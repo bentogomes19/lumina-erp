@@ -75,6 +75,41 @@ class User extends Authenticatable
                 $user->uuid = (string) Str::uuid();
             }
         });
+
+        static::saving(function ($user) {
+            if ($user->name) {
+                $user->name = mb_strtoupper($user->name, 'UTF-8');
+            }
+        });
+
+        // 🔥 Após criar ou atualizar um usuário
+        static::saved(function ($user) {
+            $roleName = $user->roles()->pluck('name')->first();
+
+            if ($roleName === 'student') {
+                // Cria ou atualiza o registro de aluno
+                \App\Models\Student::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'uuid' => $user->uuid,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'cpf' => $user->cpf,
+                        'birth_date' => $user->birth_date,
+                        'gender' => $user->gender,
+                        'address' => $user->address,
+                        'city' => $user->city,
+                        'state' => $user->state,
+                        'postal_code' => $user->postal_code,
+                        'phone_number' => $user->phone ?? $user->cellphone,
+                        'status' => $user->active ? 'Ativo' : 'Inativo',
+                    ]
+                );
+            } elseif ($user->student) {
+                // Se o usuário mudou de papel, remove o vínculo com aluno
+                $user->student()->delete();
+            }
+        });
     }
 
     /**
