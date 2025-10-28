@@ -1,29 +1,40 @@
-# Etapa 1 - Dependências PHP + Node + Composer
-FROM php:8.3-fpm
+FROM php:8.2-fpm
 
-# Instala dependências do sistema
+ENV LANG=pt_BR.UTF-8
+ENV LANGUAGE=pt_BR:pt
+ENV LC_ALL=pt_BR.UTF-8
+
+RUN apt-get update && apt-get install -y locales \
+    && echo "pt_BR.UTF-8 UTF-8" >> /etc/locale.gen \
+    && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
+    && locale-gen
+
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev nodejs npm \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    git unzip zsh curl vim pkg-config \
+    libonig-dev libzip-dev zip \
+    libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
+    libicu-dev libxml2-dev libpq-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql mbstring zip gd intl
 
-# Instala Composer
-COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Cria usuário sem root (melhor prática)
-RUN useradd -m laravel
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
 
-# Define diretório de trabalho
-WORKDIR /var/www/html
+# Criar usuário dev
+RUN useradd -ms /bin/zsh dev
+USER dev
+WORKDIR /home/dev/lumina-erp
 
-# Copia arquivos do projeto
-COPY . .
+# Instalar Oh My Zsh manualmente + P10K
+RUN git clone https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh && \
+    cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc && \
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.oh-my-zsh/custom/themes/powerlevel10k && \
+    sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/' ~/.zshrc
 
-# Ajusta permissões
-RUN chown -R laravel:laravel /var/www/html/storage /var/www/html/bootstrap/cache
+SHELL ["/bin/zsh", "-c"]
 
-# Instala dependências PHP e Node
-RUN composer install --no-interaction --prefer-dist && npm install && npm run build
-
-USER laravel
+ENV PATH="/home/dev/.composer/vendor/bin:${PATH}"
 
 CMD ["php-fpm"]

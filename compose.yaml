@@ -1,39 +1,27 @@
 services:
-    app:
-        build:
-            context: .
-            dockerfile: Dockerfile
-        image: lumina-erp:latest
-        container_name: lumina-erp
-        ports:
-            - "8000:8000"
-            - "5173:5173"
-        volumes:
-            - .:/var/www/html
-        environment:
-            APP_ENV: local
-            APP_DEBUG: true
-            APP_URL: http://localhost:8000
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
-        command: >
-            bash -c "php artisan migrate --force &&
-                     php artisan serve --host=0.0.0.0 --port=8000"
-        depends_on:
-            - mysql
+  app:
+    build: .
+    container_name: lumina-app
+    ports:
+      - "9000:9000"
+    volumes:
+      - /home/dev/lumina-erp:/home/dev/lumina-erp
+    working_dir: /home/dev/lumina-erp
+    depends_on:
+      - db
 
-    mysql:
-        image: mysql:8.0
-        restart: always
-        environment:
-            MYSQL_ROOT_PASSWORD: root
-            MYSQL_DATABASE: lumina
-            MYSQL_USER: lumina-app
-            MYSQL_PASSWORD: lumina1234
-        ports:
-            - "3306:3306"
-        volumes:
-            - db_data:/var/lib/mysql
+  db:
+    image: mysql:8
+    container_name: lumina-db
+    environment:
+      MYSQL_DATABASE: lumina
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev
+      MYSQL_ROOT_PASSWORD: lumina1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
 
 volumes:
-    db_data:
+  mysqldata:
