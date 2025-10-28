@@ -15,8 +15,6 @@
 /node_modules
 /public/build
 /public/hot
-composer.lock
-package-lock.json
 /public/storage
 /storage/*.key
 /storage/pail
