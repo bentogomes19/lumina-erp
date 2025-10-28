@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Student extends Model
 {
@@ -50,6 +51,19 @@ class Student extends Model
     public function grades()
     {
         return $this->hasMany(Grade::class);
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($student) {
+            if (empty($student->uuid)) {
+                $student->uuid = (string) Str::uuid();
+            }
+
+            if (empty($student->registration_number)) {
+                $student->registration_number = 'ALU-' . str_pad(Student::count() + 1, 5, '0', STR_PAD_LEFT);
+            }
+        });
     }
 
 
