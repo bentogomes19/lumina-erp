@@ -210,7 +210,7 @@ class UserForm
                     TextInput::make('city')->label('Cidade'),
                     TextInput::make('state')->label('Estado'),
                     TextInput::make('phone')->label('Telefone Fixo'),
-                    TextInput::make('cellphone')->label('Celular'),
+                    TextInput::make('cellphone')->label('Celular')->mask('(99) 9999-9999'),
                 ])->columns(3)
                 ->columnSpanFull(),
         ]);

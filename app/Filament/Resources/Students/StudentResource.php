@@ -23,7 +23,7 @@ class StudentResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
     protected static ?string $navigationLabel = 'Alunos';
     protected static ?string $pluralModelLabel = 'Alunos';
-    protected static ?string $modelLabel = 'Student';
+    protected static ?string $modelLabel = 'Aluno';
 
     protected static ?string $recordTitleAttribute = 'Aluno';
 

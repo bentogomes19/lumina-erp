@@ -3,6 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
+use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use CraftForge\FilamentLanguageSwitcher\FilamentLanguageSwitcherPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -25,6 +27,7 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->default()
             ->homeUrl('/admin/dashboard')
             ->id('admin')
             ->path('admin')
@@ -58,6 +61,22 @@ class AdminPanelProvider extends PanelProvider
                 ->locales([
                     ['code' => 'en', 'name' => 'English', 'flag' => 'gb'],
                     ['code' => 'pt_BR', 'name' => 'Português', 'flag' => 'br'],
+                ]),
+                FilamentShieldPlugin::make()
+                ->gridColumns([
+                    'default' => 1,
+                    'sm' => 2,
+                    'lg' => 3,
+                ])
+                ->sectionColumnSpan(1)
+                ->checkboxListColumns([
+                    'default' => 1,
+                    'sm' => 2,
+                    'lg' => 4,
+                ])
+                ->resourceCheckboxListColumns([
+                    'default' => 1,
+                    'sm' => 2,
                 ])
             ])
             ->authMiddleware([
