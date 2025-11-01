@@ -9,6 +9,8 @@ Lumina ERP é um sistema de gestão acadêmica, tem a finalidade de simplificar 
 ## 🚀 Como rodar
 
 ```bash
+# Crie um diretório 
+mkdir /dev
 git clone https://github.com/seuusuario/lumina-erp.git
 cd lumina-erp
 cp .env.example .env
@@ -26,6 +28,7 @@ APP_LOCALE=pt_BR
 APP_FALLBACK_LOCALE=en
 APP_FAKER_LOCALE=pt_BR
 
+# Banco de dados
 DB_CONNECTION=mysql
 DB_HOST=db
 DB_PORT=3306
@@ -45,23 +48,8 @@ docker exec -it lumina-app zsh
 ```
 **dentro dele, rode:**
 ```bash
-# se o command do compose já fez composer install e key:generate, ótimo.
-
 composer install
-php artisan key:generate --force
-# Garanta permissões:
-chmod -R 777 storage bootstrap/cache
-
-# Tabelas para SESSION e QUEUE (porque no .env estão em database):
-php artisan session:table
-php artisan queue:table
-
-# Migrate + seed (se tiver seeders)
+php artisan key:generate
 php artisan migrate --seed
-
-# Link do storage (uploads/imagens no Filament etc.)
-php artisan storage:link
-
-php artisan serve --host=0.0.0.0 --port=8000
 ```
 
