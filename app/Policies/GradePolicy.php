@@ -11,60 +11,36 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class GradePolicy
 {
     use HandlesAuthorization;
-    
-    public function viewAny(AuthUser $authUser): bool
+
+    public function before($user, $ability)
     {
-        return $authUser->can('ViewAny:Grade');
+        if ($user->hasRole('admin')) {
+            return true;
+        }
     }
 
-    public function view(AuthUser $authUser, Grade $grade): bool
+    public function viewAny($user)
     {
-        return $authUser->can('View:Grade');
+        return $user->can('GradesResource:ViewAny');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function view($user)
     {
-        return $authUser->can('Create:Grade');
+        return $user->can('GradesResource:View');
     }
 
-    public function update(AuthUser $authUser, Grade $grade): bool
+    public function create($user)
     {
-        return $authUser->can('Update:Grade');
+        return $user->can('GradesResource:Create');
     }
 
-    public function delete(AuthUser $authUser, Grade $grade): bool
+    public function update($user)
     {
-        return $authUser->can('Delete:Grade');
+        return $user->can('GradesResource:Update');
     }
 
-    public function restore(AuthUser $authUser, Grade $grade): bool
+    public function delete($user)
     {
-        return $authUser->can('Restore:Grade');
+        return $user->can('GradesResource:Delete');
     }
-
-    public function forceDelete(AuthUser $authUser, Grade $grade): bool
-    {
-        return $authUser->can('ForceDelete:Grade');
-    }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:Grade');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:Grade');
-    }
-
-    public function replicate(AuthUser $authUser, Grade $grade): bool
-    {
-        return $authUser->can('Replicate:Grade');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:Grade');
-    }
-
 }

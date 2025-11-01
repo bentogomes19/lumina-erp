@@ -11,60 +11,36 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class SchoolClassPolicy
 {
     use HandlesAuthorization;
-    
-    public function viewAny(AuthUser $authUser): bool
+
+    public function before($user, $ability)
     {
-        return $authUser->can('ViewAny:SchoolClass');
+        if ($user->hasRole('admin')) {
+            return true;
+        }
     }
 
-    public function view(AuthUser $authUser, SchoolClass $schoolClass): bool
+    public function viewAny($user)
     {
-        return $authUser->can('View:SchoolClass');
+        return $user->can('SchoolClassesResource:ViewAny');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function view($user)
     {
-        return $authUser->can('Create:SchoolClass');
+        return $user->can('SchoolClassesResource:View');
     }
 
-    public function update(AuthUser $authUser, SchoolClass $schoolClass): bool
+    public function create($user)
     {
-        return $authUser->can('Update:SchoolClass');
+        return $user->can('SchoolClassesResource:Create');
     }
 
-    public function delete(AuthUser $authUser, SchoolClass $schoolClass): bool
+    public function update($user)
     {
-        return $authUser->can('Delete:SchoolClass');
+        return $user->can('SchoolClassesResource:Update');
     }
 
-    public function restore(AuthUser $authUser, SchoolClass $schoolClass): bool
+    public function delete($user)
     {
-        return $authUser->can('Restore:SchoolClass');
+        return $user->can('SchoolClassesResource:Delete');
     }
-
-    public function forceDelete(AuthUser $authUser, SchoolClass $schoolClass): bool
-    {
-        return $authUser->can('ForceDelete:SchoolClass');
-    }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:SchoolClass');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:SchoolClass');
-    }
-
-    public function replicate(AuthUser $authUser, SchoolClass $schoolClass): bool
-    {
-        return $authUser->can('Replicate:SchoolClass');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:SchoolClass');
-    }
-
 }

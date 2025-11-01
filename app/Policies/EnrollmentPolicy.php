@@ -11,60 +11,36 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class EnrollmentPolicy
 {
     use HandlesAuthorization;
-    
-    public function viewAny(AuthUser $authUser): bool
+
+    public function before($user, $ability)
     {
-        return $authUser->can('ViewAny:Enrollment');
+        if ($user->hasRole('admin')) {
+            return true;
+        }
     }
 
-    public function view(AuthUser $authUser, Enrollment $enrollment): bool
+    public function viewAny($user)
     {
-        return $authUser->can('View:Enrollment');
+        return $user->can('EnrollmentsResource:ViewAny');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function view($user)
     {
-        return $authUser->can('Create:Enrollment');
+        return $user->can('EnrollmentsResource:View');
     }
 
-    public function update(AuthUser $authUser, Enrollment $enrollment): bool
+    public function create($user)
     {
-        return $authUser->can('Update:Enrollment');
+        return $user->can('EnrollmentsResource:Create');
     }
 
-    public function delete(AuthUser $authUser, Enrollment $enrollment): bool
+    public function update($user)
     {
-        return $authUser->can('Delete:Enrollment');
+        return $user->can('EnrollmentsResource:Update');
     }
 
-    public function restore(AuthUser $authUser, Enrollment $enrollment): bool
+    public function delete($user)
     {
-        return $authUser->can('Restore:Enrollment');
+        return $user->can('EnrollmentsResource:Delete');
     }
-
-    public function forceDelete(AuthUser $authUser, Enrollment $enrollment): bool
-    {
-        return $authUser->can('ForceDelete:Enrollment');
-    }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:Enrollment');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:Enrollment');
-    }
-
-    public function replicate(AuthUser $authUser, Enrollment $enrollment): bool
-    {
-        return $authUser->can('Replicate:Enrollment');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:Enrollment');
-    }
-
 }

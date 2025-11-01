@@ -11,60 +11,36 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class SubjectPolicy
 {
     use HandlesAuthorization;
-    
-    public function viewAny(AuthUser $authUser): bool
+
+    public function before($user, $ability)
     {
-        return $authUser->can('ViewAny:Subject');
+        if ($user->hasRole('admin')) {
+            return true;
+        }
     }
 
-    public function view(AuthUser $authUser, Subject $subject): bool
+    public function viewAny($user)
     {
-        return $authUser->can('View:Subject');
+        return $user->can('SubjectsResource:ViewAny');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function view($user)
     {
-        return $authUser->can('Create:Subject');
+        return $user->can('SubjectsResource:View');
     }
 
-    public function update(AuthUser $authUser, Subject $subject): bool
+    public function create($user)
     {
-        return $authUser->can('Update:Subject');
+        return $user->can('SubjectsResource:Create');
     }
 
-    public function delete(AuthUser $authUser, Subject $subject): bool
+    public function update($user)
     {
-        return $authUser->can('Delete:Subject');
+        return $user->can('SubjectsResource:Update');
     }
 
-    public function restore(AuthUser $authUser, Subject $subject): bool
+    public function delete($user)
     {
-        return $authUser->can('Restore:Subject');
+        return $user->can('SubjectsResource:Delete');
     }
-
-    public function forceDelete(AuthUser $authUser, Subject $subject): bool
-    {
-        return $authUser->can('ForceDelete:Subject');
-    }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:Subject');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:Subject');
-    }
-
-    public function replicate(AuthUser $authUser, Subject $subject): bool
-    {
-        return $authUser->can('Replicate:Subject');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:Subject');
-    }
-
 }

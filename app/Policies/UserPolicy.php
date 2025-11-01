@@ -8,60 +8,36 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class UserPolicy
 {
     use HandlesAuthorization;
-    
+
+    public function before($user, $ability)
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+    }
+
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ViewAny:User');
+        return $authUser->can('UsersResource:ViewAny');
     }
 
     public function view(AuthUser $authUser): bool
     {
-        return $authUser->can('View:User');
+        return $authUser->can('UsersResource:View');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('Create:User');
+        return $authUser->can('UsersResource:Create');
     }
 
     public function update(AuthUser $authUser): bool
     {
-        return $authUser->can('Update:User');
+        return $authUser->can('UsersResource:Update');
     }
 
     public function delete(AuthUser $authUser): bool
     {
-        return $authUser->can('Delete:User');
+        return $authUser->can('UsersResource:Delete');
     }
-
-    public function restore(AuthUser $authUser): bool
-    {
-        return $authUser->can('Restore:User');
-    }
-
-    public function forceDelete(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDelete:User');
-    }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:User');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:User');
-    }
-
-    public function replicate(AuthUser $authUser): bool
-    {
-        return $authUser->can('Replicate:User');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:User');
-    }
-
 }

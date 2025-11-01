@@ -11,60 +11,36 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class StudentPolicy
 {
     use HandlesAuthorization;
-    
-    public function viewAny(AuthUser $authUser): bool
+
+    public function before($user, $ability)
     {
-        return $authUser->can('ViewAny:Student');
+        if ($user->hasRole('admin')) {
+            return true;
+        }
     }
 
-    public function view(AuthUser $authUser, Student $student): bool
+    public function viewAny($user)
     {
-        return $authUser->can('View:Student');
+        return $user->can('StudentsResource:ViewAny');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function view($user)
     {
-        return $authUser->can('Create:Student');
+        return $user->can('StudentsResource:View');
     }
 
-    public function update(AuthUser $authUser, Student $student): bool
+    public function create($user)
     {
-        return $authUser->can('Update:Student');
+        return $user->can('StudentsResource:Create');
     }
 
-    public function delete(AuthUser $authUser, Student $student): bool
+    public function update($user)
     {
-        return $authUser->can('Delete:Student');
+        return $user->can('StudentsResource:Update');
     }
 
-    public function restore(AuthUser $authUser, Student $student): bool
+    public function delete($user)
     {
-        return $authUser->can('Restore:Student');
+        return $user->can('StudentsResource:Delete');
     }
-
-    public function forceDelete(AuthUser $authUser, Student $student): bool
-    {
-        return $authUser->can('ForceDelete:Student');
-    }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:Student');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:Student');
-    }
-
-    public function replicate(AuthUser $authUser, Student $student): bool
-    {
-        return $authUser->can('Replicate:Student');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:Student');
-    }
-
 }

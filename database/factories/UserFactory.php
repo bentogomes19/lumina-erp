@@ -42,17 +42,4 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
-
-    public function admin(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'uuid' => Str::uuid(),
-            'name' => 'admin',
-            'email' => 'admin@lumina.com',
-            'email_verified_at' => now(),
-            'password' => Hash::make('password'),
-            'remember_token' => Str::random(10),
-        ]);
-
-    }
 }

@@ -11,60 +11,36 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class RolePolicy
 {
     use HandlesAuthorization;
-    
-    public function viewAny(AuthUser $authUser): bool
+
+    public function before($user, $ability)
     {
-        return $authUser->can('ViewAny:Role');
+        if ($user->hasRole('admin')) {
+            return true;
+        }
     }
 
-    public function view(AuthUser $authUser, Role $role): bool
+    public function viewAny($user)
     {
-        return $authUser->can('View:Role');
+        return $user->can('RolesResource:ViewAny');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function view($user)
     {
-        return $authUser->can('Create:Role');
+        return $user->can('RolesResource:View');
     }
 
-    public function update(AuthUser $authUser, Role $role): bool
+    public function create($user)
     {
-        return $authUser->can('Update:Role');
+        return $user->can('RolesResource:Create');
     }
 
-    public function delete(AuthUser $authUser, Role $role): bool
+    public function update($user)
     {
-        return $authUser->can('Delete:Role');
+        return $user->can('RolesResource:Update');
     }
 
-    public function restore(AuthUser $authUser, Role $role): bool
+    public function delete($user)
     {
-        return $authUser->can('Restore:Role');
+        return $user->can('RolesResource:Delete');
     }
-
-    public function forceDelete(AuthUser $authUser, Role $role): bool
-    {
-        return $authUser->can('ForceDelete:Role');
-    }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:Role');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:Role');
-    }
-
-    public function replicate(AuthUser $authUser, Role $role): bool
-    {
-        return $authUser->can('Replicate:Role');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:Role');
-    }
-
 }

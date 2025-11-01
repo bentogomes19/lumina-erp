@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
                 'active' => true,
             ]
         );
-        $admin->assignRole('admin');
+        $admin->syncRoles('admin');
 
         // Professor
         $teacher = User::firstOrCreate(
@@ -37,7 +37,7 @@ class UserSeeder extends Seeder
                 'active' => true,
             ]
         );
-        $teacher->assignRole('teacher');
+        $teacher->syncRoles('teacher');
 
         // Aluno
         $student = User::firstOrCreate(
@@ -49,6 +49,6 @@ class UserSeeder extends Seeder
                 'active' => true,
             ]
         );
-        $student->assignRole('student');
+        $student->syncRoles('student');
     }
 }
