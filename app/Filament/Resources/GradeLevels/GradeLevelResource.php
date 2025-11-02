@@ -5,6 +5,7 @@ namespace App\Filament\Resources\GradeLevels;
 use App\Filament\Resources\GradeLevels\Pages\CreateGradeLevel;
 use App\Filament\Resources\GradeLevels\Pages\EditGradeLevel;
 use App\Filament\Resources\GradeLevels\Pages\ListGradeLevels;
+use App\Filament\Resources\GradeLevels\RelationManagers\SubjectsRelationManager;
 use App\Filament\Resources\GradeLevels\Schemas\GradeLevelForm;
 use App\Filament\Resources\GradeLevels\Tables\GradeLevelsTable;
 use App\Models\GradeLevel;
@@ -41,7 +42,7 @@ class GradeLevelResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            SubjectsRelationManager::class,
         ];
     }
 

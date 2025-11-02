@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\ClassShift;
+use App\Enums\ClassStatus;
+use App\Enums\ClassType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,14 +16,38 @@ class SchoolClass extends Model
     protected $table = 'classes';
 
     protected $fillable = [
+        'code',
         'name',
         'grade_level_id',
         'school_year_id',
         'shift',
+        'type',
         'homeroom_teacher_id',
         'capacity',
         'status',
     ];
+
+    protected $casts = [
+        'shift' => ClassShift::class,
+        'status' => ClassStatus::class,
+        'type' => ClassType::class,
+    ];
+
+    // Scopes úteis (RM-style)
+    public function scopeActive($q)
+    {
+        return $q->where('status', ClassStatus::OPEN);
+    }
+
+    public function scopeByYear($q, int $yearId)
+    {
+        return $q->where('school_year_id', $yearId);
+    }
+
+    public function scopeByShift($q, ClassShift $shift)
+    {
+        return $q->where('shift', $shift->value);
+    }
 
     public function homeroomTeacher()
     {

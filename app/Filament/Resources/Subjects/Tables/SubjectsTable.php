@@ -18,14 +18,11 @@ class SubjectsTable
         return $table
             ->columns([
                 TextColumn::make('code')
+                    ->label('Código')
                     ->searchable(),
                 TextColumn::make('name')
+                    ->label('Nome')
                     ->searchable(),
-                TextColumn::make('grade_level')
-                    ->searchable(),
-                TextColumn::make('hours_period')
-                    ->numeric()
-                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

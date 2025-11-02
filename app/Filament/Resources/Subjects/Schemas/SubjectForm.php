@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Subjects\Schemas;
 
+use App\Enums\SubjectCategory;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
@@ -12,14 +14,22 @@ class SubjectForm
     {
         return $schema
             ->components([
-                TextInput::make('code'),
+                TextInput::make('code')
+                    ->label('Código da Disciplina')
+                    ->unique(ignoreRecord: true),
+
                 TextInput::make('name')
+                    ->label('Nome')
                     ->required(),
+
                 Textarea::make('description')
+                    ->label('Descrição / Observações')
                     ->columnSpanFull(),
-                TextInput::make('grade_level'),
-                TextInput::make('hours_period')
-                    ->numeric(),
+
+                Select::make('category')
+                    ->label('Componente Curricular')
+                    ->options(SubjectCategory::toArray())
+                    ->required(),
             ]);
     }
 }

@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\GradeLevels\Schemas;
 
+use App\Enums\EducationStage;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
@@ -12,14 +15,26 @@ class GradeLevelForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label('Nome da Série/Etapa')
+                    ->label('Nome')
                     ->required()
                     ->unique(ignoreRecord: true),
 
-                TextInput::make('order')
+                Select::make('stage')
+                    ->label('Etapa')
+                    ->options(EducationStage::toArray())
+                    ->default(EducationStage::FUND_I)
+                    ->required(),
+
+                TextInput::make('display_order')
                     ->label('Ordem de Exibição')
                     ->numeric()
+                    ->minValue(1)
                     ->default(1),
+
+                Textarea::make('description')
+                    ->label('Descrição / Observações')
+                    ->rows(3)
+                    ->nullable(),
             ]);
     }
 }

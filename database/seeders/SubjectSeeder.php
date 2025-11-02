@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\SubjectName;
 use App\Models\Subject;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -13,6 +14,14 @@ class SubjectSeeder extends Seeder
      */
     public function run(): void
     {
-        Subject::factory(10)->create();
+        foreach (SubjectName::cases() as $subjectEnum) {
+            Subject::firstOrCreate(
+                ['name' => $subjectEnum->value],
+                [
+                    'code' => strtoupper(substr(md5($subjectEnum->value), 0, 6)),
+                    'category' => $subjectEnum->category(),
+                ]
+            );
+        }
     }
 }
