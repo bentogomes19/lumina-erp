@@ -25,6 +25,9 @@ class TeacherResource extends Resource
 
     protected static ?string $navigationLabel = 'Professores';
     protected static ?string $recordTitleAttribute = 'Professor';
+    protected static ?string $pluralModelLabel = 'Professor';
+    protected static ?string $modelLabel = 'Professor';
+
 
     public static function form(Schema $schema): Schema
     {

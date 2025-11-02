@@ -23,6 +23,9 @@ class TeacherAssignmentResource extends Resource
     protected static ?string $navigationLabel = 'Alocação de Professores';
     protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-user-group';
 
+    protected static ?string $pluralModelLabel = 'Alocação de Professores';
+    protected static ?string $modelLabel = 'Alocação do Professor';
+
     public static function form(Schema $schema): Schema
     {
         return TeacherAssignmentForm::configure($schema);
