@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('postal_code')->nullable();
             $table->string('mother_name')->nullable();
             $table->string('father_name')->nullable();
-            $table->enum('status', ['Ativo', 'Inativo', 'Suspenso', 'Graduado'])->default('Ativo');
+            $table->enum('status', ['active','inactive','suspended','graduated'])->default('active')->change();
             $table->date('enrollment_date')->nullable();
             $table->date('exit_date')->nullable();
             $table->json('meta')->nullable();

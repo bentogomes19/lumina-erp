@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Faker\Factory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -24,6 +22,7 @@ class DatabaseSeeder extends Seeder
             SchoolClassSeeder::class,
             TeacherSeeder::class,
             GradeSeeder::class,
+            StudentSeeder::class,
         ]);
     }
 }
