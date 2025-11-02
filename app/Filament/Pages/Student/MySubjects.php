@@ -10,7 +10,6 @@ class MySubjects extends Page
     protected static ?string $navigationLabel = 'Minhas Disciplinas';
     protected static ?string $title = 'Minhas Disciplinas';
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-book-open';
-    protected string $view = 'filament.pages.student.my-subjects';
 
     public static function shouldRegisterNavigation(): bool
     {

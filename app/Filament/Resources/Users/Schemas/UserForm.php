@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Forms;
+use App\Enums\Gender;
+use App\Enums\StudentStatus;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
@@ -13,6 +14,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Role;
+use Illuminate\Validation\Rules\Enum as EnumRule;
 
 class UserForm
 {
@@ -107,11 +109,11 @@ class UserForm
 
                     Select::make('gender')
                         ->label('Gênero')
-                        ->options([
-                            'Masculino' => 'Masculino',
-                            'Feminino' => 'Feminino',
-                            'Outro' => 'Outro',
-                        ]),
+                        ->options(Gender::options())     // valores: M, F, O
+                        ->native(false)
+                        ->required()                     // se quiser obrigatório
+                        ->rule(new EnumRule(Gender::class))
+                        ->nullable(),
 
                     FileUpload::make('avatar')
                         ->label('Foto de Perfil')

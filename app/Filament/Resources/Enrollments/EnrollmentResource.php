@@ -22,6 +22,8 @@ class EnrollmentResource extends Resource
     protected static ?int $navigationSort = 5;
     protected static ?string $navigationLabel = 'Matrículas';
     protected static ?string $recordTitleAttribute = 'Matrículas';
+    protected static ?string $pluralModelLabel = 'Matrículas';
+    protected static ?string $modelLabel = 'Matrícula';
 
     public static function form(Schema $schema): Schema
     {

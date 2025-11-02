@@ -56,7 +56,9 @@ class SchoolClass extends Model
 
     public function students()
     {
-        return $this->belongsToMany(Student::class, 'enrollments', 'class_id', 'student_id');
+        return $this->belongsToMany(Student::class, 'enrollments', 'class_id', 'student_id')
+            ->withPivot(['enrollment_date','roll_number','status'])
+            ->withTimestamps();
     }
 
     public function subjects()

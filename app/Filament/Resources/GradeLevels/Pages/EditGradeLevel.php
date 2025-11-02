@@ -16,4 +16,9 @@ class EditGradeLevel extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    public static function canViewAny(): bool { return auth()->user()?->can('roles.view') ?? false; }
+    public static function canCreate(): bool { return auth()->user()?->can('roles.create') ?? false; }
+    public static function canEdit($record): bool { return auth()->user()?->can('roles.update') ?? false; }
+    public static function canDelete($record): bool { return auth()->user()?->can('roles.delete') ?? false; }
 }

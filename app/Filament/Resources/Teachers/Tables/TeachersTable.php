@@ -6,6 +6,7 @@ use App\Enums\TeacherStatus;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\TeacherAssignment;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -14,6 +15,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Columns\TextColumn;
@@ -22,7 +24,9 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 class TeachersTable
 {
@@ -61,7 +65,64 @@ class TeachersTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('criarUsuario')
+                    ->label('Criar usuário')
+                    ->icon('heroicon-o-user-plus')
+                    ->visible(fn($record) => !$record->user_id) // só mostra se ainda não tiver usuário
+                    ->modalHeading(fn($record) => "Criar usuário para {$record->name}")
+                    ->form([
+                        TextInput::make('name')
+                            ->label('Nome')
+                            ->default(fn($record) => $record->name)
+                            ->disabled()
+                            ->dehydrated(false),
 
+                        TextInput::make('email')
+                            ->label('E-mail institucional (opcional)')
+                            ->email()
+                            ->default(fn($record) => $record->email)   // <-- vem do professor
+                            ->nullable()
+                            ->rule(Rule::unique('users','email')),
+
+                        TextInput::make('password')
+                            ->label('Senha')
+                            ->password()
+                            ->required()
+                            ->minLength(8),
+                    ])
+                    ->action(function (\App\Models\Teacher $record, array $data) {
+                        DB::transaction(function () use ($record, $data) {
+
+                            $email = filled($data['email']) ? $data['email'] : $record->email;
+
+                            // (opcional) validação manual extra se quiser
+                            if ($email && \App\Models\User::where('email', $email)->exists()) {
+                                throw \Illuminate\Validation\ValidationException::withMessages([
+                                    'email' => 'Este e-mail já está em uso por outro usuário.',
+                                ]);
+                            }
+
+                            $user = \App\Models\User::create([
+                                'name'     => $record->name,
+                                'email'    => $email,                  // <-- usa do professor por padrão
+                                'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
+                                'active'   => true,
+                            ]);
+
+                            $user->syncRoles(['teacher']);
+                            if ($role = \Spatie\Permission\Models\Role::where('name','teacher')->with('permissions')->first()) {
+                                $user->syncPermissions($role->permissions);
+                            }
+
+                            $record->user()->associate($user)->save();
+                        });
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Usuário criado com sucesso')
+                            ->body('O professor agora tem acesso como “teacher”.')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('vincular')
                     ->label('Vincular a turma/discip.')
                     ->icon('heroicon-o-link')

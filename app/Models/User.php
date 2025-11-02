@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\Gender;
+use App\Enums\StudentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -87,27 +89,34 @@ class User extends Authenticatable
             $roleName = $user->roles()->pluck('name')->first();
 
             if ($roleName === 'student') {
-                // Cria ou atualiza o registro de aluno
-                \App\Models\Student::updateOrCreate(
+                Student::updateOrCreate(
                     ['user_id' => $user->id],
                     [
-                        'uuid' => $user->uuid,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'cpf' => $user->cpf,
-                        'birth_date' => $user->birth_date,
-                        'gender' => $user->gender,
-                        'address' => $user->address,
-                        'city' => $user->city,
-                        'state' => $user->state,
-                        'postal_code' => $user->postal_code,
-                        'phone_number' => $user->phone ?? $user->cellphone,
-                        'status' => $user->active ? 'Ativo' : 'Inativo',
+                        'uuid'               => $user->uuid,
+                        'name'               => $user->name,
+                        'email'              => $user->email,
+                        'cpf'                => $user->cpf,
+                        'birth_date'         => $user->birth_date,
+                        // MAPA DE GÊNERO: aceita 'Masculino'/'Feminino'/'Outro' OU 'M'/'F'/'O'
+                        'gender'             => match ((string) $user->gender) {
+                            'Masculino', 'M' => Gender::M->value,
+                            'Feminino',  'F' => Gender::F->value,
+                            'Outro',     'O' => Gender::O->value,
+                            default          => null,
+                        },
+                        'address'            => $user->address,
+                        'city'               => $user->city,
+                        'state'              => $user->state,
+                        'postal_code'        => $user->postal_code,
+                        'phone_number'       => $user->cellphone ?? $user->phone,
+                        // AQUI ESTAVA O PROBLEMA: NUNCA use o rótulo "Ativo"
+                        'status'             => $user->active
+                            ? StudentStatus::ACTIVE->value
+                            : StudentStatus::INACTIVE->value,
+                        // Se você quer deixar a matrícula ser gerada pelo boot(), remova esta linha.
+                        // 'registration_number' => Student::generateRegistrationNumber(),
                     ]
                 );
-            } elseif ($user->student) {
-                // Se o usuário mudou de papel, remove o vínculo com aluno
-                $user->student()->delete();
             }
         });
     }

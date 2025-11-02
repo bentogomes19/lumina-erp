@@ -21,61 +21,228 @@ class StudentForm
         return $schema
             ->columns(12)
             ->components([
-                Section::make('Identificação')->schema([
-                    TextInput::make('registration_number')->label('Matrícula')->disabled()->dehydrated(false),
-                    TextInput::make('name')->label('Nome')->required()->maxLength(120),
-                    DatePicker::make('birth_date')->label('Nascimento'),
-                    Select::make('gender')->label('Gênero')
-                        ->options(Gender::options())->rule(new EnumRule(Gender::class))->nullable(),
-                    TextInput::make('cpf')->label('CPF')->mask('999.999.999-99')->unique(ignoreRecord: true)->nullable(),
-                    TextInput::make('rg')->label('RG')->maxLength(20)->nullable(),
-                    FileUpload::make('photo_url')->label('Foto')->image()->directory('students/photos')->imageEditor()->downloadable(),
-                ])->columns(3)->columnSpan(8),
+                Section::make('Identificação')
+                    ->schema([
+                        TextInput::make('registration_number')
+                            ->label('Matrícula')
+                            ->placeholder('Gerado automaticamente')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->columnSpan(3),
 
-                Section::make('Contato & Endereço')->schema([
-                    TextInput::make('email')->label('E-mail')->email()->maxLength(120)->nullable(),
-                    TextInput::make('phone_number')->label('Telefone')->tel()->maxLength(20)->nullable(),
-                    TextInput::make('address')->label('Endereço')->maxLength(120)->nullable(),
-                    TextInput::make('address_district')->label('Bairro')->maxLength(60)->nullable(),
-                    TextInput::make('city')->label('Cidade')->maxLength(60)->nullable(),
-                    TextInput::make('state')->label('UF')->maxLength(2)->nullable(),
-                    TextInput::make('postal_code')->label('CEP')->mask('99999-999')->nullable(),
-                ])->columns(3)->columnSpan(8),
+                        TextInput::make('name')
+                            ->label('Nome')
+                            ->required()
+                            ->maxLength(120)
+                            ->columnSpan(5),
 
-                Section::make('Nascimento & Nacionalidade')->schema([
-                    TextInput::make('birth_city')->label('Município de Nascimento')->nullable(),
-                    TextInput::make('birth_state')->label('UF Nasc.')->maxLength(2)->nullable(),
-                    TextInput::make('nationality')->label('Nacionalidade')->nullable(),
-                ])->columns(3)->columnSpan(4),
+                        DatePicker::make('birth_date')
+                            ->label('Nascimento')
+                            ->columnSpan(2),
 
-                Section::make('Responsáveis')->schema([
-                    TextInput::make('mother_name')->label('Mãe')->maxLength(120)->nullable(),
-                    TextInput::make('father_name')->label('Pai')->maxLength(120)->nullable(),
-                    TextInput::make('guardian_main')->label('Responsável')->maxLength(120)->nullable(),
-                    TextInput::make('guardian_phone')->label('Telefone Resp.')->tel()->maxLength(20)->nullable(),
-                    TextInput::make('guardian_email')->label('E-mail Resp.')->email()->maxLength(120)->nullable(),
-                ])->columns(2)->columnSpan(8),
+                        Select::make('gender')
+                            ->label('Gênero')
+                            ->options(Gender::options())
+                            ->rule(new EnumRule(Gender::class))
+                            ->nullable()
+                            ->columnSpan(2),
 
-                Section::make('Saúde & Transporte')->schema([
-                    Select::make('transport_mode')->label('Transporte')
-                        ->options(['none'=>'Nenhum','car'=>'Carro','bus'=>'Ônibus','van'=>'Van','walk'=>'A pé','bike'=>'Bicicleta'])->default('none'),
-                    Toggle::make('has_special_needs')
-                        ->label('Necessidade Especial')
-                        ->default(false)
-                        ->inline(false)
-                        ->required(),
-                    TextInput::make('allergies')->label('Alergias')->maxLength(120)->nullable(),
-                    Textarea::make('medical_notes')->label('Observações Médicas')->rows(2)->columnSpanFull()->nullable(),
-                ])->columns(2)->columnSpan(8),
+                        TextInput::make('cpf')
+                            ->label('CPF')
+                            ->mask('999.999.999-99')
+                            ->unique(ignoreRecord: true)
+                            ->nullable()
+                            ->columnSpan(3),
 
-                Section::make('Vínculo')->schema([
-                    DatePicker::make('enrollment_date')->label('Data de Matrícula')->native(false),
-                    DatePicker::make('exit_date')->label('Data de Saída')->native(false),
-                    Select::make('status')->label('Status')
-                        ->options(StudentStatus::options())
-                        ->default(StudentStatus::ACTIVE->value)
-                        ->required(),
-                ])->columns(3)->columnSpan(4),
+                        TextInput::make('rg')
+                            ->label('RG')
+                            ->maxLength(20)
+                            ->nullable()
+                            ->columnSpan(3),
+                    ])
+                    ->columns(10)
+                    ->columnSpan(8),
+
+                Section::make('Foto')
+                    ->schema([
+                        FileUpload::make('photo_url')
+                            ->label('Foto')
+                            ->image()
+                            ->directory('students/photos')
+                            ->imageEditor()
+                            ->downloadable(),
+                    ])
+                    ->columns(1)
+                    ->columnSpan(4),
+
+
+                Section::make('Contato & Endereço')
+                    ->schema([
+                        TextInput::make('email')
+                            ->label('E-mail')
+                            ->email()
+                            ->maxLength(120)
+                            ->nullable()
+                            ->columnSpan(4),
+
+                        TextInput::make('phone_number')
+                            ->label('Telefone')
+                            ->tel()
+                            ->maxLength(20)
+                            ->nullable()
+                            ->columnSpan(4),
+
+                        TextInput::make('postal_code')
+                            ->label('CEP')
+                            ->mask('99999-999')
+                            ->nullable()
+                            ->columnSpan(4),
+
+                        TextInput::make('address')
+                            ->label('Endereço')
+                            ->maxLength(120)
+                            ->nullable()
+                            ->columnSpan(6),
+
+                        TextInput::make('address_district')
+                            ->label('Bairro')
+                            ->maxLength(60)
+                            ->nullable()
+                            ->columnSpan(6),
+
+                        TextInput::make('city')
+                            ->label('Cidade')
+                            ->maxLength(60)
+                            ->nullable()
+                            ->columnSpan(6),
+
+                        TextInput::make('state')
+                            ->label('UF')
+                            ->maxLength(2)
+                            ->minLength(2)
+                            ->extraAttributes(['style' => 'text-transform:uppercase'])
+                            ->nullable()
+                            ->columnSpan(2),
+                    ])
+                    ->columns(12)
+                    ->columnSpan(8),
+
+                Section::make('Nascimento & Nacionalidade')
+                    ->schema([
+                        TextInput::make('birth_city')
+                            ->label('Município de Nascimento')
+                            ->nullable(),
+
+                        TextInput::make('birth_state')
+                            ->label('UF Nasc.')
+                            ->maxLength(2)
+                            ->minLength(2)
+                            ->extraAttributes(['style' => 'text-transform:uppercase'])
+                            ->nullable(),
+
+                        TextInput::make('nationality')
+                            ->label('Nacionalidade')
+                            ->nullable(),
+                    ])
+                    ->columns(3)
+                    ->columnSpan(4),
+
+                Section::make('Responsáveis')
+                    ->schema([
+                        TextInput::make('mother_name')
+                            ->label('Mãe')
+                            ->maxLength(120)
+                            ->nullable()
+                            ->columnSpan(6),
+
+                        TextInput::make('father_name')
+                            ->label('Pai')
+                            ->maxLength(120)
+                            ->nullable()
+                            ->columnSpan(6),
+
+                        TextInput::make('guardian_main')
+                            ->label('Responsável')
+                            ->maxLength(120)
+                            ->nullable()
+                            ->columnSpan(6),
+
+                        TextInput::make('guardian_phone')
+                            ->label('Telefone Resp.')
+                            ->tel()
+                            ->maxLength(20)
+                            ->nullable()
+                            ->columnSpan(3),
+
+                        TextInput::make('guardian_email')
+                            ->label('E-mail Resp.')
+                            ->email()
+                            ->maxLength(120)
+                            ->nullable()
+                            ->columnSpan(3),
+                    ])
+                    ->columns(12)
+                    ->columnSpan(8),
+
+                Section::make('Vínculo')
+                    ->schema([
+                        DatePicker::make('enrollment_date')
+                            ->label('Data de Matrícula')
+                            ->native(false)
+                            ->columnSpan(6),
+
+                        DatePicker::make('exit_date')
+                            ->label('Data de Saída')
+                            ->native(false)
+                            ->columnSpan(6),
+
+                        Select::make('status')
+                            ->label('Status')
+                            ->options(StudentStatus::options())
+                            ->default(StudentStatus::ACTIVE->value)
+                            ->required()
+                            ->columnSpan(12),
+                    ])
+                    ->columns(12)
+                    ->columnSpan(4),
+
+                Section::make('Saúde & Transporte')
+                    ->schema([
+                        Select::make('transport_mode')
+                            ->label('Transporte')
+                            ->options([
+                                'none' => 'Nenhum',
+                                'car'  => 'Carro',
+                                'bus'  => 'Ônibus',
+                                'van'  => 'Van',
+                                'walk' => 'A pé',
+                                'bike' => 'Bicicleta',
+                            ])
+                            ->default('none')
+                            ->columnSpan(3),
+
+                        Toggle::make('has_special_needs')
+                            ->label('Necessidade Especial')
+                            ->default(false)
+                            ->inline(false)
+                            ->required()
+                            ->columnSpan(3),
+
+                        TextInput::make('allergies')
+                            ->label('Alergias')
+                            ->maxLength(120)
+                            ->nullable()
+                            ->columnSpan(6),
+
+                        Textarea::make('medical_notes')
+                            ->label('Observações Médicas')
+                            ->rows(3)
+                            ->nullable()
+                            ->columnSpan(12),
+                    ])
+                    ->columns(12)
+                    ->columnSpan(12),
+
             ]);
     }
 }

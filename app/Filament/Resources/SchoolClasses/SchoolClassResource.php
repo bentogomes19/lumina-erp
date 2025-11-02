@@ -5,14 +5,12 @@ namespace App\Filament\Resources\SchoolClasses;
 use App\Filament\Resources\SchoolClasses\Pages\CreateSchoolClass;
 use App\Filament\Resources\SchoolClasses\Pages\EditSchoolClass;
 use App\Filament\Resources\SchoolClasses\Pages\ListSchoolClasses;
+use App\Filament\Resources\SchoolClasses\RelationManagers\StudentsRelationManager;
 use App\Filament\Resources\SchoolClasses\Schemas\SchoolClassForm;
 use App\Filament\Resources\SchoolClasses\Tables\SchoolClassesTable;
-use App\Filament\Resources\TeacherAssignments\Schemas\TeacherAssignmentForm;
 use App\Models\SchoolClass;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -47,7 +45,7 @@ class SchoolClassResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            StudentsRelationManager::class,
         ];
     }
 

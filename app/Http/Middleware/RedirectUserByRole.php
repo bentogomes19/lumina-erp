@@ -20,7 +20,7 @@ class RedirectUserByRole
         }
 
         $user = auth()->user();
-        $path = $request->path(); // exemplo: lumina/students
+        $path = trim($request->path(), '/'); // ex: lumina/students
 
         // Se o usuário já está em uma rota do painel, não redirecione
         if (str_starts_with($path, 'lumina/') && $path !== 'lumina') {

@@ -24,6 +24,7 @@ class RoleResource extends Resource
 
     protected static ?string $navigationLabel = 'Perfis de Acesso';
     protected static ?string $pluralModelLabel = 'Perfil de Acesso';
+    protected static ?string $modelLabel = 'Perfil de Acesso';
 
     public static function form(Schema $schema): Schema
     {

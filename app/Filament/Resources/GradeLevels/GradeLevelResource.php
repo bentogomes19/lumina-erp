@@ -54,4 +54,10 @@ class GradeLevelResource extends Resource
             'edit' => EditGradeLevel::route('/{record}/edit'),
         ];
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $u = auth()->user();
+        return $u && $u->hasRole('admin'); // ou $u->can('roles.view')
+    }
 }

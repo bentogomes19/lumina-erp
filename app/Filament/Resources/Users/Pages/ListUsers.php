@@ -24,5 +24,10 @@ class ListUsers extends ListRecords
             UsersOverview::class,
         ];
     }
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
 
 }

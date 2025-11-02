@@ -2,24 +2,21 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Filament\Resources\BaseAdminResource;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Filament\Resources\Users\Widgets\UsersOverview;
-use Spatie\Permission\Models\Role;
-use Filament\Forms;
 use App\Models\User;
 use BackedEnum;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class UserResource extends Resource
+class UserResource extends BaseAdminResource
 {
     protected static ?string $model = User::class;
     protected static string|null|\UnitEnum $navigationGroup = 'Administração';

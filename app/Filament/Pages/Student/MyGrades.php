@@ -10,7 +10,6 @@ class MyGrades extends Page
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-chart-bar';
     protected static ?string $title = 'Minhas Notas';
     protected static ?string $navigationLabel = 'Minhas Notas';
-    protected string $view = 'filament.pages.student.my-grades';
 
     public static function shouldRegisterNavigation(): bool
     {

@@ -30,7 +30,7 @@ class SchoolClassForm
                         ->label('Nome da Turma')
                         ->required()
                         ->maxLength(80),
-                ])->columns(2),
+                ])->columnSpan(['lg' => 2]),
 
                 Section::make('Contexto')->schema([
                     Select::make('grade_level_id')
@@ -42,7 +42,7 @@ class SchoolClassForm
                         ->searchable()
                         ->preload()
                         ->live()
-                        ->required(),
+                        ->required()->columnSpanFull(2),
 
                     Select::make('school_year_id')
                         ->label('Ano Letivo')
@@ -70,7 +70,7 @@ class SchoolClassForm
                         ->required()
                         ->rule(new EnumRule(ClassStatus::class))
                         ->default(ClassStatus::OPEN->value),
-                ])->columns(3),
+                ])->columns(4),
 
                 Section::make('Responsável e Capacidade')->schema([
                     Select::make('homeroom_teacher_id')
@@ -85,7 +85,7 @@ class SchoolClassForm
                         ->minValue(1)
                         ->maxValue(60)
                         ->helperText('Limite recomendado RM: 25~40 por turma, conforme etapa.'), // ajuste sua regra
-                ])->columns(2),
+                ])->collapsible(),
             ]);
     }
 }

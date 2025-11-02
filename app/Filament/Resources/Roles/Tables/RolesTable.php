@@ -15,14 +15,14 @@ class RolesTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')
-                    ->label('Nome')
-                    ->searchable(),
-
-                TextColumn::make('created_at')
-                    ->label('Criado em')
-                    ->dateTime()
+                TextColumn::make('name')->label('Nome')->searchable()->sortable(),
+                TextColumn::make('guard_name')->label('Guard')->badge()->sortable(),
+                TextColumn::make('permissions_count')
+                    ->counts('permissions')
+                    ->label('Perms')
+                    ->badge()
                     ->toggleable(),
+                TextColumn::make('created_at')->label('Criado')->dateTime()->since(),
             ])
             ->filters([
                 //
