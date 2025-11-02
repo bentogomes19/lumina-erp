@@ -59,4 +59,19 @@ class SubjectResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'code', 'bncc_code'];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) Subject::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'primary';
+    }
 }
