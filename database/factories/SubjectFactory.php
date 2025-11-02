@@ -19,9 +19,16 @@ class SubjectFactory extends Factory
     {
         return [
             'name' => $this->faker->randomElement([
-                'Mathematics', 'Portuguese', 'Science', 'Geography', 'History', 'English'
+                'Matemática',
+                'Português',
+                'Ciências',
+                'Geografia',
+                'História',
+                'Inglês',
+                'Educação Física',
+                'Artes'
             ]),
-            'code' => strtoupper($this->faker->bothify('SUB###')),
+            'code' => strtoupper($this->faker->unique->bothify('DIS###')),
         ];
     }
 }

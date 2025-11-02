@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Faker\Factory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -17,14 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
-            UserSeeder::class,
-            TeacherSeeder::class,
-            SubjectSeeder::class,
-            SchoolClassSeeder::class,
-            StudentSeeder::class,
-            EnrollmentSeeder::class,
-            GradeSeeder::class,
-            GradeLevelSeeder::class,
+            UserSeeder::class
         ]);
     }
 }
