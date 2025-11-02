@@ -17,35 +17,13 @@ class SchoolClassesTable
     {
         return $table
             ->columns([
-                TextColumn::make('uuid')
-                    ->label('UUID')
-                    ->searchable(),
-                TextColumn::make('name')
-                    ->searchable(),
-                TextColumn::make('grade')
-                    ->searchable(),
-                TextColumn::make('shift')
-                    ->badge(),
-                TextColumn::make('homeroom_teacher_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('capacity')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('status')
-                    ->badge(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('name')->label('Turma'),
+                TextColumn::make('gradeLevel.name')->label('Série'),
+                TextColumn::make('schoolYear.year')->label('Ano Letivo'),
+                TextColumn::make('shift')->label('Turno')->formatStateUsing(fn ($state) => [
+                    'morning' => 'Manhã', 'afternoon' => 'Tarde', 'evening' => 'Noite'
+                ][$state]),
+                TextColumn::make('homeroomTeacher.name')->label('Professor Responsável'),
             ])
             ->filters([
                 TrashedFilter::make(),

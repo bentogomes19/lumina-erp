@@ -17,8 +17,9 @@ use Filament\Tables\Table;
 class GradeResource extends Resource
 {
     protected static ?string $model = Grade::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
+    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-chart-bar';
+    protected static ?int $navigationSort = 4;
     protected static ?string $navigationLabel = 'Notas';
     protected static ?string $recordTitleAttribute = 'Notas';
 
@@ -46,5 +47,10 @@ class GradeResource extends Resource
             'create' => CreateGrade::route('/create'),
             'edit' => EditGrade::route('/{record}/edit'),
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()->hasRole('teacher') || auth()->user()->hasRole('admin');
     }
 }

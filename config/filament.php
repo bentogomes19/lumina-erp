@@ -117,4 +117,9 @@ return [
 
     'system_route_prefix' => 'filament',
 
+    'panels' => [
+        \App\Providers\Filament\AdminPanelProvider::class,
+        \App\Providers\Filament\StudentPanelProvider::class,
+    ],
+
 ];

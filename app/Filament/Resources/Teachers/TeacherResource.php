@@ -19,8 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class TeacherResource extends Resource
 {
     protected static ?string $model = Teacher::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
+    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-user-group';
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $navigationLabel = 'Professores';
     protected static ?string $recordTitleAttribute = 'Professor';
@@ -58,4 +59,6 @@ class TeacherResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
+
+
 }

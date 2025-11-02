@@ -19,8 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class SubjectResource extends Resource
 {
     protected static ?string $model = Subject::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
+    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-book-open';
+    protected static ?int $navigationSort = 3;
     protected static ?string $navigationLabel = 'Matérias';
     protected static ?string $recordTitleAttribute = 'Disciplinas';
 
@@ -33,7 +34,6 @@ class SubjectResource extends Resource
     {
         return SubjectsTable::configure($table);
     }
-
     public static function getRelations(): array
     {
         return [

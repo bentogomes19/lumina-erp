@@ -35,4 +35,9 @@ class Grade extends Model
     public function teacher() {
         return $this->belongsTo(Teacher::class);
     }
+
+    public function grades()
+    {
+        return $this->hasMany(\App\Models\Grade::class);
+    }
 }

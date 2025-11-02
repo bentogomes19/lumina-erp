@@ -24,4 +24,9 @@ class Enrollment extends Model
     public function class() {
         return $this->belongsTo(SchoolClass::class);
     }
+
+    public function schoolClass()
+    {
+        return $this->belongsTo(\App\Models\SchoolClass::class, 'class_id');
+    }
 }

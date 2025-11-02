@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SchoolClasses\Schemas;
 
+use App\Models\SchoolYear;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -12,24 +13,46 @@ class SchoolClassForm
     {
         return $schema
             ->components([
-                TextInput::make('uuid')
-                    ->label('UUID')
-                    ->required(),
                 TextInput::make('name')
+                    ->label('Nome da Turma')
                     ->required(),
-                TextInput::make('grade')
+
+                Select::make('grade_level_id')
+                    ->label('Série / Etapa')
+                    ->relationship('gradeLevel', 'name')
                     ->required(),
+
+                Select::make('school_year_id')
+                    ->label('Ano Letivo')
+                    ->options(SchoolYear::orderBy('year', 'desc')->pluck('year', 'id'))
+                    ->default(SchoolYear::where('is_active', true)->value('id'))
+                    ->required(),
+
                 Select::make('shift')
-                    ->options(['morning' => 'Morning', 'afternoon' => 'Afternoon', 'evening' => 'Evening'])
-                    ->default('morning')
+                    ->label('Turno')
+                    ->options([
+                        'morning' => 'Manhã',
+                        'afternoon' => 'Tarde',
+                        'evening' => 'Noite',
+                    ])
                     ->required(),
-                TextInput::make('homeroom_teacher_id')
-                    ->numeric(),
+
+                Select::make('homeroom_teacher_id')
+                    ->label('Professor Responsável')
+                    ->relationship('homeroomTeacher', 'name')
+                    ->searchable(),
+
                 TextInput::make('capacity')
+                    ->label('Capacidade Máxima')
                     ->numeric(),
+
                 Select::make('status')
-                    ->options(['open' => 'Open', 'closed' => 'Closed', 'archived' => 'Archived'])
-                    ->default('open')
+                    ->label('Status')
+                    ->options([
+                        'open' => 'Aberta',
+                        'closed' => 'Fechada',
+                        'archived' => 'Arquivada',
+                    ])
                     ->required(),
             ]);
     }

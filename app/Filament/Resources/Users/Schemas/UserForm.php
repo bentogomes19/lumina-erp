@@ -28,12 +28,7 @@ class UserForm
                         ->label('Nome completo')
                         ->placeholder('Ex: MARIA OLIVEIRA')
                         ->prefixIcon('heroicon-o-user')
-                        ->required()
-                        ->extraAttributes(['style' => 'text-transform: uppercase']) // exibe em maiúsculas no input
-                        ->live(onBlur: true) // atualiza quando o usuário sai do campo
-                        ->afterStateUpdated(function ($state, callable $set) {
-                            $set('name', mb_strtoupper($state, 'UTF-8')); // garante salvar em maiúsculas
-                        }),
+                        ->required(),
 
                     TextInput::make('email')
                         ->label('E-mail institucional')

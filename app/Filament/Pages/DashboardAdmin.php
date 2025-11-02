@@ -12,13 +12,13 @@ use Filament\Pages\Page;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class Dashboard extends Page
+class DashboardAdmin extends Page
 {
+    protected static ?string $navigationLabel = 'Painel do Administrador';
+    protected static ?string $title = 'Painel do Administrador';
+    protected static ?string $slug = 'dashboard-admin';
+
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-home';
-    protected static ?string $navigationLabel = 'Dashboard';
-    protected static ?string $title = 'Painel Lumina';
-    protected static ?string $slug = 'dashboard';
-    protected string $view = 'filament.pages.dashboard';
 
 
     protected function getHeaderWidgets(): array
@@ -26,5 +26,10 @@ class Dashboard extends Page
         return [
             DashboardStats::class,
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->hasRole('admin');
     }
 }

@@ -13,18 +13,43 @@ class SchoolClass extends Model
     protected $table = 'classes';
 
     protected $fillable = [
-        'uuid', 'name', 'grade', 'shift', 'homeroom_teacher_id', 'capacity', 'status'
+        'name',
+        'grade_level_id',
+        'school_year_id',
+        'shift',
+        'homeroom_teacher_id',
+        'capacity',
+        'status',
     ];
 
-    public function homeroomTeacher() {
+    public function homeroomTeacher()
+    {
         return $this->belongsTo(Teacher::class, 'homeroom_teacher_id');
     }
 
-    public function students() {
-        return $this->belongsToMany(Student::class, 'enrollments');
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'enrollments', 'class_id', 'student_id');
     }
 
-    public function subjects() {
+    public function subjects()
+    {
         return $this->belongsToMany(Subject::class, 'class_subject_teacher');
     }
+
+    public function schoolYear()
+    {
+        return $this->belongsTo(SchoolYear::class);
+    }
+
+    public function gradeLevel()
+    {
+        return $this->belongsTo(GradeLevel::class);
+    }
+
+    public function teacherAssignments()
+    {
+        return $this->hasMany(TeacherAssignment::class);
+    }
+
 }

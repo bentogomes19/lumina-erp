@@ -2,8 +2,9 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\DashboardAdmin;
 use App\Filament\Resources\Shield\RoleResource;
+use App\Http\Middleware\RedirectUserByRole;
 use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use CraftForge\FilamentLanguageSwitcher\FilamentLanguageSwitcherPlugin;
@@ -29,9 +30,10 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->homeUrl('/admin/dashboard')
-            ->id('admin')
-            ->path('admin')
+            ->homeUrl('/lumina/dashboard-admin')
+            ->id('lumina')
+            ->path('lumina')
+            ->brandName('Portal Lumina')
             ->login()
             ->colors([
                 'primary' => Color::Amber,
@@ -39,7 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
-                Dashboard::class,
+                DashboardAdmin::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
@@ -63,22 +65,6 @@ class AdminPanelProvider extends PanelProvider
                     ['code' => 'en', 'name' => 'English', 'flag' => 'gb'],
                     ['code' => 'pt_BR', 'name' => 'Português', 'flag' => 'br'],
                 ]),
-                FilamentShieldPlugin::make()
-                ->gridColumns([
-                    'default' => 1,
-                    'sm' => 2,
-                    'lg' => 3,
-                ])
-                ->sectionColumnSpan(1)
-                ->checkboxListColumns([
-                    'default' => 1,
-                    'sm' => 2,
-                    'lg' => 4,
-                ])
-                ->resourceCheckboxListColumns([
-                    'default' => 1,
-                    'sm' => 2,
-                ])
             ])
             ->authMiddleware([
                 Authenticate::class,

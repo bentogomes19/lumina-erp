@@ -17,8 +17,9 @@ use Filament\Tables\Table;
 class EnrollmentResource extends Resource
 {
     protected static ?string $model = Enrollment::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
+    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort = 5;
     protected static ?string $navigationLabel = 'Matrículas';
     protected static ?string $recordTitleAttribute = 'Matrículas';
 

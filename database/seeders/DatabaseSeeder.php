@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             StudentSeeder::class,
             EnrollmentSeeder::class,
             GradeSeeder::class,
+            GradeLevelSeeder::class,
         ]);
     }
 }
