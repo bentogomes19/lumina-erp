@@ -164,10 +164,10 @@ class SubjectsTable
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
-                BulkAction::make('vincularEmLote')
-                    ->label('Vincular em lote (turma/professor)')
-                    ->icon('heroicon-o-link')
-                    ->modalHeading('Vincular disciplinas selecionadas')
+                BulkAction::make('ofertarEmTurma')
+                    ->label('Ofertar em turma (sem professor)')
+                    ->icon('heroicon-o-academic-cap')
+                    ->modalHeading('Adicionar disciplinas selecionadas à turma')
                     ->form([
                         FormSelect::make('class_id')
                             ->label('Turma')
@@ -176,27 +176,13 @@ class SubjectsTable
                                     $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
                                 ]))
                             ->searchable()->preload()->required(),
-
-                        FormSelect::make('teacher_id')
-                            ->label('Professor')
-                            ->options(fn () => Teacher::orderBy('name')->pluck('name','id'))
-                            ->searchable()->preload()->required(),
                     ])
                     ->action(function (Collection $records, array $data) {
-                        $created = 0;
-                        foreach ($records as $subject) {
-                            $payload = [
-                                'teacher_id' => (int) $data['teacher_id'],
-                                'class_id'   => (int) $data['class_id'],
-                                'subject_id' => (int) $subject->id,
-                            ];
-                            if (! \App\Models\TeacherAssignment::where($payload)->exists()) {
-                                \App\Models\TeacherAssignment::create($payload);
-                                $created++;
-                            }
-                        }
+                        $class = SchoolClass::findOrFail((int) $data['class_id']);
+                        $ids   = $records->pluck('id')->all(); // subjects selecionadas
+                        $class->subjects()->syncWithoutDetaching($ids); // evita duplicar
                         \Filament\Notifications\Notification::make()
-                            ->title("{$created} vínculo(s) criado(s)")
+                            ->title(count($ids) . ' disciplina(s) adicionada(s) à turma')
                             ->success()
                             ->send();
                     })

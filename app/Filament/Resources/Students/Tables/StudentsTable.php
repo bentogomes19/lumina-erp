@@ -3,25 +3,25 @@
 namespace App\Filament\Resources\Students\Tables;
 
 use App\Enums\StudentStatus;
+use App\Models\User;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreBulkAction;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 
 class StudentsTable
 {
@@ -71,6 +71,62 @@ class StudentsTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('criarUsuario')
+                    ->label('Criar usuário')
+                    ->icon('heroicon-o-user-plus')
+                    ->visible(fn($record) => !$record->user_id)
+                    ->modalHeading(fn($record) => "Criar usuário para {$record->name}")
+                    ->form([
+                        TextInput::make('name')
+                            ->label('Nome')
+                            ->default(fn($record) => $record->name)
+                            ->disabled()
+                            ->dehydrated(false),
+
+                        TextInput::make('email')
+                            ->label('E-mail institucional (opcional)')
+                            ->email()
+                            ->default(fn($record) => $record->email) // vem do aluno
+                            ->nullable()
+                            ->rule(Rule::unique('users', 'email')), // evita 'students.id <> ...'
+
+                        TextInput::make('password')
+                            ->label('Senha')
+                            ->password()
+                            ->required()
+                            ->minLength(8),
+                    ])
+                    ->action(function (\App\Models\Student $record, array $data) {
+                        DB::transaction(function () use ($record, $data) {
+                            $email = filled($data['email']) ? $data['email'] : $record->email;
+
+                            if ($email && User::where('email', $email)->exists()) {
+                                throw ValidationException::withMessages([
+                                    'email' => 'Este e-mail já está em uso por outro usuário.',
+                                ]);
+                            }
+
+                            $user = User::create([
+                                'name'     => $record->name,
+                                'email'    => $email, // usa o do aluno por padrão
+                                'password' => Hash::make($data['password']),
+                                'active'   => true,
+                            ]);
+
+                            $user->syncRoles(['student']);
+                            if ($role = Role::where('name', 'student')->with('permissions')->first()) {
+                                $user->syncPermissions($role->permissions);
+                            }
+
+                            $record->user()->associate($user)->save();
+                        });
+
+                        Notification::make()
+                            ->title('Usuário criado com sucesso')
+                            ->body('O aluno agora tem acesso como “student”.')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

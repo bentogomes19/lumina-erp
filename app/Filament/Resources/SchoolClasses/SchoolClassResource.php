@@ -6,6 +6,7 @@ use App\Filament\Resources\SchoolClasses\Pages\CreateSchoolClass;
 use App\Filament\Resources\SchoolClasses\Pages\EditSchoolClass;
 use App\Filament\Resources\SchoolClasses\Pages\ListSchoolClasses;
 use App\Filament\Resources\SchoolClasses\RelationManagers\StudentsRelationManager;
+use App\Filament\Resources\SchoolClasses\RelationManagers\SubjectsRelationManager;
 use App\Filament\Resources\SchoolClasses\Schemas\SchoolClassForm;
 use App\Filament\Resources\SchoolClasses\Tables\SchoolClassesTable;
 use App\Models\SchoolClass;
@@ -46,6 +47,7 @@ class SchoolClassResource extends Resource
     {
         return [
             StudentsRelationManager::class,
+            SubjectsRelationManager::class,
         ];
     }
 

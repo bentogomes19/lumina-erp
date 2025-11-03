@@ -61,9 +61,14 @@ class SchoolClass extends Model
             ->withTimestamps();
     }
 
-    public function subjects()
+    public function subjectsByAssignments()
     {
-        return $this->belongsToMany(Subject::class, 'class_subject_teacher');
+        return $this->belongsToMany(
+            \App\Models\Subject::class,
+            'teacher_assignments',
+            'class_id',
+            'subject_id'
+        )->withPivot('teacher_id')->withTimestamps();
     }
 
     public function schoolYear()
@@ -88,10 +93,9 @@ class SchoolClass extends Model
             ->withTimestamps();
     }
 
-    public function subjectsByAssignments()
+    public function subjects()
     {
-        return $this->belongsToMany(Subject::class, 'teacher_assignments', 'class_id', 'subject_id')
-            ->withPivot('teacher_id')
+        return $this->belongsToMany(\App\Models\Subject::class, 'class_subjects', 'class_id', 'subject_id')
             ->withTimestamps();
     }
 

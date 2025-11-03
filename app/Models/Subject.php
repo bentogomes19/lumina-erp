@@ -31,12 +31,20 @@ class Subject extends Model
 
     public function teachers()
     {
-        return $this->belongsToMany(Teacher::class, 'class_subject_teacher');
+        // Se quiser manter um many-to-many, aponte para teacher_assignments:
+        return $this->belongsToMany(\App\Models\Teacher::class, 'teacher_assignments', 'subject_id', 'teacher_id')
+            ->withPivot('class_id')
+            ->withTimestamps();
     }
 
-    public function classes()
+    public function classesByAssignments()
     {
-        return $this->belongsToMany(SchoolClass::class, 'class_subject_teacher');
+        return $this->belongsToMany(
+            \App\Models\SchoolClass::class,
+            'teacher_assignments',
+            'subject_id',
+            'class_id'
+        )->withPivot('teacher_id')->withTimestamps();
     }
 
     public function teacherAssignments()
@@ -68,5 +76,11 @@ class Subject extends Model
         $this->attributes['normalized_code'] = $value
             ? preg_replace('/[^A-Z0-9]/', '', strtoupper($value))
             : null;
+    }
+
+    public function classes()
+    {
+        return $this->belongsToMany(\App\Models\SchoolClass::class, 'class_subjects', 'subject_id', 'class_id')
+            ->withTimestamps();
     }
 }
