@@ -18,9 +18,14 @@ class MySubjects extends Page
 
     public function getSubjects()
     {
-        return Student::where('user_id', auth()->id())
-            ->first()
-            ->class
-            ->subjects;
+        $student = Student::where('user_id', auth()->id())->first();
+        if (! $student) return collect();
+
+        $currentClass = $student->classes()
+            ->whereHas('schoolYear', fn($q) => $q->where('is_active', true))
+            ->with('subjects')
+            ->first();
+
+        return $currentClass?->subjects ?? collect();
     }
 }

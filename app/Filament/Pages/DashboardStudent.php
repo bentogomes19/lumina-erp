@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\StudentProfileWidget;
+use App\Filament\Widgets\UpcomingAssessments;
 use Filament\Pages\Page;
 
 class DashboardStudent extends Page
@@ -21,6 +22,7 @@ class DashboardStudent extends Page
     {
         return [
             StudentProfileWidget::class,
+            UpcomingAssessments::class,
         ];
     }
 

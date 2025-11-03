@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             TeacherSeeder::class,
             GradeSeeder::class,
             StudentSeeder::class,
+            AttendanceQuickSeeder::class,
         ]);
     }
 }
