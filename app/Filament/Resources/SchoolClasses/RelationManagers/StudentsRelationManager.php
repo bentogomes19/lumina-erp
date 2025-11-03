@@ -29,31 +29,6 @@ class StudentsRelationManager extends RelationManager
             ])
 
             ->headerActions([
-                AttachAction::make()
-                    ->label('Matricular aluno')
-                    ->preloadRecordSelect()
-                    ->recordSelectSearchColumns(['registration_number','name','cpf','email'])
-                    // Se quiser limitar a busca, use ->recordSelectOptionsQuery(fn ($q) => $q->where(...))
-                    ->form([
-                        DatePicker::make('enrollment_date')
-                            ->label('Data de matrícula')
-                            ->default(today())
-                            ->required(),
-                        TextInput::make('roll_number')
-                            ->label('Nº chamada')
-                            ->numeric()
-                            ->minValue(1),
-                        Select::make('status')
-                            ->label('Status')
-                            ->options([
-                                'Ativa'     => 'Ativa',
-                                'Suspensa'  => 'Suspensa',
-                                'Cancelada' => 'Cancelada',
-                                'Completa'  => 'Completa',
-                            ])
-                            ->default('Ativa')
-                            ->required(),
-                    ]),
             ])
 
             ->recordActions([

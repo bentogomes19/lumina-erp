@@ -57,9 +57,23 @@ class TeacherForm
                     ->columnSpan(6),
 
                 Section::make('Vínculo e Carga')->schema([
-                    DatePicker::make('hire_date')->label('Data de Contratação')->native(false),
-                    DatePicker::make('admission_date')->label('Admissão')->native(false),
-                    DatePicker::make('termination_date')->label('Desligamento')->native(false),
+                    DatePicker::make('hire_date')
+                        ->label('Data de Contratação')
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
+                        ->format('Y-m-d'),
+
+                    DatePicker::make('admission_date')
+                        ->label('Admissão')
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
+                        ->format('Y-m-d'),
+
+                    DatePicker::make('termination_date')
+                        ->label('Desligamento')
+                        ->native(false)
+                        ->displayFormat('d/m/Y')
+                        ->format('Y-m-d'),
                     Select::make('regime')
                         ->label('Regime')
                         ->options(TeacherRegime::options())

@@ -126,6 +126,7 @@ class TeachersTable
                 Action::make('vincular')
                     ->label('Vincular a turma/discip.')
                     ->icon('heroicon-o-link')
+                    ->visible(fn($record) => !$record->user_id)
                     ->modalHeading(fn($record) => "Vincular {$record->name}")
                     ->form([
                         Select::make('class_id')
