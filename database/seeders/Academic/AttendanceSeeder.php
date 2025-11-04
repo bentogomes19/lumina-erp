@@ -1,12 +1,12 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Seeders\Academic;
 
 use App\Models\Attendance;
 use App\Models\Student;
 use Illuminate\Database\Seeder;
 
-class AttendanceQuickSeeder extends Seeder
+class AttendanceSeeder extends Seeder
 {
     public function run(): void
     {

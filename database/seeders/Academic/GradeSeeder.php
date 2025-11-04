@@ -1,13 +1,12 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Seeders\Academic;
 
 use App\Enums\AssessmentType;
 use App\Enums\Term;
 use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\Subject;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class GradeSeeder extends Seeder

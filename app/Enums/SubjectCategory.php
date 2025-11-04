@@ -9,6 +9,8 @@ enum SubjectCategory: string
     case CIENCIAS_NATUREZA = 'ciencias_da_natureza';
     case CIENCIAS_HUMANAS = 'ciencias_humanas';
 
+    case CIENCIAS_EXATAS = 'ciencias_exatas';
+
     public function label(): string
     {
         return match ($this) {
@@ -16,6 +18,7 @@ enum SubjectCategory: string
             self::MATEMATICA => 'Matemática',
             self::CIENCIAS_NATUREZA => 'Ciências da Natureza',
             self::CIENCIAS_HUMANAS => 'Ciências Humanas',
+            self::CIENCIAS_EXATAS => 'Ciencias Exatas',
         };
     }
 

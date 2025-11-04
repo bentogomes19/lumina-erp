@@ -53,3 +53,18 @@ php artisan key:generate
 php artisan migrate --seed
 ```
 
+<div style="
+    border: 1px solid #d39aadff;
+    background-color: rgba(175, 9, 180, 1);
+    padding: 10px 20px;
+    text-align: center;
+    font-weight: bold;
+    color: white;
+">
+    📕 Documentação Oficial
+</div>
+
+---
+
+[📕 Documentação Oficial - Clique Aqui](./docs/index.md)
+
