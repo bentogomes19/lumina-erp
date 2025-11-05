@@ -19,7 +19,10 @@ class SchoolClassSeeder extends Seeder
 {
     public function run(): void
     {
-        $year = SchoolYear::first();          // ajusta conforme sua tabela
+        // Pega o ano letivo ativo
+        $year = SchoolYear::where('is_active', true)->first()
+            ?? SchoolYear::orderByDesc('year')->first(); // fallback
+
         $gradeLevels = GradeLevel::all();
         $teachers = Teacher::all();
 

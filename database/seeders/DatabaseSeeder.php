@@ -29,7 +29,6 @@ class DatabaseSeeder extends Seeder
         // Dados de referência Fixo
         $this->call([
             GradeLevelSeeder::class,
-            RolesPermissionsSeeder::class,
             SubjectSeeder::class,
             SchoolYearSeeder::class,
             RolesPermissionsSeeder::class,
@@ -48,7 +47,6 @@ class DatabaseSeeder extends Seeder
             EnrollmentSeeder::class,
             AttendanceSeeder::class,
             GradeSeeder::class,
-            AttendanceSeeder::class,
         ]);
     }
 }

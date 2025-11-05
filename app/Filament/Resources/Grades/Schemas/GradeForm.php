@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Grades\Schemas;
 use App\Enums\AssessmentType;
 use App\Enums\Term;
 use App\Models\Enrollment;
+use App\Models\Grade;
+use App\Models\SchoolClass;
 use App\Models\Subject;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -18,63 +20,147 @@ class GradeForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $user    = auth()->user();
+        $teacher = $user?->teacher;
+
         return $schema
             ->components([
                 Section::make('Contexto')->schema([
+                    // ------------- TURMA -------------
                     Select::make('class_id')
                         ->label('Turma')
-                        ->relationship('schoolClass', 'name') // exige schoolClass() no model
-                        ->searchable()->preload()->required()->live(),
+                        ->options(function () use ($teacher) {
+                            // Se for professor → só turmas dele
+                            if ($teacher) {
+                                return $teacher->classes()
+                                    ->orderBy('classes.name')
+                                    ->pluck('classes.name', 'classes.id');
+                            }
 
+                            // Admin / outros → todas as turmas
+                            return SchoolClass::query()
+                                ->orderBy('name')
+                                ->pluck('name', 'id');
+                        })
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->live(),
+
+                    // ------------- DISCIPLINA -------------
                     Select::make('subject_id')
                         ->label('Disciplina')
-                        ->options(function ($get) {
+                        ->options(function (callable $get) use ($teacher) {
                             $classId = $get('class_id');
-                            if (!$classId) return [];
-                            // puxe das disciplinas da turma (por grade_level_subject ou class_subject_teacher)
+                            if (! $classId) {
+                                return [];
+                            }
+
+                            // Professor: apenas disciplinas QUE ELE ministra na turma
+                            if ($teacher) {
+                                return $teacher->teacherAssignments()
+                                    ->where('class_id', $classId)
+                                    ->join('subjects', 'subjects.id', '=', 'teacher_assignments.subject_id')
+                                    ->orderBy('subjects.name')
+                                    ->pluck('subjects.name', 'subjects.id');
+                            }
+
+                            // Admin: qualquer disciplina vinculada à turma via teacher_assignments
                             return Subject::query()
                                 ->whereIn('id', function ($q) use ($classId) {
-                                    $q->select('subject_id')->from('class_subject_teacher')->where('class_id', $classId);
+                                    $q->select('subject_id')
+                                        ->from('teacher_assignments')
+                                        ->where('class_id', $classId);
                                 })
-                                ->orderBy('name')->pluck('name', 'id');
+                                ->orderBy('name')
+                                ->pluck('name', 'id');
                         })
-                        ->searchable()->preload()->required()->live(),
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->live(),
 
+                    // ------------- ALUNO (MATRÍCULA) -------------
                     Select::make('enrollment_id')
                         ->label('Aluno (Matrícula)')
-                        ->options(function ($get) {
+                        ->options(function (callable $get) {
                             $classId = $get('class_id');
-                            if (!$classId) return [];
+                            if (! $classId) {
+                                return [];
+                            }
+
                             return Enrollment::with('student')
                                 ->where('class_id', $classId)
                                 ->get()
-                                ->mapWithKeys(fn($e) => [$e->id => "{$e->student?->name}"]);
+                                ->mapWithKeys(fn ($e) => [
+                                    $e->id => $e->student?->name,
+                                ]);
                         })
-                        ->searchable()->preload()->required(),
+                        ->searchable()
+                        ->preload()
+                        ->required(),
                 ])->columns(3),
 
                 Section::make('Avaliação')->schema([
-                    Select::make('term')->label('Período/Bimestre')
-                        ->options(Term::options())->required()->rule(new EnumRule(Term::class)),
+                    Select::make('term')
+                        ->label('Período/Bimestre')
+                        ->options(Term::options())
+                        ->required()
+                        ->rule(new EnumRule(Term::class)),
 
-                    Select::make('assessment_type')->label('Tipo')
-                        ->options(AssessmentType::options())->required()->rule(new EnumRule(AssessmentType::class)),
+                    Select::make('assessment_type')
+                        ->label('Tipo')
+                        ->options(AssessmentType::options())
+                        ->required()
+                        ->rule(new EnumRule(AssessmentType::class)),
 
-                    TextInput::make('sequence')->label('Seq.')->numeric()->minValue(1)->default(1)->required(),
+                    TextInput::make('sequence')
+                        ->label('Seq.')
+                        ->numeric()
+                        ->minValue(1)
+                        ->default(1)
+                        ->required(),
 
-                    DatePicker::make('date_recorded')->label('Data')->default(now()),
+                    DatePicker::make('date_recorded')
+                        ->label('Data')
+                        ->default(now()),
                 ])->columns(4),
 
                 Section::make('Pontuação')->schema([
-                    TextInput::make('score')->label('Nota')->numeric()->minValue(0)->required(),
-                    TextInput::make('max_score')->label('Máx.')->numeric()->minValue(1)->default(10)->required(),
-                    TextInput::make('weight')->label('Peso')->numeric()->minValue(0.1)->default(1)->required(),
-                    TextInput::make('percent')->label('% (auto)')->disabled()->dehydrated(false)
-                        ->formatStateUsing(fn($record) => $record?->percent),
+                    TextInput::make('score')
+                        ->label('Nota')
+                        ->numeric()
+                        ->minValue(0)
+                        ->required(),
+
+                    TextInput::make('max_score')
+                        ->label('Máx.')
+                        ->numeric()
+                        ->minValue(1)
+                        ->default(10)
+                        ->required(),
+
+                    TextInput::make('weight')
+                        ->label('Peso')
+                        ->numeric()
+                        ->minValue(0.1)
+                        ->default(1)
+                        ->required(),
+
+                    TextInput::make('percent')
+                        ->label('% (auto)')
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->formatStateUsing(function ($state, ?Grade $record) {
+                            // Usa o accessor $grade->percent, se existir
+                            return $record?->percent;
+                        }),
                 ])->columns(4),
 
                 Section::make('Observações')->schema([
-                    Textarea::make('comment')->rows(3)->columnSpanFull(),
+                    Textarea::make('comment')
+                        ->rows(3)
+                        ->columnSpanFull(),
                 ]),
             ]);
     }
