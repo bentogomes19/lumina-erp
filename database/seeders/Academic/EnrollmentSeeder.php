@@ -4,8 +4,12 @@ namespace Database\Seeders\Academic;
 
 use App\Models\Enrollment;
 use App\Models\SchoolClass;
+use App\Models\SchoolYear;
 use App\Models\Student;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class EnrollmentSeeder extends Seeder
 {
@@ -14,30 +18,31 @@ class EnrollmentSeeder extends Seeder
      */
     public function run(): void
     {
-        $classes  = SchoolClass::all();
-        $students = Student::all();        // Professor
-        $teacher = User::firstOrCreate(
-            ['email' => 'professor@lumina.com'],
-            [
-                'uuid' => (string) Str::uuid(),
-                'name' => 'Professor Exemplo',
-                'password' => Hash::make('123456'),
-                'active' => true,
-            ]
-        );
-        $teacher->syncRoles('teacher');
+        $activeYear = SchoolYear::where('is_active', true)->first();
+        $classes = SchoolClass::query()
+            ->when($activeYear, fn ($q) => $q->where('school_year_id', $activeYear->id))
+            ->get();
+        $students = Student::all();
 
+        if ($classes->isEmpty() || $students->isEmpty()) {
+            $this->command?->warn('EnrollmentSeeder: faltam turmas ou alunos, seeder pulado.');
+            return;
+        }
 
         foreach ($students as $student) {
             $class = $classes->random();
 
-            Enrollment::create([
-                'student_id'      => $student->id,
-                'class_id'        => $class->id,
-                'enrollment_date' => now()->subDays(rand(10, 90)),
-                'roll_number'     => rand(1, 40),
-                'status'          => 'Ativa',
-            ]);
+            Enrollment::firstOrCreate(
+                [
+                    'student_id' => $student->id,
+                    'class_id'   => $class->id,
+                ],
+                [
+                    'enrollment_date' => now()->subDays(rand(10, 90)),
+                    'roll_number'     => rand(1, 40),
+                    'status'          => 'Ativa',
+                ]
+            );
         }
     }
 }

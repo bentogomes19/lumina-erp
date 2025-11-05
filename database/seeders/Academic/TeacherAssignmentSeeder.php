@@ -20,12 +20,12 @@ class TeacherAssignmentSeeder extends Seeder
         $subjects = Subject::all();
 
         if ($teachers->isEmpty() || $classes->isEmpty() || $subjects->isEmpty()) {
-            $this->command->warn('TeacherAssignmentSeeder: faltam teachers, classes ou subjects. Pulei o seeder.');
+            $this->command?->warn('TeacherAssignmentSeeder: faltam teachers, classes ou subjects. Pulei o seeder.');
             return;
         }
 
         foreach ($classes as $class) {
-            // escolhe de 3 a 5 disciplinas para a turma (ajusta se quiser)
+            // escolhe de 3 a 5 disciplinas aleatórias para a turma
             $classSubjects = $subjects->random(
                 min($subjects->count(), random_int(3, 5))
             );
@@ -33,11 +33,15 @@ class TeacherAssignmentSeeder extends Seeder
             foreach ($classSubjects as $subject) {
                 $teacher = $teachers->random();
 
+                // 1) cria (ou mantém) o vínculo professor+turma+disciplina
                 TeacherAssignment::firstOrCreate([
                     'teacher_id' => $teacher->id,
                     'class_id'   => $class->id,
                     'subject_id' => $subject->id,
                 ]);
+
+                // 2) garante o vínculo turma+disciplina na pivot class_subjects
+                $class->subjects()->syncWithoutDetaching([$subject->id]);
             }
         }
     }

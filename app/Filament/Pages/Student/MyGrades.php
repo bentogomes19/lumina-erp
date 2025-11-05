@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Student;
 
+use App\Filament\Widgets\StudentGradesWidget;
 use App\Models\Grade;
 use Filament\Pages\Page;
 
@@ -13,11 +14,13 @@ class MyGrades extends Page
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()->hasRole('student');
+        return auth()->check() && auth()->user()->hasRole('student');
     }
 
-    public function getGrades()
+    protected function getHeaderWidgets(): array
     {
-        return Grade::where('student_id', auth()->user()->student->id)->get();
+        return [
+            StudentGradesWidget::class, // 👈 aqui entra o widget de notas
+        ];
     }
 }

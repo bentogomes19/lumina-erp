@@ -29,6 +29,16 @@ class Subject extends Model
             ->withTimestamps();
     }
 
+    public function schoolClasses()
+    {
+        return $this->belongsToMany(
+            SchoolClass::class,
+            'class_subjects',  // mesma pivot usada em SchoolClass::subjects()
+            'subject_id',      // FK de Subject na pivot
+            'class_id',        // FK de SchoolClass na pivot
+        )->withTimestamps();
+    }
+
     public function teachers()
     {
         // Se quiser manter um many-to-many, aponte para teacher_assignments:

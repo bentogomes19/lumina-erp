@@ -16,6 +16,7 @@ class SchoolClass extends Model
     protected $table = 'classes';
 
     protected $fillable = [
+        'uuid',
         'code',
         'name',
         'grade_level_id',

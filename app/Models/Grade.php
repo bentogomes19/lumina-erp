@@ -25,16 +25,7 @@ class Grade extends Model
         'locked_at' => 'datetime',
     ];
 
-    public function enrollment()
-    {
-        return $this->belongsTo(Enrollment::class);
-    }
-
-    public function student()
-    {
-        return $this->belongsTo(Student::class);
-    }
-
+    // Relações principais
     public function schoolClass()
     {
         return $this->belongsTo(SchoolClass::class, 'class_id');
@@ -45,9 +36,14 @@ class Grade extends Model
         return $this->belongsTo(Subject::class);
     }
 
-    public function teacher()
+    public function enrollment()
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->belongsTo(Enrollment::class);
+    }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
     }
 
     public function recoveryOf()
@@ -55,13 +51,36 @@ class Grade extends Model
         return $this->belongsTo(Grade::class, 'recovery_of_id');
     }
 
-    // helpers
-    public function getPercentAttribute(): ?float {
-        if (!$this->max_score || $this->max_score == 0) return null;
+    // Accessor para percent
+    public function getPercentAttribute(): ?float
+    {
+        if (! $this->max_score || $this->max_score == 0) {
+            return null;
+        }
+
         return round(($this->score / $this->max_score) * 100, 2);
     }
 
-    public function scopeOfTeacher($q, int $teacherId){
-        return $q->where('teacher_id',$teacherId);
+    protected static function booted()
+    {
+        static::creating(function (Grade $grade) {
+            if ($grade->enrollment_id && ! $grade->student_id) {
+                $enrollment = Enrollment::find($grade->enrollment_id);
+
+                if ($enrollment) {
+                    $grade->student_id = $enrollment->student_id;
+                }
+            }
+        });
+
+        static::updating(function (Grade $grade) {
+            if ($grade->enrollment_id && ! $grade->student_id) {
+                $enrollment = Enrollment::find($grade->enrollment_id);
+
+                if ($enrollment) {
+                    $grade->student_id = $enrollment->student_id;
+                }
+            }
+        });
     }
 }
