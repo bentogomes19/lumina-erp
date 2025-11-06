@@ -36,10 +36,27 @@ class MyClassesTable extends BaseWidget
                     ->orderBy('name')
             )
             ->columns([
-                TextColumn::make('name')->label('Turma')->searchable()->sortable(),
-                TextColumn::make('schoolYear.year')->label('Ano letivo')->sortable(),
-                TextColumn::make('students_count')->label('Alunos')->numeric()->alignRight(),
-                TextColumn::make('subjects_count')->label('Disciplinas')->numeric()->alignRight(),
+                TextColumn::make('name')
+                    ->label('Turma')
+                    ->searchable()
+                    ->sortable()
+                    ->extraAttributes([
+                        'class' => 'text-primary-600 font-medium cursor-pointer',
+                    ]),
+
+                TextColumn::make('schoolYear.year')
+                    ->label('Ano letivo')
+                    ->sortable(),
+
+                TextColumn::make('students_count')
+                    ->label('Alunos')
+                    ->numeric()
+                    ->alignRight(),
+
+                TextColumn::make('subjects_count')
+                    ->label('Disciplinas')
+                    ->numeric()
+                    ->alignRight(),
             ])
             ->paginated([5, 10, 25])
             ->defaultPaginationPageOption(5);

@@ -7,8 +7,10 @@ use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\Subject;
 use Filament\Actions\BulkAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -99,16 +101,31 @@ class TeacherAttendanceWidget extends TableWidget
                 Filter::make('date')
                     ->label('Data da aula')
                     ->form([
-                        \Filament\Forms\Components\DatePicker::make('value')
+                        DatePicker::make('value')
                             ->label('Data')
                             ->default(now())
                             ->required(),
                     ])
                     ->default([
                         'value' => now()->toDateString(),
-                    ]),
-            ])
+                    ])
+                    // 💡 Mostra o chip "Data: 27/10/2025" nos filtros ativos
+                    ->indicateUsing(function (array $data): ?string {
+                        if (empty($data['value'])) {
+                            return null;
+                        }
 
+                        $date = Carbon::parse($data['value'])->format('d/m/Y');
+
+                        return "Data: {$date}";
+                    })
+                    // opcional: mantém a query como está, só usa o filtro como "contexto"
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query;
+                    }),
+            ])
+            ->filtersLayout(FiltersLayout::AboveContent)
+            ->filtersFormColumns(3)
             ->columns([
                 TextColumn::make('id')
                     ->label('#')
@@ -121,83 +138,40 @@ class TeacherAttendanceWidget extends TableWidget
                     ->label('Aluno')
                     ->searchable(),
 
-                // PRESENÇAS acumuladas (turma + disciplina opcional)
                 TextColumn::make('attendance_present_count')
                     ->label('Presenças')
                     ->alignCenter()
-                    ->formatStateUsing(function ($state, Student $record) {
-                        $ctx = $this->resolveContext(false); // não exige data pra contagem
-                        if (! $ctx) {
-                            return 0;
-                        }
-
-                        $query = Attendance::where('student_id', $record->id)
-                            ->where('class_id', $ctx['class_id'])
-                            ->where('status', 'present');
-
-                        if ($ctx['subject_id'] !== null) {
-                            $query->where('subject_id', $ctx['subject_id']);
-                        } else {
-                            $query->whereNull('subject_id');
-                        }
-
-                        $count = $query->count();
-
-                        return $count ?: 0;
+                    ->state(function (Student $record) {
+                        return Attendance::where('student_id', $record->id)
+                            ->where('class_id', $record->enrollment_class_id)
+                            ->where('status', 'present') // ajuste se usar enum/const
+                            ->count();
                     }),
 
-                // FALTAS acumuladas
                 TextColumn::make('attendance_absent_count')
                     ->label('Faltas')
                     ->alignCenter()
-                    ->formatStateUsing(function ($state, Student $record) {
-                        $ctx = $this->resolveContext(false);
-                        if (! $ctx) {
-                            return 0;
-                        }
-
-                        $query = Attendance::where('student_id', $record->id)
-                            ->where('class_id', $ctx['class_id'])
-                            ->where('status', 'absent');
-
-                        if ($ctx['subject_id'] !== null) {
-                            $query->where('subject_id', $ctx['subject_id']);
-                        } else {
-                            $query->whereNull('subject_id');
-                        }
-
-                        $count = $query->count();
-
-                        return $count ?: 0;
+                    ->state(function (Student $record) {
+                        return Attendance::where('student_id', $record->id)
+                            ->where('class_id', $record->enrollment_class_id)
+                            ->where('status', 'absent')
+                            ->count();
                     }),
 
-                // FREQUÊNCIA %
                 TextColumn::make('attendance_frequency')
                     ->label('Freq.')
                     ->alignCenter()
-                    ->formatStateUsing(function ($state, Student $record) {
-                        $ctx = $this->resolveContext(false);
-                        if (! $ctx) {
-                            return '0%';
-                        }
+                    ->state(function (Student $record) {
+                        $base = Attendance::where('student_id', $record->id)
+                            ->where('class_id', $record->enrollment_class_id);
 
-                        $baseQuery = Attendance::where('student_id', $record->id)
-                            ->where('class_id', $ctx['class_id']);
-
-                        if ($ctx['subject_id'] !== null) {
-                            $baseQuery->where('subject_id', $ctx['subject_id']);
-                        } else {
-                            $baseQuery->whereNull('subject_id');
-                        }
-
-                        $total = (clone $baseQuery)->count();
+                        $total = (clone $base)->count();
 
                         if ($total === 0) {
                             return '0%';
                         }
 
-                        // presença + atraso contam como comparecimento
-                        $present = (clone $baseQuery)
+                        $present = (clone $base)
                             ->whereIn('status', ['present', 'late'])
                             ->count();
 
@@ -214,6 +188,7 @@ class TeacherAttendanceWidget extends TableWidget
 
                         return $num < 70 ? 'danger' : null;
                     }),
+
             ])
 
             ->actions([])

@@ -78,12 +78,6 @@ class User extends Authenticatable
             }
         });
 
-        static::saving(function ($user) {
-            if ($user->name) {
-                $user->name = mb_strtoupper($user->name, 'UTF-8');
-            }
-        });
-
         // 🔥 Após criar ou atualizar um usuário
         static::saved(function ($user) {
             $roleName = $user->roles()->pluck('name')->first();
