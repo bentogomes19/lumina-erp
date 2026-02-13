@@ -38,20 +38,42 @@ DB_PASSWORD=dev
 ```
 #### Rode o container
 ```bash
-docker compose build --no-cache
-docker compose up -d --build
+make build
+make up
+# ou: docker compose build --no-cache && docker compose up -d --build
 ```
 
-#### Entre na container
+#### Entre no container e instale
 ```bash
-docker exec -it lumina-app zsh
-```
-**dentro dele, rode:**
-```bash
+make shell
+# dentro do container:
 composer install
 php artisan key:generate
 php artisan migrate --seed
 ```
+Ou em uma linha: `make install` e depois `make seed`.
+
+#### Comandos úteis (Makefile)
+| Comando   | Descrição                    |
+|-----------|------------------------------|
+| `make up` | Sobe os containers           |
+| `make down` | Para os containers         |
+| `make shell` | Entra no container (zsh)  |
+| `make migrate` | Roda migrations          |
+| `make seed` | Migrations + seeders       |
+| `make test` | PHPUnit                    |
+| `make lint` | Laravel Pint (checagem)    |
+
+---
+
+## Infraestrutura e DevOps
+
+- **Docker**: `Dockerfile` (PHP 8.2-FPM, Composer, Node 18), `compose.yaml` (app, nginx, MySQL 8) com healthcheck no banco e variáveis via `.env`.
+- **.dockerignore**: reduz tamanho do contexto de build e acelera o build.
+- **CI (GitHub Actions)**: em cada push/PR em `main` e `develop` roda **Laravel Pint**, **PHPUnit** (com MySQL em serviço) e **build da imagem Docker** (`.github/workflows/ci.yaml`).
+- **Makefile**: atalhos para build, up, down, shell, migrate, seed, test e lint.
+
+Para adicionar workers de fila no futuro, use o perfil `workers` no `compose.yaml` (serviço `queue` comentado).
 
 <div style="
     border: 1px solid #d39aadff;

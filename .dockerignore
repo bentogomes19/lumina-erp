@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE e editor
+.idea
+.vscode
+.fleet
+.nova
+.zed
+*.swp
+*.swo
+
+# Dependências (instaladas no container)
+/vendor
+/node_modules
+
+# Build e cache
+/public/build
+/public/hot
+.phpunit.cache
+.phpunit.result.cache
+.phpactor.json
+
+# Ambiente e secrets
+.env
+.env.*
+!.env.example
+
+# Documentação e dev (opcional: remova se quiser no image)
+/docs
+*.md
+!README.md
+
+# Testes e cobertura
+/coverage
+.phpunit.cache
+
+# Outros
+.DS_Store
+Thumbs.db
+Homestead.json
+Homestead.yaml
+auth.json
+*.log
