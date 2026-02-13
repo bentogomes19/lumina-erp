@@ -32,11 +32,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 # Criar usuário dev
 RUN useradd -ms /bin/zsh dev
 
-# Ajustar WORKDIR
-WORKDIR /var/www
-
-# Garantir que /var/www pertence ao dev (MUITO IMPORTANTE)
-RUN chown -R dev:dev /var/www
+# Criar pasta do projeto e ajustar WORKDIR
+RUN mkdir -p /dev/lumina-erp && chown -R dev:dev /dev/lumina-erp
+WORKDIR /dev/lumina-erp
 
 # Mudar para usuário dev
 USER dev

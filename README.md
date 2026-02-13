@@ -68,7 +68,7 @@ Ou em uma linha: `make install` e depois `make seed`.
 
 ## Infraestrutura e DevOps
 
-- **Docker**: `Dockerfile` (PHP 8.2-FPM, Composer, Node 18), `compose.yaml` (app, nginx, MySQL 8) com healthcheck no banco e variáveis via `.env`.
+- **Docker**: `Dockerfile` (PHP 8.2-FPM, Composer, Node 18), `compose.yaml` (app, nginx, MySQL 8) com healthcheck no banco e variáveis via `.env`. Dentro do container o projeto fica em **`/dev/lumina-erp`**.
 - **.dockerignore**: reduz tamanho do contexto de build e acelera o build.
 - **CI (GitHub Actions)**: em cada push/PR em `main` e `develop` roda **Laravel Pint**, **PHPUnit** (com MySQL em serviço) e **build da imagem Docker** (`.github/workflows/ci.yaml`).
 - **Makefile**: atalhos para build, up, down, shell, migrate, seed, test e lint.

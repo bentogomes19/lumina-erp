@@ -7,7 +7,7 @@ O Portal do Aluno foi completamente reformulado para oferecer uma experiência m
 ## ✨ Funcionalidades Implementadas
 
 ### 1. 📊 Dashboard do Aluno Aprimorado
-**Localização:** `/var/www/app/Filament/Pages/DashboardStudent.php`
+**Localização:** `/dev/lumina-erp/app/Filament/Pages/DashboardStudent.php`
 
 - **Portal unificado** com visão geral do desempenho acadêmico
 - **Widgets informativos** mostrando:
@@ -21,7 +21,7 @@ O Portal do Aluno foi completamente reformulado para oferecer uma experiência m
 ---
 
 ### 2. 📈 Visualizar Notas Melhorada
-**Localização:** `/var/www/app/Filament/Pages/Student/MyGrades.php`
+**Localização:** `/dev/lumina-erp/app/Filament/Pages/Student/MyGrades.php`
 
 **Recursos:**
 - ✅ **Estatísticas de desempenho** (média geral, maior nota, aproveitamento)
@@ -41,7 +41,7 @@ O Portal do Aluno foi completamente reformulado para oferecer uma experiência m
 ---
 
 ### 3. 📅 Ver Frequência Aprimorada
-**Localização:** `/var/www/app/Filament/Pages/Student/StudentAttendance.php`
+**Localização:** `/dev/lumina-erp/app/Filament/Pages/Student/StudentAttendance.php`
 
 **Recursos:**
 - ✅ **Painel de estatísticas** com cards informativos:
@@ -65,7 +65,7 @@ O Portal do Aluno foi completamente reformulado para oferecer uma experiência m
 ---
 
 ### 4. 📥 Baixar Boletim (PDF)
-**Localização:** `/var/www/resources/views/pdf/report-card.blade.php`
+**Localização:** `/dev/lumina-erp/resources/views/pdf/report-card.blade.php`
 
 **Recursos:**
 - ✅ **Geração de PDF profissional** com:
@@ -88,7 +88,7 @@ O Portal do Aluno foi completamente reformulado para oferecer uma experiência m
 ---
 
 ### 5. 📆 Ver Calendário Acadêmico
-**Localização:** `/var/www/app/Filament/Pages/Student/AcademicCalendar.php`
+**Localização:** `/dev/lumina-erp/app/Filament/Pages/Student/AcademicCalendar.php`
 
 **Recursos:**
 - ✅ **Informações do Ano Letivo** atual:
@@ -109,7 +109,7 @@ O Portal do Aluno foi completamente reformulado para oferecer uma experiência m
 ---
 
 ### 6. 📚 Minhas Disciplinas
-**Localização:** `/var/www/app/Filament/Pages/Student/MySubjects.php`
+**Localização:** `/dev/lumina-erp/app/Filament/Pages/Student/MySubjects.php`
 
 **Recursos:**
 - ✅ **Grid de disciplinas** com design card
@@ -127,7 +127,7 @@ O Portal do Aluno foi completamente reformulado para oferecer uma experiência m
 ## 🎨 Widgets Criados
 
 ### StudentGradesStatsWidget
-**Localização:** `/var/www/app/Filament/Widgets/StudentGradesStatsWidget.php`
+**Localização:** `/dev/lumina-erp/app/Filament/Widgets/StudentGradesStatsWidget.php`
 
 Exibe estatísticas resumidas das notas:
 - Média Geral com gráfico de tendência
@@ -136,7 +136,7 @@ Exibe estatísticas resumidas das notas:
 - Taxa de Aproveitamento (%)
 
 ### StudentAttendanceStatsWidget
-**Localização:** `/var/www/app/Filament/Widgets/StudentAttendanceStatsWidget.php`
+**Localização:** `/dev/lumina-erp/app/Filament/Widgets/StudentAttendanceStatsWidget.php`
 
 Exibe estatísticas de frequência:
 - Taxa de Presença (%) com gráfico semanal
@@ -212,24 +212,24 @@ Todas as páginas implementam:
 ## 📝 Arquivos Criados/Modificados
 
 ### Páginas Criadas
-- `/var/www/app/Filament/Pages/Student/AcademicCalendar.php`
+- `/dev/lumina-erp/app/Filament/Pages/Student/AcademicCalendar.php`
 
 ### Páginas Modificadas
-- `/var/www/app/Filament/Pages/Student/MyGrades.php`
-- `/var/www/app/Filament/Pages/Student/StudentAttendance.php`
-- `/var/www/app/Filament/Pages/Student/MySubjects.php`
-- `/var/www/app/Filament/Pages/DashboardStudent.php`
+- `/dev/lumina-erp/app/Filament/Pages/Student/MyGrades.php`
+- `/dev/lumina-erp/app/Filament/Pages/Student/StudentAttendance.php`
+- `/dev/lumina-erp/app/Filament/Pages/Student/MySubjects.php`
+- `/dev/lumina-erp/app/Filament/Pages/DashboardStudent.php`
 
 ### Widgets Criados
-- `/var/www/app/Filament/Widgets/StudentGradesStatsWidget.php`
-- `/var/www/app/Filament/Widgets/StudentAttendanceStatsWidget.php`
+- `/dev/lumina-erp/app/Filament/Widgets/StudentGradesStatsWidget.php`
+- `/dev/lumina-erp/app/Filament/Widgets/StudentAttendanceStatsWidget.php`
 
 ### Views Criadas
-- `/var/www/resources/views/filament/pages/student/my-grades.blade.php`
-- `/var/www/resources/views/filament/pages/student/student-attendance.blade.php`
-- `/var/www/resources/views/filament/pages/student/academic-calendar.blade.php`
-- `/var/www/resources/views/filament/pages/student/my-subjects.blade.php`
-- `/var/www/resources/views/pdf/report-card.blade.php`
+- `/dev/lumina-erp/resources/views/filament/pages/student/my-grades.blade.php`
+- `/dev/lumina-erp/resources/views/filament/pages/student/student-attendance.blade.php`
+- `/dev/lumina-erp/resources/views/filament/pages/student/academic-calendar.blade.php`
+- `/dev/lumina-erp/resources/views/filament/pages/student/my-subjects.blade.php`
+- `/dev/lumina-erp/resources/views/pdf/report-card.blade.php`
 
 ---
 

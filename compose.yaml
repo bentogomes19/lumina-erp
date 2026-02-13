@@ -4,9 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: lumina-app
-    working_dir: /var/www
+    working_dir: /dev/lumina-erp
     volumes:
-      - .:/var/www
+      - .:/dev/lumina-erp
     env_file:
       - .env
     depends_on:
@@ -22,7 +22,7 @@ services:
     ports:
       - "${APP_PORT:-8000}:80"
     volumes:
-      - .:/var/www:ro
+      - .:/dev/lumina-erp:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - app
@@ -54,10 +54,10 @@ services:
   # queue:
   #   build: .
   #   container_name: lumina-queue
-  #   working_dir: /var/www
+  #   working_dir: /dev/lumina-erp
   #   command: php artisan queue:work --sleep=3 --tries=3
   #   volumes:
-  #     - .:/var/www
+  #     - .:/dev/lumina-erp
   #   env_file: .env
   #   depends_on:
   #     app: { condition: service_started }
