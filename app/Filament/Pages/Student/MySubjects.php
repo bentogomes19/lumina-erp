@@ -10,10 +10,21 @@ class MySubjects extends Page
     protected static ?string $navigationLabel = 'Minhas Disciplinas';
     protected static ?string $title = 'Minhas Disciplinas';
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-book-open';
+    protected static ?int $navigationSort = 3;
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()->hasRole('student');
+        return auth()->user()?->hasRole('student') ?? false;
+    }
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasRole('student') ?? false;
+    }
+
+    public function getView(): string
+    {
+        return 'filament.pages.student.my-subjects';
     }
 
     public function getSubjects()
