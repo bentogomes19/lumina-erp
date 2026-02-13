@@ -14,15 +14,21 @@ class DashboardTeacher extends Page
     protected static ?string $title = 'Painel do Professor';
     protected static ?string $slug = 'dashboard-teacher';
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-academic-cap';
+    protected static ?int $navigationSort = 0;
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()->hasRole('teacher');
+        return auth()->check() && auth()->user()->hasRole('teacher');
     }
 
     public static function canAccess(): bool
     {
         return auth()->user()?->hasRole('teacher') ?? false;
+    }
+
+    public function getView(): string
+    {
+        return 'filament.pages.dashboard-teacher';
     }
 
     protected function getHeaderWidgets(): array

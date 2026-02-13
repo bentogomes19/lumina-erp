@@ -23,28 +23,70 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $names = brazilian_names();
+        $gender = $this->faker->randomElement(['M', 'F']);
+        $allNames = array_merge($names['male'], $names['female']);
+        $name = $this->faker->randomElement($allNames);
+        
+        // Gera email realístico baseado no nome
+        $emailUser = strtolower(str_replace(' ', '.', $name));
+        $emailUser = $this->removeAccents($emailUser);
+        $domain = $this->faker->randomElement(email_domains());
+        $email = $emailUser . rand(1, 999) . '@' . $domain;
+        
+        // Seleciona uma cidade e estado brasileiro
+        $cities = brazilian_cities();
+        $state = $this->faker->randomElement(array_keys($cities));
+        $city = $this->faker->randomElement($cities[$state]);
+        
+        $street = $this->faker->randomElement(brazilian_streets());
+        $district = $this->faker->randomElement(brazilian_districts());
+        
         return [
-            'uuid'            => $this->faker->uuid,
-            'name'            => $this->faker->name,
-            'email'           => $this->faker->unique()->safeEmail,
+            'uuid'              => $this->faker->uuid,
+            'name'              => $name,
+            'email'             => $email,
             'email_verified_at' => now(),
-            'password'        => bcrypt('password'),
-            'cpf'             => $this->faker->numerify('###.###.###-##'),
-            'rg'              => $this->faker->numerify('##.###.###-#'),
-            'birth_date'      => $this->faker->date(),
-            'gender'          => $this->faker->randomElement(['M','F','O']),
-            'address'         => $this->faker->streetAddress,
-            'district'        => $this->faker->citySuffix,
-            'city'            => $this->faker->city,
-            'state'           => $this->faker->randomElement(['SP','RJ','MG','RS', 'BA', 'MA', 'MS', 'SC', 'PR', 'DF']),
-            'postal_code'     => $this->faker->numerify('#####-###'),
-            'phone'           => $this->faker->phoneNumber,
-            'cellphone'       => $this->faker->phoneNumber,
-            'avatar'          => null,
-            'active'          => 1,
-            'last_login_at'   => null,
-            'remember_token'  => Str::random(10),
+            'password'          => bcrypt('password'),
+            'cpf'               => generate_cpf(),
+            'rg'                => generate_rg(),
+            'birth_date'        => $this->faker->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
+            'gender'            => $gender,
+            'address'           => $street . ', ' . $this->faker->buildingNumber(),
+            'district'          => $district,
+            'city'              => $city,
+            'state'             => $state,
+            'postal_code'       => $this->faker->numerify('#####-###'),
+            'phone'             => brazilian_phone(false),
+            'cellphone'         => brazilian_phone(true),
+            'avatar'            => null,
+            'active'            => 1,
+            'last_login_at'     => null,
+            'remember_token'    => Str::random(10),
         ];
+    }
+    
+    /**
+     * Remove acentos de uma string
+     */
+    private function removeAccents(string $string): string
+    {
+        $unwanted = [
+            'á' => 'a', 'à' => 'a', 'ã' => 'a', 'â' => 'a', 'ä' => 'a',
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ó' => 'o', 'ò' => 'o', 'õ' => 'o', 'ô' => 'o', 'ö' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ç' => 'c', 'ñ' => 'n',
+            'Á' => 'A', 'À' => 'A', 'Ã' => 'A', 'Â' => 'A', 'Ä' => 'A',
+            'É' => 'E', 'È' => 'E', 'Ê' => 'E', 'Ë' => 'E',
+            'Í' => 'I', 'Ì' => 'I', 'Î' => 'I', 'Ï' => 'I',
+            'Ó' => 'O', 'Ò' => 'O', 'Õ' => 'O', 'Ô' => 'O', 'Ö' => 'O',
+            'Ú' => 'U', 'Ù' => 'U', 'Û' => 'U', 'Ü' => 'U',
+            'Ç' => 'C', 'Ñ' => 'N',
+        ];
+        
+        return strtr($string, $unwanted);
     }
 
     /**

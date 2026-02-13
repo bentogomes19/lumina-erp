@@ -6,9 +6,9 @@ use App\Filament\Widgets\StudentProfileWidget;
 use App\Filament\Widgets\StudentGradesStatsWidget;
 use App\Filament\Widgets\StudentAttendanceStatsWidget;
 use App\Filament\Widgets\UpcomingAssessments;
-use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Pages\Page;
 
-class DashboardStudent extends BaseDashboard
+class DashboardStudent extends Page
 {
     protected static ?string $navigationLabel = 'Painel do Aluno';
     protected static ?string $title = 'Portal do Aluno';
@@ -26,7 +26,12 @@ class DashboardStudent extends BaseDashboard
         return auth()->user()?->hasRole('student') ?? false;
     }
 
-    public function getWidgets(): array
+    public function getView(): string
+    {
+        return 'filament.pages.dashboard-student';
+    }
+
+    protected function getHeaderWidgets(): array
     {
         return [
             StudentProfileWidget::class,
@@ -36,7 +41,7 @@ class DashboardStudent extends BaseDashboard
         ];
     }
 
-    public function getColumns(): int | array
+    public function getHeaderWidgetsColumns(): int | array
     {
         return 2;
     }

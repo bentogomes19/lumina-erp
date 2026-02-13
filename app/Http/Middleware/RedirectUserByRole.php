@@ -20,24 +20,28 @@ class RedirectUserByRole
         }
 
         $user = auth()->user();
-        $path = trim($request->path(), '/'); // ex: lumina/students
+        $path = trim($request->path(), '/');
 
-        // Se o usuário já está em uma rota do painel, não redirecione
-        if (str_starts_with($path, 'lumina/') && $path !== 'lumina') {
+        // Se está tentando acessar apenas /lumina (raiz do painel)
+        // ou está em uma página que não é um dashboard específico
+        if ($path === 'lumina' || $path === 'lumina/') {
+            // Redireciona para o dashboard apropriado
+            if ($user->hasRole('admin')) {
+                return redirect('/lumina/dashboard-admin');
+            }
+
+            if ($user->hasRole('teacher')) {
+                return redirect('/lumina/dashboard-teacher');
+            }
+
+            if ($user->hasRole('student')) {
+                return redirect('/lumina/dashboard-student');
+            }
+        }
+
+        // Se já está em uma rota específica do painel, deixa passar
+        if (str_starts_with($path, 'lumina/')) {
             return $next($request);
-        }
-
-        // Agora sim, decidimos o dashboard:
-        if ($user->hasRole('admin')) {
-            return redirect('/lumina/dashboard-admin');
-        }
-
-        if ($user->hasRole('teacher')) {
-            return redirect('/lumina/dashboard-teacher');
-        }
-
-        if ($user->hasRole('student')) {
-            return redirect('/lumina/dashboard-student');
         }
 
         return $next($request);
