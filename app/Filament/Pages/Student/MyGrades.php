@@ -4,6 +4,8 @@ namespace App\Filament\Pages\Student;
 
 use App\Filament\Widgets\StudentGradesWidget;
 use App\Filament\Widgets\StudentGradesStatsWidget;
+use App\Filament\Widgets\StudentGradesOverviewWidget;
+use App\Filament\Widgets\StudentGradesTableWidget;
 use App\Models\Grade;
 use App\Models\Student;
 use Filament\Pages\Page;
@@ -36,8 +38,14 @@ class MyGrades extends Page
     protected function getHeaderWidgets(): array
     {
         return [
-            StudentGradesStatsWidget::class,
-            StudentGradesWidget::class,
+            StudentGradesOverviewWidget::class,
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            StudentGradesTableWidget::class,
         ];
     }
 
