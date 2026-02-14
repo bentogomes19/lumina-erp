@@ -1,7 +1,7 @@
 # Lumina ERP - Comandos Docker/DevOps
 # Uso: make <alvo>
 
-.PHONY: help build up down restart shell install migrate seed test lint clean bootstrap
+.PHONY: help build up down restart shell install migrate seed test lint clean bootstrap key
 
 APP_CONTAINER = lumina-app
 
@@ -19,7 +19,12 @@ help:
 	@echo "  make fresh     - migrate:fresh --seed (dentro do app)"
 	@echo "  make test      - PHPUnit (dentro do app)"
 	@echo "  make lint      - Laravel Pint (dentro do app)"
+	@echo "  make key       - Gera APP_KEY no .env (corrige MissingAppKeyException)"
 	@echo "  make clean     - Para containers e remove volumes"
+
+# Gera APP_KEY no .env (use se aparecer MissingAppKeyException)
+key:
+	docker exec $(APP_CONTAINER) php artisan key:generate
 
 # Depois do clone: cria .env, sobe containers, instala deps e roda migrate --seed
 bootstrap:
