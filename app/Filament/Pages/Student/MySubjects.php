@@ -12,6 +12,7 @@ class MySubjects extends Page
 {
     protected static ?string $navigationLabel = 'Minhas Disciplinas';
     protected static ?string $title = 'Minhas Disciplinas';
+    protected static ?string $slug = 'my-subjects';
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-book-open';
     protected static ?int $navigationSort = 3;
 

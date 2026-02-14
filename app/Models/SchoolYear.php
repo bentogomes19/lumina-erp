@@ -13,6 +13,12 @@ class SchoolYear extends Model
         'is_active',
     ];
 
+    protected $casts = [
+        'starts_at' => 'date',
+        'ends_at' => 'date',
+        'is_active' => 'boolean',
+    ];
+
     public static function active()
     {
         return self::where('active', true)->first();
