@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Student;
 
+use App\Enums\AttendanceStatus;
 use App\Models\Attendance;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
@@ -44,18 +45,30 @@ class StudentAttendance extends Page implements HasTable
         $studentId = auth()->user()?->student?->id ?? 0;
         
         $total = Attendance::where('student_id', $studentId)->count();
-        $present = Attendance::where('student_id', $studentId)->where('status', 'present')->count();
-        $absent = Attendance::where('student_id', $studentId)->where('status', 'absent')->count();
-        $late = Attendance::where('student_id', $studentId)->where('status', 'late')->count();
+        $present = Attendance::where('student_id', $studentId)
+            ->where('status', AttendanceStatus::PRESENT)
+            ->count();
+        $absent = Attendance::where('student_id', $studentId)
+            ->where('status', AttendanceStatus::ABSENT)
+            ->count();
+        $late = Attendance::where('student_id', $studentId)
+            ->where('status', AttendanceStatus::LATE)
+            ->count();
+        $excused = Attendance::where('student_id', $studentId)
+            ->where('status', AttendanceStatus::EXCUSED)
+            ->count();
         
-        $attendanceRate = $total > 0 ? round(($present / $total) * 100, 2) : 0;
+        // Taxa de frequência (presenças + atrasos) / total
+        $attendanceRate = $total > 0 ? round((($present + $late) / $total) * 100, 2) : 0;
         
         return [
             'total' => $total,
             'present' => $present,
             'absent' => $absent,
             'late' => $late,
+            'excused' => $excused,
             'rate' => $attendanceRate,
+            'alert' => $attendanceRate < 75.0,
         ];
     }
 
@@ -67,7 +80,7 @@ class StudentAttendance extends Page implements HasTable
             ->query(
                 Attendance::query()
                     ->where('student_id', $studentId)
-                    ->with(['subject'])
+                    ->with(['subject', 'lesson'])
                     ->latest('date')
             )
             ->columns([
@@ -77,28 +90,43 @@ class StudentAttendance extends Page implements HasTable
                     ->sortable()
                     ->searchable(),
 
+                TextColumn::make('lesson.start_time')
+                    ->label('Horário')
+                    ->time('H:i')
+                    ->toggleable(),
+
                 BadgeColumn::make('status')
                     ->label('Status')
                     ->colors([
-                        'success' => fn($state) => $state === 'present',
-                        'danger'  => fn($state) => $state === 'absent',
-                        'warning' => fn($state) => $state === 'late',
-                        'gray'    => fn() => true,
+                        'success' => fn($state) => $state === AttendanceStatus::PRESENT,
+                        'danger'  => fn($state) => $state === AttendanceStatus::ABSENT,
+                        'warning' => fn($state) => $state === AttendanceStatus::LATE,
+                        'info'    => fn($state) => $state === AttendanceStatus::EXCUSED,
                     ])
-                    ->formatStateUsing(fn($state) => match ($state) {
-                        'present' => 'Presente',
-                        'absent'  => 'Falta',
-                        'late'    => 'Atraso',
-                        default   => $state,
-                    })
+                    ->formatStateUsing(fn($state) => $state?->label() ?? $state)
                     ->sortable(),
 
                 TextColumn::make('subject.name')
                     ->label('Disciplina')
                     ->searchable()
-                    ->toggleable(),
+                    ->sortable(),
+
+                TextColumn::make('lesson.topic')
+                    ->label('Tópico da Aula')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->wrap(),
+
+                TextColumn::make('notes')
+                    ->label('Observações')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->wrap(),
             ])
             ->filters([
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options(AttendanceStatus::options()),
+
                 SelectFilter::make('month')
                     ->label('Mês')
                     ->options([

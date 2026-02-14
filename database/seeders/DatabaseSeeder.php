@@ -5,7 +5,9 @@ namespace Database\Seeders;
 use Database\Seeders\Academic\AttendanceSeeder;
 use Database\Seeders\Academic\EnrollmentSeeder;
 use Database\Seeders\Academic\GradeSeeder;
+use Database\Seeders\Academic\LessonSeeder;
 use Database\Seeders\Academic\SchoolClassSeeder;
+use Database\Seeders\Academic\SchoolHolidaySeeder;
 use Database\Seeders\Academic\SchoolYearSeeder;
 use Database\Seeders\Academic\TeacherAssignmentSeeder;
 use Database\Seeders\Core\GradeLevelSeeder;
@@ -31,6 +33,7 @@ class DatabaseSeeder extends Seeder
             GradeLevelSeeder::class,
             SubjectSeeder::class,
             SchoolYearSeeder::class,
+            SchoolHolidaySeeder::class,  // NOVO: Criar feriados antes de gerar aulas
             RolesPermissionsSeeder::class,
         ]);
         // Usuários Básicos
@@ -45,7 +48,8 @@ class DatabaseSeeder extends Seeder
             SchoolClassSeeder::class,
             TeacherAssignmentSeeder::class,
             EnrollmentSeeder::class,
-            AttendanceSeeder::class,
+            LessonSeeder::class,        // NOVO: Gerar aulas antes de registrar frequências
+            AttendanceSeeder::class,     // Registrar frequências baseadas nas aulas
             GradeSeeder::class,
         ]);
     }

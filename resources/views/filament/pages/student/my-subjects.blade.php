@@ -105,7 +105,10 @@
                     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem">
                         @foreach($categorySubjects as $subject)
                             @php $cs = $categoryStyles[$subject->category?->value ?? ''] ?? $defaultStyle; @endphp
-                            <div style="background:rgba(30,41,59,0.7);border:1px solid rgba(255,255,255,0.08);border-radius:0.75rem;overflow:hidden">
+                            <a href="{{ url('/lumina/subject-detail?subject=' . $subject->id) }}" 
+                               style="background:rgba(30,41,59,0.7);border:1px solid rgba(255,255,255,0.08);border-radius:0.75rem;overflow:hidden;text-decoration:none;display:block;transition:all 0.2s"
+                               onmouseover="this.style.background='rgba(30,41,59,0.9)'; this.style.borderColor='rgba(255,255,255,0.12)'; this.style.transform='translateY(-2px)'"
+                               onmouseout="this.style.background='rgba(30,41,59,0.7)'; this.style.borderColor='rgba(255,255,255,0.08)'; this.style.transform='translateY(0)'">
                                 {{-- Color accent bar --}}
                                 <div style="height:3px;background:{{ $cs['accent'] }}"></div>
 
@@ -203,7 +206,7 @@
                                         </p>
                                     @endif
                                 </div>
-                            </div>
+                            </a>
                         @endforeach
                     </div>
                 </div>
