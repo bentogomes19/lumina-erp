@@ -1,12 +1,13 @@
 # Lumina ERP - Comandos Docker/DevOps
 # Uso: make <alvo>
 
-.PHONY: help build up down restart shell install migrate seed test lint clean
+.PHONY: help build up down restart shell install migrate seed test lint clean bootstrap
 
 APP_CONTAINER = lumina-app
 
 help:
 	@echo "Lumina ERP - Comandos disponíveis:"
+	@echo "  make bootstrap - Clone → primeiro refresh: .env + up + install + migrate --seed"
 	@echo "  make build     - Build dos containers"
 	@echo "  make up        - Sobe os containers em background"
 	@echo "  make down      - Para e remove containers"
@@ -19,6 +20,15 @@ help:
 	@echo "  make test      - PHPUnit (dentro do app)"
 	@echo "  make lint      - Laravel Pint (dentro do app)"
 	@echo "  make clean     - Para containers e remove volumes"
+
+# Depois do clone: cria .env, sobe containers, instala deps e roda migrate --seed
+bootstrap:
+	@test -f .env || cp .env.example .env
+	docker compose up -d --build
+	@echo "Aguardando containers..."
+	@sleep 10
+	docker exec $(APP_CONTAINER) sh -c "composer install && php artisan key:generate && php artisan migrate --seed"
+	@echo "Pronto. Abra http://localhost:8000 no browser."
 
 build:
 	docker compose build --no-cache

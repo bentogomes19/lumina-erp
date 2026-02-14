@@ -3,66 +3,39 @@
 Sistema de Gestão Escolar desenvolvido em **Laravel + Filament + Docker**.
 
 ## Introdução do Sistema
-Lumina ERP é um sistema de gestão acadêmica, tem a finalidade de simplificar os processos...
+Lumina ERP é um sistema de gestão acadêmica, tem a finalidade de simplificar os processos.
 
+---
 
-## 🚀 Como rodar
+## 🚀 Do clone ao primeiro refresh no browser
+
+**Pré-requisitos:** [Docker](https://docs.docker.com/get-docker) e Git. Para enviar código (push) sem senha: [SSH no GitHub](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) ou [GitHub CLI](https://cli.github.com).
 
 ```bash
-# Crie um diretório 
-mkdir /dev
-git clone https://github.com/seuusuario/lumina-erp.git
+git clone git@github.com:SEU_ORG_OU_USUARIO/lumina-erp.git
 cd lumina-erp
-cp .env.example .env
+make bootstrap
 ```
 
-```dotenv
-# CONFIGURAÇÃO ARQUIVO .ENV
-APP_NAME="Lumina ERP"
-APP_ENV=local
-APP_KEY=
-APP_DEBUG=true
-APP_URL=http://localhost
+Depois abra **http://localhost:8000** no browser.
 
-APP_LOCALE=pt_BR
-APP_FALLBACK_LOCALE=en
-APP_FAKER_LOCALE=pt_BR
+O `make bootstrap` cria o `.env` (se não existir), sobe os containers (app, nginx, MySQL), instala dependências e roda as migrations com seeders.
 
-# Banco de dados
-DB_CONNECTION=mysql
-DB_HOST=db
-DB_PORT=3306
-DB_DATABASE=lumina
-DB_USERNAME=dev
-DB_PASSWORD=dev
-```
-#### Rode o container
-```bash
-make build
-make up
-# ou: docker compose build --no-cache && docker compose up -d --build
-```
+**Sem Make?** Veja o passo a passo e alternativas em [Ambiente Dev](./docs/devops/ambiente-dev.md) (inclui **autenticação GitHub** e comandos PowerShell/Bash).
 
-#### Entre no container e instale
-```bash
-make shell
-# dentro do container:
-composer install
-php artisan key:generate
-php artisan migrate --seed
-```
-Ou em uma linha: `make install` e depois `make seed`.
+---
 
-#### Comandos úteis (Makefile)
-| Comando   | Descrição                    |
-|-----------|------------------------------|
-| `make up` | Sobe os containers           |
-| `make down` | Para os containers         |
-| `make shell` | Entra no container (zsh)  |
-| `make migrate` | Roda migrations          |
-| `make seed` | Migrations + seeders       |
-| `make test` | PHPUnit                    |
-| `make lint` | Laravel Pint (checagem)    |
+## Comandos úteis (Makefile)
+| Comando | Descrição |
+|---------|-----------|
+| `make bootstrap` | Do zero: .env + up + install + migrate --seed |
+| `make up` | Sobe os containers |
+| `make down` | Para os containers |
+| `make shell` | Entra no container (zsh) |
+| `make migrate` | Roda migrations |
+| `make seed` | Migrations + seeders |
+| `make test` | PHPUnit |
+| `make lint` | Laravel Pint (checagem) |
 
 ---
 
@@ -71,7 +44,7 @@ Ou em uma linha: `make install` e depois `make seed`.
 - **Docker**: `Dockerfile` (PHP 8.2-FPM, Composer, Node 18), `compose.yaml` (app, nginx, MySQL 8) com healthcheck no banco e variáveis via `.env`. Dentro do container o projeto fica em **`/dev/lumina-erp`**.
 - **.dockerignore**: reduz tamanho do contexto de build e acelera o build.
 - **CI (GitHub Actions)**: em cada push/PR em `main` e `develop` roda **Laravel Pint**, **PHPUnit** (com MySQL em serviço) e **build da imagem Docker** (`.github/workflows/ci.yaml`).
-- **Makefile**: atalhos para build, up, down, shell, migrate, seed, test e lint.
+- **Makefile**: atalhos para bootstrap, build, up, down, shell, migrate, seed, test e lint.
 
 Para adicionar workers de fila no futuro, use o perfil `workers` no `compose.yaml` (serviço `queue` comentado).
 
