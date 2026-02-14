@@ -36,6 +36,10 @@ RUN useradd -ms /bin/zsh dev
 RUN mkdir -p /dev/lumina-erp && chown -R dev:dev /dev/lumina-erp
 WORKDIR /dev/lumina-erp
 
+# Entrypoint: garante .env e APP_KEY antes de subir o php-fpm (fora do volume)
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && chown dev:dev /entrypoint.sh
+
 # Mudar para usuário dev
 USER dev
 
@@ -51,4 +55,5 @@ SHELL ["/bin/zsh", "-c"]
 # PATH correto para o composer global do dev
 ENV PATH="/home/dev/.composer/vendor/bin:${PATH}"
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["php-fpm"]

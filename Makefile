@@ -27,9 +27,9 @@ help:
 	@echo "  make clear     - Limpa caches (config, route, view) após alterar código"
 	@echo "  make clean     - Para containers e remove volumes"
 
-# Gera APP_KEY no .env (use se aparecer MissingAppKeyException)
+# Gera APP_KEY no .env (garante .env e linha APP_KEY= antes de rodar key:generate)
 key:
-	docker exec $(APP_CONTAINER) php artisan key:generate
+	docker exec $(APP_CONTAINER) sh -c "test -f .env || cp .env.example .env; grep -q '^APP_KEY=' .env 2>/dev/null || echo 'APP_KEY=' >> .env; php artisan key:generate --force"
 
 # Limpa caches do Laravel (use após alterar .env, rotas, config, views)
 clear:
