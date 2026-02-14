@@ -268,6 +268,64 @@ Todas as páginas implementam:
 
 ---
 
+## ⚠️ Guia de Estilização — Inline Styles obrigatórios
+
+O Filament compila seu próprio CSS (via seu pipeline interno) e **não inclui todas as classes utilitárias do Tailwind** que normalmente estariam disponíveis em um projeto Laravel padrão. Classes como `grid`, `flex`, `gap-4`, `grid-cols-2`, `space-y-6`, `rounded-xl`, entre outras, **não são reconhecidas** dentro das views do painel Filament — resultando em layouts completamente quebrados (elementos empilhados, sem espaçamento, sem grid).
+
+### Solução adotada
+
+Utilizar **inline styles** (`style="..."`) para todo o layout dentro das views Blade do portal do aluno (`resources/views/filament/pages/student/*.blade.php`).
+
+### O que usar inline styles
+
+| Categoria | Exemplo |
+|-----------|---------|
+| Layout (grid, flex) | `style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem"` |
+| Espaçamento (margin, padding, gap) | `style="padding:1.25rem;margin:0"` |
+| Dimensões (width, height) | `style="width:2.5rem;height:2.5rem"` |
+| Cores (background, color, border) | `style="background:rgba(30,41,59,0.7);color:#f1f5f9"` |
+| Tipografia (font-size, font-weight) | `style="font-size:0.875rem;font-weight:600"` |
+| Bordas e arredondamento | `style="border-radius:0.75rem;border:1px solid rgba(255,255,255,0.08)"` |
+
+### O que funciona com classes Tailwind no Filament
+
+- Classes internas do Filament (`fi-section`, `fi-header`, etc.)
+- Componentes Blade do Filament (`<x-filament-panels::page>`, `<x-filament::section>`, etc.)
+
+### Ícones
+
+O middleware `DisableBladeIconComponents` está ativo no painel. Usar a diretiva `@svg()` em vez de `<x-heroicon-o-*>`:
+
+```blade
+{{-- ❌ Não funciona corretamente --}}
+<x-heroicon-o-book-open class="h-5 w-5 text-blue-600" />
+
+{{-- ✅ Correto --}}
+@svg('heroicon-o-book-open', '', ['style' => 'width:1.25rem;height:1.25rem;color:#3b82f6'])
+```
+
+### Responsividade
+
+Como inline styles não suportam media queries, adicionar um bloco `<style>` no final da view:
+
+```blade
+<style>
+    @media (max-width: 768px) {
+        [style*="grid-template-columns:repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
+        [style*="grid-template-columns:repeat(2,1fr)"] { grid-template-columns: 1fr !important; }
+    }
+</style>
+```
+
+### Páginas afetadas
+
+- `resources/views/filament/pages/student/my-subjects.blade.php` — já migrada para inline styles
+- `resources/views/filament/pages/student/student-attendance.blade.php` — usa classes Tailwind (funciona parcialmente)
+- `resources/views/filament/pages/student/academic-calendar.blade.php` — usa classes Tailwind (funciona parcialmente)
+- `resources/views/filament/pages/student/my-grades.blade.php` — usa widgets Filament (não afetada)
+
+---
+
 ## 📞 Suporte
 
 Para dúvidas ou problemas com o portal do aluno, entre em contato com a administração da escola.
