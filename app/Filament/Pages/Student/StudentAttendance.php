@@ -42,19 +42,54 @@ class StudentAttendance extends Page implements HasTable
     // Estatísticas de frequência
     public function getAttendanceStats(): array
     {
-        $studentId = auth()->user()?->student?->id ?? 0;
+        $student = auth()->user()?->student;
         
-        $total = Attendance::where('student_id', $studentId)->count();
-        $present = Attendance::where('student_id', $studentId)
+        if (!$student) {
+            return [
+                'total' => 0,
+                'present' => 0,
+                'absent' => 0,
+                'late' => 0,
+                'excused' => 0,
+                'rate' => 0,
+                'alert' => false,
+            ];
+        }
+
+        // Get current active class
+        $currentClass = $student->classes()
+            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
+            ->first();
+
+        if (!$currentClass) {
+            return [
+                'total' => 0,
+                'present' => 0,
+                'absent' => 0,
+                'late' => 0,
+                'excused' => 0,
+                'rate' => 0,
+                'alert' => false,
+            ];
+        }
+        
+        $total = Attendance::where('student_id', $student->id)
+            ->where('class_id', $currentClass->id)
+            ->count();
+        $present = Attendance::where('student_id', $student->id)
+            ->where('class_id', $currentClass->id)
             ->where('status', AttendanceStatus::PRESENT)
             ->count();
-        $absent = Attendance::where('student_id', $studentId)
+        $absent = Attendance::where('student_id', $student->id)
+            ->where('class_id', $currentClass->id)
             ->where('status', AttendanceStatus::ABSENT)
             ->count();
-        $late = Attendance::where('student_id', $studentId)
+        $late = Attendance::where('student_id', $student->id)
+            ->where('class_id', $currentClass->id)
             ->where('status', AttendanceStatus::LATE)
             ->count();
-        $excused = Attendance::where('student_id', $studentId)
+        $excused = Attendance::where('student_id', $student->id)
+            ->where('class_id', $currentClass->id)
             ->where('status', AttendanceStatus::EXCUSED)
             ->count();
         
@@ -74,12 +109,26 @@ class StudentAttendance extends Page implements HasTable
 
     public function table(Table $table): Table
     {
-        $studentId = auth()->user()?->student?->id ?? 0;
+        $student = auth()->user()?->student;
+        
+        if (!$student) {
+            return $table->query(Attendance::query()->whereRaw('1 = 0'));
+        }
+
+        // Get current active class
+        $currentClass = $student->classes()
+            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
+            ->first();
+
+        if (!$currentClass) {
+            return $table->query(Attendance::query()->whereRaw('1 = 0'));
+        }
 
         return $table
             ->query(
                 Attendance::query()
-                    ->where('student_id', $studentId)
+                    ->where('student_id', $student->id)
+                    ->where('class_id', $currentClass->id)
                     ->with(['subject', 'lesson'])
                     ->latest('date')
             )

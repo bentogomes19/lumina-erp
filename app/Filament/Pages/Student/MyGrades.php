@@ -71,8 +71,19 @@ class MyGrades extends Page
             return redirect()->back()->with('error', 'Estudante não encontrado');
         }
 
+        // Get current active class
+        $currentClass = $student->classes()
+            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
+            ->with('schoolYear')
+            ->first();
+
+        if (!$currentClass) {
+            return redirect()->back()->with('error', 'Nenhuma turma ativa encontrada');
+        }
+
         $grades = Grade::query()
             ->where('student_id', $student->id)
+            ->where('class_id', $currentClass->id)
             ->with(['subject', 'schoolClass'])
             ->orderBy('term')
             ->orderBy('subject_id')

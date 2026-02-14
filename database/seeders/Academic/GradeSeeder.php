@@ -16,12 +16,18 @@ class GradeSeeder extends Seeder
      */
     public function run(): void
     {
-        $enrollments = Enrollment::with('class')->get();
-        $subjects = Subject::limit(5)->get();
+        $enrollments = Enrollment::with(['class.subjects'])->get();
 
         foreach ($enrollments as $enr) {
+            // Get subjects for this specific class
+            $classSubjects = $enr->class->subjects;
+            
+            if ($classSubjects->isEmpty()) {
+                continue; // Skip if class has no subjects assigned
+            }
+
             foreach ([Term::B1, Term::B2] as $term) {
-                foreach ($subjects as $subject) {
+                foreach ($classSubjects as $subject) {
                     foreach ([1,2] as $seq) {
                         Grade::updateOrCreate([
                             'enrollment_id'   => $enr->id,
