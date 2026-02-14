@@ -34,6 +34,8 @@ class DashboardAdmin extends Page
             DashboardStats::class,
         ];
     }
+        
+        
 
     public function getHeaderWidgetsColumns(): int | array
     {
