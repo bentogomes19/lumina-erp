@@ -4,17 +4,18 @@
 # Todos os comandos php artisan e composer rodam DENTRO do container (lumina-app).
 # Use os alvos abaixo em vez de rodar artisan no host.
 
-.PHONY: help build up down restart shell install migrate seed test lint clean bootstrap key clear
+.PHONY: help build up down restart rebuild shell install migrate seed test lint clean bootstrap key clear
 
 APP_CONTAINER = lumina-app
 
 help:
 	@echo "Lumina ERP - Comandos disponíveis (artisan/composer rodam no container):"
 	@echo "  make bootstrap - Clone → primeiro refresh: .env + up + install + migrate --seed"
-	@echo "  make build     - Build dos containers"
-	@echo "  make up        - Sobe os containers em background"
+	@echo "  make build     - Build dos containers (--no-cache)"
+	@echo "  make up        - Sobe os containers em background (rebuild se necessário)"
 	@echo "  make down      - Para e remove containers"
 	@echo "  make restart   - Reinicia os containers"
+	@echo "  make rebuild   - Rebuild completo (Dockerfile/compose) e sobe de novo"
 	@echo "  make shell     - Entra no container da aplicação (zsh)"
 	@echo "  make install   - composer install + key:generate (dentro do app)"
 	@echo "  make migrate   - Roda migrations (dentro do app)"
@@ -53,6 +54,10 @@ down:
 	docker compose down
 
 restart: down up
+
+# Após alterar Dockerfile ou compose: rebuild da imagem e sobe os containers
+rebuild:
+	docker compose build --no-cache && docker compose up -d
 
 shell:
 	docker exec -it $(APP_CONTAINER) zsh
