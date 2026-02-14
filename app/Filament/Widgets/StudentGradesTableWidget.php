@@ -33,9 +33,24 @@ class StudentGradesTableWidget extends Widget
             ];
         }
 
-        // Busca todas as notas do aluno
+        // Get current active class
+        $currentClass = $user->student->classes()
+            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
+            ->first();
+
+        if (!$currentClass) {
+            return [
+                'gradesByTerm' => collect(),
+                'assessmentColumns' => [],
+                'termLabels' => [],
+                'termAverages' => [],
+            ];
+        }
+
+        // Busca notas do aluno da turma atual (ano letivo ativo)
         $grades = Grade::query()
             ->where('student_id', $user->student->id)
+            ->where('class_id', $currentClass->id)
             ->with(['subject', 'schoolClass'])
             ->orderBy('term')
             ->orderBy('subject_id')

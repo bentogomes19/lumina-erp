@@ -17,4 +17,16 @@ enum AssessmentType: string
             'project' => 'Projeto', 'participation' => 'Participação', 'recovery' => 'Recuperação',
         ];
     }
+
+    public function label(): string
+    {
+        return match($this) {
+            self::TEST => 'Prova',
+            self::QUIZ => 'Quiz',
+            self::WORK => 'Trabalho',
+            self::PROJECT => 'Projeto',
+            self::PARTICIPATION => 'Participação',
+            self::RECOVERY => 'Recuperação',
+        };
+    }
 }

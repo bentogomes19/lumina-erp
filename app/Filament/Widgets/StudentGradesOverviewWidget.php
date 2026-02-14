@@ -23,9 +23,24 @@ class StudentGradesOverviewWidget extends BaseWidget
             return [];
         }
 
-        // Busca todas as notas do aluno
+        // Get current active class
+        $currentClass = $user->student->classes()
+            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
+            ->first();
+
+        if (!$currentClass) {
+            return [
+                Stat::make('Notas Registradas', '0')
+                    ->description('Nenhuma turma ativa no momento')
+                    ->icon('heroicon-o-chart-bar')
+                    ->color('gray'),
+            ];
+        }
+
+        // Busca notas do aluno da turma atual (ano letivo ativo)
         $grades = Grade::query()
             ->where('student_id', $user->student->id)
+            ->where('class_id', $currentClass->id)
             ->get();
 
         if ($grades->isEmpty()) {
