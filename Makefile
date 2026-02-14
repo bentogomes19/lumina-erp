@@ -1,12 +1,15 @@
 # Lumina ERP - Comandos Docker/DevOps
 # Uso: make <alvo>
+#
+# Todos os comandos php artisan e composer rodam DENTRO do container (lumina-app).
+# Use os alvos abaixo em vez de rodar artisan no host.
 
-.PHONY: help build up down restart shell install migrate seed test lint clean bootstrap key
+.PHONY: help build up down restart shell install migrate seed test lint clean bootstrap key clear
 
 APP_CONTAINER = lumina-app
 
 help:
-	@echo "Lumina ERP - Comandos disponíveis:"
+	@echo "Lumina ERP - Comandos disponíveis (artisan/composer rodam no container):"
 	@echo "  make bootstrap - Clone → primeiro refresh: .env + up + install + migrate --seed"
 	@echo "  make build     - Build dos containers"
 	@echo "  make up        - Sobe os containers em background"
@@ -20,11 +23,16 @@ help:
 	@echo "  make test      - PHPUnit (dentro do app)"
 	@echo "  make lint      - Laravel Pint (dentro do app)"
 	@echo "  make key       - Gera APP_KEY no .env (corrige MissingAppKeyException)"
+	@echo "  make clear     - Limpa caches (config, route, view) após alterar código"
 	@echo "  make clean     - Para containers e remove volumes"
 
 # Gera APP_KEY no .env (use se aparecer MissingAppKeyException)
 key:
 	docker exec $(APP_CONTAINER) php artisan key:generate
+
+# Limpa caches do Laravel (use após alterar .env, rotas, config, views)
+clear:
+	docker exec $(APP_CONTAINER) php artisan optimize:clear
 
 # Depois do clone: cria .env, sobe containers, instala deps e roda migrate --seed
 bootstrap:

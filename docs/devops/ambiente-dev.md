@@ -115,15 +115,20 @@ Em seguida: **http://localhost:8000**.
 
 ## 4. Comandos úteis após o bootstrap
 
-| Comando       | Descrição                          |
-|---------------|------------------------------------|
-| `make up`     | Sobe os containers                 |
-| `make down`   | Para os containers                |
-| `make shell`  | Entra no container da app (zsh)   |
-| `make seed`   | Roda migrations + seeders         |
-| `make fresh`  | migrate:fresh --seed              |
-| `make test`   | PHPUnit                           |
-| `make lint`   | Laravel Pint (checagem)           |
+**Importante:** `php artisan` e `composer` devem rodar **dentro do container** (ambiente com PHP, extensões e `.env` corretos). Use os alvos do Makefile (ex.: `make migrate`, `make seed`) ou `docker exec lumina-app php artisan ...` — não rode artisan no host.
+
+| Comando        | Descrição                          |
+|----------------|------------------------------------|
+| `make up`      | Sobe os containers                 |
+| `make down`    | Para os containers                 |
+| `make shell`   | Entra no container da app (zsh)    |
+| `make migrate` | Roda migrations (no container)     |
+| `make seed`    | Roda migrations + seeders          |
+| `make fresh`   | migrate:fresh --seed               |
+| `make key`     | Gera APP_KEY no .env               |
+| `make clear`   | Limpa caches (config/route/view)   |
+| `make test`    | PHPUnit                            |
+| `make lint`    | Laravel Pint (checagem)            |
 
 ---
 
