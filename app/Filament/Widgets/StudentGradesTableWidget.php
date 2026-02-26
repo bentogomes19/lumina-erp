@@ -15,6 +15,9 @@ class StudentGradesTableWidget extends Widget
 
     protected int|string|array $columnSpan = 'full';
 
+    /** Bimestre selecionado no combobox (null = todos). */
+    public ?string $selectedTerm = null;
+
     public static function canView(): bool
     {
         return auth()->check() && auth()->user()->hasRole('student');
@@ -30,6 +33,7 @@ class StudentGradesTableWidget extends Widget
                 'assessmentColumns' => [],
                 'termLabels' => [],
                 'termAverages' => [],
+                'availableTerms' => [],
             ];
         }
 
@@ -44,6 +48,7 @@ class StudentGradesTableWidget extends Widget
                 'assessmentColumns' => [],
                 'termLabels' => [],
                 'termAverages' => [],
+                'availableTerms' => [],
             ];
         }
 
@@ -56,14 +61,6 @@ class StudentGradesTableWidget extends Widget
             ->orderBy('subject_id')
             ->orderBy('sequence')
             ->get();
-
-        // Termos (bimestres)
-        $termLabels = [
-            'b1' => '1º Bimestre',
-            'b2' => '2º Bimestre',
-            'b3' => '3º Bimestre',
-            'b4' => '4º Bimestre',
-        ];
 
         // Agrupa por bimestre
         $gradesByTerm = new Collection();
@@ -113,11 +110,31 @@ class StudentGradesTableWidget extends Widget
             $gradesByTerm->put($term, $disciplines);
         }
 
+        // Termos (bimestres) para labels e combobox
+        $termLabels = [
+            'b1' => '1º Bimestre',
+            'b2' => '2º Bimestre',
+            'b3' => '3º Bimestre',
+            'b4' => '4º Bimestre',
+        ];
+
+        // Se nenhum termo selecionado, usa o primeiro disponível para não deixar vazio
+        if ($this->selectedTerm === null && $gradesByTerm->isNotEmpty()) {
+            $this->selectedTerm = $gradesByTerm->keys()->first();
+        }
+
+        // Filtra apenas o bimestre selecionado para exibição
+        $gradesByTermFiltered = $this->selectedTerm
+            ? $gradesByTerm->only([$this->selectedTerm])
+            : $gradesByTerm;
+
         return [
-            'gradesByTerm' => $gradesByTerm,
+            'gradesByTerm' => $gradesByTermFiltered,
+            'gradesByTermAll' => $gradesByTerm,
             'assessmentColumns' => $assessmentColumns->unique()->sort()->values(),
             'termLabels' => $termLabels,
             'termAverages' => $termAverages,
+            'availableTerms' => $gradesByTerm->keys()->values()->all(),
         ];
     }
 }
