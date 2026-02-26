@@ -6,9 +6,44 @@
             $assessmentColumns = $data['assessmentColumns'];
             $termLabels = $data['termLabels'];
             $termAverages = $data['termAverages'];
+            $availableTerms = $data['availableTerms'] ?? [];
         @endphp
 
+        {{-- Combobox: selecionar boletim por bimestre --}}
+        @if (count($availableTerms) > 0)
+            <div class="grades-select-wrapper" style="margin-bottom: 1.5rem;">
+                <label for="selectedTerm" class="grades-select-label">Boletim (período)</label>
+                <select
+                    id="selectedTerm"
+                    wire:model.live="selectedTerm"
+                    class="grades-select"
+                >
+                    @foreach ($availableTerms as $termKey)
+                        <option value="{{ $termKey }}">{{ $termLabels[$termKey] ?? $termKey }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+
         <style>
+            /* Combobox boletim - claro e escuro */
+            .grades-select-label {
+                display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;
+            }
+            .dark .grades-select-label { color: #e5e7eb; }
+
+            .grades-select {
+                padding: 0.5rem 2rem 0.5rem 0.75rem; border-radius: 8px;
+                border: 1px solid #e5e7eb; font-size: 0.95rem; min-width: 200px;
+                background: #fff; color: #111827;
+            }
+            .dark .grades-select {
+                background: #1e293b; border-color: #475569; color: #f1f5f9;
+            }
+            .dark .grades-select option {
+                background: #1e293b; color: #f1f5f9;
+            }
+
             .grades-wrapper { display: flex; flex-direction: column; gap: 2rem; }
 
             /* Card do bimestre */
@@ -57,34 +92,22 @@
             }
             .dark .grades-class-badge { background: #1e3a5f; color: #93c5fd; }
 
-            /* Círculo de nota */
-            .grade-circle {
-                display: inline-flex; align-items: center; justify-content: center;
-                width: 48px; height: 48px; border-radius: 50%;
-                font-size: 0.85rem; font-weight: 700; border: 2px solid;
-            }
-            .grade-circle.good { background: #dcfce7; color: #166534; border-color: #86efac; }
-            .grade-circle.warn { background: #fef9c3; color: #854d0e; border-color: #fde047; }
-            .grade-circle.bad  { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+            /* Nota (apenas número, sem círculo) */
+            .grade-value { font-weight: 700; font-size: 0.95rem; }
+            .grade-value.good { color: #166534; }
+            .grade-value.warn { color: #854d0e; }
+            .grade-value.bad  { color: #991b1b; }
+            .dark .grade-value.good { color: #86efac; }
+            .dark .grade-value.warn { color: #fde047; }
+            .dark .grade-value.bad  { color: #fca5a5; }
 
-            .dark .grade-circle.good { background: #14532d; color: #86efac; border-color: #22c55e; }
-            .dark .grade-circle.warn { background: #713f12; color: #fde047; border-color: #eab308; }
-            .dark .grade-circle.bad  { background: #7f1d1d; color: #fca5a5; border-color: #ef4444; }
-
-            /* Círculo de média */
-            .grade-avg {
-                display: inline-flex; align-items: center; justify-content: center;
-                width: 52px; height: 52px; border-radius: 50%;
-                font-size: 0.9rem; font-weight: 800; border: 3px solid;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            .grade-avg.good { background: #dcfce7; color: #166534; border-color: #22c55e; }
-            .grade-avg.warn { background: #fef9c3; color: #854d0e; border-color: #eab308; }
-            .grade-avg.bad  { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
-
-            .dark .grade-avg.good { background: #14532d; color: #86efac; border-color: #22c55e; }
-            .dark .grade-avg.warn { background: #713f12; color: #fde047; border-color: #eab308; }
-            .dark .grade-avg.bad  { background: #7f1d1d; color: #fca5a5; border-color: #ef4444; }
+            .grade-avg-value { font-weight: 800; font-size: 1rem; }
+            .grade-avg-value.good { color: #166534; }
+            .grade-avg-value.warn { color: #854d0e; }
+            .grade-avg-value.bad  { color: #991b1b; }
+            .dark .grade-avg-value.good { color: #86efac; }
+            .dark .grade-avg-value.warn { color: #fde047; }
+            .dark .grade-avg-value.bad  { color: #fca5a5; }
 
             /* Data */
             .grades-date { color: #6b7280; font-size: 0.85rem; }
@@ -169,7 +192,7 @@
                                                             $score = $subjectData['grades'][$assessment];
                                                             $level = $score >= 7 ? 'good' : ($score >= 5 ? 'warn' : 'bad');
                                                         @endphp
-                                                        <span class="grade-circle {{ $level }}">
+                                                        <span class="grade-value {{ $level }}">
                                                             {{ number_format($score, 1, ',', '.') }}
                                                         </span>
                                                     @else
@@ -183,7 +206,7 @@
                                                     $avg = $subjectData['average'];
                                                     $level = $avg >= 7 ? 'good' : ($avg >= 5 ? 'warn' : 'bad');
                                                 @endphp
-                                                <span class="grade-avg {{ $level }}">
+                                                <span class="grade-avg-value {{ $level }}">
                                                     {{ number_format($avg, 1, ',', '.') }}
                                                 </span>
                                             </td>
