@@ -15,8 +15,10 @@ class EditStudent extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
-            ForceDeleteAction::make(),
+            DeleteAction::make()
+                ->visible(fn () => $this->record && auth()->user()?->can('delete', $this->record)),
+            ForceDeleteAction::make()
+                ->visible(fn () => $this->record && auth()->user()?->can('forceDelete', $this->record)),
             RestoreAction::make(),
         ];
     }

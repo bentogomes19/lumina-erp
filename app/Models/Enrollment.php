@@ -32,6 +32,11 @@ class Enrollment extends Model
         return $this->belongsTo(\App\Models\SchoolClass::class, 'class_id');
     }
 
+    public function grades()
+    {
+        return $this->hasMany(Grade::class);
+    }
+
     // Próximo número de chamada dentro da turma
     public static function nextRollNumberFor(int $classId): int
     {

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Enrollments\Tables;
 
 use App\Enums\EnrollmentStatus;
-use App\Enums\Term;
 use App\Models\Enrollment;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
@@ -12,6 +11,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -75,14 +75,17 @@ class EnrollmentsTable
             ])
 
             ->filters([
-                // 🔹 Filtro por ano letivo via relacionamento
-                // 🔹 Novo filtro: ano letivo, já vindo com o ativo selecionado
                 SelectFilter::make('school_year_id')
                     ->label('Ano letivo')
-                    ->relationship('schoolClass.schoolYear', 'year')
+                    ->options(fn () => SchoolYear::orderByDesc('year')->pluck('year', 'id'))
+                    ->query(function ($query, array $data) {
+                        $value = $data['value'] ?? $data['school_year_id'] ?? null;
+                        if (filled($value)) {
+                            $query->whereHas('class', fn ($q) => $q->where('school_year_id', $value));
+                        }
+                    })
                     ->default(fn () => SchoolYear::where('is_active', true)->value('id')),
 
-                // 🔹 Filtro por turma via relacionamento
                 SelectFilter::make('class_id')
                     ->label('Turma')
                     ->relationship('class', 'name')
@@ -92,10 +95,6 @@ class EnrollmentsTable
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options(EnrollmentStatus::options()),
-
-                SelectFilter::make('term')
-                    ->label('Período')
-                    ->options(Term::options()),
             ])
 
             ->recordActions([
@@ -131,6 +130,7 @@ class EnrollmentsTable
                                 ->required(),
                         ])
                         ->action(function ($records, $data) {
+                            $updated = 0;
                             foreach ($records as $enr) {
                                 $exists = Enrollment::where('student_id', $enr->student_id)
                                     ->where('class_id', $data['class_id'])
@@ -141,11 +141,47 @@ class EnrollmentsTable
                                         'class_id'    => $data['class_id'],
                                         'roll_number' => Enrollment::nextRollNumberFor((int) $data['class_id']),
                                     ]);
+                                    $updated++;
                                 }
+                            }
+                            if ($updated > 0) {
+                                Notification::make()
+                                    ->title('Transferência de turma')
+                                    ->body("{$updated} matrícula(s) transferida(s).")
+                                    ->success()
+                                    ->send();
                             }
                         }),
 
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->action(function ($records) {
+                            $user = auth()->user();
+                            $deleted = 0;
+                            $blocked = 0;
+                            foreach ($records as $enrollment) {
+                                if ($user->can('delete', $enrollment)) {
+                                    $enrollment->delete();
+                                    $deleted++;
+                                } else {
+                                    $blocked++;
+                                }
+                            }
+                            if ($blocked > 0) {
+                                Notification::make()
+                                    ->title('Exclusão em lote')
+                                    ->body($deleted > 0
+                                        ? "{$deleted} matrícula(s) excluída(s). {$blocked} não puderam ser excluídas (possuem notas lançadas). Cancele a matrícula em vez de excluir."
+                                        : "Nenhuma matrícula excluída. Matrículas com notas lançadas não podem ser excluídas. Cancele o status da matrícula em vez de excluir.")
+                                    ->warning()
+                                    ->send();
+                            } elseif ($deleted > 0) {
+                                Notification::make()
+                                    ->title('Matrículas excluídas')
+                                    ->body("{$deleted} matrícula(s) excluída(s).")
+                                    ->success()
+                                    ->send();
+                            }
+                        }),
                 ]),
             ]);
     }

@@ -12,8 +12,14 @@ class EditEnrollment extends EditRecord
 
     protected function getHeaderActions(): array
     {
+        $record = $this->record;
+        $hasGrades = $record && $record->grades()->exists();
+
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->visible(fn () => auth()->user()?->can('delete', $record))
+                ->disabled($hasGrades)
+                ->tooltip($hasGrades ? 'Não é possível excluir matrícula com notas lançadas. Cancele a matrícula (status Cancelada) em vez de excluir.' : null),
         ];
     }
 }
