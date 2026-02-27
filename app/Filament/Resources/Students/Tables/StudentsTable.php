@@ -130,7 +130,35 @@ class StudentsTable
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->action(function ($records) {
+                            $user = auth()->user();
+                            $deleted = 0;
+                            $blocked = 0;
+                            foreach ($records as $student) {
+                                if ($user->can('delete', $student)) {
+                                    $student->delete();
+                                    $deleted++;
+                                } else {
+                                    $blocked++;
+                                }
+                            }
+                            if ($blocked > 0) {
+                                Notification::make()
+                                    ->title('Exclusão em lote')
+                                    ->body($deleted > 0
+                                        ? "{$deleted} aluno(s) excluído(s). {$blocked} não puderam ser excluídos por possuírem matrículas ou vínculo com turmas."
+                                        : "Nenhum aluno excluído. Alunos com matrículas ou vínculo com turmas não podem ser excluídos.")
+                                    ->warning()
+                                    ->send();
+                            } elseif ($deleted > 0) {
+                                Notification::make()
+                                    ->title('Alunos excluídos')
+                                    ->body("{$deleted} aluno(s) excluído(s).")
+                                    ->success()
+                                    ->send();
+                            }
+                        }),
                     BulkAction::make('bulkStatus')
                         ->label('Alterar status (selecionados)')
                         ->icon('heroicon-o-adjustments-vertical')

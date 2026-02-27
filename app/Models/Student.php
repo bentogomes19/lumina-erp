@@ -16,7 +16,7 @@ class Student extends Model
 
     protected $fillable = [
         'uuid', 'user_id', 'registration_number', 'name', 'birth_date', 'gender', 'cpf', 'rg',
-        'email', 'phone_number', 'address', 'city', 'state', 'postal_code',
+        'email', 'phone_number', 'address', 'address_district', 'city', 'state', 'postal_code',
         'birth_city', 'birth_state', 'nationality',
         'mother_name', 'father_name', 'guardian_main', 'guardian_phone', 'guardian_email',
         'transport_mode', 'has_special_needs', 'medical_notes', 'allergies',
