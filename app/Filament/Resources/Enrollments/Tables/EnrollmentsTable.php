@@ -10,9 +10,10 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -30,6 +31,7 @@ class EnrollmentsTable
                     'class.schoolYear',
                 ])
             )
+            ->defaultSort('enrollment_date', 'desc')
 
             ->columns([
                 TextColumn::make('student.registration_number')
@@ -58,14 +60,23 @@ class EnrollmentsTable
                     ->alignCenter()
                     ->sortable(),
 
-                BadgeColumn::make('status')
+                TextColumn::make('status')
                     ->label('Status')
-                    ->colors(EnrollmentStatus::colors())
-                    ->formatStateUsing(function ($state) {
-                        if ($state instanceof EnrollmentStatus) {
-                            return $state->value;
-                        }
-                        return (string) $state;
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state instanceof EnrollmentStatus ? $state->value : (string) $state)
+                    ->color(fn ($state) => match (true) {
+                        $state instanceof EnrollmentStatus => match ($state) {
+                            EnrollmentStatus::ACTIVE => 'success',
+                            EnrollmentStatus::SUSPENDED => 'warning',
+                            EnrollmentStatus::CANCELED => 'danger',
+                            EnrollmentStatus::COMPLETED => 'info',
+                            default => 'gray',
+                        },
+                        $state === 'Ativa' => 'success',
+                        $state === 'Suspensa' => 'warning',
+                        $state === 'Cancelada' => 'danger',
+                        $state === 'Completa' => 'info',
+                        default => 'gray',
                     }),
 
                 TextColumn::make('enrollment_date')
@@ -98,6 +109,48 @@ class EnrollmentsTable
             ])
 
             ->recordActions([
+                ViewAction::make()
+                    ->label('Ver')
+                    ->modalHeading('Dados da matrícula')
+                    ->modalDescription('Informações somente leitura desta matrícula.')
+                    ->mutateRecordDataUsing(function (array $data, Enrollment $record): array {
+                        $data['student_name'] = $record->student?->name;
+                        $data['student_registration_number'] = $record->student?->registration_number;
+                        $data['class_name'] = $record->class?->name;
+                        $data['grade_level'] = $record->class?->gradeLevel?->name;
+                        $data['school_year'] = $record->class?->schoolYear?->year;
+                        $data['enrollment_date_formatted'] = $record->enrollment_date?->format('d/m/Y');
+                        $data['status_label'] = $record->status instanceof EnrollmentStatus
+                            ? $record->status->value
+                            : (string) $record->status;
+                        return $data;
+                    })
+                    ->form([
+                        TextInput::make('student_registration_number')
+                            ->label('Nº Matrícula (aluno)')
+                            ->disabled(),
+                        TextInput::make('student_name')
+                            ->label('Aluno')
+                            ->disabled(),
+                        TextInput::make('class_name')
+                            ->label('Turma')
+                            ->disabled(),
+                        TextInput::make('grade_level')
+                            ->label('Série')
+                            ->disabled(),
+                        TextInput::make('school_year')
+                            ->label('Ano letivo')
+                            ->disabled(),
+                        TextInput::make('roll_number')
+                            ->label('Nº de chamada')
+                            ->disabled(),
+                        TextInput::make('enrollment_date_formatted')
+                            ->label('Data da matrícula')
+                            ->disabled(),
+                        TextInput::make('status_label')
+                            ->label('Status')
+                            ->disabled(),
+                    ]),
                 EditAction::make(),
             ])
 
