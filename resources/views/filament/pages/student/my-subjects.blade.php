@@ -52,6 +52,12 @@
             .ms-stats-grid  { grid-template-columns: repeat(2, 1fr) !important; }
             .ms-subject-grid { grid-template-columns: 1fr !important; }
         }
+
+        .ms-icon-xs { width: 0.875rem !important; height: 0.875rem !important; }
+        .ms-icon-sm { width: 1rem !important; height: 1rem !important; }
+        .ms-icon-md { width: 1.125rem !important; height: 1.125rem !important; }
+        .ms-icon-lg { width: 1.4rem !important; height: 1.4rem !important; }
+        .ms-icon-xl { width: 1.75rem !important; height: 1.75rem !important; }
     </style>
 
     @php
@@ -80,7 +86,7 @@
                     <div style="display:flex;align-items:center;gap:1rem">
                         <div
                             style="width:2.75rem;height:2.75rem;border-radius:0.5rem;background:rgba(217,119,6,0.15);display:flex;align-items:center;justify-content:center">
-                            @svg('heroicon-o-academic-cap', '', ['style' => 'width:1.4rem;height:1.4rem;color:#fbbf24'])
+                            @svg('heroicon-o-academic-cap', 'ms-icon-lg', ['style' => 'color:#fbbf24'])
                         </div>
                         <div>
                             <h2 style="font-size:1.125rem;font-weight:700;color:var(--ms-text-primary);margin:0">
@@ -99,7 +105,7 @@
                         </div>
                     </div>
                     <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;color:var(--ms-text-secondary)">
-                        @svg('heroicon-o-identification', '', ['style' => 'width:1rem;height:1rem;color:var(--ms-text-secondary)'])
+                        @svg('heroicon-o-identification', 'ms-icon-sm', ['style' => 'color:var(--ms-text-secondary)'])
                         <span>Matrícula: <strong style="color:var(--ms-text-primary)">{{ $student?->registration_number }}</strong></span>
                     </div>
                 </div>
@@ -124,7 +130,7 @@
                         <div style="display:flex;align-items:center;gap:0.75rem">
                             <div
                                 style="width:2.5rem;height:2.5rem;border-radius:0.5rem;background:{{ $card['color'] }}1a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                @svg($card['icon'], '', ['style' => 'width:1.25rem;height:1.25rem;color:' . $card['color']])
+                                @svg($card['icon'], 'ms-icon-md', ['style' => 'color:' . $card['color']])
                             </div>
                             <div>
                                 <p style="font-size:1.5rem;font-weight:700;color:var(--ms-text-primary);margin:0;line-height:1.2">
@@ -179,7 +185,7 @@
                                         <div style="display:flex;align-items:center;gap:0.75rem;min-width:0">
                                             <div
                                                 style="width:2.25rem;height:2.25rem;border-radius:0.5rem;background:{{ $cs['bg'] }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                                @svg('heroicon-o-book-open', '', ['style' => 'width:1.125rem;height:1.125rem;color:' . $cs['accent']])
+                                                @svg('heroicon-o-book-open', 'ms-icon-md', ['style' => 'color:' . $cs['accent']])
                                             </div>
                                             <div style="min-width:0">
                                                 <h4
@@ -217,7 +223,7 @@
                                     {{-- Teacher --}}
                                     @if($subject->teacher_name)
                                         <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;color:var(--ms-text-secondary)">
-                                            @svg('heroicon-o-user', '', ['style' => 'width:0.875rem;height:0.875rem;color:var(--ms-text-muted);flex-shrink:0'])
+                                            @svg('heroicon-o-user', 'ms-icon-xs', ['style' => 'color:var(--ms-text-muted);flex-shrink:0'])
                                             <span>Prof. {{ $subject->teacher_name }}</span>
                                         </div>
                                     @endif
@@ -288,7 +294,7 @@
             <div class="ms-card" style="padding:3rem;text-align:center">
                 <div
                     style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                    @svg('heroicon-o-book-open', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
+                    @svg('heroicon-o-book-open', 'ms-icon-xl', ['style' => 'color:#f59e0b'])
                 </div>
                 <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">
                     Nenhuma Disciplina Encontrada

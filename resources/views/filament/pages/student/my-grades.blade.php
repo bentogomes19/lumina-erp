@@ -47,6 +47,12 @@
             .ms-subject-grid { grid-template-columns: 1fr !important; }
             .ms-term-grid    { grid-template-columns: repeat(2, 1fr) !important; }
         }
+
+        .ms-icon-xs { width: 0.875rem !important; height: 0.875rem !important; }
+        .ms-icon-sm { width: 1rem !important; height: 1rem !important; }
+        .ms-icon-md { width: 1.125rem !important; height: 1.125rem !important; }
+        .ms-icon-lg { width: 1.4rem !important; height: 1.4rem !important; }
+        .ms-icon-xl { width: 1.75rem !important; height: 1.75rem !important; }
     </style>
 
     @php
@@ -76,7 +82,7 @@
     @if(!$student || !$currentClass)
         <div class="ms-card" style="padding:3rem;text-align:center">
             <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @svg('heroicon-o-chart-bar', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
+                @svg('heroicon-o-chart-bar', 'ms-icon-xl', ['style' => 'color:#f59e0b'])
             </div>
             <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">
                 Nenhuma turma ativa encontrada
@@ -93,7 +99,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
                     <div style="display:flex;align-items:center;gap:1rem">
                         <div style="width:2.75rem;height:2.75rem;border-radius:0.5rem;background:rgba(217,119,6,0.15);display:flex;align-items:center;justify-content:center">
-                            @svg('heroicon-o-academic-cap', '', ['style' => 'width:1.4rem;height:1.4rem;color:#fbbf24'])
+                            @svg('heroicon-o-academic-cap', 'ms-icon-lg', ['style' => 'color:#fbbf24'])
                         </div>
                         <div>
                             <h2 style="font-size:1.125rem;font-weight:700;color:var(--ms-text-primary);margin:0">{{ $currentClass->name }}</h2>
@@ -106,7 +112,7 @@
                         </div>
                     </div>
                     <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;color:var(--ms-text-secondary)">
-                        @svg('heroicon-o-identification', '', ['style' => 'width:1rem;height:1rem'])
+                        @svg('heroicon-o-identification', 'ms-icon-sm', [])
                         <span>Matrícula: <strong style="color:var(--ms-text-primary)">{{ $student->registration_number }}</strong></span>
                     </div>
                 </div>
@@ -127,7 +133,7 @@
                 <div style="display:flex;flex-direction:column;gap:0.5rem">
                     @if($stats['failed'] > 0)
                         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-left:4px solid #ef4444;border-radius:0.75rem;padding:0.875rem 1.125rem;display:flex;align-items:center;gap:0.75rem">
-                            @svg('heroicon-s-x-circle', '', ['style' => 'width:1.125rem;height:1.125rem;color:#ef4444;flex-shrink:0'])
+                            @svg('heroicon-s-x-circle', 'ms-icon-md', ['style' => 'color:#ef4444;flex-shrink:0'])
                             <p style="font-size:0.875rem;color:var(--ms-text-primary);margin:0">
                                 Você está <strong style="color:#ef4444">reprovado(a)</strong> em
                                 <strong style="color:#ef4444">{{ $stats['failed'] }} {{ $stats['failed'] === 1 ? 'disciplina' : 'disciplinas' }}</strong>.
@@ -137,7 +143,7 @@
                     @endif
                     @if($stats['recovery'] > 0)
                         <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);border-left:4px solid #eab308;border-radius:0.75rem;padding:0.875rem 1.125rem;display:flex;align-items:center;gap:0.75rem">
-                            @svg('heroicon-s-exclamation-triangle', '', ['style' => 'width:1.125rem;height:1.125rem;color:#eab308;flex-shrink:0'])
+                            @svg('heroicon-s-exclamation-triangle', 'ms-icon-md', ['style' => 'color:#eab308;flex-shrink:0'])
                             <p style="font-size:0.875rem;color:var(--ms-text-primary);margin:0">
                                 Você está convocado(a) para <strong style="color:#eab308">recuperação</strong> em
                                 <strong style="color:#eab308">{{ $stats['recovery'] }} {{ $stats['recovery'] === 1 ? 'disciplina' : 'disciplinas' }}</strong>.
@@ -162,7 +168,7 @@
                     <div class="ms-card" style="padding:0.875rem">
                         <div style="display:flex;align-items:center;gap:0.625rem">
                             <div style="width:2.25rem;height:2.25rem;border-radius:0.5rem;background:{{ $card['color'] }}1a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                @svg($card['icon'], '', ['style' => 'width:1.125rem;height:1.125rem;color:'.$card['color']])
+                                @svg($card['icon'], 'ms-icon-md', ['style' => 'color:'.$card['color']])
                             </div>
                             <div>
                                 <p style="font-size:1.25rem;font-weight:700;color:var(--ms-text-primary);margin:0;line-height:1.2">{{ $card['value'] }}</p>
@@ -178,7 +184,7 @@
                     <div class="ms-card" style="padding:0.875rem;border-color:{{ $oc }}44">
                         <div style="display:flex;align-items:center;gap:0.625rem">
                             <div style="width:2.25rem;height:2.25rem;border-radius:50%;background:{{ $oc }}1a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                @svg('heroicon-o-star', '', ['style' => 'width:1.125rem;height:1.125rem;color:'.$oc])
+                                @svg('heroicon-o-star', 'ms-icon-md', ['style' => 'color:'.$oc])
                             </div>
                             <div>
                                 <p style="font-size:1.25rem;font-weight:700;color:{{ $oc }};margin:0;line-height:1.2">{{ number_format($stats['average'], 1, ',', '') }}</p>
@@ -323,7 +329,7 @@
                                 {{-- Points needed --}}
                                 @if($item['points_needed'] !== null)
                                     <div style="margin-top:0.25rem;padding:0.5rem 0.75rem;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:0.5rem;display:flex;align-items:center;gap:0.5rem">
-                                        @svg('heroicon-o-light-bulb', '', ['style' => 'width:0.875rem;height:0.875rem;color:#eab308;flex-shrink:0'])
+                                        @svg('heroicon-o-light-bulb', 'ms-icon-xs', ['style' => 'color:#eab308;flex-shrink:0'])
                                         <span style="font-size:0.75rem;color:var(--ms-text-secondary)">
                                             Você precisa de pelo menos
                                             <strong style="color:#eab308">{{ number_format($item['points_needed'], 1, ',', '') }}</strong>
@@ -340,7 +346,7 @@
             @else
                 <div class="ms-card" style="padding:3rem;text-align:center">
                     <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(100,116,139,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                        @svg('heroicon-o-chart-bar', '', ['style' => 'width:2rem;height:2rem;color:#94a3b8'])
+                        @svg('heroicon-o-chart-bar', 'ms-icon-xl', ['style' => 'color:#94a3b8'])
                     </div>
                     <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">
                         Nenhuma nota lançada
