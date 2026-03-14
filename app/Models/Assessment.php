@@ -10,7 +10,7 @@ class Assessment extends Model
     use HasFactory;
 
     protected $fillable = ['class_id','subject_id','title','scheduled_at','weight'];
-    protected $casts = ['scheduled_at' => 'datetime'];
+    protected $casts    = ['scheduled_at' => 'datetime'];
 
     public function schoolClass()
     {

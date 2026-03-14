@@ -22,13 +22,13 @@
         .header {
             text-align: center;
             margin-bottom: 30px;
-            border-bottom: 3px solid #2563eb;
+            border-bottom: 3px solid #d97706;
             padding-bottom: 15px;
         }
         
         .header h1 {
             font-size: 24pt;
-            color: #1e40af;
+            color: #92400e;
             margin-bottom: 5px;
         }
         
@@ -64,7 +64,7 @@
         }
         
         .subject-title {
-            background: #2563eb;
+            background: #d97706;
             color: white;
             padding: 10px 15px;
             font-size: 13pt;
@@ -82,7 +82,7 @@
             padding: 8px 15px;
             font-weight: bold;
             color: #1e293b;
-            border-left: 4px solid #2563eb;
+            border-left: 4px solid #d97706;
         }
         
         .grades-table {
@@ -111,12 +111,12 @@
         }
         
         .average-row {
-            background: #dbeafe !important;
+            background: #fef3c7 !important;
             font-weight: bold;
         }
         
         .average-row td {
-            color: #1e40af;
+            color: #92400e;
         }
         
         .overall-average {

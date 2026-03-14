@@ -35,8 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Portal Lumina')
             ->login()
             ->colors([
-                'primary' => Color::hex('#2563eb'),
-                'gray'    => Color::Slate,
+                'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

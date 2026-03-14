@@ -18,7 +18,7 @@
 
         $categoryStyles = [
             'linguagens'          => ['accent' => '#8b5cf6', 'bg' => 'rgba(139,92,246,0.12)', 'text' => '#7c3aed'],
-            'matematica'          => ['accent' => '#3b82f6', 'bg' => 'rgba(59,130,246,0.12)',  'text' => '#2563eb'],
+            'matematica'          => ['accent' => '#f43f5e', 'bg' => 'rgba(244,63,94,0.12)',  'text' => '#e11d48'],
             'ciencias_da_natureza'=> ['accent' => '#10b981', 'bg' => 'rgba(16,185,129,0.12)', 'text' => '#059669'],
             'ciencias_humanas'    => ['accent' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.12)', 'text' => '#d97706'],
             'ciencias_exatas'     => ['accent' => '#06b6d4', 'bg' => 'rgba(6,182,212,0.12)',  'text' => '#0891b2'],
@@ -127,7 +127,7 @@
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
                 @php
                     $statCards = [
-                        ['icon'=>'heroicon-o-calendar-days','value'=>$totalClasses,'label'=>'Aulas Dadas','color'=>'#3b82f6'],
+                        ['icon'=>'heroicon-o-calendar-days','value'=>$totalClasses,'label'=>'Aulas Dadas','color'=>'#f59e0b'],
                         ['icon'=>'heroicon-o-check-circle','value'=>$presences,'label'=>'Presenças','color'=>'#22c55e'],
                         ['icon'=>'heroicon-o-clock','value'=>$lates,'label'=>'Atrasos','color'=>'#eab308'],
                         ['icon'=>'heroicon-o-x-circle','value'=>$absences,'label'=>'Faltas','color'=>'#ef4444'],
@@ -152,7 +152,7 @@
             @if(collect($termAverages)->filter(fn($t) => $t['average'] !== null)->isNotEmpty())
                 <div style="background:rgba(30,41,59,0.7);border:1px solid rgba(255,255,255,0.08);border-radius:0.75rem;padding:1.25rem">
                     <h3 style="font-size:1rem;font-weight:600;color:#f1f5f9;margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem">
-                        @svg('heroicon-o-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#3b82f6'])
+                        @svg('heroicon-o-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#f59e0b'])
                         Notas por Bimestre
                     </h3>
                     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
