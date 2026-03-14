@@ -2,289 +2,170 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boletim Escolar - {{ $student->name }}</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1e293b; background: #fff; }
+
+        .page { padding: 24px 28px; }
+
+        /* ── Header ── */
+        .header { border-bottom: 2px solid #f59e0b; padding-bottom: 12px; margin-bottom: 16px; }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .school-name { font-size: 15px; font-weight: bold; color: #1e293b; }
+        .school-sub  { font-size: 9px; color: #64748b; margin-top: 2px; }
+        .doc-title   { font-size: 13px; font-weight: bold; color: #f59e0b; text-align: right; }
+        .doc-year    { font-size: 9px; color: #64748b; text-align: right; margin-top: 2px; }
+
+        /* ── Student info ── */
+        .student-info { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; margin-bottom: 16px; }
+        .info-grid { display: flex; gap: 24px; flex-wrap: wrap; }
+        .info-item label { font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; display: block; }
+        .info-item span  { font-size: 10px; font-weight: 600; color: #1e293b; }
+
+        /* ── Summary ── */
+        .summary { display: flex; gap: 10px; margin-bottom: 16px; }
+        .summary-item { flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; text-align: center; }
+        .summary-item .val { font-size: 18px; font-weight: 800; }
+        .summary-item .lbl { font-size: 7.5px; text-transform: uppercase; color: #64748b; margin-top: 2px; }
+
+        /* ── Table ── */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        thead th {
+            background: #1e293b; color: #fff; font-size: 8px; text-transform: uppercase;
+            letter-spacing: 0.05em; padding: 6px 8px; text-align: center;
         }
-        
-        body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 11pt;
-            line-height: 1.4;
-            color: #333;
-            padding: 20px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #d97706;
-            padding-bottom: 15px;
-        }
-        
-        .header h1 {
-            font-size: 24pt;
-            color: #92400e;
-            margin-bottom: 5px;
-        }
-        
-        .header h2 {
-            font-size: 16pt;
-            color: #64748b;
-            font-weight: normal;
-        }
-        
-        .student-info {
-            background: #f1f5f9;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 25px;
-        }
-        
-        .student-info table {
-            width: 100%;
-        }
-        
-        .student-info td {
-            padding: 5px;
-        }
-        
-        .student-info .label {
-            font-weight: bold;
-            color: #475569;
-            width: 150px;
-        }
-        
-        .grades-section {
-            margin-bottom: 25px;
-        }
-        
-        .subject-title {
-            background: #d97706;
-            color: white;
-            padding: 10px 15px;
-            font-size: 13pt;
-            font-weight: bold;
-            margin-top: 15px;
-            margin-bottom: 5px;
-        }
-        
-        .term-section {
-            margin-bottom: 15px;
-        }
-        
-        .term-header {
-            background: #cbd5e1;
-            padding: 8px 15px;
-            font-weight: bold;
-            color: #1e293b;
-            border-left: 4px solid #d97706;
-        }
-        
-        .grades-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-        }
-        
-        .grades-table th {
-            background: #e2e8f0;
-            padding: 8px;
-            text-align: left;
-            font-weight: bold;
-            border: 1px solid #cbd5e1;
-            font-size: 10pt;
-        }
-        
-        .grades-table td {
-            padding: 8px;
-            border: 1px solid #e2e8f0;
-            font-size: 10pt;
-        }
-        
-        .grades-table tr:nth-child(even) {
-            background: #f8fafc;
-        }
-        
-        .average-row {
-            background: #fef3c7 !important;
-            font-weight: bold;
-        }
-        
-        .average-row td {
-            color: #92400e;
-        }
-        
-        .overall-average {
-            background: #10b981;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 14pt;
-            font-weight: bold;
-            margin: 20px 0;
-            border-radius: 5px;
-        }
-        
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 9pt;
-            color: #64748b;
-            padding-top: 15px;
-            border-top: 1px solid #cbd5e1;
-        }
-        
-        .status {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 9pt;
-            font-weight: bold;
-        }
-        
-        .status-approved {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .status-recovery {
-            background: #fed7aa;
-            color: #92400e;
-        }
-        
-        .status-failed {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .page-break {
-            page-break-after: always;
-        }
+        thead th:first-child { text-align: left; }
+        tbody tr:nth-child(even) { background: #f8fafc; }
+        tbody td { padding: 6px 8px; font-size: 9.5px; border-bottom: 1px solid #e2e8f0; text-align: center; }
+        tbody td:first-child { text-align: left; font-weight: 600; }
+
+        /* ── Grade colors ── */
+        .g-ok  { color: #16a34a; font-weight: 700; }
+        .g-rec { color: #b45309; font-weight: 700; }
+        .g-nok { color: #dc2626; font-weight: 700; }
+        .g-nil { color: #94a3b8; }
+
+        /* ── Status badge ── */
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: 600; }
+        .b-approved { background: #dcfce7; color: #166534; }
+        .b-recovery { background: #fef9c3; color: #854d0e; }
+        .b-failed   { background: #fee2e2; color: #991b1b; }
+        .b-ongoing  { background: #f1f5f9; color: #475569; }
+
+        /* ── Signatures & footer ── */
+        .signatures { display: flex; gap: 60px; justify-content: center; margin-top: 36px; margin-bottom: 20px; }
+        .sig-line .line  { border-top: 1px solid #334155; width: 150px; margin: 0 auto 4px; }
+        .sig-line .label { font-size: 8px; color: #64748b; text-align: center; }
+        .footer { border-top: 1px solid #e2e8f0; padding-top: 8px; display: flex; justify-content: space-between; font-size: 8px; color: #94a3b8; }
     </style>
 </head>
 <body>
+<div class="page">
+
+    {{-- ── Header ── --}}
     <div class="header">
-        <h1>BOLETIM ESCOLAR</h1>
-        <h2>Relatório de Desempenho Acadêmico</h2>
+        <div class="header-top">
+            <div>
+                <div class="school-name">{{ config('app.name', 'Lumina ERP') }}</div>
+                <div class="school-sub">Sistema de Gestão Escolar</div>
+            </div>
+            <div>
+                <div class="doc-title">BOLETIM ESCOLAR</div>
+                <div class="doc-year">Ano Letivo {{ $currentClass->schoolYear?->year ?? now()->year }}</div>
+            </div>
+        </div>
     </div>
-    
+
+    {{-- ── Student info ── --}}
     <div class="student-info">
-        <table>
-            <tr>
-                <td class="label">Nome do Aluno:</td>
-                <td>{{ $student->name }}</td>
-            </tr>
-            <tr>
-                <td class="label">Matrícula:</td>
-                <td>{{ $student->registration_number }}</td>
-            </tr>
-            <tr>
-                <td class="label">Data de Emissão:</td>
-                <td>{{ $generatedAt->format('d/m/Y H:i') }}</td>
-            </tr>
-        </table>
+        <div class="info-grid">
+            <div class="info-item"><label>Nome do Aluno</label><span>{{ $student->name }}</span></div>
+            <div class="info-item"><label>Matrícula</label><span>{{ $student->registration_number }}</span></div>
+            <div class="info-item"><label>Turma</label><span>{{ $currentClass->name }}</span></div>
+            @if($currentClass->gradeLevel)
+                <div class="info-item"><label>Série</label><span>{{ $currentClass->gradeLevel->name }}</span></div>
+            @endif
+            <div class="info-item"><label>Emitido em</label><span>{{ $generatedAt->format('d/m/Y H:i') }}</span></div>
+        </div>
     </div>
-    
-    <div class="grades-section">
-        @foreach($reportData as $subjectName => $terms)
-            <div class="subject-title">{{ $subjectName }}</div>
-            
-            @foreach($terms as $term => $termData)
-                <div class="term-section">
-                    <div class="term-header">
-                        {{ match($term) {
-                            'b1' => '1º Bimestre',
-                            'b2' => '2º Bimestre',
-                            'b3' => '3º Bimestre',
-                            'b4' => '4º Bimestre',
-                            default => $term,
-                        } }}
-                    </div>
-                    
-                    <table class="grades-table">
-                        <thead>
-                            <tr>
-                                <th>Tipo de Avaliação</th>
-                                <th style="text-align: center;">Sequência</th>
-                                <th style="text-align: center;">Nota</th>
-                                <th style="text-align: center;">Nota Máxima</th>
-                                <th style="text-align: center;">Peso</th>
-                                <th>Data</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($termData['grades'] as $grade)
-                                <tr>
-                                    <td>
-                                        {{ match($grade->assessment_type?->value ?? $grade->assessment_type) {
-                                            'test' => 'Prova',
-                                            'quiz' => 'Quiz',
-                                            'work' => 'Trabalho',
-                                            'project' => 'Projeto',
-                                            'participation' => 'Participação',
-                                            'recovery' => 'Recuperação',
-                                            default => $grade->assessment_type,
-                                        } }}
-                                    </td>
-                                    <td style="text-align: center;">{{ $grade->sequence }}</td>
-                                    <td style="text-align: center; font-weight: bold;">
-                                        {{ number_format($grade->score, 2, ',', '.') }}
-                                    </td>
-                                    <td style="text-align: center;">
-                                        {{ number_format($grade->max_score, 2, ',', '.') }}
-                                    </td>
-                                    <td style="text-align: center;">
-                                        {{ $grade->weight ? number_format($grade->weight, 2, ',', '.') : '-' }}
-                                    </td>
-                                    <td>{{ $grade->date_recorded?->format('d/m/Y') ?? '-' }}</td>
-                                </tr>
-                            @endforeach
-                            <tr class="average-row">
-                                <td colspan="2"><strong>Média do Bimestre:</strong></td>
-                                <td colspan="4" style="text-align: center; font-size: 12pt;">
-                                    {{ number_format($termData['average'], 2, ',', '.') }}
-                                    @if($termData['average'] >= 7.0)
-                                        <span class="status status-approved">✓ Aprovado</span>
-                                    @elseif($termData['average'] >= 5.0)
-                                        <span class="status status-recovery">⚠ Recuperação</span>
-                                    @else
-                                        <span class="status status-failed">✗ Insuficiente</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            @endforeach
-        @endforeach
-    </div>
-    
-    <div class="overall-average">
-        MÉDIA GERAL: {{ number_format($overallAverage, 2, ',', '.') }}
-        @if($overallAverage >= 7.0)
-            - DESEMPENHO SATISFATÓRIO
-        @elseif($overallAverage >= 5.0)
-            - NECESSITA RECUPERAÇÃO
-        @else
-            - DESEMPENHO INSUFICIENTE
+
+    {{-- ── Summary ── --}}
+    @php
+        $col        = collect($subjects);
+        $approved   = $col->where('status', 'approved')->count();
+        $recovery   = $col->where('status', 'recovery')->count();
+        $failed     = $col->where('status', 'failed')->count();
+        $avgAll     = $col->pluck('overall_average')->filter(fn($v) => $v !== null);
+        $overallAvg = $avgAll->isNotEmpty() ? round($avgAll->avg(), 1) : null;
+        $statusLabels = ['approved' => 'Aprovado', 'recovery' => 'Recuperação', 'failed' => 'Reprovado', 'ongoing' => 'Cursando'];
+        $gradeClass = fn($v) => $v === null ? 'g-nil' : ($v >= 6 ? 'g-ok' : ($v >= 4 ? 'g-rec' : 'g-nok'));
+    @endphp
+
+    <div class="summary">
+        <div class="summary-item"><div class="val" style="color:#1e293b">{{ $col->count() }}</div><div class="lbl">Disciplinas</div></div>
+        <div class="summary-item"><div class="val g-ok">{{ $approved }}</div><div class="lbl">Aprovadas</div></div>
+        <div class="summary-item"><div class="val g-rec">{{ $recovery }}</div><div class="lbl">Recuperação</div></div>
+        <div class="summary-item"><div class="val g-nok">{{ $failed }}</div><div class="lbl">Reprovadas</div></div>
+        @if($overallAvg !== null)
+            <div class="summary-item">
+                <div class="val {{ $gradeClass($overallAvg) }}">{{ number_format($overallAvg, 1, ',', '') }}</div>
+                <div class="lbl">Média Geral</div>
+            </div>
         @endif
     </div>
-    
-    <div class="footer">
-        <p><strong>LEGENDA:</strong></p>
-        <p>
-            Aprovado: Nota ≥ 7,0 | 
-            Recuperação: 5,0 ≤ Nota < 7,0 | 
-            Insuficiente: Nota < 5,0
-        </p>
-        <p style="margin-top: 10px;">
-            Este documento foi gerado eletronicamente em {{ $generatedAt->format('d/m/Y') }} às {{ $generatedAt->format('H:i') }}.
-        </p>
+
+    {{-- ── Grades table ── --}}
+    <table>
+        <thead>
+            <tr>
+                <th style="width:30%">Disciplina</th>
+                <th>1º Bim</th>
+                <th>2º Bim</th>
+                <th>3º Bim</th>
+                <th>4º Bim</th>
+                <th>Média Final</th>
+                <th>Situação</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($subjects as $item)
+                @php
+                    $s      = $item['subject'];
+                    $terms  = $item['terms'];
+                    $over   = $item['overall_average'];
+                    $status = $item['status'];
+                @endphp
+                <tr>
+                    <td>{{ $s?->name ?? '—' }}</td>
+                    @foreach(['b1','b2','b3','b4'] as $tk)
+                        @php $fa = $terms[$tk]['final_average'] ?? null; @endphp
+                        <td class="{{ $gradeClass($fa) }}">{{ $fa !== null ? number_format($fa, 1, ',', '') : '—' }}</td>
+                    @endforeach
+                    <td class="{{ $gradeClass($over) }}">{{ $over !== null ? number_format($over, 1, ',', '') : '—' }}</td>
+                    <td><span class="badge b-{{ $status }}">{{ $statusLabels[$status] ?? $status }}</span></td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    {{-- ── Signatures ── --}}
+    <div class="signatures">
+        <div class="sig-line">
+            <div class="line"></div>
+            <div class="label">Coordenação Pedagógica</div>
+        </div>
+        <div class="sig-line">
+            <div class="line"></div>
+            <div class="label">Responsável pelo Aluno</div>
+        </div>
     </div>
+
+    {{-- ── Footer ── --}}
+    <div class="footer">
+        <span>Gerado em {{ $generatedAt->format('d/m/Y \à\s H:i') }}</span>
+        <span>{{ config('app.name', 'Lumina ERP') }} — Documento de uso exclusivo da instituição</span>
+    </div>
+
+</div>
 </body>
 </html>
