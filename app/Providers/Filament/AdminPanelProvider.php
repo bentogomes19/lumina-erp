@@ -55,13 +55,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->plugins([
-                FilamentLanguageSwitcherPlugin::make()
-                ->locales([
-                    ['code' => 'en', 'name' => 'English', 'flag' => 'gb'],
-                    ['code' => 'pt_BR', 'name' => 'Português', 'flag' => 'br'],
-                ]),
-            ])
+            ->plugins([])
             ->authMiddleware([
                 Authenticate::class,
                 RedirectUserByRole::class,
