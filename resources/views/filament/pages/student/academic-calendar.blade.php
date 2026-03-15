@@ -1,906 +1,852 @@
 <x-filament-panels::page>
-<style>
-    /* ── Tokens ── */
-    :root {
-        --ac-bg:          #ffffff;
-        --ac-surface:     #f8fafc;
-        --ac-border:      #e2e8f0;
-        --ac-text:        #1e293b;
-        --ac-muted:       #64748b;
-        --ac-faint:       #94a3b8;
-        --ac-hover:       #f1f5f9;
-        --ac-today-ring:  #6366f1;
-        --ac-weekend-bg:  #fafafa;
-    }
-    .dark {
-        --ac-bg:          #080a0c;
-        --ac-surface:     #0d1117;
-        --ac-border:      #1e293b;
-        --ac-text:        #f1f5f9;
-        --ac-muted:       #94a3b8;
-        --ac-faint:       #475569;
-        --ac-hover:       #0f172a;
-        --ac-today-ring:  #818cf8;
-        --ac-weekend-bg:  #090c10;
-    }
+    <style>
+        /* ── CSS Variables ── */
+        :root {
+            --ac-card-bg:        #ffffff;
+            --ac-card-border:    #e2e8f0;
+            --ac-cell-bg:        #f8fafc;
+            --ac-cell-border:    #e2e8f0;
+            --ac-bar-bg:         #e2e8f0;
+            --ac-text-primary:   #1e293b;
+            --ac-text-secondary: #64748b;
+            --ac-text-muted:     #94a3b8;
+            --ac-hover-bg:       #f1f5f9;
+            --ac-today-ring:     #f59e0b;
+            --ac-weekend-bg:     #f8fafc;
+        }
+        .dark {
+            --ac-card-bg:        #080a0c;
+            --ac-card-border:    #334155;
+            --ac-cell-bg:        #0c1019;
+            --ac-cell-border:    #1e293b;
+            --ac-bar-bg:         #10141d;
+            --ac-text-primary:   #f1f5f9;
+            --ac-text-secondary: #94a3b8;
+            --ac-text-muted:     #64748b;
+            --ac-hover-bg:       #0a0d11;
+            --ac-today-ring:     #f59e0b;
+            --ac-weekend-bg:     #0a0d11;
+        }
 
-    /* ── Card ── */
-    .ac-card {
-        background: var(--ac-bg);
-        border: 1px solid var(--ac-border);
-        border-radius: 0.875rem;
-        padding: 1.25rem;
-    }
+        .ac-card {
+            background: var(--ac-card-bg);
+            border: 1px solid var(--ac-card-border);
+            border-radius: 0.75rem;
+        }
 
-    /* ── Header nav button ── */
-    .ac-nav-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.25rem;
-        height: 2.25rem;
-        border-radius: 0.5rem;
-        border: 1px solid var(--ac-border);
-        background: var(--ac-bg);
-        color: var(--ac-muted);
-        cursor: pointer;
-        transition: all 0.15s;
-    }
-    .ac-nav-btn:hover { background: var(--ac-hover); color: var(--ac-text); }
+        /* ── View mode tabs ── */
+        .ac-tab {
+            padding: 0.4rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--ac-text-secondary);
+            background: transparent;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            transition: all 0.15s;
+        }
+        .ac-tab:hover   { background: var(--ac-hover-bg); color: var(--ac-text-primary); }
+        .ac-tab.active  { background: #f59e0b; color: #fff; }
 
-    .ac-pill-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.375rem;
-        padding: 0.3rem 0.75rem;
-        border-radius: 999px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        border: 1.5px solid var(--ac-border);
-        background: var(--ac-bg);
-        color: var(--ac-muted);
-        cursor: pointer;
-        transition: all 0.15s;
-        white-space: nowrap;
-    }
-    .ac-pill-btn:hover  { background: var(--ac-hover); }
-    .ac-pill-btn.active { border-color: currentColor; }
+        /* ── Navigation button ── */
+        .ac-nav-btn {
+            width: 2rem; height: 2rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--ac-card-border);
+            background: var(--ac-card-bg);
+            color: var(--ac-text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .ac-nav-btn:hover { background: var(--ac-hover-bg); color: var(--ac-text-primary); }
 
-    .ac-view-btn {
-        padding: 0.35rem 0.875rem;
-        border-radius: 0.5rem;
-        font-size: 0.8125rem;
-        font-weight: 500;
-        cursor: pointer;
-        color: var(--ac-muted);
-        transition: all 0.15s;
-        background: transparent;
-        border: none;
-    }
-    .ac-view-btn.active {
-        background: var(--ac-surface);
-        color: var(--ac-text);
-        box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    }
+        /* ── Category filter pill ── */
+        .ac-filter-pill {
+            display: flex; align-items: center; gap: 0.375rem;
+            padding: 0.3125rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1.5px solid var(--ac-card-border);
+            background: var(--ac-card-bg);
+            color: var(--ac-text-secondary);
+            transition: all 0.15s;
+        }
+        .ac-filter-pill:hover { background: var(--ac-hover-bg); }
+        .ac-filter-pill.active { border-color: currentColor; }
 
-    /* ── Month grid ── */
-    .ac-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 2px;
-    }
-    .ac-dow {
-        text-align: center;
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: var(--ac-faint);
-        padding: 0.5rem 0 0.25rem;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-    }
-    .ac-cell {
-        background: var(--ac-bg);
-        border: 1px solid var(--ac-border);
-        border-radius: 0.5rem;
-        min-height: 5.5rem;
-        padding: 0.375rem;
-        cursor: default;
-        transition: background 0.1s;
-        position: relative;
-    }
-    .ac-cell.has-events { cursor: pointer; }
-    .ac-cell.has-events:hover { background: var(--ac-hover); }
-    .ac-cell.is-empty {
-        background: transparent;
-        border-color: transparent;
-    }
-    .ac-cell.is-weekend {
-        background: var(--ac-weekend-bg);
-    }
-    .ac-cell.is-today {
-        outline: 2px solid var(--ac-today-ring);
-        outline-offset: -2px;
-    }
-    .ac-cell-day {
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: var(--ac-muted);
-        line-height: 1.5rem;
-        width: 1.5rem;
-        height: 1.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        margin-bottom: 0.25rem;
-    }
-    .ac-cell.is-today .ac-cell-day {
-        background: var(--ac-today-ring);
-        color: #fff;
-    }
-    .ac-cell.is-weekend .ac-cell-day { color: var(--ac-faint); }
+        /* ── Month grid ── */
+        .ac-month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        .ac-dow-header {
+            text-align: center;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--ac-text-muted);
+            padding: 0.375rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .ac-cell {
+            min-height: 5.5rem;
+            background: var(--ac-card-bg);
+            border: 1px solid var(--ac-cell-border);
+            border-radius: 0.375rem;
+            padding: 0.375rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            position: relative;
+            transition: background 0.1s;
+        }
+        .ac-cell:hover { background: var(--ac-hover-bg); }
+        .ac-cell.empty { background: var(--ac-cell-bg); opacity: 0.4; border-color: transparent; }
+        .ac-cell.weekend { background: var(--ac-weekend-bg); }
+        .ac-cell.today {
+            outline: 2px solid var(--ac-today-ring);
+            outline-offset: -2px;
+            background: var(--ac-card-bg);
+        }
+        .ac-day-num {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--ac-text-secondary);
+            line-height: 1.4;
+            width: 1.5rem;
+            height: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .ac-cell.today .ac-day-num {
+            background: #f59e0b;
+            color: #fff;
+        }
+        .ac-event-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 0.625rem;
+            font-weight: 500;
+            cursor: pointer;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            line-height: 1.6;
+            transition: opacity 0.15s;
+        }
+        .ac-event-chip:hover { opacity: 0.85; }
+        .ac-event-more {
+            font-size: 0.5625rem;
+            color: var(--ac-text-muted);
+            padding: 1px 5px;
+            cursor: pointer;
+        }
 
-    /* ── Event chips inside cells ── */
-    .ac-event-chip {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.68rem;
-        font-weight: 500;
-        line-height: 1.4;
-        margin-bottom: 2px;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        max-width: 100%;
-    }
-    .ac-event-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
+        /* ── Week grid ── */
+        .ac-week-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+        .ac-week-col {
+            min-height: 14rem;
+            background: var(--ac-card-bg);
+            border: 1px solid var(--ac-cell-border);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .ac-week-col.today { outline: 2px solid var(--ac-today-ring); outline-offset: -2px; }
+        .ac-week-col.weekend { background: var(--ac-weekend-bg); }
+        .ac-week-day-header {
+            text-align: center;
+            padding-bottom: 0.375rem;
+            border-bottom: 1px solid var(--ac-cell-border);
+            margin-bottom: 0.25rem;
+        }
+        .ac-week-event {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.3rem;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            cursor: pointer;
+            line-height: 1.5;
+            transition: opacity 0.15s;
+        }
+        .ac-week-event:hover { opacity: 0.8; }
 
-    /* ── List view ── */
-    .ac-list-day {
-        display: flex;
-        gap: 1rem;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--ac-border);
-    }
-    .ac-list-day:last-child { border-bottom: none; }
-    .ac-list-date-col {
-        width: 4.5rem;
-        flex-shrink: 0;
-        text-align: center;
-    }
-    .ac-list-date-num {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--ac-text);
-        line-height: 1;
-    }
-    .ac-list-date-weekday {
-        font-size: 0.7rem;
-        color: var(--ac-faint);
-        text-transform: uppercase;
-        letter-spacing: .04em;
-    }
-    .ac-list-date-month {
-        font-size: 0.7rem;
-        color: var(--ac-muted);
-    }
-    .ac-list-event {
-        flex: 1;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        padding: 0.625rem 0.875rem;
-        border-radius: 0.625rem;
-        margin-bottom: 0.375rem;
-        cursor: pointer;
-        transition: opacity 0.15s;
-    }
-    .ac-list-event:hover { opacity: 0.85; }
-    .ac-list-event-icon {
-        width: 2rem;
-        height: 2rem;
-        border-radius: 0.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
+        /* ── List view ── */
+        .ac-list-date-group { margin-bottom: 1.25rem; }
+        .ac-list-date-label {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--ac-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .ac-list-event {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.875rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.1s;
+            margin-bottom: 0.375rem;
+            border: 1px solid var(--ac-card-border);
+            background: var(--ac-card-bg);
+        }
+        .ac-list-event:hover { background: var(--ac-hover-bg); }
 
-    /* Keep heroicons visually consistent even if external SVG styles leak in. */
-    .ac-nav-btn svg,
-    .ac-list-event-icon svg,
-    .ac-modal-icon svg,
-    .ac-modal-close svg,
-    .ac-detail-row svg,
-    .ac-upcoming-item svg,
-    .ac-card > svg {
-        width: 1rem;
-        height: 1rem;
-        flex-shrink: 0;
-    }
+        /* ── Event modal ── */
+        .ac-modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .ac-modal {
+            background: var(--ac-card-bg);
+            border: 1px solid var(--ac-card-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 28rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+        }
 
-    .ac-empty-state-icon {
-        width: 2.25rem;
-        height: 2.25rem;
-    }
+        /* ── Upcoming sidebar ── */
+        .ac-upcoming-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.625rem 0;
+            border-bottom: 1px solid var(--ac-cell-border);
+        }
+        .ac-upcoming-item:last-child { border-bottom: none; }
 
-    .ac-icon-xs { width: 0.875rem !important; height: 0.875rem !important; }
-    .ac-icon-sm { width: 1rem !important; height: 1rem !important; }
-    .ac-icon-md { width: 1.25rem !important; height: 1.25rem !important; }
-    .ac-icon-lg { width: 1.5rem !important; height: 1.5rem !important; }
+        /* ── Subject select ── */
+        .ac-select {
+            padding: 0.375rem 0.625rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--ac-card-border);
+            background: var(--ac-card-bg);
+            color: var(--ac-text-primary);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            outline: none;
+        }
+        .ac-select:focus { border-color: #f59e0b; }
 
-    /* ── Upcoming sidebar card ── */
-    .ac-upcoming-item {
-        display: flex;
-        align-items: center;
-        gap: 0.625rem;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--ac-border);
-    }
-    .ac-upcoming-item:last-child { border-bottom: none; }
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .ac-layout       { flex-direction: column !important; }
+            .ac-sidebar      { width: 100% !important; }
+            .ac-cell         { min-height: 3.5rem; }
+            .ac-week-col     { min-height: 8rem; }
+        }
+        @media (max-width: 640px) {
+            .ac-controls-row { flex-wrap: wrap; }
+            .ac-month-grid   { gap: 1px; }
+            .ac-cell         { min-height: 2.75rem; padding: 0.25rem; }
+            .ac-day-num      { font-size: 0.6875rem; width: 1.25rem; height: 1.25rem; }
+            .ac-event-chip   { display: none; }
+            .ac-cell-dot     { display: flex !important; }
+            .ac-week-grid    { grid-template-columns: 1fr; }
+        }
+    </style>
 
-    /* ── Modal overlay ── */
-    .ac-modal-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: rgba(0,0,0,.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-    }
-    .ac-modal {
-        background: var(--ac-bg);
-        border: 1px solid var(--ac-border);
-        border-radius: 1rem;
-        max-width: 30rem;
-        width: 100%;
-        padding: 1.5rem;
-        box-shadow: 0 20px 60px rgba(0,0,0,.25);
-    }
-    .ac-modal-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        margin-bottom: 1rem;
-    }
-    .ac-modal-icon {
-        width: 2.75rem;
-        height: 2.75rem;
-        border-radius: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 0.875rem;
-        flex-shrink: 0;
-    }
-    .ac-modal-close {
-        width: 2rem;
-        height: 2rem;
-        border-radius: 0.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: var(--ac-faint);
-        background: transparent;
-        border: none;
-        transition: all 0.15s;
-    }
-    .ac-modal-close:hover { background: var(--ac-hover); color: var(--ac-text); }
+    @php
+        $data         = $this->getPageData();
+        $student      = $data['student'];
+        $currentClass = $data['currentClass'];
+        $schoolYear   = $data['schoolYear'];
+        $monthStart   = $data['monthStart'];
+        $grid         = $data['grid'];
+        $weekGrid     = $data['weekGrid'];
+        $listEvents   = $data['listEvents'];
+        $upcoming     = $data['upcoming'];
+        $subjects     = $data['subjects'];
+        $today        = now()->format('Y-m-d');
 
-    .ac-detail-row {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 0;
-        font-size: 0.875rem;
-        color: var(--ac-muted);
-        border-bottom: 1px solid var(--ac-border);
-    }
-    .ac-detail-row:last-child { border-bottom: none; }
-    .ac-detail-label { color: var(--ac-faint); font-size: 0.75rem; min-width: 5rem; }
+        $monthName = ucfirst($monthStart->locale('pt_BR')->translatedFormat('F Y'));
 
-    /* ── Legend ── */
-    .ac-legend-item {
-        display: flex;
-        align-items: center;
-        gap: 0.375rem;
-        font-size: 0.8rem;
-        color: var(--ac-muted);
-    }
-    .ac-legend-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
+        $weekStartCrb = $data['weekStart'];
+        $weekEndCrb   = $weekStartCrb->copy()->addDays(6);
+        $weekLabel    = $weekStartCrb->locale('pt_BR')->translatedFormat('d M') . ' – ' . $weekEndCrb->locale('pt_BR')->translatedFormat('d M Y');
 
-    /* ── Responsive: mobile shows dots only ── */
-    @media (max-width: 640px) {
-        .ac-cell { min-height: 3.25rem; }
-        .ac-event-chip-text { display: none; }
-        .ac-event-chip { padding: 0.125rem 0.25rem; }
-    }
-</style>
+        $dowNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-@php
-    $data        = $this->getPageData();
-    $student     = $data['student'];
-    $currentClass = $data['currentClass'];
-    $schoolYear  = $data['schoolYear'];
-    $monthStart  = $data['monthStart'];
-    $grid        = $data['grid'];
-    $events      = $data['events'];
-    $listEvents  = $data['listEvents'];
-    $upcoming    = $data['upcoming'];
-    $subjects    = $data['subjects'];
+        $categories = [
+            'assessment'  => ['label' => 'Avaliações',    'color' => '#3b82f6', 'icon' => 'heroicon-o-pencil-square'],
+            'holiday'     => ['label' => 'Feriados',      'color' => '#ef4444', 'icon' => 'heroicon-o-flag'],
+            'recess'      => ['label' => 'Recessos',      'color' => '#8b5cf6', 'icon' => 'heroicon-o-sun'],
+            'school_event'=> ['label' => 'Eventos',       'color' => '#10b981', 'icon' => 'heroicon-o-star'],
+            'period'      => ['label' => 'Período Letivo','color' => '#10b981', 'icon' => 'heroicon-o-academic-cap'],
+        ];
 
-    $monthLabel = ucfirst($monthStart->locale('pt_BR')->translatedFormat('F Y'));
-    $today      = now()->format('Y-m-d');
+        // Group list events by date
+        $groupedList = [];
+        foreach ($listEvents as $ev) {
+            $groupedList[$ev['date']][] = $ev;
+        }
+        ksort($groupedList);
+    @endphp
 
-    $categories = [
-        ['key' => 'assessment',  'label' => 'Avaliações',       'color' => '#3b82f6'],
-        ['key' => 'holiday',     'label' => 'Feriados',          'color' => '#ef4444'],
-        ['key' => 'recess',      'label' => 'Recesso',           'color' => '#8b5cf6'],
-        ['key' => 'school_event','label' => 'Eventos Escolares', 'color' => '#10b981'],
-        ['key' => 'period',      'label' => 'Período Letivo',    'color' => '#f97316'],
-    ];
-
-    $daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-@endphp
-
-{{-- ═══════════════════════════════════════════════════════════
-     ALPINE WRAPPER — event modal state lives here
-     ═══════════════════════════════════════════════════════════ --}}
-<div
-    x-data="{
-        showModal: false,
-        selectedEvent: null,
-        allEvents: @js($events->toArray()),
-        openEvent(eventId) {
-            this.selectedEvent = this.allEvents.find(e => e.id === eventId) || null;
-            if (this.selectedEvent) this.showModal = true;
-        },
-        closeModal() { this.showModal = false; this.selectedEvent = null; }
-    }"
-    @keydown.escape.window="closeModal()"
->
-
-{{-- ── No-student state ─────────────────────────────────────── --}}
-@if (! $student || ! $currentClass)
-    <div class="ac-card text-center py-16">
-        <x-heroicon-o-calendar class="ac-empty-state-icon mx-auto mb-4" style="color: var(--ac-faint)" />
-        <p class="font-semibold text-lg" style="color: var(--ac-text)">Nenhuma turma ativa encontrada</p>
-        <p class="mt-1 text-sm" style="color: var(--ac-muted)">O calendário acadêmico ficará disponível após a matrícula.</p>
-    </div>
-
-@else
-
-{{-- ══════════════════════════════════════════════════════════════
-     SCHOOL YEAR BANNER
-     ══════════════════════════════════════════════════════════════ --}}
-@if ($schoolYear)
-<div class="ac-card mb-4 flex flex-wrap items-center justify-between gap-3">
-    <div class="flex items-center gap-3">
-        <div class="flex items-center justify-center w-10 h-10 rounded-xl" style="background:#eff6ff">
-            <x-heroicon-o-academic-cap class="ac-icon-md" style="color:#3b82f6" />
+    {{-- ── No class state ── --}}
+    @if(!$student || !$currentClass)
+        <div class="ac-card" style="padding:3rem;text-align:center">
+            <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+                @svg('heroicon-o-calendar-days', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
+            </div>
+            <h3 style="font-size:1.125rem;font-weight:600;color:var(--ac-text-primary);margin:0 0 0.5rem">
+                Nenhuma turma ativa encontrada
+            </h3>
+            <p style="font-size:0.875rem;color:var(--ac-text-secondary);margin:0">
+                Você não está matriculado em nenhuma turma no ano letivo vigente.
+            </p>
         </div>
-        <div>
-            <p class="text-xs font-medium" style="color: var(--ac-faint)">Ano Letivo</p>
-            <p class="font-bold text-lg" style="color: var(--ac-text)">{{ $schoolYear->year }}</p>
-        </div>
-    </div>
-    <div class="flex gap-6 text-sm">
-        <div>
-            <p class="text-xs" style="color: var(--ac-faint)">Início</p>
-            <p class="font-semibold" style="color: var(--ac-text)">{{ $schoolYear->starts_at?->format('d/m/Y') ?? '—' }}</p>
-        </div>
-        <div>
-            <p class="text-xs" style="color: var(--ac-faint)">Término</p>
-            <p class="font-semibold" style="color: var(--ac-text)">{{ $schoolYear->ends_at?->format('d/m/Y') ?? '—' }}</p>
-        </div>
-        <div>
-            <p class="text-xs" style="color: var(--ac-faint)">Turma</p>
-            <p class="font-semibold" style="color: var(--ac-text)">{{ $currentClass->name ?? '—' }}</p>
-        </div>
-    </div>
-</div>
-@endif
+    @else
 
-{{-- ══════════════════════════════════════════════════════════════
-     MAIN LAYOUT: calendar + sidebar
-     ══════════════════════════════════════════════════════════════ --}}
-<div class="grid grid-cols-1 xl:grid-cols-4 gap-4">
+    {{-- ── Main layout ── --}}
+    <div
+        x-data="{
+            selectedEvent: null,
+            openEvent(ev) { this.selectedEvent = ev; },
+            closeEvent() { this.selectedEvent = null; }
+        }"
+        style="display:flex;flex-direction:column;gap:1.25rem"
+    >
 
-    {{-- ═══════════════════════════════════════
-         LEFT COLUMN: calendar
-         ═══════════════════════════════════════ --}}
-    <div class="xl:col-span-3 space-y-4">
-
-        {{-- ── Calendar card ─────────────────── --}}
-        <div class="ac-card">
-
-            {{-- Header: nav + view toggle --}}
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-
-                {{-- Month navigation --}}
-                <div class="flex items-center gap-2">
-                    <button wire:click="previousMonth" class="ac-nav-btn" aria-label="Mês anterior">
-                        <x-heroicon-s-chevron-left class="ac-icon-sm" />
-                    </button>
-
-                    <h2 class="text-base font-bold min-w-[9rem] text-center" style="color: var(--ac-text)">
-                        {{ $monthLabel }}
-                    </h2>
-
-                    <button wire:click="nextMonth" class="ac-nav-btn" aria-label="Próximo mês">
-                        <x-heroicon-s-chevron-right class="ac-icon-sm" />
-                    </button>
-
-                    @if($monthStart->format('Y-m') !== now()->format('Y-m'))
-                        <button wire:click="goToToday"
-                            class="ac-nav-btn text-xs font-semibold px-3 w-auto"
-                            style="color:#6366f1; border-color:#6366f1"
-                            aria-label="Ir para hoje">
-                            Hoje
-                        </button>
-                    @endif
+        {{-- ▸ Header bar --}}
+        <div class="ac-card" style="padding:1rem 1.25rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem">
+                {{-- Class info --}}
+                <div style="display:flex;align-items:center;gap:0.875rem">
+                    <div style="width:2.5rem;height:2.5rem;border-radius:0.625rem;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        @svg('heroicon-o-calendar-days', '', ['style' => 'width:1.35rem;height:1.35rem;color:#f59e0b'])
+                    </div>
+                    <div>
+                        <h2 style="font-size:1rem;font-weight:700;color:var(--ac-text-primary);margin:0">
+                            Calendário Acadêmico
+                        </h2>
+                        <p style="font-size:0.8125rem;color:var(--ac-text-secondary);margin:0.0625rem 0 0">
+                            {{ $currentClass->name }}
+                            @if($schoolYear)
+                                &middot; Ano Letivo {{ $schoolYear->year }}
+                            @endif
+                        </p>
+                    </div>
                 </div>
 
-                {{-- View mode toggle --}}
-                <div class="flex items-center gap-1 p-1 rounded-lg" style="background: var(--ac-surface); border: 1px solid var(--ac-border)">
-                    <button wire:click="$set('viewMode','month')"
-                        class="ac-view-btn {{ $this->viewMode === 'month' ? 'active' : '' }}">
-                        <span class="hidden sm:inline">Mensal</span>
-                        <span class="sm:hidden">Mês</span>
+                {{-- Export buttons --}}
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                    <button
+                        wire:click="exportPdf"
+                        title="Exportar PDF"
+                        style="display:flex;align-items:center;gap:0.375rem;padding:0.375rem 0.75rem;border-radius:0.5rem;border:1px solid var(--ac-card-border);background:var(--ac-card-bg);color:var(--ac-text-secondary);font-size:0.75rem;font-weight:500;cursor:pointer;transition:all 0.15s"
+                        onmouseover="this.style.background='var(--ac-hover-bg)'" onmouseout="this.style.background='var(--ac-card-bg)'"
+                    >
+                        @svg('heroicon-o-document-arrow-down', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                        PDF
                     </button>
-                    <button wire:click="$set('viewMode','list')"
-                        class="ac-view-btn {{ $this->viewMode === 'list' ? 'active' : '' }}">
-                        <span class="hidden sm:inline">Agenda</span>
-                        <span class="sm:hidden">Lista</span>
+                    <button
+                        wire:click="exportIcal"
+                        title="Exportar iCal"
+                        style="display:flex;align-items:center;gap:0.375rem;padding:0.375rem 0.75rem;border-radius:0.5rem;border:1px solid var(--ac-card-border);background:var(--ac-card-bg);color:var(--ac-text-secondary);font-size:0.75rem;font-weight:500;cursor:pointer;transition:all 0.15s"
+                        onmouseover="this.style.background='var(--ac-hover-bg)'" onmouseout="this.style.background='var(--ac-card-bg)'"
+                    >
+                        @svg('heroicon-o-arrow-down-tray', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                        iCal
                     </button>
                 </div>
             </div>
+        </div>
 
-            {{-- Category filter pills --}}
-            <div class="flex flex-wrap gap-2 mb-4">
-                @foreach($categories as $cat)
-                    @php $active = in_array($cat['key'], $this->activeCategories); @endphp
-                    <button
-                        wire:click="toggleCategory('{{ $cat['key'] }}')"
-                        class="ac-pill-btn {{ $active ? 'active' : '' }}"
-                        style="{{ $active ? 'color:' . $cat['color'] . '; border-color:' . $cat['color'] : '' }}"
-                        aria-pressed="{{ $active ? 'true' : 'false' }}"
-                    >
-                        <span class="ac-legend-dot" style="background: {{ $cat['color'] }}"></span>
-                        {{ $cat['label'] }}
+        {{-- ▸ Controls row: view tabs + nav + subject filter --}}
+        <div class="ac-card" style="padding:0.75rem 1.25rem">
+            <div class="ac-controls-row" style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap">
+
+                {{-- View mode tabs --}}
+                <div style="display:flex;align-items:center;gap:0.25rem;background:var(--ac-cell-bg);border-radius:0.625rem;padding:0.25rem">
+                    <button wire:click="setViewMode('month')" class="ac-tab {{ $this->viewMode === 'month' ? 'active' : '' }}">
+                        @svg('heroicon-o-squares-2x2', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                        Mês
                     </button>
-                @endforeach
+                    <button wire:click="setViewMode('week')" class="ac-tab {{ $this->viewMode === 'week' ? 'active' : '' }}">
+                        @svg('heroicon-o-view-columns', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                        Semana
+                    </button>
+                    <button wire:click="setViewMode('list')" class="ac-tab {{ $this->viewMode === 'list' ? 'active' : '' }}">
+                        @svg('heroicon-o-list-bullet', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                        Lista
+                    </button>
+                </div>
+
+                {{-- Navigation --}}
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                    @if($this->viewMode === 'week')
+                        <button wire:click="previousWeek" class="ac-nav-btn" title="Semana anterior">
+                            @svg('heroicon-o-chevron-left', '', ['style' => 'width:1rem;height:1rem'])
+                        </button>
+                        <span style="font-size:0.875rem;font-weight:600;color:var(--ac-text-primary);min-width:12rem;text-align:center">
+                            {{ $weekLabel }}
+                        </span>
+                        <button wire:click="nextWeek" class="ac-nav-btn" title="Próxima semana">
+                            @svg('heroicon-o-chevron-right', '', ['style' => 'width:1rem;height:1rem'])
+                        </button>
+                    @else
+                        <button wire:click="previousMonth" class="ac-nav-btn" title="Mês anterior">
+                            @svg('heroicon-o-chevron-left', '', ['style' => 'width:1rem;height:1rem'])
+                        </button>
+                        <span style="font-size:0.9375rem;font-weight:700;color:var(--ac-text-primary);min-width:10rem;text-align:center;text-transform:capitalize">
+                            {{ $monthName }}
+                        </span>
+                        <button wire:click="nextMonth" class="ac-nav-btn" title="Próximo mês">
+                            @svg('heroicon-o-chevron-right', '', ['style' => 'width:1rem;height:1rem'])
+                        </button>
+                    @endif
+                    <button wire:click="goToToday" class="ac-nav-btn" style="width:auto;padding:0 0.75rem;font-size:0.75rem;font-weight:500" title="Ir para hoje">
+                        Hoje
+                    </button>
+                </div>
 
                 {{-- Subject filter --}}
                 @if($subjects->isNotEmpty())
                     <select
-                        wire:model.live="filterSubjectId"
-                        class="ac-pill-btn"
-                        style="cursor: pointer"
-                        aria-label="Filtrar por disciplina"
+                        wire:change="setSubjectFilter($event.target.value === '' ? null : parseInt($event.target.value))"
+                        class="ac-select"
                     >
                         <option value="">Todas as disciplinas</option>
                         @foreach($subjects as $subject)
-                            <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                            <option value="{{ $subject->id }}" {{ $this->filterSubjectId == $subject->id ? 'selected' : '' }}>
+                                {{ $subject->name }}
+                            </option>
                         @endforeach
                     </select>
                 @endif
             </div>
 
-            {{-- ════════════════════════════════
-                 MONTH VIEW
-                 ════════════════════════════════ --}}
-            @if($this->viewMode === 'month')
-
-                {{-- Day-of-week headers --}}
-                <div class="ac-grid mb-0.5">
-                    @foreach($daysOfWeek as $i => $dow)
-                        <div class="ac-dow {{ in_array($i, [0,6]) ? 'opacity-50' : '' }}">
-                            {{ $dow }}
-                        </div>
-                    @endforeach
-                </div>
-
-                {{-- Calendar cells --}}
-                <div class="ac-grid">
-                    @foreach($grid as $cell)
-                        @if($cell['type'] === 'empty')
-                            <div class="ac-cell is-empty" aria-hidden="true"></div>
-                        @else
-                            @php
-                                $hasEvents  = ! empty($cell['events']);
-                                $isToday    = $cell['is_today'];
-                                $isWeekend  = $cell['is_weekend'];
-                                $cellEvents = array_slice($cell['events'], 0, 3);
-                                $moreCount  = max(0, count($cell['events']) - 3);
-                            @endphp
-                            <div
-                                class="ac-cell
-                                    {{ $hasEvents ? 'has-events' : '' }}
-                                    {{ $isToday   ? 'is-today'   : '' }}
-                                    {{ $isWeekend ? 'is-weekend' : '' }}"
-                                @if($hasEvents)
-                                    @click="openEvent('{{ $cell['events'][0]['id'] }}')"
-                                @endif
-                                role="{{ $hasEvents ? 'button' : '' }}"
-                                aria-label="{{ $isToday ? 'Hoje, ' : '' }}{{ $cell['day'] }} — {{ count($cell['events']) }} evento(s)"
-                            >
-                                <div class="ac-cell-day">{{ $cell['day'] }}</div>
-
-                                @foreach($cellEvents as $ev)
-                                    <div
-                                        class="ac-event-chip"
-                                        style="background: {{ $ev['bg_color'] }}; color: {{ $ev['text_color'] }}"
-                                        @click.stop="openEvent('{{ $ev['id'] }}')"
-                                        title="{{ $ev['title'] }}"
-                                    >
-                                        <span class="ac-event-dot" style="background: {{ $ev['dot_color'] }}"></span>
-                                        <span class="ac-event-chip-text truncate">{{ $ev['title'] }}</span>
-                                    </div>
-                                @endforeach
-
-                                @if($moreCount > 0)
-                                    <div class="text-center mt-0.5">
-                                        <span class="text-xs font-medium" style="color: var(--ac-faint)">+{{ $moreCount }}</span>
-                                    </div>
-                                @endif
-                            </div>
+            {{-- Category filters --}}
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--ac-cell-border)">
+                <span style="font-size:0.6875rem;font-weight:600;color:var(--ac-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-right:0.25rem">
+                    Filtrar:
+                </span>
+                @foreach($categories as $key => $cat)
+                    @php $isActive = in_array($key, $this->activeCategories); @endphp
+                    <button
+                        wire:click="toggleCategory('{{ $key }}')"
+                        class="ac-filter-pill {{ $isActive ? 'active' : '' }}"
+                        style="{{ $isActive ? 'color:'.$cat['color'].';border-color:'.$cat['color'].';background:'.($cat['color']).'18' : '' }}"
+                    >
+                        <span style="width:0.5rem;height:0.5rem;border-radius:50%;background:{{ $cat['color'] }};display:inline-block;flex-shrink:0"></span>
+                        {{ $cat['label'] }}
+                        @if(!$isActive)
+                            <span style="font-size:0.6rem;opacity:0.5">(oculto)</span>
                         @endif
-                    @endforeach
-                </div>
+                    </button>
+                @endforeach
+            </div>
+        </div>
 
-            {{-- ════════════════════════════════
-                 AGENDA / LIST VIEW
-                 ════════════════════════════════ --}}
-            @else
-                @if($listEvents->isEmpty())
-                    <div class="py-12 text-center">
-                        <x-heroicon-o-calendar-days class="ac-icon-lg mx-auto mb-3" style="color: var(--ac-faint)" />
-                        <p class="text-sm" style="color: var(--ac-muted)">Nenhum evento neste mês.</p>
-                    </div>
-                @else
-                    @php
-                        $grouped = $listEvents->groupBy('date');
-                    @endphp
-                    <div class="divide-y" style="border-color: var(--ac-border)">
-                        @foreach($grouped as $date => $dayEvents)
-                            @php
-                                $carbon     = \Carbon\Carbon::parse($date);
-                                $isToday    = $date === $today;
-                                $weekdayPt  = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][$carbon->dayOfWeek];
-                            @endphp
-                            <div class="ac-list-day">
-                                {{-- Date column --}}
-                                <div class="ac-list-date-col pt-1">
-                                    <div class="ac-list-date-num
-                                        {{ $isToday ? 'text-indigo-500' : '' }}">
-                                        {{ $carbon->format('d') }}
+        {{-- ▸ Main area + sidebar --}}
+        <div class="ac-layout" style="display:flex;gap:1.25rem;align-items:flex-start">
+
+            {{-- ── Calendar panel ── --}}
+            <div style="flex:1;min-width:0">
+
+                {{-- MONTH VIEW --}}
+                @if($this->viewMode === 'month')
+                    <div class="ac-card" style="padding:1rem;overflow:hidden">
+                        {{-- Day-of-week headers --}}
+                        <div class="ac-month-grid" style="margin-bottom:4px">
+                            @foreach($dowNames as $dow)
+                                <div class="ac-dow-header">{{ $dow }}</div>
+                            @endforeach
+                        </div>
+
+                        {{-- Calendar cells --}}
+                        <div class="ac-month-grid">
+                            @foreach($grid as $cell)
+                                @if($cell['type'] === 'empty')
+                                    <div class="ac-cell empty"></div>
+                                @else
+                                    @php
+                                        $cellClasses = 'ac-cell';
+                                        if ($cell['is_today'])    $cellClasses .= ' today';
+                                        if ($cell['is_weekend'])  $cellClasses .= ' weekend';
+                                        $visibleEvents = array_slice($cell['events'], 0, 3);
+                                        $hiddenCount   = count($cell['events']) - count($visibleEvents);
+                                    @endphp
+                                    <div class="{{ $cellClasses }}">
+                                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+                                            <span class="ac-day-num">{{ $cell['day'] }}</span>
+                                            {{-- Dot indicators for mobile (hidden by default, shown via CSS) --}}
+                                            @if(count($cell['events']) > 0)
+                                                <div class="ac-cell-dot" style="display:none;gap:1px;flex-wrap:wrap;max-width:1.5rem">
+                                                    @foreach(array_slice($cell['events'], 0, 3) as $ev)
+                                                        <span style="width:4px;height:4px;border-radius:50%;background:{{ $ev['dot_color'] }};display:inline-block"></span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        @foreach($visibleEvents as $ev)
+                                            @php
+                                                $isCont = $ev['is_continuation'] ?? false;
+                                            @endphp
+                                            <div
+                                                class="ac-event-chip"
+                                                style="background:{{ $ev['bg_color'] }};color:{{ $ev['text_color'] }};{{ $isCont ? 'opacity:0.7;' : '' }}"
+                                                title="{{ $ev['title'] }}"
+                                                x-on:click.stop="openEvent({{ json_encode($ev) }})"
+                                            >
+                                                <span style="width:5px;height:5px;border-radius:50%;background:{{ $ev['dot_color'] }};flex-shrink:0;display:inline-block"></span>
+                                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                                    {{ $isCont ? '↳ ' : '' }}{{ $ev['title'] }}
+                                                </span>
+                                            </div>
+                                        @endforeach
+
+                                        @if($hiddenCount > 0)
+                                            <div class="ac-event-more">+{{ $hiddenCount }} mais</div>
+                                        @endif
                                     </div>
-                                    <div class="ac-list-date-weekday">{{ $weekdayPt }}</div>
-                                    <div class="ac-list-date-month">{{ ucfirst($carbon->locale('pt_BR')->translatedFormat('M')) }}</div>
-                                    @if($isToday)
-                                        <span class="inline-block mt-1 text-xs font-bold text-indigo-500">Hoje</span>
-                                    @endif
-                                </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
 
-                                {{-- Events column --}}
-                                <div class="flex-1 space-y-2">
-                                    @foreach($dayEvents as $ev)
+                {{-- WEEK VIEW --}}
+                @elseif($this->viewMode === 'week')
+                    <div class="ac-card" style="padding:1rem;overflow:hidden">
+                        <div class="ac-week-grid">
+                            @foreach($weekGrid as $col)
+                                @php
+                                    $colClasses = 'ac-week-col';
+                                    if ($col['is_today'])   $colClasses .= ' today';
+                                    if ($col['is_weekend']) $colClasses .= ' weekend';
+                                @endphp
+                                <div class="{{ $colClasses }}">
+                                    {{-- Day header --}}
+                                    <div class="ac-week-day-header">
+                                        <div style="font-size:0.625rem;font-weight:700;color:var(--ac-text-muted);text-transform:uppercase;letter-spacing:0.05em">
+                                            {{ $dowNames[$col['dow']] }}
+                                        </div>
+                                        <div style="font-size:1.25rem;font-weight:{{ $col['is_today'] ? '800' : '600' }};color:{{ $col['is_today'] ? '#f59e0b' : 'var(--ac-text-primary)' }};line-height:1.2">
+                                            {{ $col['day'] }}
+                                        </div>
+                                        <div style="font-size:0.6rem;color:var(--ac-text-muted)">
+                                            {{ $col['month_name'] }}
+                                        </div>
+                                    </div>
+
+                                    {{-- Events --}}
+                                    @forelse($col['events'] as $ev)
+                                        <div
+                                            class="ac-week-event"
+                                            style="background:{{ $ev['bg_color'] }};color:{{ $ev['text_color'] }}"
+                                            x-on:click.stop="openEvent({{ json_encode($ev) }})"
+                                        >
+                                            @if($ev['time'])
+                                                <div style="font-size:0.5625rem;opacity:0.7;margin-bottom:1px">{{ $ev['time'] }}</div>
+                                            @endif
+                                            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $ev['title'] }}</div>
+                                        </div>
+                                    @empty
+                                        <div style="flex:1;display:flex;align-items:center;justify-content:center;opacity:0.25">
+                                            @svg('heroicon-o-minus', '', ['style' => 'width:1.25rem;height:1.25rem;color:var(--ac-text-muted)'])
+                                        </div>
+                                    @endforelse
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                {{-- LIST VIEW --}}
+                @else
+                    <div class="ac-card" style="padding:1.25rem">
+                        @if(empty($groupedList))
+                            <div style="text-align:center;padding:3rem 1rem;color:var(--ac-text-muted)">
+                                @svg('heroicon-o-calendar', '', ['style' => 'width:2.5rem;height:2.5rem;margin:0 auto 0.75rem;display:block'])
+                                <p style="margin:0;font-size:0.9375rem">Nenhum evento neste período</p>
+                            </div>
+                        @else
+                            @foreach($groupedList as $dateStr => $evList)
+                                @php
+                                    $dateCrb   = \Carbon\Carbon::parse($dateStr);
+                                    $isToday   = $dateStr === $today;
+                                    $dateLabel = ucfirst($dateCrb->locale('pt_BR')->translatedFormat('l, d \d\e F'));
+                                @endphp
+                                <div class="ac-list-date-group">
+                                    <div class="ac-list-date-label">
+                                        <span style="display:inline-block;width:3px;height:0.875rem;border-radius:2px;background:{{ $isToday ? '#f59e0b' : 'var(--ac-text-muted)' }}"></span>
+                                        {{ $dateLabel }}
+                                        @if($isToday)
+                                            <span style="font-size:0.625rem;font-weight:700;color:#fff;background:#f59e0b;padding:1px 6px;border-radius:999px">HOJE</span>
+                                        @endif
+                                    </div>
+                                    @foreach($evList as $ev)
                                         <div
                                             class="ac-list-event"
-                                            style="background: {{ $ev['bg_color'] }}"
-                                            @click="openEvent('{{ $ev['id'] }}')"
-                                            role="button"
-                                            tabindex="0"
-                                            @keydown.enter="openEvent('{{ $ev['id'] }}')"
+                                            x-on:click="openEvent({{ json_encode($ev) }})"
                                         >
-                                            <div class="ac-list-event-icon" style="background: {{ $ev['dot_color'] }}22">
-                                                @switch($ev['icon'])
-                                                    @case('pencil-square')
-                                                        <x-heroicon-o-pencil-square class="ac-icon-sm" style="color: {{ $ev['dot_color'] }}" />
-                                                        @break
-                                                    @case('flag')
-                                                        <x-heroicon-o-flag class="ac-icon-sm" style="color: {{ $ev['dot_color'] }}" />
-                                                        @break
-                                                    @case('sun')
-                                                        <x-heroicon-o-sun class="ac-icon-sm" style="color: {{ $ev['dot_color'] }}" />
-                                                        @break
-                                                    @case('star')
-                                                        <x-heroicon-o-star class="ac-icon-sm" style="color: {{ $ev['dot_color'] }}" />
-                                                        @break
-                                                    @case('academic-cap')
-                                                        <x-heroicon-o-academic-cap class="ac-icon-sm" style="color: {{ $ev['dot_color'] }}" />
-                                                        @break
-                                                    @default
-                                                        <x-heroicon-o-calendar class="ac-icon-sm" style="color: {{ $ev['dot_color'] }}" />
-                                                @endswitch
+                                            {{-- Icon badge --}}
+                                            <div style="width:2.25rem;height:2.25rem;border-radius:0.5rem;background:{{ $ev['bg_color'] }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                                <span style="width:0.625rem;height:0.625rem;border-radius:50%;background:{{ $ev['dot_color'] }};display:inline-block"></span>
                                             </div>
-                                            <div class="flex-1 min-w-0">
-                                                <p class="font-semibold text-sm leading-tight truncate"
-                                                    style="color: {{ $ev['text_color'] }}">
-                                                    {{ $ev['title'] }}
-                                                </p>
-                                                <p class="text-xs mt-0.5 truncate"
-                                                    style="color: {{ $ev['dot_color'] }}bb">
-                                                    {{ $ev['category_label'] }}
-                                                    @if($ev['subject']) · {{ $ev['subject'] }} @endif
-                                                    @if($ev['time']) · {{ $ev['time'] }} @endif
-                                                </p>
+                                            <div style="flex:1;min-width:0">
+                                                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;flex-wrap:wrap">
+                                                    <span style="font-size:0.9375rem;font-weight:600;color:var(--ac-text-primary)">
+                                                        {{ $ev['title'] }}
+                                                    </span>
+                                                    @if($ev['time'])
+                                                        <span style="font-size:0.75rem;color:var(--ac-text-muted);white-space:nowrap">
+                                                            @svg('heroicon-o-clock', '', ['style' => 'width:0.75rem;height:0.75rem;display:inline'])
+                                                            {{ $ev['time'] }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;flex-wrap:wrap">
+                                                    <span style="font-size:0.6875rem;font-weight:500;padding:1px 6px;border-radius:999px;background:{{ $ev['bg_color'] }};color:{{ $ev['text_color'] }}">
+                                                        {{ $ev['category_label'] }}
+                                                    </span>
+                                                    @if($ev['subject'])
+                                                        <span style="font-size:0.6875rem;color:var(--ac-text-muted)">
+                                                            {{ $ev['subject'] }}
+                                                        </span>
+                                                    @endif
+                                                    @if($ev['impacts_grade'])
+                                                        <span style="font-size:0.6rem;color:#3b82f6;display:flex;align-items:center;gap:2px">
+                                                            @svg('heroicon-o-academic-cap', '', ['style' => 'width:0.625rem;height:0.625rem'])
+                                                            Impacta nota
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
-                                            <x-heroicon-o-chevron-right class="ac-icon-sm flex-shrink-0"
-                                                style="color: {{ $ev['dot_color'] }}88" />
                                         </div>
                                     @endforeach
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        @endif
                     </div>
                 @endif
-            @endif
 
-        </div>{{-- /ac-card --}}
-
-        {{-- ── Legend ──────────────────────────────────────── --}}
-        <div class="ac-card">
-            <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color: var(--ac-faint)">
-                Legenda
-            </p>
-            <div class="flex flex-wrap gap-x-5 gap-y-2">
-                @foreach($categories as $cat)
-                    <div class="ac-legend-item">
-                        <span class="ac-legend-dot" style="background: {{ $cat['color'] }}"
-                            role="img" aria-label="{{ $cat['label'] }}"></span>
-                        <span>{{ $cat['label'] }}</span>
+                {{-- ▸ Legend --}}
+                <div class="ac-card" style="padding:0.875rem 1.25rem;margin-top:1rem">
+                    <div style="display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap">
+                        <span style="font-size:0.6875rem;font-weight:700;color:var(--ac-text-muted);text-transform:uppercase;letter-spacing:0.05em">
+                            Legenda
+                        </span>
+                        @foreach($categories as $key => $cat)
+                            <div style="display:flex;align-items:center;gap:0.375rem;font-size:0.75rem;color:var(--ac-text-secondary)">
+                                <span style="width:0.625rem;height:0.625rem;border-radius:50%;background:{{ $cat['color'] }};display:inline-block;flex-shrink:0"></span>
+                                {{ $cat['label'] }}
+                            </div>
+                        @endforeach
+                        <div style="display:flex;align-items:center;gap:0.375rem;font-size:0.75rem;color:var(--ac-text-secondary)">
+                            <span style="width:0.875rem;height:0.875rem;border-radius:3px;outline:2px solid #f59e0b;display:inline-block;flex-shrink:0"></span>
+                            Hoje
+                        </div>
                     </div>
-                @endforeach
-                <div class="ac-legend-item">
-                    <span class="w-4 h-4 rounded border-2 flex-shrink-0"
-                        style="border-color: var(--ac-today-ring)"
-                        role="img" aria-label="Hoje"></span>
-                    <span>Hoje</span>
                 </div>
             </div>
-        </div>
 
-    </div>{{-- /xl:col-span-3 --}}
+            {{-- ── Upcoming events sidebar ── --}}
+            <div class="ac-sidebar ac-card" style="width:17rem;flex-shrink:0;padding:1.125rem">
+                <h3 style="font-size:0.8125rem;font-weight:700;color:var(--ac-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.875rem;display:flex;align-items:center;gap:0.5rem">
+                    @svg('heroicon-o-bell', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                    Próximos Eventos
+                </h3>
 
-    {{-- ═══════════════════════════════════════
-         RIGHT COLUMN: sidebar
-         ═══════════════════════════════════════ --}}
-    <div class="xl:col-span-1 space-y-4">
-
-        {{-- Upcoming events --}}
-        <div class="ac-card">
-            <div class="flex items-center gap-2 mb-3">
-                <x-heroicon-o-bell-alert class="ac-icon-sm" style="color:#f59e0b" />
-                <p class="text-sm font-semibold" style="color: var(--ac-text)">Próximos 14 dias</p>
-            </div>
-
-            @if($upcoming->isEmpty())
-                <p class="text-xs py-4 text-center" style="color: var(--ac-faint)">
-                    Sem eventos próximos.
-                </p>
-            @else
-                @foreach($upcoming as $ev)
+                @forelse($upcoming as $ev)
                     @php
-                        $du = $ev['days_until'];
-                        $label = match(true) {
-                            $du === 0 => 'Hoje',
-                            $du === 1 => 'Amanhã',
-                            default   => "Em {$du} dias",
+                        $daysUntil = $ev['days_until'];
+                        $daysLabel = match(true) {
+                            $daysUntil === 0 => 'Hoje',
+                            $daysUntil === 1 => 'Amanhã',
+                            default          => 'Em ' . $daysUntil . ' dias',
                         };
-                        $urgent = $du <= 2;
+                        $urgencyColor = match(true) {
+                            $daysUntil === 0 => '#ef4444',
+                            $daysUntil <= 2  => '#f97316',
+                            $daysUntil <= 5  => '#eab308',
+                            default          => 'var(--ac-text-muted)',
+                        };
                     @endphp
                     <div class="ac-upcoming-item">
-                        <span class="w-2 h-2 rounded-full flex-shrink-0"
-                            style="background: {{ $ev['dot_color'] }}"
-                            role="img" aria-label="{{ $ev['category_label'] }}"></span>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-semibold truncate" style="color: var(--ac-text)">
+                        <span style="width:8px;height:8px;border-radius:50%;background:{{ $ev['dot_color'] }};flex-shrink:0;margin-top:5px"></span>
+                        <div style="flex:1;min-width:0">
+                            <p style="font-size:0.8125rem;font-weight:600;color:var(--ac-text-primary);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
                                 {{ $ev['title'] }}
                             </p>
                             @if($ev['subject'])
-                                <p class="text-xs truncate" style="color: var(--ac-faint)">{{ $ev['subject'] }}</p>
+                                <p style="font-size:0.6875rem;color:var(--ac-text-muted);margin:0.125rem 0 0">
+                                    {{ $ev['subject'] }}
+                                </p>
                             @endif
+                            <p style="font-size:0.6875rem;color:var(--ac-text-secondary);margin:0.25rem 0 0">
+                                {{ ucfirst(\Carbon\Carbon::parse($ev['date'])->locale('pt_BR')->translatedFormat('d \d\e M')) }}
+                                &middot;
+                                <span style="font-weight:600;color:{{ $urgencyColor }}">{{ $daysLabel }}</span>
+                            </p>
                         </div>
-                        <span class="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0
-                            {{ $urgent ? 'text-red-600' : 'text-gray-500 dark:text-gray-400' }}"
-                            style="{{ $urgent ? 'background:#fef2f2' : 'background: var(--ac-surface)' }}">
-                            {{ $label }}
-                        </span>
                     </div>
-                @endforeach
-            @endif
+                @empty
+                    <div style="text-align:center;padding:1.5rem 0;color:var(--ac-text-muted)">
+                        @svg('heroicon-o-check-circle', '', ['style' => 'width:2rem;height:2rem;margin:0 auto 0.5rem;display:block;color:#22c55e'])
+                        <p style="font-size:0.8125rem;margin:0">Nenhum evento nos próximos 14 dias</p>
+                    </div>
+                @endforelse
+            </div>
         </div>
 
-        {{-- Quick bimester summary --}}
-        @if($schoolYear && $schoolYear->starts_at && $schoolYear->ends_at)
-            @php
-                $start     = $schoolYear->starts_at;
-                $total     = (int) $start->diffInDays($schoolYear->ends_at);
-                $quarter   = (int) ($total / 4);
-                $bimesters = [
-                    ['label' => '1º Bimestre', 'start' => $start->copy(), 'end' => $start->copy()->addDays($quarter)],
-                    ['label' => '2º Bimestre', 'start' => $start->copy()->addDays($quarter + 1), 'end' => $start->copy()->addDays($quarter * 2)],
-                    ['label' => '3º Bimestre', 'start' => $start->copy()->addDays($quarter * 2 + 1), 'end' => $start->copy()->addDays($quarter * 3)],
-                    ['label' => '4º Bimestre', 'start' => $start->copy()->addDays($quarter * 3 + 1), 'end' => $schoolYear->ends_at->copy()],
-                ];
-            @endphp
-            <div class="ac-card">
-                <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color: var(--ac-faint)">
-                    Bimestres {{ $schoolYear->year }}
-                </p>
-                <div class="space-y-2">
-                    @foreach($bimesters as $bi)
-                        @php
-                            $isPast    = now()->gt($bi['end']);
-                            $isCurrent = now()->between($bi['start'], $bi['end']);
-                        @endphp
-                        <div class="flex items-center justify-between py-1.5 px-2.5 rounded-lg text-sm
-                            {{ $isCurrent ? 'font-semibold' : '' }}"
-                            style="{{ $isCurrent ? 'background: var(--ac-surface); border: 1px solid var(--ac-border)' : '' }}">
-                            <span style="color: {{ $isCurrent ? '#6366f1' : ($isPast ? 'var(--ac-faint)' : 'var(--ac-muted)') }}">
-                                {{ $bi['label'] }}
-                                @if($isCurrent)
-                                    <span class="ml-1 text-xs font-normal"
-                                        style="color:#6366f1; background:#eef2ff; padding: 1px 6px; border-radius: 999px">
-                                        atual
-                                    </span>
-                                @endif
-                            </span>
-                            <span class="text-xs" style="color: var(--ac-faint)">
-                                {{ $bi['start']->format('d/m') }} — {{ $bi['end']->format('d/m') }}
-                            </span>
+        {{-- ── Event detail modal (Alpine.js) ── --}}
+        <template x-if="selectedEvent !== null">
+            <div
+                class="ac-modal-backdrop"
+                x-on:click.self="closeEvent()"
+                x-on:keydown.escape.window="closeEvent()"
+            >
+                <div class="ac-modal" x-on:click.stop>
+                    {{-- Header --}}
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:1.125rem">
+                        <div style="display:flex;align-items:flex-start;gap:0.875rem">
+                            <div
+                                style="width:2.5rem;height:2.5rem;border-radius:0.625rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"
+                                :style="`background:${selectedEvent.bg_color}`"
+                            >
+                                <span style="width:0.75rem;height:0.75rem;border-radius:50%;display:inline-block"
+                                    :style="`background:${selectedEvent.dot_color}`"></span>
+                            </div>
+                            <div>
+                                <h3 style="font-size:1rem;font-weight:700;color:var(--ac-text-primary);margin:0;line-height:1.3" x-text="selectedEvent.title"></h3>
+                                <span
+                                    style="font-size:0.6875rem;font-weight:500;padding:1px 7px;border-radius:999px;display:inline-block;margin-top:0.25rem"
+                                    :style="`background:${selectedEvent.bg_color};color:${selectedEvent.text_color}`"
+                                    x-text="selectedEvent.category_label"
+                                ></span>
+                            </div>
                         </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
+                        <button x-on:click="closeEvent()" style="width:1.75rem;height:1.75rem;border-radius:0.375rem;border:1px solid var(--ac-card-border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--ac-text-muted)">
+                            @svg('heroicon-o-x-mark', '', ['style' => 'width:1rem;height:1rem'])
+                        </button>
+                    </div>
 
-    </div>{{-- /sidebar --}}
+                    {{-- Body --}}
+                    <div style="display:flex;flex-direction:column;gap:0.625rem;font-size:0.8125rem">
 
-</div>{{-- /grid --}}
-
-@endif {{-- end has student --}}
-
-{{-- ══════════════════════════════════════════════════════════════
-     EVENT DETAIL MODAL
-     ══════════════════════════════════════════════════════════════ --}}
-<div
-    x-show="showModal"
-    x-transition:enter="transition ease-out duration-200"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-150"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-    class="ac-modal-overlay"
-    @click.self="closeModal()"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Detalhes do evento"
-    style="display: none"
->
-    <div
-        x-show="showModal"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0 scale-95"
-        x-transition:enter-end="opacity-100 scale-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100 scale-100"
-        x-transition:leave-end="opacity-0 scale-95"
-        class="ac-modal"
-    >
-        <template x-if="selectedEvent">
-            <div>
-                {{-- Modal header --}}
-                <div class="ac-modal-header">
-                    <div class="flex items-start gap-3 flex-1 min-w-0">
-                        <div class="ac-modal-icon"
-                            :style="'background:' + (selectedEvent.bg_color || '#f1f5f9')">
-                            <template x-if="selectedEvent.icon === 'pencil-square'">
-                                <x-heroicon-o-pencil-square class="ac-icon-md" />
-                            </template>
-                            <template x-if="selectedEvent.icon === 'flag'">
-                                <x-heroicon-o-flag class="ac-icon-md" />
-                            </template>
-                            <template x-if="selectedEvent.icon === 'sun'">
-                                <x-heroicon-o-sun class="ac-icon-md" />
-                            </template>
-                            <template x-if="selectedEvent.icon === 'star'">
-                                <x-heroicon-o-star class="ac-icon-md" />
-                            </template>
-                            <template x-if="selectedEvent.icon === 'academic-cap'">
-                                <x-heroicon-o-academic-cap class="ac-icon-md" />
+                        {{-- Date --}}
+                        <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
+                            @svg('heroicon-o-calendar', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                            <span x-text="selectedEvent.date"></span>
+                            <template x-if="selectedEvent.date_end && selectedEvent.date_end !== selectedEvent.date">
+                                <span x-text="'→ ' + selectedEvent.date_end" style="color:var(--ac-text-muted)"></span>
                             </template>
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="font-bold text-base leading-tight" style="color: var(--ac-text)"
-                                x-text="selectedEvent.title"></p>
-                            <p class="text-xs mt-0.5 font-medium"
-                                :style="'color:' + selectedEvent.dot_color"
-                                x-text="selectedEvent.category_label"></p>
+
+                        {{-- Time --}}
+                        <template x-if="selectedEvent.time">
+                            <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
+                                @svg('heroicon-o-clock', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                                <span x-text="selectedEvent.time"></span>
+                            </div>
+                        </template>
+
+                        {{-- Subject --}}
+                        <template x-if="selectedEvent.subject">
+                            <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
+                                @svg('heroicon-o-book-open', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                                <span x-text="selectedEvent.subject"></span>
+                            </div>
+                        </template>
+
+                        {{-- Teacher --}}
+                        <template x-if="selectedEvent.teacher">
+                            <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
+                                @svg('heroicon-o-user', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                                <span x-text="selectedEvent.teacher"></span>
+                            </div>
+                        </template>
+
+                        {{-- Location --}}
+                        <template x-if="selectedEvent.location">
+                            <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
+                                @svg('heroicon-o-map-pin', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                                <span x-text="selectedEvent.location"></span>
+                            </div>
+                        </template>
+
+                        {{-- Weight (assessments) --}}
+                        <template x-if="selectedEvent.weight !== null && selectedEvent.weight !== undefined">
+                            <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
+                                @svg('heroicon-o-scale', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                                <span>Peso: <strong x-text="selectedEvent.weight"></strong></span>
+                            </div>
+                        </template>
+
+                        {{-- Description --}}
+                        <template x-if="selectedEvent.description">
+                            <div style="padding:0.75rem;background:var(--ac-cell-bg);border-radius:0.5rem;color:var(--ac-text-secondary);margin-top:0.25rem;border:1px solid var(--ac-cell-border)">
+                                <span x-text="selectedEvent.description"></span>
+                            </div>
+                        </template>
+
+                        {{-- Impact badges --}}
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;flex-wrap:wrap">
+                            <template x-if="selectedEvent.impacts_grade">
+                                <span style="font-size:0.6875rem;font-weight:500;padding:3px 8px;border-radius:999px;background:rgba(59,130,246,0.12);color:#3b82f6;display:flex;align-items:center;gap:4px">
+                                    @svg('heroicon-o-academic-cap', '', ['style' => 'width:0.75rem;height:0.75rem'])
+                                    Impacta nota
+                                </span>
+                            </template>
+                            <template x-if="selectedEvent.impacts_freq">
+                                <span style="font-size:0.6875rem;font-weight:500;padding:3px 8px;border-radius:999px;background:rgba(234,179,8,0.12);color:#ca8a04;display:flex;align-items:center;gap:4px">
+                                    @svg('heroicon-o-user-group', '', ['style' => 'width:0.75rem;height:0.75rem'])
+                                    Impacta frequência
+                                </span>
+                            </template>
                         </div>
                     </div>
-                    <button @click="closeModal()" class="ac-modal-close" aria-label="Fechar">
-                        <x-heroicon-o-x-mark class="ac-icon-sm" />
-                    </button>
-                </div>
 
-                {{-- Details --}}
-                <div class="space-y-0 rounded-lg overflow-hidden" style="border: 1px solid var(--ac-border)">
-
-                    {{-- Description --}}
-                    <div class="ac-detail-row px-4" x-show="selectedEvent.description">
-                        <x-heroicon-o-information-circle class="ac-icon-sm flex-shrink-0" style="color: var(--ac-faint)" />
-                        <span class="ac-detail-label">Descrição</span>
-                        <span x-text="selectedEvent.description" style="color: var(--ac-text)"></span>
+                    {{-- Footer --}}
+                    <div style="margin-top:1.25rem;padding-top:0.875rem;border-top:1px solid var(--ac-cell-border);display:flex;justify-content:flex-end">
+                        <button
+                            x-on:click="closeEvent()"
+                            style="padding:0.4375rem 1.125rem;border-radius:0.5rem;border:1px solid var(--ac-card-border);background:var(--ac-card-bg);color:var(--ac-text-secondary);font-size:0.8125rem;font-weight:500;cursor:pointer"
+                        >
+                            Fechar
+                        </button>
                     </div>
-
-                    {{-- Date --}}
-                    <div class="ac-detail-row px-4">
-                        <x-heroicon-o-calendar class="ac-icon-sm flex-shrink-0" style="color: var(--ac-faint)" />
-                        <span class="ac-detail-label">Data</span>
-                        <span style="color: var(--ac-text)" x-text="
-                            selectedEvent.date_end && selectedEvent.date_end !== selectedEvent.date
-                                ? selectedEvent.date + ' a ' + selectedEvent.date_end
-                                : selectedEvent.date
-                        "></span>
-                    </div>
-
-                    {{-- Time --}}
-                    <div class="ac-detail-row px-4" x-show="selectedEvent.time">
-                        <x-heroicon-o-clock class="ac-icon-sm flex-shrink-0" style="color: var(--ac-faint)" />
-                        <span class="ac-detail-label">Horário</span>
-                        <span x-text="selectedEvent.time" style="color: var(--ac-text)"></span>
-                    </div>
-
-                    {{-- Subject --}}
-                    <div class="ac-detail-row px-4" x-show="selectedEvent.subject">
-                        <x-heroicon-o-book-open class="ac-icon-sm flex-shrink-0" style="color: var(--ac-faint)" />
-                        <span class="ac-detail-label">Disciplina</span>
-                        <span x-text="selectedEvent.subject" style="color: var(--ac-text)"></span>
-                    </div>
-
-                    {{-- Weight --}}
-                    <div class="ac-detail-row px-4" x-show="selectedEvent.weight">
-                        <x-heroicon-o-scale class="ac-icon-sm flex-shrink-0" style="color: var(--ac-faint)" />
-                        <span class="ac-detail-label">Peso</span>
-                        <span x-text="selectedEvent.weight" style="color: var(--ac-text)"></span>
-                    </div>
-
-                </div>
-
-                {{-- Close button --}}
-                <div class="mt-4">
-                    <button
-                        @click="closeModal()"
-                        class="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
-                        style="background: var(--ac-surface); border: 1px solid var(--ac-border); color: var(--ac-muted)"
-                    >
-                        Fechar
-                    </button>
                 </div>
             </div>
         </template>
-    </div>
-</div>
 
-</div>{{-- /x-data --}}
+    </div>
+    @endif
+
 </x-filament-panels::page>
