@@ -2,11 +2,12 @@
 
 namespace App\Filament\Resources\SchoolYears\Tables;
 
+use App\Enums\SchoolYearStatus;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class SchoolYearsTable
@@ -16,18 +17,35 @@ class SchoolYearsTable
         return $table
             ->columns([
                 TextColumn::make('year')
-                    ->label('Ano'),
+                    ->label('Ano')
+                    ->sortable()
+                    ->searchable(),
 
-                TextColumn::make('gradeLevel.name')
-                    ->label('Série'),
+                TextColumn::make('starts_at')
+                    ->label('Início')
+                    ->date('d/m/Y')
+                    ->sortable(),
 
-                IconColumn::make('is_active')
-                    ->Label('Ativo')
-                    ->boolean()
+                TextColumn::make('ends_at')
+                    ->label('Fim')
+                    ->date('d/m/Y'),
 
+                TextColumn::make('terms_count')
+                    ->label('Períodos')
+                    ->counts('terms')
+                    ->alignCenter(),
+
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state instanceof SchoolYearStatus ? $state->label() : (string) $state)
+                    ->color(fn ($state) => $state instanceof SchoolYearStatus ? $state->color() : 'gray'),
             ])
+            ->defaultSort('year', 'desc')
             ->filters([
-                //
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options(SchoolYearStatus::toArray()),
             ])
             ->recordActions([
                 EditAction::make(),

@@ -15,11 +15,9 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    /** Número máximo de tentativas antes do bloqueio automático */
+    public const MAX_LOGIN_ATTEMPTS = 5;
+
     protected $fillable = [
         'uuid',
         'name',
@@ -39,37 +37,31 @@ class User extends Authenticatable
         'avatar',
         'active',
         'last_login_at',
+        'force_password_change',
+        'login_attempts',
+        'locked_at',
+        'inactive_reason',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'birth_date' => 'date',
-            'active' => 'boolean',
-            'last_login_at' => 'datetime',
+            'email_verified_at'     => 'datetime',
+            'password'              => 'hashed',
+            'birth_date'            => 'date',
+            'active'                => 'boolean',
+            'last_login_at'         => 'datetime',
+            'force_password_change' => 'boolean',
+            'login_attempts'        => 'integer',
+            'locked_at'             => 'datetime',
         ];
     }
 
-    /**
-     * Gera UUID automaticamente ao criar o registro.
-     */
     protected static function booted()
     {
         static::creating(function ($user) {
@@ -78,7 +70,6 @@ class User extends Authenticatable
             }
         });
 
-        // 🔥 Após criar ou atualizar um usuário
         static::saved(function ($user) {
             $roleName = $user->roles()->pluck('name')->first();
 
@@ -86,57 +77,123 @@ class User extends Authenticatable
                 Student::updateOrCreate(
                     ['user_id' => $user->id],
                     [
-                        'uuid'               => $user->uuid,
-                        'name'               => $user->name,
-                        'email'              => $user->email,
-                        'cpf'                => $user->cpf,
-                        'birth_date'         => $user->birth_date,
-                        // MAPA DE GÊNERO: aceita 'Masculino'/'Feminino'/'Outro' OU 'M'/'F'/'O'
-                        'gender'             => match ((string) $user->gender) {
+                        'uuid'         => $user->uuid,
+                        'name'         => $user->name,
+                        'email'        => $user->email,
+                        'cpf'          => $user->cpf,
+                        'birth_date'   => $user->birth_date,
+                        'gender'       => match ((string) $user->gender) {
                             'Masculino', 'M' => Gender::M->value,
                             'Feminino',  'F' => Gender::F->value,
                             'Outro',     'O' => Gender::O->value,
                             default          => null,
                         },
-                        'address'            => $user->address,
-                        'city'               => $user->city,
-                        'state'              => $user->state,
-                        'postal_code'        => $user->postal_code,
-                        'phone_number'       => $user->cellphone ?? $user->phone,
-                        // AQUI ESTAVA O PROBLEMA: NUNCA use o rótulo "Ativo"
-                        'status'             => $user->active
+                        'address'      => $user->address,
+                        'city'         => $user->city,
+                        'state'        => $user->state,
+                        'postal_code'  => $user->postal_code,
+                        'phone_number' => $user->cellphone ?? $user->phone,
+                        'status'       => $user->active
                             ? StudentStatus::ACTIVE->value
                             : StudentStatus::INACTIVE->value,
-                        // Se você quer deixar a matrícula ser gerada pelo boot(), remova esta linha.
-                        // 'registration_number' => Student::generateRegistrationNumber(),
+                    ]
+                );
+            }
+
+            if ($roleName === 'teacher') {
+                Teacher::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'uuid'  => $user->uuid,
+                        'name'  => $user->name,
+                        'email' => $user->email,
+                        'cpf'   => $user->cpf,
+                        'phone' => $user->cellphone ?? $user->phone,
                     ]
                 );
             }
         });
     }
 
-    /**
-     * Relacionamento 1:1 com Student.
-     */
-    public function student()
+    // ─── Accessors ───────────────────────────────────────────────────────────
+
+    public function getIsLockedAttribute(): bool
     {
-        return $this->hasOne(Student::class, 'user_id', );
+        return ! is_null($this->locked_at);
     }
 
-    /**
-     * Relacionamento 1:1 com Teacher.
-     */
-    public function teacher()
-    {
-        return $this->hasOne(Teacher::class);
-    }
-
-    /**
-     * Exibe o nome completo + papel (para relatórios ou listagem)
-     */
     public function getDisplayNameAttribute(): string
     {
         $role = $this->roles()->pluck('name')->first();
         return "{$this->name}" . ($role ? " ({$role})" : '');
+    }
+
+    // ─── Métodos de negócio ───────────────────────────────────────────────────
+
+    /**
+     * Registra tentativa de login falha e bloqueia se atingir o limite.
+     */
+    public function registerFailedLogin(): void
+    {
+        $attempts = $this->login_attempts + 1;
+        $data = ['login_attempts' => $attempts];
+
+        if ($attempts >= self::MAX_LOGIN_ATTEMPTS) {
+            $data['locked_at'] = now();
+        }
+
+        $this->updateQuietly($data);
+    }
+
+    /**
+     * Registra login bem-sucedido.
+     */
+    public function registerSuccessfulLogin(): void
+    {
+        $this->updateQuietly([
+            'last_login_at'  => now(),
+            'login_attempts' => 0,
+        ]);
+    }
+
+    /**
+     * Desbloqueia o usuário. Apenas perfil TI pode executar esta ação.
+     */
+    public function unlock(): void
+    {
+        $this->updateQuietly([
+            'locked_at'      => null,
+            'login_attempts' => 0,
+        ]);
+    }
+
+    /**
+     * Gera senha temporária, força troca no próximo acesso.
+     * Retorna a senha em texto para exibição ao administrador.
+     */
+    public function resetToTemporaryPassword(): string
+    {
+        $tempPassword = Str::upper(Str::random(3)) . rand(10, 99) . Str::random(3);
+
+        $this->updateQuietly([
+            'password'              => bcrypt($tempPassword),
+            'force_password_change' => true,
+            'login_attempts'        => 0,
+            'locked_at'             => null,
+        ]);
+
+        return $tempPassword;
+    }
+
+    // ─── Relacionamentos ─────────────────────────────────────────────────────
+
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'user_id');
+    }
+
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class);
     }
 }
