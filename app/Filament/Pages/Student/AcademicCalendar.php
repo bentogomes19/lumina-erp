@@ -5,7 +5,6 @@ namespace App\Filament\Pages\Student;
 use App\Enums\HolidayType;
 use App\Models\Assessment;
 use App\Models\SchoolHoliday;
-use App\Models\SchoolYear;
 use App\Models\Subject;
 use App\Models\TeacherAssignment;
 use Carbon\Carbon;
@@ -22,11 +21,12 @@ class AcademicCalendar extends Page
 
     // ── State ────────────────────────────────────────────────────────────────
 
-    public int $currentMonth;
-    public int $currentYear;
-    public string $viewMode = 'month'; // month | list
-    public array $activeCategories = ['assessment', 'holiday', 'recess', 'school_event', 'period'];
-    public ?int $filterSubjectId = null;
+    public int    $currentMonth;
+    public int    $currentYear;
+    public string $viewMode       = 'month'; // month | week | list
+    public string $weekStart      = '';      // ISO date of the Sunday starting the displayed week
+    public array  $activeCategories = ['assessment', 'holiday', 'recess', 'school_event', 'period'];
+    public ?int   $filterSubjectId  = null;
 
     // ── Access ───────────────────────────────────────────────────────────────
 
@@ -51,9 +51,10 @@ class AcademicCalendar extends Page
     {
         $this->currentMonth = (int) now()->format('m');
         $this->currentYear  = (int) now()->format('Y');
+        $this->weekStart    = now()->startOfWeek(Carbon::SUNDAY)->format('Y-m-d');
     }
 
-    // ── Navigation actions ───────────────────────────────────────────────────
+    // ── Month navigation ─────────────────────────────────────────────────────
 
     public function previousMonth(): void
     {
@@ -69,10 +70,54 @@ class AcademicCalendar extends Page
         $this->currentYear  = $date->year;
     }
 
+    // ── Week navigation ──────────────────────────────────────────────────────
+
+    public function previousWeek(): void
+    {
+        $date            = Carbon::parse($this->weekStart)->subWeek();
+        $this->weekStart = $date->format('Y-m-d');
+        // keep month/year in sync so the month grid is consistent when switching back
+        $this->currentMonth = $date->month;
+        $this->currentYear  = $date->year;
+    }
+
+    public function nextWeek(): void
+    {
+        $date            = Carbon::parse($this->weekStart)->addWeek();
+        $this->weekStart = $date->format('Y-m-d');
+        $this->currentMonth = $date->month;
+        $this->currentYear  = $date->year;
+    }
+
+    // ── Go to today ───────────────────────────────────────────────────────────
+
     public function goToToday(): void
     {
         $this->currentMonth = (int) now()->format('m');
         $this->currentYear  = (int) now()->format('Y');
+        $this->weekStart    = now()->startOfWeek(Carbon::SUNDAY)->format('Y-m-d');
+    }
+
+    // ── View mode ────────────────────────────────────────────────────────────
+
+    public function setViewMode(string $mode): void
+    {
+        $this->viewMode = $mode;
+
+        if ($mode === 'week') {
+            // Sync weekStart to the week that contains the 1st of the displayed month
+            $this->weekStart = Carbon::create($this->currentYear, $this->currentMonth, 1)
+                ->startOfWeek(Carbon::SUNDAY)
+                ->format('Y-m-d');
+        }
+
+        if ($mode === 'month' || $mode === 'list') {
+            // Snap displayed month to the week's midpoint (Thursday) so the month
+            // always reflects the week the user was looking at in week view.
+            $midWeek = Carbon::parse($this->weekStart)->addDays(3);
+            $this->currentMonth = $midWeek->month;
+            $this->currentYear  = $midWeek->year;
+        }
     }
 
     // ── Filter actions ───────────────────────────────────────────────────────
@@ -91,6 +136,20 @@ class AcademicCalendar extends Page
     public function setSubjectFilter(?int $subjectId): void
     {
         $this->filterSubjectId = $subjectId;
+    }
+
+    // ── Export stubs ─────────────────────────────────────────────────────────
+
+    public function exportPdf(): void
+    {
+        // TODO: generate and stream PDF for the current month
+        $this->dispatch('notify', ['message' => 'Exportação em PDF em breve.', 'type' => 'info']);
+    }
+
+    public function exportIcal(): void
+    {
+        // TODO: generate and stream .ics for the current period
+        $this->dispatch('notify', ['message' => 'Exportação iCal em breve.', 'type' => 'info']);
     }
 
     // ── Data ─────────────────────────────────────────────────────────────────
@@ -113,22 +172,37 @@ class AcademicCalendar extends Page
         }
 
         $schoolYear = $currentClass->schoolYear;
-        $monthStart = Carbon::create($this->currentYear, $this->currentMonth, 1)->startOfDay();
-        $monthEnd   = $monthStart->copy()->endOfMonth()->endOfDay();
 
-        // Collect all events for the month
-        $events = $this->collectEvents($currentClass, $schoolYear, $monthStart, $monthEnd);
+        // Determine the date window to load events for
+        if ($this->viewMode === 'week') {
+            $periodStart = Carbon::parse($this->weekStart)->startOfDay();
+            $periodEnd   = $periodStart->copy()->addDays(6)->endOfDay();
+        } else {
+            $periodStart = Carbon::create($this->currentYear, $this->currentMonth, 1)->startOfDay();
+            $periodEnd   = $periodStart->copy()->endOfMonth()->endOfDay();
+        }
+
+        $monthStart = Carbon::create($this->currentYear, $this->currentMonth, 1)->startOfDay();
+
+        // Preload teacher assignments for subject→teacher lookup
+        $teacherMap = $this->loadTeacherMap($currentClass->id);
+
+        // Collect all events for the period
+        $events = $this->collectEvents($currentClass, $schoolYear, $periodStart, $periodEnd, $teacherMap);
 
         // Build calendar grid
-        $grid = $this->buildMonthGrid($monthStart, $events);
+        $grid     = $this->viewMode !== 'week' ? $this->buildMonthGrid($monthStart, $events) : [];
+        $weekGrid = $this->viewMode === 'week'
+            ? $this->buildWeekGrid(Carbon::parse($this->weekStart), $events)
+            : [];
 
-        // List view: all events for the month sorted by date
+        // List view: all events sorted by date
         $listEvents = $events->sortBy('date')->values();
 
-        // Upcoming events for sidebar (next 7 days from today)
-        $upcoming = $this->getUpcomingEvents($currentClass, $schoolYear);
+        // Upcoming events for sidebar (next 14 days)
+        $upcoming = $this->getUpcomingEvents($currentClass, $schoolYear, $teacherMap);
 
-        // Subjects in the class for filter dropdown
+        // Subjects for filter dropdown
         $subjects = $this->getClassSubjects($currentClass->id);
 
         return [
@@ -136,7 +210,9 @@ class AcademicCalendar extends Page
             'currentClass' => $currentClass,
             'schoolYear'   => $schoolYear,
             'monthStart'   => $monthStart,
+            'weekStart'    => Carbon::parse($this->weekStart),
             'grid'         => $grid,
+            'weekGrid'     => $weekGrid,
             'events'       => $events->values(),
             'listEvents'   => $listEvents,
             'upcoming'     => $upcoming,
@@ -144,22 +220,41 @@ class AcademicCalendar extends Page
         ];
     }
 
+    // ── Private: teacher map ─────────────────────────────────────────────────
+
+    private function loadTeacherMap(int $classId): array
+    {
+        try {
+            return TeacherAssignment::where('class_id', $classId)
+                ->with('teacher.user')
+                ->get()
+                ->mapWithKeys(fn ($a) => [
+                    $a->subject_id => $a->teacher?->user?->name,
+                ])
+                ->filter()
+                ->toArray();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
     // ── Private: event collection ────────────────────────────────────────────
 
-    private function collectEvents($currentClass, $schoolYear, Carbon $monthStart, Carbon $monthEnd): Collection
+    private function collectEvents($currentClass, $schoolYear, Carbon $start, Carbon $end, array $teacherMap = []): Collection
     {
         $events = collect();
 
         // 1. Assessments (Avaliações)
         if (in_array('assessment', $this->activeCategories)) {
             $assessments = Assessment::where('class_id', $currentClass->id)
-                ->whereBetween('scheduled_at', [$monthStart, $monthEnd])
+                ->whereBetween('scheduled_at', [$start, $end])
                 ->when($this->filterSubjectId, fn ($q) => $q->where('subject_id', $this->filterSubjectId))
                 ->with(['subject'])
                 ->orderBy('scheduled_at')
                 ->get();
 
             foreach ($assessments as $assessment) {
+                $teacherName = $teacherMap[$assessment->subject_id] ?? null;
                 $events->push([
                     'id'             => 'assessment_' . $assessment->id,
                     'title'          => $assessment->title,
@@ -171,11 +266,15 @@ class AcademicCalendar extends Page
                     'category_label' => 'Avaliação',
                     'color'          => 'blue',
                     'subject'        => $assessment->subject?->name,
+                    'teacher'        => $teacherName,
                     'weight'         => $assessment->weight,
+                    'location'       => null,
                     'icon'           => 'pencil-square',
                     'dot_color'      => '#3b82f6',
                     'bg_color'       => '#eff6ff',
                     'text_color'     => '#1d4ed8',
+                    'impacts_grade'  => true,
+                    'impacts_freq'   => false,
                 ]);
             }
         }
@@ -184,7 +283,7 @@ class AcademicCalendar extends Page
         if (! empty(array_intersect(['holiday', 'recess', 'school_event'], $this->activeCategories))) {
             $holidays = SchoolHoliday::active()
                 ->when($schoolYear, fn ($q) => $q->forYear($schoolYear->id))
-                ->inPeriod($monthStart, $monthEnd)
+                ->inPeriod($start, $end)
                 ->orderBy('start_date')
                 ->get();
 
@@ -228,11 +327,15 @@ class AcademicCalendar extends Page
                     'category_label' => $holiday->type->label(),
                     'color'          => 'red',
                     'subject'        => null,
+                    'teacher'        => null,
                     'weight'         => null,
+                    'location'       => null,
                     'icon'           => $icon,
                     'dot_color'      => $dotColor,
                     'bg_color'       => $bgColor,
                     'text_color'     => $textColor,
+                    'impacts_grade'  => false,
+                    'impacts_freq'   => in_array($holiday->type, [HolidayType::SCHOOL_EVENT]),
                 ]);
             }
         }
@@ -241,7 +344,7 @@ class AcademicCalendar extends Page
         if (in_array('period', $this->activeCategories) && $schoolYear) {
             foreach ($this->getSchoolYearEvents($schoolYear) as $event) {
                 $eventDate = Carbon::parse($event['date']);
-                if ($eventDate->month === $this->currentMonth && $eventDate->year === $this->currentYear) {
+                if ($eventDate->between($start, $end)) {
                     $events->push($event);
                 }
             }
@@ -256,101 +359,67 @@ class AcademicCalendar extends Page
             return [];
         }
 
-        $start      = $schoolYear->starts_at;
-        $end        = $schoolYear->ends_at;
-        $totalDays  = (int) $start->diffInDays($end);
-        $quarter    = (int) ($totalDays / 4);
+        $start     = $schoolYear->starts_at;
+        $end       = $schoolYear->ends_at;
+        $totalDays = (int) $start->diffInDays($end);
+        $quarter   = (int) ($totalDays / 4);
+
+        $base = [
+            'time' => null, 'category' => 'period', 'category_label' => 'Período Letivo',
+            'subject' => null, 'teacher' => null, 'weight' => null, 'location' => null,
+            'date_end' => null, 'impacts_grade' => false, 'impacts_freq' => false,
+        ];
 
         return [
-            [
-                'id'             => 'period_year_start',
-                'title'          => 'Início do Ano Letivo ' . $schoolYear->year,
-                'description'    => 'Primeiro dia do ano letivo.',
-                'date'           => $start->format('Y-m-d'),
-                'date_end'       => null,
-                'time'           => null,
-                'category'       => 'period',
-                'category_label' => 'Período Letivo',
-                'color'          => 'emerald',
-                'subject'        => null,
-                'weight'         => null,
-                'icon'           => 'academic-cap',
-                'dot_color'      => '#10b981',
-                'bg_color'       => '#ecfdf5',
-                'text_color'     => '#047857',
-            ],
-            [
-                'id'             => 'period_b1_end',
-                'title'          => 'Fim do 1º Bimestre',
-                'description'    => 'Encerramento do primeiro bimestre.',
-                'date'           => $start->copy()->addDays($quarter)->format('Y-m-d'),
-                'date_end'       => null,
-                'time'           => null,
-                'category'       => 'period',
-                'category_label' => 'Período Letivo',
-                'color'          => 'orange',
-                'subject'        => null,
-                'weight'         => null,
-                'icon'           => 'flag',
-                'dot_color'      => '#f97316',
-                'bg_color'       => '#fff7ed',
-                'text_color'     => '#c2410c',
-            ],
-            [
-                'id'             => 'period_b2_end',
-                'title'          => 'Fim do 2º Bimestre',
-                'description'    => 'Encerramento do segundo bimestre.',
-                'date'           => $start->copy()->addDays($quarter * 2)->format('Y-m-d'),
-                'date_end'       => null,
-                'time'           => null,
-                'category'       => 'period',
-                'category_label' => 'Período Letivo',
-                'color'          => 'orange',
-                'subject'        => null,
-                'weight'         => null,
-                'icon'           => 'flag',
-                'dot_color'      => '#f97316',
-                'bg_color'       => '#fff7ed',
-                'text_color'     => '#c2410c',
-            ],
-            [
-                'id'             => 'period_b3_end',
-                'title'          => 'Fim do 3º Bimestre',
-                'description'    => 'Encerramento do terceiro bimestre.',
-                'date'           => $start->copy()->addDays($quarter * 3)->format('Y-m-d'),
-                'date_end'       => null,
-                'time'           => null,
-                'category'       => 'period',
-                'category_label' => 'Período Letivo',
-                'color'          => 'orange',
-                'subject'        => null,
-                'weight'         => null,
-                'icon'           => 'flag',
-                'dot_color'      => '#f97316',
-                'bg_color'       => '#fff7ed',
-                'text_color'     => '#c2410c',
-            ],
-            [
-                'id'             => 'period_year_end',
-                'title'          => 'Encerramento do Ano Letivo ' . $schoolYear->year,
-                'description'    => 'Último dia do ano letivo.',
-                'date'           => $end->format('Y-m-d'),
-                'date_end'       => null,
-                'time'           => null,
-                'category'       => 'period',
-                'category_label' => 'Período Letivo',
-                'color'          => 'emerald',
-                'subject'        => null,
-                'weight'         => null,
-                'icon'           => 'academic-cap',
-                'dot_color'      => '#10b981',
-                'bg_color'       => '#ecfdf5',
-                'text_color'     => '#047857',
-            ],
+            array_merge($base, [
+                'id'          => 'period_year_start',
+                'title'       => 'Início do Ano Letivo ' . $schoolYear->year,
+                'description' => 'Primeiro dia do ano letivo.',
+                'date'        => $start->format('Y-m-d'),
+                'icon'        => 'academic-cap',
+                'dot_color'   => '#10b981', 'bg_color' => '#ecfdf5', 'text_color' => '#047857',
+                'color'       => 'emerald',
+            ]),
+            array_merge($base, [
+                'id'          => 'period_b1_end',
+                'title'       => 'Fim do 1º Bimestre',
+                'description' => 'Encerramento do primeiro bimestre.',
+                'date'        => $start->copy()->addDays($quarter)->format('Y-m-d'),
+                'icon'        => 'flag',
+                'dot_color'   => '#f97316', 'bg_color' => '#fff7ed', 'text_color' => '#c2410c',
+                'color'       => 'orange',
+            ]),
+            array_merge($base, [
+                'id'          => 'period_b2_end',
+                'title'       => 'Fim do 2º Bimestre',
+                'description' => 'Encerramento do segundo bimestre.',
+                'date'        => $start->copy()->addDays($quarter * 2)->format('Y-m-d'),
+                'icon'        => 'flag',
+                'dot_color'   => '#f97316', 'bg_color' => '#fff7ed', 'text_color' => '#c2410c',
+                'color'       => 'orange',
+            ]),
+            array_merge($base, [
+                'id'          => 'period_b3_end',
+                'title'       => 'Fim do 3º Bimestre',
+                'description' => 'Encerramento do terceiro bimestre.',
+                'date'        => $start->copy()->addDays($quarter * 3)->format('Y-m-d'),
+                'icon'        => 'flag',
+                'dot_color'   => '#f97316', 'bg_color' => '#fff7ed', 'text_color' => '#c2410c',
+                'color'       => 'orange',
+            ]),
+            array_merge($base, [
+                'id'          => 'period_year_end',
+                'title'       => 'Encerramento do Ano Letivo ' . $schoolYear->year,
+                'description' => 'Último dia do ano letivo.',
+                'date'        => $end->format('Y-m-d'),
+                'icon'        => 'academic-cap',
+                'dot_color'   => '#10b981', 'bg_color' => '#ecfdf5', 'text_color' => '#047857',
+                'color'       => 'emerald',
+            ]),
         ];
     }
 
-    private function getUpcomingEvents($currentClass, $schoolYear): Collection
+    private function getUpcomingEvents($currentClass, $schoolYear, array $teacherMap = []): Collection
     {
         $start = now()->startOfDay();
         $end   = now()->addDays(14)->endOfDay();
@@ -371,7 +440,7 @@ class AcademicCalendar extends Page
                 'category_label' => 'Avaliação',
                 'subject'        => $assessment->subject?->name,
                 'dot_color'      => '#3b82f6',
-                'days_until'     => (int) now()->diffInDays($assessment->scheduled_at, false),
+                'days_until'     => max(0, (int) now()->startOfDay()->diffInDays($assessment->scheduled_at->startOfDay(), false)),
             ]);
         }
 
@@ -390,45 +459,28 @@ class AcademicCalendar extends Page
                 'category_label' => $holiday->type->label(),
                 'subject'        => null,
                 'dot_color'      => '#8b5cf6',
-                'days_until'     => (int) now()->diffInDays($holiday->start_date, false),
+                'days_until'     => max(0, (int) now()->startOfDay()->diffInDays($holiday->start_date->startOfDay(), false)),
             ]);
         }
 
         return $events->sortBy('date')->values();
     }
 
-    // ── Private: calendar grid ───────────────────────────────────────────────
+    // ── Private: calendar grids ───────────────────────────────────────────────
 
     private function buildMonthGrid(Carbon $monthStart, Collection $events): array
     {
         $daysInMonth    = $monthStart->daysInMonth;
         $firstDayOfWeek = $monthStart->dayOfWeek; // 0 = Sunday
 
-        // Group events by date, expand multi-day events
-        $eventsByDate = [];
-        foreach ($events as $event) {
-            $eventsByDate[$event['date']][] = $event;
+        $eventsByDate = $this->groupEventsByDate($events);
+        $cells        = [];
+        $today        = now()->format('Y-m-d');
 
-            if ($event['date_end'] && $event['date_end'] !== $event['date']) {
-                $cursor = Carbon::parse($event['date'])->addDay();
-                $rangeEnd = Carbon::parse($event['date_end']);
-                while ($cursor->lte($rangeEnd)) {
-                    $key = $cursor->format('Y-m-d');
-                    $eventsByDate[$key][] = array_merge($event, ['is_continuation' => true]);
-                    $cursor->addDay();
-                }
-            }
-        }
-
-        $cells = [];
-        $today = now()->format('Y-m-d');
-
-        // Leading empty cells
         for ($i = 0; $i < $firstDayOfWeek; $i++) {
             $cells[] = ['type' => 'empty', 'day' => null, 'date' => null, 'events' => [], 'is_today' => false, 'is_weekend' => false];
         }
 
-        // Day cells
         for ($d = 1; $d <= $daysInMonth; $d++) {
             $date    = $monthStart->copy()->setDay($d);
             $dateStr = $date->format('Y-m-d');
@@ -442,7 +494,6 @@ class AcademicCalendar extends Page
             ];
         }
 
-        // Trailing empty cells to complete last week
         $remainder = count($cells) % 7;
         if ($remainder > 0) {
             for ($i = 0; $i < (7 - $remainder); $i++) {
@@ -451,6 +502,50 @@ class AcademicCalendar extends Page
         }
 
         return $cells;
+    }
+
+    private function buildWeekGrid(Carbon $weekStartDate, Collection $events): array
+    {
+        $eventsByDate = $this->groupEventsByDate($events);
+        $today        = now()->format('Y-m-d');
+        $cells        = [];
+
+        for ($i = 0; $i < 7; $i++) {
+            $date    = $weekStartDate->copy()->addDays($i);
+            $dateStr = $date->format('Y-m-d');
+            $cells[] = [
+                'type'       => 'day',
+                'day'        => $date->day,
+                'date'       => $dateStr,
+                'month_name' => ucfirst($date->locale('pt_BR')->translatedFormat('M')),
+                'events'     => $eventsByDate[$dateStr] ?? [],
+                'is_today'   => $dateStr === $today,
+                'is_weekend' => $date->isWeekend(),
+                'dow'        => $date->dayOfWeek,
+            ];
+        }
+
+        return $cells;
+    }
+
+    private function groupEventsByDate(Collection $events): array
+    {
+        $byDate = [];
+        foreach ($events as $event) {
+            $byDate[$event['date']][] = $event;
+
+            if ($event['date_end'] && $event['date_end'] !== $event['date']) {
+                $cursor   = Carbon::parse($event['date'])->addDay();
+                $rangeEnd = Carbon::parse($event['date_end']);
+                while ($cursor->lte($rangeEnd)) {
+                    $key = $cursor->format('Y-m-d');
+                    $byDate[$key][] = array_merge($event, ['is_continuation' => true]);
+                    $cursor->addDay();
+                }
+            }
+        }
+
+        return $byDate;
     }
 
     // ── Private: subjects in class ───────────────────────────────────────────
@@ -470,12 +565,16 @@ class AcademicCalendar extends Page
 
     private function emptyData(): array
     {
+        $monthStart = Carbon::create($this->currentYear, $this->currentMonth, 1);
+
         return [
             'student'      => null,
             'currentClass' => null,
             'schoolYear'   => null,
-            'monthStart'   => Carbon::create($this->currentYear, $this->currentMonth, 1),
+            'monthStart'   => $monthStart,
+            'weekStart'    => Carbon::parse($this->weekStart ?: now()->startOfWeek(Carbon::SUNDAY)),
             'grid'         => [],
+            'weekGrid'     => [],
             'events'       => collect(),
             'listEvents'   => collect(),
             'upcoming'     => collect(),
