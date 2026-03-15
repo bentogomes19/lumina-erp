@@ -26,6 +26,12 @@ class UserResource extends BaseAdminResource
     protected static ?string $pluralModelLabel = 'Usuário';
     protected static ?string $modelLabel = 'Usuário';
 
+    // Secretaria tem apenas leitura; TI/admin têm acesso total (garantido pelo BaseAdminResource)
+    protected static function viewPermission(): string   { return 'users.view'; }
+    protected static function createPermission(): string { return 'users.create'; }
+    protected static function editPermission(): string   { return 'users.edit'; }
+    protected static function deletePermission(): string { return 'users.delete'; }
+
     public static function form(Schema $schema): Schema
     {
         return UserForm::configure($schema);
@@ -38,38 +44,31 @@ class UserResource extends BaseAdminResource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => ListUsers::route('/'),
+            'index'  => ListUsers::route('/'),
             'create' => CreateUser::route('/create'),
-            'edit' => EditUser::route('/{record}/edit'),
+            'edit'   => EditUser::route('/{record}/edit'),
         ];
     }
 
     public static function getRecordRouteBindingEloquentQuery(): Builder
     {
         return parent::getRecordRouteBindingEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+            ->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
     public static function getWidgets(): array
     {
-        return [
-            UsersOverview::class,
-        ];
+        return [UsersOverview::class];
     }
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return (string) static::getModel()::count();
     }
-
 }

@@ -8,6 +8,7 @@ use App\Models\SchoolClass;
 use App\Models\SchoolYear;
 use App\Models\Student;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
@@ -20,6 +21,14 @@ class EnrollmentForm
     {
         return $schema
             ->components([
+                // Exibe o número de matrícula em edição (somente leitura)
+                TextInput::make('registration_number')
+                    ->label('Nº Matrícula')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->helperText('Gerado automaticamente após salvar. Imutável.')
+                    ->visibleOn('edit'),
+
                 Select::make('school_year_id')
                     ->label('Ano Letivo')
                     ->options(fn () => SchoolYear::orderByDesc('year')->pluck('year', 'id'))
@@ -30,7 +39,7 @@ class EnrollmentForm
                 Select::make('class_id')
                     ->label('Turma')
                     ->options(function (Get $get) {
-                        $query = SchoolClass::query()->with('gradeLevel','schoolYear')->orderBy('name');
+                        $query = SchoolClass::query()->with('gradeLevel', 'schoolYear')->orderBy('name');
                         if ($get('school_year_id')) {
                             $query->where('school_year_id', $get('school_year_id'));
                         }
@@ -42,7 +51,7 @@ class EnrollmentForm
                     ->live()
                     ->afterStateUpdated(function ($state, callable $set) {
                         if ($state) {
-                            $set('roll_number', Enrollment::nextRollNumberFor((int)$state));
+                            $set('roll_number', Enrollment::nextRollNumberFor((int) $state));
                         }
                     }),
 
@@ -50,12 +59,20 @@ class EnrollmentForm
                     ->label('Aluno')
                     ->searchable()
                     ->preload()
-                    ->options(fn () => Student::orderBy('name')->pluck('name','id'))
+                    ->options(fn () => Student::orderBy('name')->pluck('name', 'id'))
                     ->required()
-                    ->helperText('Somente 1 matrícula por turma.')
-                    ->rule(function (Get $get) {
+                    ->helperText('Somente 1 matrícula ativa por turma por período letivo.')
+                    ->rule(function (Get $get, $record) {
                         return Rule::unique('enrollments', 'student_id')
-                            ->where(fn($q) => $q->where('class_id', (int) $get('class_id')));
+                            ->where(fn ($q) => $q
+                                ->where('class_id', (int) $get('class_id'))
+                                ->whereIn('status', [
+                                    EnrollmentStatus::ACTIVE->value,
+                                    EnrollmentStatus::SUSPENDED->value,
+                                    EnrollmentStatus::LOCKED->value,
+                                ])
+                            )
+                            ->ignore($record?->id);
                     }),
 
                 DatePicker::make('enrollment_date')

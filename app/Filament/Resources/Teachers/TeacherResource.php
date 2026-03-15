@@ -24,10 +24,14 @@ class TeacherResource extends BaseAdminResource
     protected static ?int $navigationSort = 2;
 
     protected static ?string $navigationLabel = 'Professores';
-    protected static ?string $recordTitleAttribute = 'Professor';
+    protected static ?string $recordTitleAttribute = 'name';
     protected static ?string $pluralModelLabel = 'Professor';
     protected static ?string $modelLabel = 'Professor';
 
+    protected static function viewPermission(): string   { return 'teachers.view'; }
+    protected static function createPermission(): string { return 'teachers.create'; }
+    protected static function editPermission(): string   { return 'teachers.edit'; }
+    protected static function deletePermission(): string { return 'teachers.delete'; }
 
     public static function form(Schema $schema): Schema
     {

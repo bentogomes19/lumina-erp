@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Subjects;
 
+use App\Filament\Resources\BaseAdminResource;
 use App\Filament\Resources\Subjects\Pages\CreateSubject;
 use App\Filament\Resources\Subjects\Pages\EditSubject;
 use App\Filament\Resources\Subjects\Pages\ListSubjects;
@@ -9,23 +10,26 @@ use App\Filament\Resources\Subjects\Schemas\SubjectForm;
 use App\Filament\Resources\Subjects\Tables\SubjectsTable;
 use App\Models\Subject;
 use BackedEnum;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class SubjectResource extends Resource
+class SubjectResource extends BaseAdminResource
 {
     protected static ?string $model = Subject::class;
     protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
     protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-book-open';
     protected static ?int $navigationSort = 3;
     protected static ?string $navigationLabel = 'Disciplinas';
-    protected static ?string $recordTitleAttribute = 'Disciplinas';
+    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $pluralModelLabel = 'Disciplinas';
+    protected static ?string $modelLabel = 'Disciplina';
 
-    protected static ?string $modelLabel = 'Disciplinas';
+    protected static function viewPermission(): string   { return 'subjects.view'; }
+    protected static function createPermission(): string { return 'subjects.create'; }
+    protected static function editPermission(): string   { return 'subjects.edit'; }
+    protected static function deletePermission(): string { return 'subjects.delete'; }
 
     public static function form(Schema $schema): Schema
     {
@@ -36,28 +40,25 @@ class SubjectResource extends Resource
     {
         return SubjectsTable::configure($table);
     }
+
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => ListSubjects::route('/'),
+            'index'  => ListSubjects::route('/'),
             'create' => CreateSubject::route('/create'),
-            'edit' => EditSubject::route('/{record}/edit'),
+            'edit'   => EditSubject::route('/{record}/edit'),
         ];
     }
 
     public static function getRecordRouteBindingEloquentQuery(): Builder
     {
         return parent::getRecordRouteBindingEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+            ->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
     public static function getGloballySearchableAttributes(): array

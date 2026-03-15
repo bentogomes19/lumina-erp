@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Models\Student;
+use App\Models\Teacher;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
 
@@ -10,30 +12,46 @@ class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;
 
+    /**
+     * Força troca de senha no primeiro acesso e zera tentativas.
+     */
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['force_password_change'] = $data['force_password_change'] ?? true;
+        $data['login_attempts']        = 0;
+        $data['locked_at']             = null;
+
+        return $data;
+    }
+
+    /**
+     * Após criar: sincroniza perfil e cria vínculo Student/Teacher se necessário.
+     */
     protected function afterCreate(): void
     {
-        $role = $this->record->role ?? null;
+        $role = $this->form->getState()['role'] ?? null;
 
-        if ($role && method_exists($this->record, 'assignRole')) {
-            $this->record->assignRole($role);
+        if (! $role) {
+            return;
         }
 
-        // Cria automaticamente o vínculo
-        if ($role === 'student') {
-            \App\Models\Student::create([
-                'uuid' => Str::uuid(),
+        $this->record->syncRoles([$role]);
+
+        if ($role === 'student' && ! $this->record->student()->exists()) {
+            Student::create([
+                'uuid'    => (string) Str::uuid(),
                 'user_id' => $this->record->id,
-                'name' => $this->record->name,
-                'email' => $this->record->email,
+                'name'    => $this->record->name,
+                'email'   => $this->record->email,
             ]);
         }
 
-        if ($role === 'teacher') {
-            \App\Models\Teacher::create([
-                'uuid' => Str::uuid(),
+        if ($role === 'teacher' && ! $this->record->teacher()->exists()) {
+            Teacher::create([
+                'uuid'    => (string) Str::uuid(),
                 'user_id' => $this->record->id,
-                'name' => $this->record->name,
-                'email' => $this->record->email,
+                'name'    => $this->record->name,
+                'email'   => $this->record->email,
             ]);
         }
     }
@@ -42,6 +60,4 @@ class CreateUser extends CreateRecord
     {
         return $this->getResource()::getUrl('index');
     }
-
-
 }

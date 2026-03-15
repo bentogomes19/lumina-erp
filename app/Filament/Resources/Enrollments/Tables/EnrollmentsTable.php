@@ -34,9 +34,11 @@ class EnrollmentsTable
             ->defaultSort('enrollment_date', 'desc')
 
             ->columns([
-                TextColumn::make('student.registration_number')
-                    ->label('Matrícula')
-                    ->searchable(),
+                TextColumn::make('registration_number')
+                    ->label('Nº Matrícula')
+                    ->searchable()
+                    ->copyable()
+                    ->fontFamily('mono'),
 
                 TextColumn::make('student.name')
                     ->label('Aluno')
@@ -64,20 +66,7 @@ class EnrollmentsTable
                     ->label('Status')
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state instanceof EnrollmentStatus ? $state->value : (string) $state)
-                    ->color(fn ($state) => match (true) {
-                        $state instanceof EnrollmentStatus => match ($state) {
-                            EnrollmentStatus::ACTIVE => 'success',
-                            EnrollmentStatus::SUSPENDED => 'warning',
-                            EnrollmentStatus::CANCELED => 'danger',
-                            EnrollmentStatus::COMPLETED => 'info',
-                            default => 'gray',
-                        },
-                        $state === 'Ativa' => 'success',
-                        $state === 'Suspensa' => 'warning',
-                        $state === 'Cancelada' => 'danger',
-                        $state === 'Completa' => 'info',
-                        default => 'gray',
-                    }),
+                    ->color(fn ($state) => EnrollmentStatus::colors()[$state instanceof EnrollmentStatus ? $state->value : (string) $state] ?? 'gray'),
 
                 TextColumn::make('enrollment_date')
                     ->label('Data')

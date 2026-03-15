@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Grades;
 
+use App\Filament\Resources\BaseAdminResource;
 use App\Filament\Resources\Grades\Pages\CreateGrade;
 use App\Filament\Resources\Grades\Pages\EditGrade;
 use App\Filament\Resources\Grades\Pages\ListGrades;
@@ -10,22 +11,41 @@ use App\Filament\Resources\Grades\Tables\GradesTable;
 use App\Models\Enrollment;
 use App\Models\Grade;
 use BackedEnum;
-use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
-class GradeResource extends Resource
+class GradeResource extends BaseAdminResource
 {
     protected static ?string $model = Grade::class;
     protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
     protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-chart-bar';
     protected static ?int $navigationSort = 4;
     protected static ?string $navigationLabel = 'Notas';
-    protected static ?string $recordTitleAttribute = 'Notas';
     protected static ?string $pluralModelLabel = 'Notas';
-
     protected static ?string $modelLabel = 'Nota';
+
+    protected static function viewPermission(): string   { return 'grades.view'; }
+    protected static function createPermission(): string { return 'grades.create'; }
+    protected static function editPermission(): string   { return 'grades.edit'; }
+    protected static function deletePermission(): string { return 'grades.delete'; }
+
+    /** Professores também acessam o módulo de notas */
+    public static function canViewAny(): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+        if ($user->hasAnyRole(['admin', 'ti', 'secretaria'])) {
+            return true;
+        }
+        return $user->hasRole('teacher') && $user->can('grades.view.own');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canViewAny();
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -39,64 +59,43 @@ class GradeResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => ListGrades::route('/'),
+            'index'  => ListGrades::route('/'),
             'create' => CreateGrade::route('/create'),
-            'edit' => EditGrade::route('/{record}/edit'),
+            'edit'   => EditGrade::route('/{record}/edit'),
         ];
     }
 
-    public static function canAccess(): bool
-    {
-        return auth()->user()->hasRole('teacher') || auth()->user()->hasRole('admin');
-    }
-
-    /**
-     * Antes de criar o registro, completar student_id (e garantir class_id) a partir da matrícula.
-     */
     protected static function mutateFormDataBeforeCreate(array $data): array
     {
         if (! empty($data['enrollment_id'])) {
             $enrollment = Enrollment::find($data['enrollment_id']);
-
             if ($enrollment) {
-                // garante que o student_id vai para o banco
                 $data['student_id'] = $enrollment->student_id;
-
-                // opcional: garantir que class_id bate com a matrícula
                 if (! empty($enrollment->class_id)) {
                     $data['class_id'] = $enrollment->class_id;
                 }
             }
         }
-
         return $data;
     }
 
-    /**
-     * Opcional: na edição, se alterarem a matrícula, sincroniza student_id de novo.
-     */
     protected static function mutateFormDataBeforeSave(array $data): array
     {
         if (! empty($data['enrollment_id'])) {
             $enrollment = Enrollment::find($data['enrollment_id']);
-
             if ($enrollment) {
                 $data['student_id'] = $enrollment->student_id;
-
                 if (! empty($enrollment->class_id)) {
                     $data['class_id'] = $enrollment->class_id;
                 }
             }
         }
-
         return $data;
     }
 }
