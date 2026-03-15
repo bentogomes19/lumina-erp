@@ -6,6 +6,8 @@ use App\Filament\Resources\BaseAdminResource;
 use App\Filament\Resources\Enrollments\Pages\CreateEnrollment;
 use App\Filament\Resources\Enrollments\Pages\EditEnrollment;
 use App\Filament\Resources\Enrollments\Pages\ListEnrollments;
+use App\Filament\Resources\Enrollments\RelationManagers\EnrollmentDocumentsRelationManager;
+use App\Filament\Resources\Enrollments\RelationManagers\EnrollmentLogsRelationManager;
 use App\Filament\Resources\Enrollments\Schemas\EnrollmentForm;
 use App\Filament\Resources\Enrollments\Tables\EnrollmentsTable;
 use App\Models\Enrollment;
@@ -40,7 +42,10 @@ class EnrollmentResource extends BaseAdminResource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            EnrollmentLogsRelationManager::class,
+            EnrollmentDocumentsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
