@@ -20,7 +20,7 @@ class SchoolYearResource extends BaseAdminResource
 
     protected static string|null|\UnitEnum $navigationGroup = 'Configurações Acadêmicas';
     protected static ?string $slug = 'school-years';
-    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-calendar';
+    protected static string|null|BackedEnum $navigationIcon = 'fas-calendar';
     protected static ?string $navigationLabel = 'Ano Letivo';
     protected static ?string $pluralModelLabel = 'Ano Letivo';
     protected static ?string $modelLabel = 'Ano Letivo';

@@ -104,8 +104,8 @@ class EnrollmentDocumentsRelationManager extends RelationManager
                 IconColumn::make('arquivo_path')
                     ->label('Digital')
                     ->boolean()
-                    ->trueIcon('heroicon-o-paper-clip')
-                    ->falseIcon('heroicon-o-minus')
+                    ->trueIcon('fas-paperclip')
+                    ->falseIcon('fas-minus')
                     ->trueColor('success')
                     ->falseColor('gray'),
 

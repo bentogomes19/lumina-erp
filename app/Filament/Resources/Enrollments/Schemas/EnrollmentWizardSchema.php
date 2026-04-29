@@ -29,7 +29,7 @@ class EnrollmentWizardSchema
         return [
             Step::make('Identificação do aluno')
                 ->description('Aluno já cadastrado ou novo cadastro na secretaria')
-                ->icon('heroicon-o-user-circle')
+                ->icon('fas-circle-user')
                 ->schema([
                     Radio::make('student_source')
                         ->label('Tipo de cadastro')
@@ -105,10 +105,10 @@ class EnrollmentWizardSchema
 
             Step::make('Dados da matrícula')
                 ->description('Ano letivo, turma, data e status da matrícula')
-                ->icon('heroicon-o-academic-cap')
+                ->icon('fas-graduation-cap')
                 ->schema([
                     Section::make('Ano letivo e turma')
-                        ->icon('heroicon-o-calendar-days')
+                        ->icon('fas-calendar-days')
                         ->description('Selecione o ano letivo e a turma em que o aluno será matriculado.')
                         ->schema([
                             Select::make('school_year_id')
@@ -140,7 +140,7 @@ class EnrollmentWizardSchema
                         ->columns(2),
 
                     Section::make('Data e número de chamada')
-                        ->icon('heroicon-o-identification')
+                        ->icon('fas-id-card')
                         ->description('Data da matrícula e número do aluno na lista de chamada.')
                         ->schema([
                             DatePicker::make('enrollment_date')
@@ -167,10 +167,10 @@ class EnrollmentWizardSchema
 
             Step::make('Endereço')
                 ->description('Endereço do aluno (novo cadastro)')
-                ->icon('heroicon-o-home')
+                ->icon('fas-house')
                 ->schema([
                     Section::make('Endereço e contato')
-                        ->icon('heroicon-o-map-pin')
+                        ->icon('fas-location-dot')
                         ->description('Informe o CEP para preencher automaticamente ou selecione estado e cidade.')
                         ->schema([
                             TextInput::make('student_postal_code')
@@ -178,7 +178,7 @@ class EnrollmentWizardSchema
                                 ->mask('99999-999')
                                 ->placeholder('Digite o CEP...')
                                 ->live(onBlur: true)
-                                ->suffixIcon('heroicon-o-magnifying-glass')
+                                ->suffixIcon('fas-magnifying-glass')
                                 ->afterStateUpdated(function ($state, callable $set) {
                                     if (! $state) {
                                         return;
@@ -280,10 +280,10 @@ class EnrollmentWizardSchema
 
             Step::make('Responsáveis')
                 ->description('Mãe, pai e responsável legal pelo aluno')
-                ->icon('heroicon-o-user-group')
+                ->icon('fas-user-group')
                 ->schema([
                     Section::make('Dados dos pais')
-                        ->icon('heroicon-o-users')
+                        ->icon('fas-users')
                         ->description('Nome da mãe e do pai (ou responsáveis).')
                         ->schema([
                             TextInput::make('student_mother_name')
@@ -303,7 +303,7 @@ class EnrollmentWizardSchema
                         ->columns(1),
 
                     Section::make('Responsável legal')
-                        ->icon('heroicon-o-phone')
+                        ->icon('fas-phone')
                         ->description('Em caso de ausência dos pais, informe quem pode ser contatado.')
                         ->schema([
                             TextInput::make('student_guardian_main')
@@ -337,7 +337,7 @@ class EnrollmentWizardSchema
 
             Step::make('Saúde e transporte')
                 ->description('Informações para a secretaria e coordenação')
-                ->icon('heroicon-o-heart')
+                ->icon('fas-heart')
                 ->schema([
                     Select::make('student_transport_mode')
                         ->label('Meio de transporte')
@@ -374,7 +374,7 @@ class EnrollmentWizardSchema
 
             Step::make('Revisão')
                 ->description('Confira os dados antes de concluir a matrícula')
-                ->icon('heroicon-o-clipboard-document-check')
+                ->icon('fas-clipboard-check')
                 ->schema([
                     Placeholder::make('review_student')
                         ->label('Aluno')

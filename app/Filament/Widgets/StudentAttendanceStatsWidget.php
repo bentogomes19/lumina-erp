@@ -36,23 +36,23 @@ class StudentAttendanceStatsWidget extends BaseWidget
         return [
             Stat::make('Taxa de Presença', $attendanceRate . '%')
                 ->description('Presença nas aulas')
-                ->descriptionIcon('heroicon-m-check-circle')
+                ->descriptionIcon('fas-circle-check')
                 ->color($attendanceRate >= 75 ? 'success' : ($attendanceRate >= 60 ? 'warning' : 'danger'))
                 ->chart($this->getAttendanceTrend()),
 
             Stat::make('Total de Presenças', $present)
                 ->description('Dias presentes')
-                ->descriptionIcon('heroicon-m-calendar-days')
+                ->descriptionIcon('fas-calendar-days')
                 ->color('success'),
 
             Stat::make('Faltas', $absent)
                 ->description('Total de ausências')
-                ->descriptionIcon('heroicon-m-x-circle')
+                ->descriptionIcon('fas-circle-xmark')
                 ->color($absent > 10 ? 'danger' : ($absent > 5 ? 'warning' : 'success')),
 
             Stat::make('Atrasos', $late)
                 ->description('Chegada após início')
-                ->descriptionIcon('heroicon-m-clock')
+                ->descriptionIcon('fas-clock')
                 ->color($late > 5 ? 'warning' : 'gray'),
         ];
     }

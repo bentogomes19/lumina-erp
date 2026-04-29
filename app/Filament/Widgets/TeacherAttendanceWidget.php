@@ -196,7 +196,7 @@ class TeacherAttendanceWidget extends TableWidget
             ->bulkActions([
                 BulkAction::make('fecharChamada')
                     ->label('Fechar chamada (selecionados = presentes)')
-                    ->icon('heroicon-o-check-circle')
+                    ->icon('fas-circle-check')
                     ->color('primary')
                     ->requiresConfirmation()
                     ->action(function (Collection $records) {

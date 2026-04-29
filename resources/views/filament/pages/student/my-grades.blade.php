@@ -1,61 +1,5 @@
 <x-filament-panels::page>
-    <style>
-        /* ── Light mode ── */
-        :root {
-            --ms-card-bg:        #ffffff;
-            --ms-card-border:    #e2e8f0;
-            --ms-cell-bg:        #f1f5f9;
-            --ms-bar-bg:         #e2e8f0;
-            --ms-text-primary:   #1e293b;
-            --ms-text-secondary: #64748b;
-            --ms-text-muted:     #94a3b8;
-            --ms-hover-bg:       #f8fafc;
-        }
-        /* ── Dark mode via Filament .dark ── */
-        .dark {
-            --ms-card-bg:        #080a0c;
-            --ms-card-border:    #334155;
-            --ms-cell-bg:        #0f172a;
-            --ms-bar-bg:         #10141d;
-            --ms-text-primary:   #f1f5f9;
-            --ms-text-secondary: #94a3b8;
-            --ms-text-muted:     #64748b;
-            --ms-hover-bg:       #0a0d11;
-        }
-
-        .ms-card { background: var(--ms-card-bg); border: 1px solid var(--ms-card-border); border-radius: 0.75rem; }
-
-        .ms-period-btn {
-            padding: 0.375rem 0.875rem; border-radius: 999px; font-size: 0.8125rem;
-            font-weight: 500; cursor: pointer; border: 1px solid var(--ms-card-border);
-            background: var(--ms-card-bg); color: var(--ms-text-secondary); transition: all 0.15s;
-        }
-        .ms-period-btn:hover  { background: var(--ms-hover-bg); }
-        .ms-period-btn.active { background: #f59e0b; border-color: #f59e0b; color: #fff; }
-
-        .ms-freq-bar-track { width: 100%; height: 5px; border-radius: 999px; background: var(--ms-bar-bg); overflow: hidden; }
-
-        .ms-assess-row {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 0.5rem; padding: 0.375rem 0; font-size: 0.75rem;
-            border-bottom: 1px solid var(--ms-bar-bg);
-        }
-        .ms-assess-row:last-child { border-bottom: none; }
-
-        @media (max-width: 768px) {
-            .ms-stats-grid   { grid-template-columns: repeat(3, 1fr) !important; }
-            .ms-subject-grid { grid-template-columns: 1fr !important; }
-            .ms-term-grid    { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-
-        .ms-icon-xs { width: 0.875rem !important; height: 0.875rem !important; }
-        .ms-icon-sm { width: 1rem !important; height: 1rem !important; }
-        .ms-icon-md { width: 1.125rem !important; height: 1.125rem !important; }
-        .ms-icon-lg { width: 1.4rem !important; height: 1.4rem !important; }
-        .ms-icon-xl { width: 1.75rem !important; height: 1.75rem !important; }
-    </style>
-
-    @php
+@php
         $data         = $this->getPageData();
         $student      = $data['student'];
         $currentClass = $data['currentClass'];
@@ -82,7 +26,7 @@
     @if(!$student || !$currentClass)
         <div class="ms-card" style="padding:3rem;text-align:center">
             <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @svg('heroicon-o-chart-bar', 'ms-icon-xl', ['style' => 'color:#f59e0b'])
+                @svg('fas-chart-bar', 'ms-icon-xl', ['style' => 'color:#f59e0b'])
             </div>
             <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">
                 Nenhuma turma ativa encontrada
@@ -99,7 +43,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
                     <div style="display:flex;align-items:center;gap:1rem">
                         <div style="width:2.75rem;height:2.75rem;border-radius:0.5rem;background:rgba(217,119,6,0.15);display:flex;align-items:center;justify-content:center">
-                            @svg('heroicon-o-academic-cap', 'ms-icon-lg', ['style' => 'color:#fbbf24'])
+                            @svg('fas-graduation-cap', 'ms-icon-lg', ['style' => 'color:#fbbf24'])
                         </div>
                         <div>
                             <h2 style="font-size:1.125rem;font-weight:700;color:var(--ms-text-primary);margin:0">{{ $currentClass->name }}</h2>
@@ -112,7 +56,7 @@
                         </div>
                     </div>
                     <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;color:var(--ms-text-secondary)">
-                        @svg('heroicon-o-identification', 'ms-icon-sm', [])
+                        @svg('fas-id-card', 'ms-icon-sm', [])
                         <span>Matrícula: <strong style="color:var(--ms-text-primary)">{{ $student->registration_number }}</strong></span>
                     </div>
                 </div>
@@ -133,7 +77,7 @@
                 <div style="display:flex;flex-direction:column;gap:0.5rem">
                     @if($stats['failed'] > 0)
                         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-left:4px solid #ef4444;border-radius:0.75rem;padding:0.875rem 1.125rem;display:flex;align-items:center;gap:0.75rem">
-                            @svg('heroicon-s-x-circle', 'ms-icon-md', ['style' => 'color:#ef4444;flex-shrink:0'])
+                            @svg('fas-circle-xmark', 'ms-icon-md', ['style' => 'color:#ef4444;flex-shrink:0'])
                             <p style="font-size:0.875rem;color:var(--ms-text-primary);margin:0">
                                 Você está <strong style="color:#ef4444">reprovado(a)</strong> em
                                 <strong style="color:#ef4444">{{ $stats['failed'] }} {{ $stats['failed'] === 1 ? 'disciplina' : 'disciplinas' }}</strong>.
@@ -143,7 +87,7 @@
                     @endif
                     @if($stats['recovery'] > 0)
                         <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);border-left:4px solid #eab308;border-radius:0.75rem;padding:0.875rem 1.125rem;display:flex;align-items:center;gap:0.75rem">
-                            @svg('heroicon-s-exclamation-triangle', 'ms-icon-md', ['style' => 'color:#eab308;flex-shrink:0'])
+                            @svg('fas-triangle-exclamation', 'ms-icon-md', ['style' => 'color:#eab308;flex-shrink:0'])
                             <p style="font-size:0.875rem;color:var(--ms-text-primary);margin:0">
                                 Você está convocado(a) para <strong style="color:#eab308">recuperação</strong> em
                                 <strong style="color:#eab308">{{ $stats['recovery'] }} {{ $stats['recovery'] === 1 ? 'disciplina' : 'disciplinas' }}</strong>.
@@ -157,11 +101,11 @@
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:1rem">
                 @php
                     $overallCards = [
-                        ['icon'=>'heroicon-o-book-open',   'value'=>$stats['total'],    'label'=>'Disciplinas',  'color'=>'#f59e0b'],
-                        ['icon'=>'heroicon-o-check-circle', 'value'=>$stats['approved'],'label'=>'Aprovadas',    'color'=>'#22c55e'],
-                        ['icon'=>'heroicon-o-arrow-path',   'value'=>$stats['recovery'],'label'=>'Recuperação',  'color'=>'#eab308'],
-                        ['icon'=>'heroicon-o-x-circle',     'value'=>$stats['failed'],  'label'=>'Reprovadas',   'color'=>'#ef4444'],
-                        ['icon'=>'heroicon-o-clock',        'value'=>$stats['ongoing'], 'label'=>'Cursando',     'color'=>'#64748b'],
+                        ['icon'=>'fas-book-open',   'value'=>$stats['total'],    'label'=>'Disciplinas',  'color'=>'#f59e0b'],
+                        ['icon'=>'fas-circle-check', 'value'=>$stats['approved'],'label'=>'Aprovadas',    'color'=>'#22c55e'],
+                        ['icon'=>'fas-rotate',   'value'=>$stats['recovery'],'label'=>'Recuperação',  'color'=>'#eab308'],
+                        ['icon'=>'fas-circle-xmark',     'value'=>$stats['failed'],  'label'=>'Reprovadas',   'color'=>'#ef4444'],
+                        ['icon'=>'fas-clock',        'value'=>$stats['ongoing'], 'label'=>'Cursando',     'color'=>'#64748b'],
                     ];
                 @endphp
                 @foreach($overallCards as $card)
@@ -184,7 +128,7 @@
                     <div class="ms-card" style="padding:0.875rem;border-color:{{ $oc }}44">
                         <div style="display:flex;align-items:center;gap:0.625rem">
                             <div style="width:2.25rem;height:2.25rem;border-radius:50%;background:{{ $oc }}1a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                @svg('heroicon-o-star', 'ms-icon-md', ['style' => 'color:'.$oc])
+                                @svg('fas-star', 'ms-icon-md', ['style' => 'color:'.$oc])
                             </div>
                             <div>
                                 <p style="font-size:1.25rem;font-weight:700;color:{{ $oc }};margin:0;line-height:1.2">{{ number_format($stats['average'], 1, ',', '') }}</p>
@@ -329,7 +273,7 @@
                                 {{-- Points needed --}}
                                 @if($item['points_needed'] !== null)
                                     <div style="margin-top:0.25rem;padding:0.5rem 0.75rem;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:0.5rem;display:flex;align-items:center;gap:0.5rem">
-                                        @svg('heroicon-o-light-bulb', 'ms-icon-xs', ['style' => 'color:#eab308;flex-shrink:0'])
+                                        @svg('fas-lightbulb', 'ms-icon-xs', ['style' => 'color:#eab308;flex-shrink:0'])
                                         <span style="font-size:0.75rem;color:var(--ms-text-secondary)">
                                             Você precisa de pelo menos
                                             <strong style="color:#eab308">{{ number_format($item['points_needed'], 1, ',', '') }}</strong>
@@ -346,7 +290,7 @@
             @else
                 <div class="ms-card" style="padding:3rem;text-align:center">
                     <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(100,116,139,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                        @svg('heroicon-o-chart-bar', 'ms-icon-xl', ['style' => 'color:#94a3b8'])
+                        @svg('fas-chart-bar', 'ms-icon-xl', ['style' => 'color:#94a3b8'])
                     </div>
                     <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">
                         Nenhuma nota lançada

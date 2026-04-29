@@ -19,7 +19,7 @@ class EnrollmentResource extends BaseAdminResource
 {
     protected static ?string $model = Enrollment::class;
     protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
-    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string|null|BackedEnum $navigationIcon = 'fas-layer-group';
     protected static ?int $navigationSort = 5;
     protected static ?string $navigationLabel = 'Matrículas';
     protected static ?string $pluralModelLabel = 'Matrículas';

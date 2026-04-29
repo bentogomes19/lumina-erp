@@ -13,7 +13,7 @@ class DashboardTeacher extends Page
     protected static ?string $navigationLabel = 'Painel do Professor';
     protected static ?string $title = 'Painel do Professor';
     protected static ?string $slug = 'dashboard-teacher';
-    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-academic-cap';
+    protected static string|null|\BackedEnum $navigationIcon = 'fas-graduation-cap';
     protected static ?int $navigationSort = 0;
 
     public static function shouldRegisterNavigation(): bool

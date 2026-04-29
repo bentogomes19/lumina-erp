@@ -16,7 +16,7 @@ class DashboardStudent extends Page
     protected static ?string $navigationLabel              = 'Painel do Aluno';
     protected static ?string $title                        = 'Portal do Aluno';
     protected static ?string $slug                         = 'dashboard-student';
-    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-academic-cap';
+    protected static string|null|\BackedEnum $navigationIcon = 'fas-graduation-cap';
     protected static ?int $navigationSort                  = 0;
 
     public static function shouldRegisterNavigation(): bool

@@ -21,7 +21,7 @@ class StudentProfileWidget extends StatsOverviewWidget
             return [
                 Stat::make('Perfil não vinculado', '—')
                     ->description('Este usuário não está vinculado a um aluno.')
-                    ->icon('heroicon-o-exclamation-circle')
+                    ->icon('fas-circle-exclamation')
                     ->color('gray'),
             ];
         }
@@ -69,17 +69,17 @@ class StudentProfileWidget extends StatsOverviewWidget
         return [
             Stat::make('Ano Letivo', $anoLetivo)
                 ->description($currentYear ? 'Ano corrente da matrícula' : 'Nenhum ano letivo ativo')
-                ->icon('heroicon-o-calendar')
+                ->icon('fas-calendar')
                 ->color($currentYear ? 'info' : 'gray'),
 
             Stat::make('Turma', $turmaNome)
                 ->description("Série: {$serie}")
-                ->icon('heroicon-o-user-group')
+                ->icon('fas-user-group')
                 ->color($schoolClass ? 'primary' : 'gray'),
 
             Stat::make('Média Geral', number_format($mediaNotas, 2, ',', '.'))
                 ->description($mediaNotas > 0 ? 'Média das avaliações' : 'Sem notas ainda')
-                ->icon('heroicon-o-academic-cap')
+                ->icon('fas-graduation-cap')
                 ->color($mediaNotas > 0 ? 'success' : 'gray'),
         ];
     }

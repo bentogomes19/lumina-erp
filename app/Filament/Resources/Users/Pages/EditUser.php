@@ -22,7 +22,7 @@ class EditUser extends EditRecord
             // Resetar senha (TI/admin)
             Action::make('reset_password')
                 ->label('Resetar Senha')
-                ->icon('heroicon-o-key')
+                ->icon('fas-key')
                 ->color('warning')
                 ->requiresConfirmation()
                 ->modalHeading('Resetar senha')
@@ -44,7 +44,7 @@ class EditUser extends EditRecord
             // Desbloquear (somente TI/admin — regra de negócio)
             Action::make('unlock')
                 ->label('Desbloquear')
-                ->icon('heroicon-o-lock-open')
+                ->icon('fas-lock-open')
                 ->color('success')
                 ->requiresConfirmation()
                 ->action(function () {
@@ -59,7 +59,7 @@ class EditUser extends EditRecord
             // Inativar com motivo
             Action::make('inactivate')
                 ->label('Inativar')
-                ->icon('heroicon-o-x-circle')
+                ->icon('fas-circle-xmark')
                 ->color('danger')
                 ->form([
                     Textarea::make('inactive_reason')
@@ -82,7 +82,7 @@ class EditUser extends EditRecord
             // Reativar (somente TI/admin — regra de negócio)
             Action::make('activate')
                 ->label('Reativar')
-                ->icon('heroicon-o-check-circle')
+                ->icon('fas-circle-check')
                 ->color('success')
                 ->requiresConfirmation()
                 ->modalDescription('O usuário voltará a ter acesso ao sistema.')

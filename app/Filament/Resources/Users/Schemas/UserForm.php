@@ -35,12 +35,12 @@ class UserForm
 
             // ── Identificação ────────────────────────────────────────────────
             Section::make('Identificação')
-                ->icon('heroicon-o-identification')
+                ->icon('fas-id-card')
                 ->schema([
                     TextInput::make('name')
                         ->label('Nome completo')
                         ->placeholder('Ex: MARIA OLIVEIRA')
-                        ->prefixIcon('heroicon-o-user')
+                        ->prefixIcon('fas-user')
                         ->required()
                         ->maxLength(255),
 
@@ -100,7 +100,7 @@ class UserForm
 
             // ── Segurança (somente leitura em edição) ────────────────────────
             Section::make('Segurança e Acessos')
-                ->icon('heroicon-o-shield-check')
+                ->icon('fas-shield-halved')
                 ->schema([
                     Placeholder::make('last_login_at')
                         ->label('Último acesso')
@@ -128,13 +128,13 @@ class UserForm
 
             // ── Informações Pessoais ──────────────────────────────────────────
             Section::make('Informações Pessoais')
-                ->icon('heroicon-o-user-circle')
+                ->icon('fas-circle-user')
                 ->schema([
                     TextInput::make('cpf')
                         ->label('CPF')
                         ->mask('999.999.999-99')
                         ->unique(table: 'users', column: 'cpf', ignoreRecord: true)
-                        ->prefixIcon('heroicon-o-identification'),
+                        ->prefixIcon('fas-id-card'),
 
                     TextInput::make('rg')
                         ->label('RG')
@@ -163,14 +163,14 @@ class UserForm
 
             // ── Endereço e Contato ────────────────────────────────────────────
             Section::make('Endereço e Contato')
-                ->icon('heroicon-o-map-pin')
+                ->icon('fas-location-dot')
                 ->schema([
                     TextInput::make('postal_code')
                         ->label('CEP')
                         ->mask('99999-999')
                         ->placeholder('00000-000')
                         ->live(onBlur: true)
-                        ->suffixIcon('heroicon-o-magnifying-glass')
+                        ->suffixIcon('fas-magnifying-glass')
                         ->afterStateUpdated(function ($state, callable $set) {
                             if (! $state) {
                                 return;

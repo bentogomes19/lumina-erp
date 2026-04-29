@@ -10,7 +10,7 @@ class TeacherAttendance extends Page
     protected static ?string $navigationLabel = 'Lançar Faltas';
     protected static ?string $title = 'Lançar Faltas';
     protected static ?string $slug  = 'lancar-faltas';
-    protected static string|null|\BackedEnum $navigationIcon  = 'heroicon-o-clipboard-document-check';
+    protected static string|null|\BackedEnum $navigationIcon  = 'fas-clipboard-check';
 
     public static function shouldRegisterNavigation(): bool
     {

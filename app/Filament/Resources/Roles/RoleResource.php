@@ -17,7 +17,7 @@ class RoleResource extends BaseAdminResource
 {
     protected static ?string $model = Role::class;
 
-    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-shield-check';
+    protected static string|null|BackedEnum $navigationIcon = 'fas-shield-halved';
     protected static string|null|\UnitEnum $navigationGroup = 'Administração';
     protected static ?string $navigationLabel = 'Perfis de Acesso';
     protected static ?string $pluralModelLabel = 'Perfil de Acesso';

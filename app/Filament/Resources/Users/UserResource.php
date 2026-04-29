@@ -20,7 +20,7 @@ class UserResource extends BaseAdminResource
 {
     protected static ?string $model = User::class;
     protected static string|null|\UnitEnum $navigationGroup = 'Administração';
-    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-users';
+    protected static string|null|BackedEnum $navigationIcon = 'fas-users';
     protected static ?int $navigationSort = 1;
     protected static ?string $navigationLabel = 'Usuários';
     protected static ?string $pluralModelLabel = 'Usuário';

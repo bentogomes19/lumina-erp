@@ -19,7 +19,7 @@ class StudentAttendance extends Page implements HasTable
     protected static ?string $navigationLabel = 'Frequência';
     protected static ?string $title = 'Frequência';
     protected static ?string $slug = 'student-attendance';
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
+    protected static string|\BackedEnum|null $navigationIcon = 'fas-calendar-days';
     protected static ?int $navigationSort = 2;
 
     public string $selectedPeriod = 'all';

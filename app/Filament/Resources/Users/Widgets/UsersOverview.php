@@ -18,33 +18,33 @@ class UsersOverview extends StatsOverviewWidget
         return [
             Stat::make('Usuários Ativos', $ativos)
                 ->color('success')
-                ->icon('heroicon-o-users'),
+                ->icon('fas-users'),
 
             Stat::make('Bloqueados', $bloqueados)
                 ->color($bloqueados > 0 ? 'danger' : 'gray')
-                ->icon('heroicon-o-lock-closed'),
+                ->icon('fas-lock'),
 
             Stat::make('Aguardando troca de senha', $aguardandoTroca)
                 ->color($aguardandoTroca > 0 ? 'warning' : 'gray')
-                ->icon('heroicon-o-key'),
+                ->icon('fas-key'),
 
             Stat::make('TI / Admin', User::role(['ti', 'admin'])->count())
                 ->color('danger')
-                ->icon('heroicon-o-shield-check'),
+                ->icon('fas-shield-halved'),
 
             Stat::make('Secretaria / Financeiro',
                 User::role(['secretaria', 'financeiro'])->count()
             )
                 ->color('warning')
-                ->icon('heroicon-o-building-office'),
+                ->icon('fas-building'),
 
             Stat::make('Professores', User::role('teacher')->count())
                 ->color('primary')
-                ->icon('heroicon-o-academic-cap'),
+                ->icon('fas-graduation-cap'),
 
             Stat::make('Alunos', User::role('student')->count())
                 ->color('info')
-                ->icon('heroicon-o-user-group'),
+                ->icon('fas-user-group'),
         ];
     }
 }

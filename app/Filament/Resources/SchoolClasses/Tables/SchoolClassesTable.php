@@ -83,7 +83,7 @@ class SchoolClassesTable
                 EditAction::make(),
                 Action::make('matricularAluno')
                     ->label('Vincular Aluno')
-                    ->icon('heroicon-o-user-plus')
+                    ->icon('fas-user-plus')
                     ->modalHeading('Vincular Student')
                     ->form([
                         Select::make('student_id')
@@ -141,7 +141,7 @@ class SchoolClassesTable
                     }),
                 Action::make('verDisciplinas')
                     ->label('Ver disciplinas')
-                    ->icon('heroicon-o-book-open')
+                    ->icon('fas-book-open')
                     ->modalHeading(fn ($record) => "Disciplinas — {$record->name}")
                     ->modalContent(function (\App\Models\SchoolClass $record) {
                         $badges = $record->subjects()

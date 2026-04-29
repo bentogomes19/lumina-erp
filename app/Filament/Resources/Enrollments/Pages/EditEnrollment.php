@@ -58,7 +58,7 @@ class EditEnrollment extends EditRecord
                 // Trancar
                 Action::make('trancar')
                     ->label('Trancar Matrícula')
-                    ->icon('heroicon-o-lock-closed')
+                    ->icon('fas-lock')
                     ->color('warning')
                     ->visible(fn () => $this->record->status === EnrollmentStatus::ACTIVE)
                     ->modalHeading('Trancar Matrícula')
@@ -110,7 +110,7 @@ class EditEnrollment extends EditRecord
                 // Reativar
                 Action::make('reativar')
                     ->label('Reativar Matrícula')
-                    ->icon('heroicon-o-lock-open')
+                    ->icon('fas-lock-open')
                     ->color('success')
                     ->visible(fn () => $this->record->status === EnrollmentStatus::LOCKED)
                     ->modalHeading('Reativar Matrícula')
@@ -152,7 +152,7 @@ class EditEnrollment extends EditRecord
                 // Transferir Turma
                 Action::make('transferirTurma')
                     ->label('Transferir Turma')
-                    ->icon('heroicon-o-arrows-right-left')
+                    ->icon('fas-right-left')
                     ->color('info')
                     ->visible(fn () => $this->record->status === EnrollmentStatus::ACTIVE)
                     ->modalHeading('Transferência entre Turmas')
@@ -266,7 +266,7 @@ class EditEnrollment extends EditRecord
                 // Transferência Externa
                 Action::make('transferirExterna')
                     ->label('Transferência Externa')
-                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->icon('fas-up-right-from-square')
                     ->color('purple')
                     ->visible(fn () => in_array($this->record->status, [
                         EnrollmentStatus::ACTIVE,
@@ -324,7 +324,7 @@ class EditEnrollment extends EditRecord
                 // Cancelar
                 Action::make('cancelar')
                     ->label('Cancelar Matrícula')
-                    ->icon('heroicon-o-x-circle')
+                    ->icon('fas-circle-xmark')
                     ->color('danger')
                     ->visible(fn () => in_array($this->record->status, [
                         EnrollmentStatus::ACTIVE,
@@ -377,7 +377,7 @@ class EditEnrollment extends EditRecord
                 // Reverter Cancelamento (somente TI)
                 Action::make('reverterCancelamento')
                     ->label('Reverter Cancelamento')
-                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->icon('fas-rotate-left')
                     ->color('warning')
                     ->visible(fn () => $this->record->status === EnrollmentStatus::CANCELED
                         && auth()->user()?->hasAnyRole(['admin', 'ti'])
@@ -425,21 +425,21 @@ class EditEnrollment extends EditRecord
 
             ])
             ->label('Operações')
-            ->icon('heroicon-o-cog-6-tooth')
+            ->icon('fas-gear')
             ->button(),
 
             // ── PDFs ───────────────────────────────────────────────────────────
             ActionGroup::make([
                 Action::make('pdfComprovante')
                     ->label('Comprovante de Matrícula')
-                    ->icon('heroicon-o-document-arrow-down')
+                    ->icon('fas-file-arrow-down')
                     ->color('gray')
                     ->url(fn () => route('pdf.enrollment.comprovante', $this->record->id))
                     ->openUrlInNewTab(),
 
                 Action::make('pdfTransferenciaInterna')
                     ->label('PDF Transferência de Turma')
-                    ->icon('heroicon-o-document-arrow-down')
+                    ->icon('fas-file-arrow-down')
                     ->color('info')
                     ->visible(fn () => $this->record->status === EnrollmentStatus::TRANSFERRED_INTERNAL)
                     ->url(fn () => route('pdf.enrollment.transferencia-interna', $this->record->id))
@@ -447,7 +447,7 @@ class EditEnrollment extends EditRecord
 
                 Action::make('pdfTransferenciaExterna')
                     ->label('Declaração de Transferência')
-                    ->icon('heroicon-o-document-arrow-down')
+                    ->icon('fas-file-arrow-down')
                     ->color('gray')
                     ->visible(fn () => $this->record->status === EnrollmentStatus::TRANSFERRED_EXTERNAL)
                     ->url(fn () => route('pdf.enrollment.transferencia-externa', $this->record->id))
@@ -455,7 +455,7 @@ class EditEnrollment extends EditRecord
 
                 Action::make('pdfTrancamento')
                     ->label('Comprovante de Trancamento')
-                    ->icon('heroicon-o-document-arrow-down')
+                    ->icon('fas-file-arrow-down')
                     ->color('gray')
                     ->visible(fn () => $this->record->status === EnrollmentStatus::LOCKED)
                     ->url(fn () => route('pdf.enrollment.trancamento', $this->record->id))
@@ -463,14 +463,14 @@ class EditEnrollment extends EditRecord
 
                 Action::make('pdfCancelamento')
                     ->label('Termo de Cancelamento')
-                    ->icon('heroicon-o-document-arrow-down')
+                    ->icon('fas-file-arrow-down')
                     ->color('gray')
                     ->visible(fn () => $this->record->status === EnrollmentStatus::CANCELED)
                     ->url(fn () => route('pdf.enrollment.cancelamento', $this->record->id))
                     ->openUrlInNewTab(),
             ])
             ->label('Emitir PDF')
-            ->icon('heroicon-o-printer')
+            ->icon('fas-print')
             ->button()
             ->color('gray'),
 

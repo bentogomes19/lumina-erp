@@ -48,13 +48,13 @@ class EnrollmentsRelationManager extends RelationManager
                 \Filament\Actions\Action::make('edit')
                     ->label('Editar matrícula')
                     ->url(fn ($record) => EnrollmentResource::getUrl('edit', ['record' => $record]))
-                    ->icon('heroicon-o-pencil'),
+                    ->icon('fas-pencil'),
             ])
             ->headerActions([
                 \Filament\Actions\Action::make('novaMatricula')
                     ->label('Nova matrícula')
                     ->url(fn () => EnrollmentResource::getUrl('create') . '?student_id=' . $this->getOwnerRecord()->id)
-                    ->icon('heroicon-o-plus'),
+                    ->icon('fas-plus'),
             ]);
     }
 }

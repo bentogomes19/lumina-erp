@@ -25,7 +25,7 @@ class EnrollmentForm
 
                 // ── Identificação da matrícula (somente edição) ────────────────
                 Section::make('Identificação')
-                    ->icon('heroicon-o-identification')
+                    ->icon('fas-id-card')
                     ->columns(3)
                     ->visibleOn('edit')
                     ->schema([
@@ -34,7 +34,7 @@ class EnrollmentForm
                             ->disabled()
                             ->dehydrated(false)
                             ->helperText('Gerado automaticamente. Imutável.')
-                            ->prefixIcon('heroicon-o-hashtag')
+                            ->prefixIcon('fas-hashtag')
                             ->columnSpan(1),
 
                         Placeholder::make('student_name_preview')
@@ -45,7 +45,7 @@ class EnrollmentForm
 
                 // ── Dados do aluno ─────────────────────────────────────────────
                 Section::make('Aluno')
-                    ->icon('heroicon-o-user')
+                    ->icon('fas-user')
                     ->columns(2)
                     ->schema([
                         Select::make('student_id')
@@ -85,7 +85,7 @@ class EnrollmentForm
 
                 // ── Dados acadêmicos ───────────────────────────────────────────
                 Section::make('Dados Acadêmicos')
-                    ->icon('heroicon-o-academic-cap')
+                    ->icon('fas-graduation-cap')
                     ->columns(2)
                     ->schema([
                         Select::make('school_year_id')
@@ -94,7 +94,7 @@ class EnrollmentForm
                             ->default(fn () => SchoolYear::where('is_active', true)->value('id'))
                             ->live()
                             ->required()
-                            ->prefixIcon('heroicon-o-calendar'),
+                            ->prefixIcon('fas-calendar'),
 
                         Select::make('class_id')
                             ->label('Turma')
@@ -114,25 +114,25 @@ class EnrollmentForm
                                     $set('roll_number', Enrollment::nextRollNumberFor((int) $state));
                                 }
                             })
-                            ->prefixIcon('heroicon-o-user-group'),
+                            ->prefixIcon('fas-user-group'),
 
                         DatePicker::make('enrollment_date')
                             ->label('Data da Matrícula')
                             ->default(now())
                             ->required()
-                            ->prefixIcon('heroicon-o-calendar-days'),
+                            ->prefixIcon('fas-calendar-days'),
 
                         TextInput::make('roll_number')
                             ->label('Nº Chamada')
                             ->numeric()
                             ->minValue(1)
                             ->helperText('Sugerido automaticamente, pode ajustar.')
-                            ->prefixIcon('heroicon-o-list-bullet'),
+                            ->prefixIcon('fas-list'),
                     ]),
 
                 // ── Status ─────────────────────────────────────────────────────
                 Section::make('Status')
-                    ->icon('heroicon-o-signal')
+                    ->icon('fas-signal')
                     ->schema([
                         Select::make('status')
                             ->label('Status da Matrícula')

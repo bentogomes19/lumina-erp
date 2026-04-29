@@ -32,7 +32,7 @@ class StudentGradesOverviewWidget extends BaseWidget
             return [
                 Stat::make('Notas Registradas', '0')
                     ->description('Nenhuma turma ativa no momento')
-                    ->icon('heroicon-o-chart-bar')
+                    ->icon('fas-chart-bar')
                     ->color('gray'),
             ];
         }
@@ -47,7 +47,7 @@ class StudentGradesOverviewWidget extends BaseWidget
             return [
                 Stat::make('Notas Registradas', '0')
                     ->description('Nenhuma nota registrada ainda')
-                    ->icon('heroicon-o-chart-bar')
+                    ->icon('fas-chart-bar')
                     ->color('gray'),
             ];
         }
@@ -62,27 +62,27 @@ class StudentGradesOverviewWidget extends BaseWidget
         return [
             Stat::make('Média Geral', number_format($averageGrade, 2, ',', '.'))
                 ->description('De todas as avaliações')
-                ->icon('heroicon-o-star')
+                ->icon('fas-star')
                 ->color($averageGrade >= 7 ? 'success' : ($averageGrade >= 5 ? 'warning' : 'danger')),
 
             Stat::make('Avaliações', $totalGrades)
                 ->description('Notas registradas')
-                ->icon('heroicon-o-document-text')
+                ->icon('fas-file-lines')
                 ->color('info'),
 
             Stat::make('Disciplinas', $disciplines)
                 ->description('Com notas registradas')
-                ->icon('heroicon-o-book-open')
+                ->icon('fas-book-open')
                 ->color('primary'),
 
             Stat::make('Maior Nota', number_format($highestGrade, 2, ',', '.'))
                 ->description('Melhor desempenho')
-                ->icon('heroicon-o-arrow-trending-up')
+                ->icon('fas-arrow-trend-up')
                 ->color('success'),
 
             Stat::make('Menor Nota', number_format($lowestGrade, 2, ',', '.'))
                 ->description('Desempenho mais baixo')
-                ->icon('heroicon-o-arrow-trending-down')
+                ->icon('fas-arrow-trend-down')
                 ->color('danger'),
         ];
     }

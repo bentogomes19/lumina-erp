@@ -1,0 +1,69 @@
+/* ── Light mode (default) ── */
+        :root {
+            --ms-card-bg:        #ffffff;
+            --ms-card-border:    #e2e8f0;
+            --ms-cell-bg:        #f1f5f9;
+            --ms-bar-bg:         #e2e8f0;
+            --ms-text-primary:   #1e293b;
+            --ms-text-secondary: #64748b;
+            --ms-text-muted:     #94a3b8;
+            --ms-hover-bg:       #f8fafc;
+        }
+
+        /* ── Dark mode — controlado pela classe .dark do Filament ── */
+        .dark {
+            --ms-card-bg:        #080a0c;
+            --ms-card-border:    #334155;
+            --ms-cell-bg:        #0f172a;
+            --ms-bar-bg:         #10141d;
+            --ms-text-primary:   #f1f5f9;
+            --ms-text-secondary: #94a3b8;
+            --ms-text-muted:     #64748b;
+            --ms-hover-bg:       #0a0d11;
+        }
+
+        /* ── Base card ── */
+        .ms-card {
+            background: var(--ms-card-bg);
+            border: 1px solid var(--ms-card-border);
+            border-radius: 0.75rem;
+        }
+
+        /* ── Back button ── */
+        a.ms-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--ms-card-bg);
+            border: 1px solid var(--ms-card-border);
+            border-radius: 0.5rem;
+            color: var(--ms-text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        a.ms-back-btn:hover {
+            background: var(--ms-hover-bg);
+            border-color: color-mix(in srgb, var(--ms-card-border) 60%, currentColor 40%);
+        }
+
+        /* ── Lesson row ── */
+        .ms-lesson-row {
+            background: var(--ms-cell-bg);
+            border: 1px solid var(--ms-card-border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* ── Responsive grid ── */
+        @media (max-width: 768px) {
+            .ms-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .ms-term-grid  { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 480px) {
+            .ms-stats-grid { grid-template-columns: 1fr !important; }
+        }

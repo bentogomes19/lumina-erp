@@ -223,7 +223,7 @@ class GradesTable
                     DeleteBulkAction::make(),
                     BulkAction::make('lock')
                         ->label('Fechar notas (selecionadas)')
-                        ->icon('heroicon-o-lock-closed')
+                        ->icon('fas-lock')
                         ->requiresConfirmation()
                         ->action(fn ($records) => $records->each->update(['locked_at' => now()])),
                 ]),
