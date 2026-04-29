@@ -8,16 +8,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Str;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
-    /** Número máximo de tentativas antes do bloqueio automático */
+    /**
+     * Número máximo de tentativas antes do bloqueio automático.
+     */
     public const MAX_LOGIN_ATTEMPTS = 5;
 
+    /**
+     * Campos que podem ser preenchidos em massa pela aplicação.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'uuid',
         'name',
@@ -43,11 +50,21 @@ class User extends Authenticatable
         'inactive_reason',
     ];
 
+    /**
+     * Campos ocultos em serializações.
+     *
+     * @var array<int, string>
+     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
+    /**
+     * Retorna as conversões automáticas de tipos dos atributos.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -62,7 +79,12 @@ class User extends Authenticatable
         ];
     }
 
-    protected static function booted()
+    /**
+     * Configura eventos de criação e sincronização com perfis acadêmicos.
+     *
+     * @return void
+     */
+    protected static function booted(): void
     {
         static::creating(function ($user) {
             if (empty($user->uuid)) {
@@ -115,20 +137,25 @@ class User extends Authenticatable
         });
     }
 
-    // ─── Accessors ───────────────────────────────────────────────────────────
-
+    /**
+     * Indica se o usuário está bloqueado.
+     *
+     * @return bool
+     */
     public function getIsLockedAttribute(): bool
     {
         return ! is_null($this->locked_at);
     }
 
+    /**
+     * Retorna o nome do usuário com o perfil principal para exibição.
+     */
     public function getDisplayNameAttribute(): string
     {
         $role = $this->roles()->pluck('name')->first();
+
         return "{$this->name}" . ($role ? " ({$role})" : '');
     }
-
-    // ─── Métodos de negócio ───────────────────────────────────────────────────
 
     /**
      * Registra tentativa de login falha e bloqueia se atingir o limite.
@@ -136,7 +163,7 @@ class User extends Authenticatable
     public function registerFailedLogin(): void
     {
         $attempts = $this->login_attempts + 1;
-        $data = ['login_attempts' => $attempts];
+        $data     = ['login_attempts' => $attempts];
 
         if ($attempts >= self::MAX_LOGIN_ATTEMPTS) {
             $data['locked_at'] = now();
@@ -185,13 +212,17 @@ class User extends Authenticatable
         return $tempPassword;
     }
 
-    // ─── Relacionamentos ─────────────────────────────────────────────────────
-
+    /**
+     * Retorna o aluno vinculado ao usuário.
+     */
     public function student()
     {
         return $this->hasOne(Student::class, 'user_id');
     }
 
+    /**
+     * Retorna o professor vinculado ao usuário.
+     */
     public function teacher()
     {
         return $this->hasOne(Teacher::class);

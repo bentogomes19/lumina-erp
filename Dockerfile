@@ -25,8 +25,8 @@ RUN apt-get update && apt-get install -y \
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Node.js 18
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+# Node.js 22 (Vite 7 exige Node >=20.19 ou >=22.12)
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs
 
 # Criar usuário dev

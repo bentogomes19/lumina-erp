@@ -4,7 +4,7 @@
 # Todos os comandos php artisan e composer rodam DENTRO do container (lumina-app).
 # Use os alvos abaixo em vez de rodar artisan no host.
 
-.PHONY: help build up down restart rebuild shell install migrate seed test lint clean bootstrap key clear
+.PHONY: help build up down restart rebuild shell install migrate seed fresh test lint lint-fix clean bootstrap key clear
 
 APP_CONTAINER = lumina-app
 
@@ -17,7 +17,7 @@ help:
 	@echo "  make restart   - Reinicia os containers"
 	@echo "  make rebuild   - Rebuild completo (Dockerfile/compose) e sobe de novo"
 	@echo "  make shell     - Entra no container da aplicação (zsh)"
-	@echo "  make install   - composer install + key:generate (dentro do app)"
+	@echo "  make install   - composer install + npm ci/build + key:generate (dentro do app)"
 	@echo "  make migrate   - Roda migrations (dentro do app)"
 	@echo "  make seed      - Roda migrations + seeders (dentro do app)"
 	@echo "  make fresh     - migrate:fresh --seed (dentro do app)"
@@ -41,13 +41,14 @@ bootstrap:
 	docker compose up -d --build
 	@echo "Aguardando containers..."
 	@sleep 10
-	docker exec $(APP_CONTAINER) sh -c "composer install && php artisan key:generate && php artisan migrate --seed"
+	docker exec $(APP_CONTAINER) sh -c "composer install && npm ci && npm run build && php artisan key:generate && php artisan migrate --seed"
 	@echo "Pronto. Abra http://localhost:8000 no browser."
 
 build:
 	docker compose build --no-cache
 
 up:
+	@test -f .env || cp .env.example .env
 	docker compose up -d --build
 
 down:
@@ -57,13 +58,14 @@ restart: down up
 
 # Após alterar Dockerfile ou compose: rebuild da imagem e sobe os containers
 rebuild:
+	@test -f .env || cp .env.example .env
 	docker compose build --no-cache && docker compose up -d
 
 shell:
 	docker exec -it $(APP_CONTAINER) zsh
 
 install:
-	docker exec -it $(APP_CONTAINER) sh -c "composer install && php artisan key:generate"
+	docker exec -it $(APP_CONTAINER) sh -c "composer install && npm ci && npm run build && php artisan key:generate"
 
 migrate:
 	docker exec -it $(APP_CONTAINER) php artisan migrate

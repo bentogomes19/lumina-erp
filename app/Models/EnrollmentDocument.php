@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 /**
  * Documento vinculado a uma matrícula.
  * Controla o checklist de documentos obrigatórios/opcionais com suporte a upload digital.
@@ -18,8 +16,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $arquivo_path
  * @property string|null $arquivo_nome_original
  */
-class EnrollmentDocument extends Model
+class EnrollmentDocument extends BaseModel
 {
+    /**
+     * Campos que podem ser preenchidos em massa pela aplicação.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'enrollment_id',
         'tipo',
@@ -31,64 +34,90 @@ class EnrollmentDocument extends Model
         'arquivo_nome_original',
     ];
 
+    /**
+     * Conversões automáticas de tipos dos atributos.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'data_entrega' => 'date',
     ];
 
-    // ── Tipos de documentos aceitos pelo sistema ──────────────────────────────
-
+    /**
+     * Tipos de documentos aceitos pelo sistema.
+     *
+     * @var array<string, string>
+     */
     public const TIPOS = [
-        'rg'                      => 'RG / Documento de Identidade',
-        'cpf'                     => 'CPF',
-        'certidao_nascimento'     => 'Certidão de Nascimento',
-        'comprovante_residencia'  => 'Comprovante de Residência',
-        'historico_escolar'       => 'Histórico Escolar',
+        'rg'                       => 'RG / Documento de Identidade',
+        'cpf'                      => 'CPF',
+        'certidao_nascimento'      => 'Certidão de Nascimento',
+        'comprovante_residencia'   => 'Comprovante de Residência',
+        'historico_escolar'        => 'Histórico Escolar',
         'declaracao_transferencia' => 'Declaração de Transferência',
-        'foto_3x4'                => 'Foto 3x4',
-        'atestado_saude'          => 'Atestado de Saúde / Vacinação',
-        'laudo_medico'            => 'Laudo Médico (necessidades especiais)',
-        'outros'                  => 'Outros',
+        'foto_3x4'                 => 'Foto 3x4',
+        'atestado_saude'           => 'Atestado de Saúde / Vacinação',
+        'laudo_medico'             => 'Laudo Médico (necessidades especiais)',
+        'outros'                   => 'Outros',
     ];
 
-    // ── Status possíveis do documento ─────────────────────────────────────────
-
+    /**
+     * Status possíveis do documento.
+     *
+     * @var array<string, string>
+     */
     public const STATUS_OPTIONS = [
         'pendente'   => 'Pendente',
         'entregue'   => 'Entregue',
         'dispensado' => 'Dispensado',
     ];
 
+    /**
+     * Cores de exibição por status do documento.
+     *
+     * @var array<string, string>
+     */
     public const STATUS_COLORS = [
         'pendente'   => 'warning',
         'entregue'   => 'success',
         'dispensado' => 'gray',
     ];
 
-    // ── Relações ──────────────────────────────────────────────────────────────
-
+    /**
+     * Retorna a matrícula vinculada ao documento.
+     */
     public function enrollment()
     {
         return $this->belongsTo(Enrollment::class);
     }
 
+    /**
+     * Retorna o usuário que recebeu o documento.
+     */
     public function recebidoPor()
     {
         return $this->belongsTo(User::class, 'recebido_por_user_id');
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
+    /**
+     * Retorna o rótulo legível do tipo de documento.
+     */
     public function tipoLabel(): string
     {
         return self::TIPOS[$this->tipo] ?? $this->tipo;
     }
 
+    /**
+     * Retorna o rótulo legível do status do documento.
+     */
     public function statusLabel(): string
     {
         return self::STATUS_OPTIONS[$this->status] ?? $this->status;
     }
 
-    /** Retorna true se o documento possui arquivo digital anexado */
+    /**
+     * Indica se o documento possui arquivo digital anexado.
+     */
     public function temArquivo(): bool
     {
         return ! empty($this->arquivo_path);
