@@ -77,8 +77,8 @@ class UsersTable
                 IconColumn::make('force_password_change')
                     ->label('Troca senha')
                     ->boolean()
-                    ->trueIcon('heroicon-o-key')
-                    ->falseIcon('heroicon-o-check')
+                    ->trueIcon('fas-key')
+                    ->falseIcon('fas-check')
                     ->trueColor('warning')
                     ->falseColor('success')
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -150,7 +150,7 @@ class UsersTable
                 // Ação: Resetar Senha (gera senha temporária + force_password_change)
                 Action::make('reset_password')
                     ->label('Resetar Senha')
-                    ->icon('heroicon-o-key')
+                    ->icon('fas-key')
                     ->color('warning')
                     ->requiresConfirmation()
                     ->modalHeading('Resetar senha do usuário')
@@ -170,7 +170,7 @@ class UsersTable
                 // Ação: Desbloquear (somente TI/admin)
                 Action::make('unlock')
                     ->label('Desbloquear')
-                    ->icon('heroicon-o-lock-open')
+                    ->icon('fas-lock-open')
                     ->color('success')
                     ->requiresConfirmation()
                     ->modalHeading('Desbloquear usuário')
@@ -189,7 +189,7 @@ class UsersTable
                 // Ação: Inativar com motivo
                 Action::make('inactivate')
                     ->label('Inativar')
-                    ->icon('heroicon-o-x-circle')
+                    ->icon('fas-circle-xmark')
                     ->color('danger')
                     ->form([
                         Textarea::make('inactive_reason')
@@ -215,7 +215,7 @@ class UsersTable
                 // Ação: Reativar (somente TI/admin)
                 Action::make('activate')
                     ->label('Reativar')
-                    ->icon('heroicon-o-check-circle')
+                    ->icon('fas-circle-check')
                     ->color('success')
                     ->requiresConfirmation()
                     ->modalHeading('Reativar usuário')
@@ -243,7 +243,7 @@ class UsersTable
                 BulkActionGroup::make([
                     BulkAction::make('bulk_inactivate')
                         ->label('Inativar selecionados')
-                        ->icon('heroicon-o-x-circle')
+                        ->icon('fas-circle-xmark')
                         ->color('danger')
                         ->requiresConfirmation()
                         ->form([
@@ -261,7 +261,7 @@ class UsersTable
 
                     BulkAction::make('bulk_activate')
                         ->label('Reativar selecionados')
-                        ->icon('heroicon-o-check-circle')
+                        ->icon('fas-circle-check')
                         ->color('success')
                         ->requiresConfirmation()
                         ->action(fn ($records) => $records->each->updateQuietly([

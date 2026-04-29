@@ -1,71 +1,5 @@
 <x-filament-panels::page>
-    <style>
-        /* ── Variáveis de tema ── */
-        :root {
-            --ms-card-bg:        #ffffff;
-            --ms-card-border:    #e2e8f0;
-            --ms-cell-bg:        #f1f5f9;
-            --ms-bar-bg:         #e2e8f0;
-            --ms-text-primary:   #1e293b;
-            --ms-text-secondary: #64748b;
-            --ms-text-muted:     #94a3b8;
-            --ms-hover-bg:       #f8fafc;
-        }
-        .dark {
-            --ms-card-bg:        #080a0c;
-            --ms-card-border:    #334155;
-            --ms-cell-bg:        #0f172a;
-            --ms-bar-bg:         #10141d;
-            --ms-text-primary:   #f1f5f9;
-            --ms-text-secondary: #94a3b8;
-            --ms-text-muted:     #64748b;
-            --ms-hover-bg:       #0a0d11;
-        }
-
-        .ms-card { background: var(--ms-card-bg); border: 1px solid var(--ms-card-border); border-radius: 0.75rem; }
-
-        /* ── Avatar de iniciais ── */
-        .ms-avatar {
-            width: 4rem; height: 4rem; border-radius: 50%;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.375rem; font-weight: 800; color: #fff; flex-shrink: 0;
-        }
-
-        /* ── Linha da agenda ── */
-        .ms-lesson-row {
-            display: flex; align-items: flex-start; gap: 0.875rem;
-            padding: 0.75rem 0; border-bottom: 1px solid var(--ms-bar-bg);
-        }
-        .ms-lesson-row:last-child { border-bottom: none; }
-
-        /* ── Barra de frequência ── */
-        .ms-bar-track { width: 100%; height: 5px; border-radius: 999px; background: var(--ms-bar-bg); overflow: hidden; }
-
-        /* ── Card de atalho ── */
-        a.ms-shortcut {
-            display: flex; align-items: center; gap: 0.75rem;
-            padding: 0.875rem 1rem; border-radius: 0.625rem;
-            background: var(--ms-cell-bg); border: 1px solid var(--ms-card-border);
-            text-decoration: none; transition: background 0.15s, transform 0.15s;
-        }
-        a.ms-shortcut:hover { background: var(--ms-hover-bg); transform: translateX(3px); }
-
-        /* ── Ponto de status da aula ── */
-        .ms-lesson-dot {
-            width: 0.625rem; height: 0.625rem; border-radius: 50%; flex-shrink: 0; margin-top: 0.375rem;
-        }
-
-        /* ── Grade responsiva ── */
-        @media (max-width: 900px) {
-            .ms-two-col { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 640px) {
-            .ms-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-    </style>
-
-    @php
+@php
         $data                = $this->getPageData();
         $student             = $data['student'];
         $currentClass        = $data['currentClass'];
@@ -104,7 +38,7 @@
     @if(!$student)
         <div class="ms-card" style="padding:3rem;text-align:center">
             <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @svg('heroicon-o-exclamation-triangle', '', ['style' => 'width:2rem;height:2rem;color:#ef4444'])
+                @svg('fas-triangle-exclamation', '', ['style' => 'width:2rem;height:2rem;color:#ef4444'])
             </div>
             <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">Perfil de aluno não encontrado</h3>
             <p style="font-size:0.875rem;color:var(--ms-text-secondary);margin:0">
@@ -114,7 +48,7 @@
     @elseif(!$currentClass)
         <div class="ms-card" style="padding:3rem;text-align:center">
             <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @svg('heroicon-o-academic-cap', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
+                @svg('fas-graduation-cap', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
             </div>
             <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">Nenhuma turma ativa</h3>
             <p style="font-size:0.875rem;color:var(--ms-text-secondary);margin:0">
@@ -144,7 +78,7 @@
                             </h1>
                             <div style="display:flex;align-items:center;gap:0.625rem;flex-wrap:wrap;margin-top:0.375rem">
                                 <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--ms-text-secondary)">
-                                    @svg('heroicon-o-identification', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                                    @svg('fas-id-card', '', ['style' => 'width:0.875rem;height:0.875rem'])
                                     {{ $student->registration_number }}
                                 </span>
                                 <span style="color:var(--ms-text-muted)">·</span>
@@ -160,7 +94,7 @@
                             </div>
                             <div style="margin-top:0.375rem">
                                 <span style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.75rem;padding:0.2rem 0.625rem;border-radius:999px;background:rgba(34,197,94,0.12);color:#16a34a;font-weight:600">
-                                    @svg('heroicon-o-check-circle', '', ['style' => 'width:0.75rem;height:0.75rem'])
+                                    @svg('fas-circle-check', '', ['style' => 'width:0.75rem;height:0.75rem'])
                                     Ativo · Ano Letivo {{ $schoolYear->year ?? now()->year }}
                                 </span>
                             </div>
@@ -199,7 +133,7 @@
                 <div style="display:flex;flex-direction:column;gap:0.5rem">
                     @if($attendance['alert'] ?? false)
                         <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-left:4px solid #ef4444;border-radius:0.75rem;padding:0.875rem 1.125rem;display:flex;align-items:center;gap:0.75rem">
-                            @svg('heroicon-s-exclamation-triangle', '', ['style' => 'width:1.125rem;height:1.125rem;color:#ef4444;flex-shrink:0'])
+                            @svg('fas-triangle-exclamation', '', ['style' => 'width:1.125rem;height:1.125rem;color:#ef4444;flex-shrink:0'])
                             <p style="font-size:0.875rem;color:var(--ms-text-primary);margin:0">
                                 Sua <strong style="color:#ef4444">frequência está abaixo de 75%</strong>. Você pode ser reprovado(a) por falta. Procure a coordenação.
                             </p>
@@ -207,7 +141,7 @@
                     @endif
                     @if($grades['failed'] > 0)
                         <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-left:4px solid #ef4444;border-radius:0.75rem;padding:0.875rem 1.125rem;display:flex;align-items:center;gap:0.75rem">
-                            @svg('heroicon-s-x-circle', '', ['style' => 'width:1.125rem;height:1.125rem;color:#ef4444;flex-shrink:0'])
+                            @svg('fas-circle-xmark', '', ['style' => 'width:1.125rem;height:1.125rem;color:#ef4444;flex-shrink:0'])
                             <p style="font-size:0.875rem;color:var(--ms-text-primary);margin:0">
                                 Você está <strong style="color:#ef4444">reprovado(a) em {{ $grades['failed'] }} {{ $grades['failed'] === 1 ? 'disciplina' : 'disciplinas' }}</strong>. Acesse <a href="{{ url('/lumina/my-grades') }}" style="color:#ef4444;text-decoration:underline">Minhas Notas</a> para mais detalhes.
                             </p>
@@ -221,31 +155,31 @@
                 @php
                     $summaryCards = [
                         [
-                            'icon'  => 'heroicon-o-check-circle',
+                            'icon'  => 'fas-circle-check',
                             'value' => $freqRate > 0 ? number_format($freqRate, 1, ',', '') . '%' : '—',
                             'label' => 'Frequência',
                             'color' => $freqC,
                             'sub'   => ($attendance['total'] ?? 0) . ' aulas registradas',
                         ],
                         [
-                            'icon'  => 'heroicon-o-chart-bar',
+                            'icon'  => 'fas-chart-bar',
                             'value' => $gradeAvg !== null ? number_format($gradeAvg, 1, ',', '') : '—',
                             'label' => 'Média Geral',
                             'color' => $gradeC,
                             'sub'   => ($grades['total'] ?? 0) . ' disciplinas',
                         ],
                         [
-                            'icon'  => 'heroicon-o-calendar-days',
+                            'icon'  => 'fas-calendar-days',
                             'value' => $todayLessons->count(),
                             'label' => 'Aulas Hoje',
                             'color' => '#f59e0b',
                             'sub'   => now()->translatedFormat('l, d/m'),
                         ],
                         [
-                            'icon'  => 'heroicon-o-clipboard-document-list',
+                            'icon'  => 'fas-clipboard-list',
                             'value' => $upcomingAssessments->count(),
                             'label' => 'Próximas Avaliações',
-                            'color' => '#a855f7',
+                            'color' => '#0f766e',
                             'sub'   => 'nos próximos 7 dias',
                         ],
                     ];
@@ -272,7 +206,7 @@
                 {{-- Agenda do dia --}}
                 <div class="ms-card" style="padding:1.25rem">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
-                        @svg('heroicon-o-clock', '', ['style' => 'width:1.125rem;height:1.125rem;color:#f59e0b'])
+                        @svg('fas-clock', '', ['style' => 'width:1.125rem;height:1.125rem;color:#f59e0b'])
                         <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Agenda de Hoje</h3>
                         <span style="font-size:0.75rem;color:var(--ms-text-muted);margin-left:auto">{{ now()->translatedFormat('l, d \d\e F') }}</span>
                     </div>
@@ -280,7 +214,7 @@
                     @if($todayLessons->isEmpty())
                         <div style="padding:2rem;text-align:center">
                             <div style="width:3rem;height:3rem;border-radius:50%;background:rgba(100,116,139,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem">
-                                @svg('heroicon-o-calendar-days', '', ['style' => 'width:1.5rem;height:1.5rem;color:var(--ms-text-muted)'])
+                                @svg('fas-calendar-days', '', ['style' => 'width:1.5rem;height:1.5rem;color:var(--ms-text-muted)'])
                             </div>
                             <p style="font-size:0.875rem;color:var(--ms-text-secondary);margin:0">Nenhuma aula agendada para hoje.</p>
                         </div>
@@ -335,7 +269,7 @@
                 {{-- Próximas avaliações --}}
                 <div class="ms-card" style="padding:1.25rem">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
-                        @svg('heroicon-o-clipboard-document-list', '', ['style' => 'width:1.125rem;height:1.125rem;color:#a855f7'])
+                        @svg('fas-clipboard-list', '', ['style' => 'width:1.125rem;height:1.125rem;color:#0f766e'])
                         <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Próximas Avaliações</h3>
                     </div>
 
@@ -349,7 +283,7 @@
                                 @php
                                     $daysUntil = now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($assessment->scheduled_at)->startOfDay(), false);
                                     $isUrgent  = $daysUntil <= 2;
-                                    $urgColor  = $isUrgent ? '#ef4444' : ($daysUntil <= 4 ? '#eab308' : '#a855f7');
+                                    $urgColor  = $isUrgent ? '#ef4444' : ($daysUntil <= 4 ? '#eab308' : '#0f766e');
                                 @endphp
                                 <div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.625rem;border-radius:0.5rem;background:var(--ms-cell-bg)">
                                     {{-- Data --}}
@@ -387,7 +321,7 @@
                 {{-- Últimas notas --}}
                 <div class="ms-card" style="padding:1.25rem">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
-                        @svg('heroicon-o-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#22c55e'])
+                        @svg('fas-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#22c55e'])
                         <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Últimas Notas Lançadas</h3>
                         <a href="{{ url('/lumina/my-grades') }}" style="font-size:0.75rem;color:#f59e0b;margin-left:auto;text-decoration:none">Ver todas →</a>
                     </div>
@@ -430,21 +364,21 @@
                 {{-- Atalhos rápidos --}}
                 <div class="ms-card" style="padding:1.25rem">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
-                        @svg('heroicon-o-squares-2x2', '', ['style' => 'width:1.125rem;height:1.125rem;color:#64748b'])
+                        @svg('fas-table-cells-large', '', ['style' => 'width:1.125rem;height:1.125rem;color:#64748b'])
                         <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Acesso Rápido</h3>
                     </div>
 
                     <div style="display:flex;flex-direction:column;gap:0.5rem">
                         @php
                             $shortcuts = [
-                                ['href' => '/lumina/my-grades',         'icon' => 'heroicon-o-chart-bar',        'label' => 'Minhas Notas',       'color' => '#22c55e',
+                                ['href' => '/lumina/my-grades',         'icon' => 'fas-chart-bar',        'label' => 'Minhas Notas',       'color' => '#22c55e',
                                  'badge' => $grades['failed'] > 0 ? $grades['failed'] : ($grades['recovery'] > 0 ? $grades['recovery'] : null),
                                  'badgeColor' => $grades['failed'] > 0 ? '#ef4444' : '#eab308'],
-                                ['href' => '/lumina/my-subjects',       'icon' => 'heroicon-o-book-open',        'label' => 'Minhas Disciplinas', 'color' => '#06b6d4', 'badge' => null],
-                                ['href' => '/lumina/student-attendance','icon' => 'heroicon-o-calendar-days',   'label' => 'Frequência',         'color' => '#f59e0b',
+                                ['href' => '/lumina/my-subjects',       'icon' => 'fas-book-open',        'label' => 'Minhas Disciplinas', 'color' => '#06b6d4', 'badge' => null],
+                                ['href' => '/lumina/student-attendance','icon' => 'fas-calendar-days',   'label' => 'Frequência',         'color' => '#f59e0b',
                                  'badge' => ($attendance['alert'] ?? false) ? '!' : null,
                                  'badgeColor' => '#ef4444'],
-                                ['href' => '/lumina/academic-calendar', 'icon' => 'heroicon-o-calendar',         'label' => 'Calendário Escolar', 'color' => '#a855f7', 'badge' => null],
+                                ['href' => '/lumina/academic-calendar', 'icon' => 'fas-calendar',         'label' => 'Calendário Escolar', 'color' => '#0f766e', 'badge' => null],
                             ];
                         @endphp
                         @foreach($shortcuts as $sh)
@@ -456,7 +390,7 @@
                                 @if($sh['badge'] !== null)
                                     <span style="width:1.25rem;height:1.25rem;border-radius:50%;background:{{ $sh['badgeColor'] }};color:#fff;font-size:0.625rem;font-weight:700;display:flex;align-items:center;justify-content:center">{{ $sh['badge'] }}</span>
                                 @endif
-                                @svg('heroicon-o-chevron-right', '', ['style' => 'width:0.875rem;height:0.875rem;color:var(--ms-text-muted)'])
+                                @svg('fas-chevron-right', '', ['style' => 'width:0.875rem;height:0.875rem;color:var(--ms-text-muted)'])
                             </a>
                         @endforeach
                     </div>

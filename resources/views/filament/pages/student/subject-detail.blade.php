@@ -1,77 +1,5 @@
 <x-filament-panels::page>
-    <style>
-        /* ── Light mode (default) ── */
-        :root {
-            --ms-card-bg:        #ffffff;
-            --ms-card-border:    #e2e8f0;
-            --ms-cell-bg:        #f1f5f9;
-            --ms-bar-bg:         #e2e8f0;
-            --ms-text-primary:   #1e293b;
-            --ms-text-secondary: #64748b;
-            --ms-text-muted:     #94a3b8;
-            --ms-hover-bg:       #f8fafc;
-        }
-
-        /* ── Dark mode — controlado pela classe .dark do Filament ── */
-        .dark {
-            --ms-card-bg:        #080a0c;
-            --ms-card-border:    #334155;
-            --ms-cell-bg:        #0f172a;
-            --ms-bar-bg:         #10141d;
-            --ms-text-primary:   #f1f5f9;
-            --ms-text-secondary: #94a3b8;
-            --ms-text-muted:     #64748b;
-            --ms-hover-bg:       #0a0d11;
-        }
-
-        /* ── Base card ── */
-        .ms-card {
-            background: var(--ms-card-bg);
-            border: 1px solid var(--ms-card-border);
-            border-radius: 0.75rem;
-        }
-
-        /* ── Back button ── */
-        a.ms-back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: var(--ms-card-bg);
-            border: 1px solid var(--ms-card-border);
-            border-radius: 0.5rem;
-            color: var(--ms-text-secondary);
-            text-decoration: none;
-            font-size: 0.875rem;
-            transition: background 0.2s, border-color 0.2s;
-        }
-        a.ms-back-btn:hover {
-            background: var(--ms-hover-bg);
-            border-color: color-mix(in srgb, var(--ms-card-border) 60%, currentColor 40%);
-        }
-
-        /* ── Lesson row ── */
-        .ms-lesson-row {
-            background: var(--ms-cell-bg);
-            border: 1px solid var(--ms-card-border);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        /* ── Responsive grid ── */
-        @media (max-width: 768px) {
-            .ms-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-            .ms-term-grid  { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-        @media (max-width: 480px) {
-            .ms-stats-grid { grid-template-columns: 1fr !important; }
-        }
-    </style>
-
-    @php
+@php
         $data = $this->getSubjectData();
         $subject = $data['subject'];
         $teacher = $data['teacher'];
@@ -89,7 +17,7 @@
         $objectives = $data['objectives'];
 
         $categoryStyles = [
-            'linguagens'          => ['accent' => '#8b5cf6', 'bg' => 'rgba(139,92,246,0.12)', 'text' => '#7c3aed'],
+            'linguagens'          => ['accent' => '#0284c7', 'bg' => 'rgba(2,132,199,0.12)', 'text' => '#0369a1'],
             'matematica'          => ['accent' => '#f43f5e', 'bg' => 'rgba(244,63,94,0.12)',  'text' => '#e11d48'],
             'ciencias_da_natureza'=> ['accent' => '#10b981', 'bg' => 'rgba(16,185,129,0.12)', 'text' => '#059669'],
             'ciencias_humanas'    => ['accent' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.12)', 'text' => '#d97706'],
@@ -103,7 +31,7 @@
         {{-- Error state --}}
         <div class="ms-card" style="padding:3rem;text-align:center">
             <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @svg('heroicon-o-exclamation-triangle', '', ['style' => 'width:2rem;height:2rem;color:#ef4444'])
+                @svg('fas-triangle-exclamation', '', ['style' => 'width:2rem;height:2rem;color:#ef4444'])
             </div>
             <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">
                 Disciplina não encontrada
@@ -118,7 +46,7 @@
             {{-- ▸ Back button --}}
             <div>
                 <a href="{{ url('/lumina/my-subjects') }}" class="ms-back-btn">
-                    @svg('heroicon-o-arrow-left', '', ['style' => 'width:1rem;height:1rem'])
+                    @svg('fas-arrow-left', '', ['style' => 'width:1rem;height:1rem'])
                     <span>Voltar para Disciplinas</span>
                 </a>
             </div>
@@ -129,7 +57,7 @@
                 <div style="padding:1.5rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;flex-wrap:wrap">
                     <div style="display:flex;align-items:start;gap:1rem;min-width:0;flex:1">
                         <div style="width:3.5rem;height:3.5rem;border-radius:0.75rem;background:{{ $cs['bg'] }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                            @svg('heroicon-o-book-open', '', ['style' => 'width:1.75rem;height:1.75rem;color:'.$cs['accent']])
+                            @svg('fas-book-open', '', ['style' => 'width:1.75rem;height:1.75rem;color:'.$cs['accent']])
                         </div>
                         <div style="min-width:0">
                             <h2 style="font-size:1.5rem;font-weight:700;color:var(--ms-text-primary);margin:0">
@@ -138,24 +66,24 @@
                             <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-top:0.375rem">
                                 @if($subject->code)
                                     <span style="display:inline-flex;align-items:center;gap:0.375rem;font-size:0.8125rem;color:var(--ms-text-secondary)">
-                                        @svg('heroicon-o-hashtag', '', ['style' => 'width:0.875rem;height:0.875rem;color:var(--ms-text-muted)'])
+                                        @svg('fas-hashtag', '', ['style' => 'width:0.875rem;height:0.875rem;color:var(--ms-text-muted)'])
                                         <span style="font-family:monospace">{{ $subject->code }}</span>
                                     </span>
                                 @endif
                                 <span style="display:inline-flex;align-items:center;gap:0.375rem;font-size:0.8125rem;color:var(--ms-text-secondary)">
-                                    @svg('heroicon-o-tag', '', ['style' => 'width:0.875rem;height:0.875rem;color:var(--ms-text-muted)'])
+                                    @svg('fas-tag', '', ['style' => 'width:0.875rem;height:0.875rem;color:var(--ms-text-muted)'])
                                     {{ $subject->category?->label() ?? 'Sem Categoria' }}
                                 </span>
                                 @if($currentClass)
                                     <span style="display:inline-flex;align-items:center;gap:0.375rem;font-size:0.8125rem;color:var(--ms-text-secondary)">
-                                        @svg('heroicon-o-academic-cap', '', ['style' => 'width:0.875rem;height:0.875rem;color:var(--ms-text-muted)'])
+                                        @svg('fas-graduation-cap', '', ['style' => 'width:0.875rem;height:0.875rem;color:var(--ms-text-muted)'])
                                         {{ $currentClass->name }}
                                     </span>
                                 @endif
                             </div>
                             @if($teacher)
                                 <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem;font-size:0.9375rem;color:var(--ms-text-primary)">
-                                    @svg('heroicon-o-user', '', ['style' => 'width:1rem;height:1rem;color:var(--ms-text-secondary)'])
+                                    @svg('fas-user', '', ['style' => 'width:1rem;height:1rem;color:var(--ms-text-secondary)'])
                                     <span>Professor(a): <strong>{{ $teacher->name }}</strong></span>
                                 </div>
                             @endif
@@ -196,10 +124,10 @@
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
                 @php
                     $statCards = [
-                        ['icon'=>'heroicon-o-calendar-days','value'=>$totalClasses,'label'=>'Aulas Dadas', 'color'=>'#f59e0b'],
-                        ['icon'=>'heroicon-o-check-circle', 'value'=>$presences,   'label'=>'Presenças',  'color'=>'#22c55e'],
-                        ['icon'=>'heroicon-o-clock',        'value'=>$lates,        'label'=>'Atrasos',   'color'=>'#eab308'],
-                        ['icon'=>'heroicon-o-x-circle',     'value'=>$absences,     'label'=>'Faltas',    'color'=>'#ef4444'],
+                        ['icon'=>'fas-calendar-days','value'=>$totalClasses,'label'=>'Aulas Dadas', 'color'=>'#f59e0b'],
+                        ['icon'=>'fas-circle-check', 'value'=>$presences,   'label'=>'Presenças',  'color'=>'#22c55e'],
+                        ['icon'=>'fas-clock',        'value'=>$lates,        'label'=>'Atrasos',   'color'=>'#eab308'],
+                        ['icon'=>'fas-circle-xmark',     'value'=>$absences,     'label'=>'Faltas',    'color'=>'#ef4444'],
                     ];
                 @endphp
                 @foreach($statCards as $card)
@@ -221,7 +149,7 @@
             @if(collect($termAverages)->filter(fn($t) => $t['average'] !== null)->isNotEmpty())
                 <div class="ms-card" style="padding:1.25rem">
                     <h3 style="font-size:1rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem">
-                        @svg('heroicon-o-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#f59e0b'])
+                        @svg('fas-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#f59e0b'])
                         Notas por Bimestre
                     </h3>
                     <div class="ms-term-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
@@ -259,7 +187,7 @@
             @if($subject->description || $syllabus || $objectives)
                 <div class="ms-card" style="padding:1.25rem">
                     <h3 style="font-size:1rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem">
-                        @svg('heroicon-o-document-text', '', ['style' => 'width:1.125rem;height:1.125rem;color:#8b5cf6'])
+                        @svg('fas-file-lines', '', ['style' => 'width:1.125rem;height:1.125rem;color:#0284c7'])
                         Ementa e Descrição
                     </h3>
 
@@ -298,9 +226,9 @@
 
                     @if($hoursWeekly)
                         <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--ms-bar-bg)">
-                            <div style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 0.875rem;background:rgba(139,92,246,0.12);border-radius:0.5rem">
-                                @svg('heroicon-o-clock', '', ['style' => 'width:1rem;height:1rem;color:#a78bfa'])
-                                <span style="font-size:0.875rem;color:#e9d5ff">
+                            <div style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 0.875rem;background:rgba(2,132,199,0.12);border-radius:0.5rem">
+                                @svg('fas-clock', '', ['style' => 'width:1rem;height:1rem;color:#38bdf8'])
+                                <span style="font-size:0.875rem;color:#bae6fd">
                                     <strong>{{ $hoursWeekly }}</strong> horas semanais
                                 </span>
                             </div>
@@ -310,9 +238,9 @@
             @endif
 
             {{-- ▸ Lessons list --}}
-            <div class="ms-card" style="padding:1.25rem">
+            <div class="ms-card" data-lumina-no-enter style="padding:1.25rem">
                 <h3 style="font-size:1rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem">
-                    @svg('heroicon-o-calendar-days', '', ['style' => 'width:1.125rem;height:1.125rem;color:#22c55e'])
+                    @svg('fas-calendar-days', '', ['style' => 'width:1.125rem;height:1.125rem;color:#22c55e'])
                     Histórico de Aulas
                     <span style="font-size:0.75rem;color:var(--ms-text-secondary);font-weight:400;margin-left:auto">
                         {{ $lessons->count() }} {{ $lessons->count() === 1 ? 'aula' : 'aulas' }}
@@ -324,10 +252,10 @@
                         @foreach($lessons as $lesson)
                             @php
                                 $statusInfo = [
-                                    'present'   => ['label' => 'Presente',    'color' => '#22c55e', 'bg' => 'rgba(34,197,94,0.12)',  'icon' => 'heroicon-o-check-circle'],
-                                    'absent'    => ['label' => 'Falta',        'color' => '#ef4444', 'bg' => 'rgba(239,68,68,0.12)',  'icon' => 'heroicon-o-x-circle'],
-                                    'late'      => ['label' => 'Atraso',       'color' => '#eab308', 'bg' => 'rgba(234,179,8,0.12)',  'icon' => 'heroicon-o-clock'],
-                                    'justified' => ['label' => 'Justificado',  'color' => '#06b6d4', 'bg' => 'rgba(6,182,212,0.12)', 'icon' => 'heroicon-o-document-text'],
+                                    'present'   => ['label' => 'Presente',    'color' => '#22c55e', 'bg' => 'rgba(34,197,94,0.12)',  'icon' => 'fas-circle-check'],
+                                    'absent'    => ['label' => 'Falta',        'color' => '#ef4444', 'bg' => 'rgba(239,68,68,0.12)',  'icon' => 'fas-circle-xmark'],
+                                    'late'      => ['label' => 'Atraso',       'color' => '#eab308', 'bg' => 'rgba(234,179,8,0.12)',  'icon' => 'fas-clock'],
+                                    'justified' => ['label' => 'Justificado',  'color' => '#06b6d4', 'bg' => 'rgba(6,182,212,0.12)', 'icon' => 'fas-file-lines'],
                                 ];
                                 $attendance  = $lesson->student_attendance;
                                 $status      = $attendance?->status;
@@ -388,7 +316,7 @@
                 @else
                     <div style="padding:2rem;text-align:center">
                         <div style="width:3rem;height:3rem;border-radius:50%;background:rgba(71,85,105,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem">
-                            @svg('heroicon-o-calendar-days', '', ['style' => 'width:1.5rem;height:1.5rem;color:var(--ms-text-secondary)'])
+                            @svg('fas-calendar-days', '', ['style' => 'width:1.5rem;height:1.5rem;color:var(--ms-text-secondary)'])
                         </div>
                         <p style="font-size:0.9375rem;color:var(--ms-text-secondary);margin:0">
                             Nenhuma aula registrada até o momento.

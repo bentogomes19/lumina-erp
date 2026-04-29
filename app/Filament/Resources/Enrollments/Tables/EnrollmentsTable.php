@@ -174,7 +174,7 @@ class EnrollmentsTable
 
                             // ── Dados do aluno ────────────────────────────────
                             InfoSection::make('Aluno')
-                                ->icon('heroicon-o-user')
+                                ->icon('fas-user')
                                 ->columns(3)
                                 ->schema([
                                     TextEntry::make('student.name')
@@ -199,7 +199,7 @@ class EnrollmentsTable
 
                             // ── Dados acadêmicos ──────────────────────────────
                             InfoSection::make('Dados Acadêmicos')
-                                ->icon('heroicon-o-academic-cap')
+                                ->icon('fas-graduation-cap')
                                 ->columns(3)
                                 ->schema([
                                     TextEntry::make('schoolYear.year')
@@ -226,12 +226,12 @@ class EnrollmentsTable
                                     TextEntry::make('operatedBy.name')
                                         ->label('Registrado por')
                                         ->placeholder('Sistema')
-                                        ->icon('heroicon-m-user-circle'),
+                                        ->icon('fas-circle-user'),
                                 ]),
 
                             // ── Dados de trancamento (somente se Trancada) ────
                             InfoSection::make('Dados do Trancamento')
-                                ->icon('heroicon-o-lock-closed')
+                                ->icon('fas-lock')
                                 ->columns(2)
                                 ->schema([
                                     TextEntry::make('locked_reason')
@@ -248,7 +248,7 @@ class EnrollmentsTable
 
                             // ── Dados da transferência interna ────────────────
                             InfoSection::make('Dados da Transferência')
-                                ->icon('heroicon-o-arrows-right-left')
+                                ->icon('fas-right-left')
                                 ->schema([
                                     TextEntry::make('transfer_reason')
                                         ->label('Motivo')
@@ -258,7 +258,7 @@ class EnrollmentsTable
 
                             // ── Dados da transferência externa ────────────────
                             InfoSection::make('Dados da Transferência Externa')
-                                ->icon('heroicon-o-arrow-top-right-on-square')
+                                ->icon('fas-up-right-from-square')
                                 ->columns(2)
                                 ->schema([
                                     TextEntry::make('transfer_destination')
@@ -273,7 +273,7 @@ class EnrollmentsTable
 
                             // ── Dados do cancelamento ─────────────────────────
                             InfoSection::make('Dados do Cancelamento')
-                                ->icon('heroicon-o-x-circle')
+                                ->icon('fas-circle-xmark')
                                 ->schema([
                                     TextEntry::make('cancel_reason')
                                         ->label('Motivo')
@@ -291,14 +291,14 @@ class EnrollmentsTable
                     // ── Documentos PDF ────────────────────────────────────────
                     Action::make('pdfComprovante')
                         ->label('Emitir Comprovante')
-                        ->icon('heroicon-o-document-arrow-down')
+                        ->icon('fas-file-arrow-down')
                         ->color('gray')
                         ->url(fn (Enrollment $record) => route('pdf.enrollment.comprovante', $record->id))
                         ->openUrlInNewTab(),
 
                     Action::make('pdfTransferenciaInterna')
                         ->label('PDF Transferência de Turma')
-                        ->icon('heroicon-o-document-arrow-down')
+                        ->icon('fas-file-arrow-down')
                         ->color('info')
                         ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::TRANSFERRED_INTERNAL)
                         ->url(fn (Enrollment $record) => route('pdf.enrollment.transferencia-interna', $record->id))
@@ -306,7 +306,7 @@ class EnrollmentsTable
 
                     Action::make('pdfTransferenciaExterna')
                         ->label('Declaração de Transferência')
-                        ->icon('heroicon-o-document-arrow-down')
+                        ->icon('fas-file-arrow-down')
                         ->color('gray')
                         ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::TRANSFERRED_EXTERNAL)
                         ->url(fn (Enrollment $record) => route('pdf.enrollment.transferencia-externa', $record->id))
@@ -314,7 +314,7 @@ class EnrollmentsTable
 
                     Action::make('pdfTrancamento')
                         ->label('Comprovante de Trancamento')
-                        ->icon('heroicon-o-document-arrow-down')
+                        ->icon('fas-file-arrow-down')
                         ->color('gray')
                         ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::LOCKED)
                         ->url(fn (Enrollment $record) => route('pdf.enrollment.trancamento', $record->id))
@@ -322,7 +322,7 @@ class EnrollmentsTable
 
                     Action::make('pdfCancelamento')
                         ->label('Termo de Cancelamento')
-                        ->icon('heroicon-o-document-arrow-down')
+                        ->icon('fas-file-arrow-down')
                         ->color('gray')
                         ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::CANCELED)
                         ->url(fn (Enrollment $record) => route('pdf.enrollment.cancelamento', $record->id))
@@ -333,7 +333,7 @@ class EnrollmentsTable
                     // ── Trancar matrícula ─────────────────────────────────────
                 Action::make('trancar')
                     ->label('Trancar')
-                    ->icon('heroicon-o-lock-closed')
+                    ->icon('fas-lock')
                     ->color('warning')
                     ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::ACTIVE)
                     ->modalHeading('Trancar Matrícula')
@@ -382,7 +382,7 @@ class EnrollmentsTable
                 // ── Reativar matrícula (de Trancada → Ativa) ─────────────────
                 Action::make('reativar')
                     ->label('Reativar')
-                    ->icon('heroicon-o-lock-open')
+                    ->icon('fas-lock-open')
                     ->color('success')
                     ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::LOCKED)
                     ->modalHeading('Reativar Matrícula')
@@ -421,7 +421,7 @@ class EnrollmentsTable
                 // ── Transferência interna (entre turmas) ──────────────────────
                 Action::make('transferirTurma')
                     ->label('Transferir Turma')
-                    ->icon('heroicon-o-arrows-right-left')
+                    ->icon('fas-right-left')
                     ->color('info')
                     ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::ACTIVE)
                     ->modalHeading('Transferência entre Turmas')
@@ -536,7 +536,7 @@ class EnrollmentsTable
                 // ── Transferência externa (outra instituição) ─────────────────
                 Action::make('transferirExterna')
                     ->label('Transferência Externa')
-                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->icon('fas-up-right-from-square')
                     ->color('purple')
                     ->visible(fn (Enrollment $record) => in_array($record->status, [
                         EnrollmentStatus::ACTIVE,
@@ -591,7 +591,7 @@ class EnrollmentsTable
                 // ── Cancelar matrícula ────────────────────────────────────────
                 Action::make('cancelar')
                     ->label('Cancelar')
-                    ->icon('heroicon-o-x-circle')
+                    ->icon('fas-circle-xmark')
                     ->color('danger')
                     ->visible(fn (Enrollment $record) => in_array($record->status, [
                         EnrollmentStatus::ACTIVE,
@@ -641,7 +641,7 @@ class EnrollmentsTable
                 // ── Reverter cancelamento (somente TI) ───────────────────────
                 Action::make('reverterCancelamento')
                     ->label('Reverter Cancelamento')
-                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->icon('fas-rotate-left')
                     ->color('warning')
                     ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::CANCELED
                         && auth()->user()?->hasAnyRole(['admin', 'ti'])
@@ -695,7 +695,7 @@ class EnrollmentsTable
                     // Rematrícula em lote
                     BulkAction::make('rematricula')
                         ->label('Rematrícula em Lote')
-                        ->icon('heroicon-o-arrow-path')
+                        ->icon('fas-rotate')
                         ->deselectRecordsAfterCompletion()
                         ->form([
                             Select::make('school_year_id')
@@ -775,7 +775,7 @@ class EnrollmentsTable
                     // Alteração de status em lote (uso administrativo)
                     BulkAction::make('bulkStatus')
                         ->label('Alterar status')
-                        ->icon('heroicon-o-adjustments-horizontal')
+                        ->icon('fas-sliders')
                         ->form([
                             Select::make('status')
                                 ->options(EnrollmentStatus::options())

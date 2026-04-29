@@ -10,7 +10,7 @@ use Filament\Pages\Page;
 
 class MyGrades extends Page
 {
-    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-chart-bar';
+    protected static string|null|\BackedEnum $navigationIcon = 'fas-chart-bar';
     protected static ?string $title                          = 'Minhas Notas';
     protected static ?string $navigationLabel                = 'Minhas Notas';
     protected static ?int    $navigationSort                 = 1;
@@ -52,7 +52,7 @@ class MyGrades extends Page
         return [
             Action::make('downloadReportCard')
                 ->label('Baixar Boletim (PDF)')
-                ->icon('heroicon-o-arrow-down-tray')
+                ->icon('fas-download')
                 ->color('success')
                 ->action(fn() => $this->downloadReportCard()),
         ];

@@ -45,7 +45,7 @@ class SubjectsRelationManager extends RelationManager
             ->headerActions([
                 Action::make('addSubjects')
                     ->label('Adicionar disciplina(s)')
-                    ->icon('heroicon-o-plus')
+                    ->icon('fas-plus')
                     ->modalHeading('Vincular disciplina(s) à série')
                     ->form([
                         Select::make('subject_ids')
@@ -86,7 +86,7 @@ class SubjectsRelationManager extends RelationManager
                 // ✅ EDITAR SOMENTE O PIVOT
                 Action::make('editarVinculo')
                     ->label('Editar vínculo')
-                    ->icon('heroicon-o-pencil-square')
+                    ->icon('fas-pen-to-square')
                     ->modalHeading('Editar carga horária (pivot)')
                     ->form(fn ($record) => [
                         TextInput::make('hours_weekly')
@@ -106,7 +106,7 @@ class SubjectsRelationManager extends RelationManager
                 // ✅ DESVINCULAR (detach)
                 Action::make('removerVinculo')
                     ->label('Remover da série')
-                    ->icon('heroicon-o-link-slash')
+                    ->icon('fas-link-slash')
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(function ($livewire, $record) {

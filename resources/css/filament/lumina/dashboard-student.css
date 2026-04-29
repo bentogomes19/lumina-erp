@@ -1,0 +1,63 @@
+/* ── Variáveis de tema ── */
+        :root {
+            --ms-card-bg:        #ffffff;
+            --ms-card-border:    #e2e8f0;
+            --ms-cell-bg:        #f1f5f9;
+            --ms-bar-bg:         #e2e8f0;
+            --ms-text-primary:   #1e293b;
+            --ms-text-secondary: #64748b;
+            --ms-text-muted:     #94a3b8;
+            --ms-hover-bg:       #f8fafc;
+        }
+        .dark {
+            --ms-card-bg:        #080a0c;
+            --ms-card-border:    #334155;
+            --ms-cell-bg:        #0f172a;
+            --ms-bar-bg:         #10141d;
+            --ms-text-primary:   #f1f5f9;
+            --ms-text-secondary: #94a3b8;
+            --ms-text-muted:     #64748b;
+            --ms-hover-bg:       #0a0d11;
+        }
+
+        .ms-card { background: var(--ms-card-bg); border: 1px solid var(--ms-card-border); border-radius: 0.75rem; }
+
+        /* ── Avatar de iniciais ── */
+        .ms-avatar {
+            width: 4rem; height: 4rem; border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.375rem; font-weight: 800; color: #fff; flex-shrink: 0;
+        }
+
+        /* ── Linha da agenda ── */
+        .ms-lesson-row {
+            display: flex; align-items: flex-start; gap: 0.875rem;
+            padding: 0.75rem 0; border-bottom: 1px solid var(--ms-bar-bg);
+        }
+        .ms-lesson-row:last-child { border-bottom: none; }
+
+        /* ── Barra de frequência ── */
+        .ms-bar-track { width: 100%; height: 5px; border-radius: 999px; background: var(--ms-bar-bg); overflow: hidden; }
+
+        /* ── Card de atalho ── */
+        a.ms-shortcut {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.875rem 1rem; border-radius: 0.625rem;
+            background: var(--ms-cell-bg); border: 1px solid var(--ms-card-border);
+            text-decoration: none;
+        }
+        a.ms-shortcut:hover { background: var(--ms-hover-bg); }
+
+        /* ── Ponto de status da aula ── */
+        .ms-lesson-dot {
+            width: 0.625rem; height: 0.625rem; border-radius: 50%; flex-shrink: 0; margin-top: 0.375rem;
+        }
+
+        /* ── Grade responsiva ── */
+        @media (max-width: 900px) {
+            .ms-two-col { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 640px) {
+            .ms-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }

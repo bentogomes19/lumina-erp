@@ -40,32 +40,32 @@ class EnrollmentStatsWidget extends StatsOverviewWidget
         return [
             Stat::make('Total de Matrículas', $total)
                 ->description($activeYearId ? 'Ano letivo atual' : 'Todos os anos')
-                ->icon('heroicon-o-academic-cap')
+                ->icon('fas-graduation-cap')
                 ->color('primary'),
 
             Stat::make('Ativas', $get(EnrollmentStatus::ACTIVE))
                 ->description('Matrículas ativas')
-                ->icon('heroicon-o-check-circle')
+                ->icon('fas-circle-check')
                 ->color('success'),
 
             Stat::make('Trancadas', $get(EnrollmentStatus::LOCKED))
                 ->description('Trancamentos vigentes')
-                ->icon('heroicon-o-lock-closed')
+                ->icon('fas-lock')
                 ->color('warning'),
 
             Stat::make('Canceladas', $get(EnrollmentStatus::CANCELED))
                 ->description('Canceladas no período')
-                ->icon('heroicon-o-x-circle')
+                ->icon('fas-circle-xmark')
                 ->color('danger'),
 
             Stat::make('Transferidas', $get(EnrollmentStatus::TRANSFERRED_INTERNAL) + $get(EnrollmentStatus::TRANSFERRED_EXTERNAL))
                 ->description('Internas + Externas')
-                ->icon('heroicon-o-arrow-right-circle')
+                ->icon('fas-circle-right')
                 ->color('info'),
 
             Stat::make('Concluídas', $get(EnrollmentStatus::COMPLETED))
                 ->description('Encerradas com êxito')
-                ->icon('heroicon-o-trophy')
+                ->icon('fas-trophy')
                 ->color('primary'),
         ];
     }

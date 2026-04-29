@@ -1,286 +1,5 @@
 <x-filament-panels::page>
-    <style>
-        /* ── CSS Variables ── */
-        :root {
-            --ac-card-bg:        #ffffff;
-            --ac-card-border:    #e2e8f0;
-            --ac-cell-bg:        #f8fafc;
-            --ac-cell-border:    #e2e8f0;
-            --ac-bar-bg:         #e2e8f0;
-            --ac-text-primary:   #1e293b;
-            --ac-text-secondary: #64748b;
-            --ac-text-muted:     #94a3b8;
-            --ac-hover-bg:       #f1f5f9;
-            --ac-today-ring:     #f59e0b;
-            --ac-weekend-bg:     #f8fafc;
-        }
-        .dark {
-            --ac-card-bg:        #080a0c;
-            --ac-card-border:    #334155;
-            --ac-cell-bg:        #0c1019;
-            --ac-cell-border:    #1e293b;
-            --ac-bar-bg:         #10141d;
-            --ac-text-primary:   #f1f5f9;
-            --ac-text-secondary: #94a3b8;
-            --ac-text-muted:     #64748b;
-            --ac-hover-bg:       #0a0d11;
-            --ac-today-ring:     #f59e0b;
-            --ac-weekend-bg:     #0a0d11;
-        }
-
-        .ac-card {
-            background: var(--ac-card-bg);
-            border: 1px solid var(--ac-card-border);
-            border-radius: 0.75rem;
-        }
-
-        /* ── View mode tabs ── */
-        .ac-tab {
-            padding: 0.4rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            cursor: pointer;
-            color: var(--ac-text-secondary);
-            background: transparent;
-            border: none;
-            display: flex;
-            align-items: center;
-            gap: 0.375rem;
-            transition: all 0.15s;
-        }
-        .ac-tab:hover   { background: var(--ac-hover-bg); color: var(--ac-text-primary); }
-        .ac-tab.active  { background: #f59e0b; color: #fff; }
-
-        /* ── Navigation button ── */
-        .ac-nav-btn {
-            width: 2rem; height: 2rem;
-            border-radius: 0.5rem;
-            border: 1px solid var(--ac-card-border);
-            background: var(--ac-card-bg);
-            color: var(--ac-text-secondary);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .ac-nav-btn:hover { background: var(--ac-hover-bg); color: var(--ac-text-primary); }
-
-        /* ── Category filter pill ── */
-        .ac-filter-pill {
-            display: flex; align-items: center; gap: 0.375rem;
-            padding: 0.3125rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            border: 1.5px solid var(--ac-card-border);
-            background: var(--ac-card-bg);
-            color: var(--ac-text-secondary);
-            transition: all 0.15s;
-        }
-        .ac-filter-pill:hover { background: var(--ac-hover-bg); }
-        .ac-filter-pill.active { border-color: currentColor; }
-
-        /* ── Month grid ── */
-        .ac-month-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-        }
-        .ac-dow-header {
-            text-align: center;
-            font-size: 0.6875rem;
-            font-weight: 700;
-            color: var(--ac-text-muted);
-            padding: 0.375rem 0;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-        .ac-cell {
-            min-height: 5.5rem;
-            background: var(--ac-card-bg);
-            border: 1px solid var(--ac-cell-border);
-            border-radius: 0.375rem;
-            padding: 0.375rem;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            position: relative;
-            transition: background 0.1s;
-        }
-        .ac-cell:hover { background: var(--ac-hover-bg); }
-        .ac-cell.empty { background: var(--ac-cell-bg); opacity: 0.4; border-color: transparent; }
-        .ac-cell.weekend { background: var(--ac-weekend-bg); }
-        .ac-cell.today {
-            outline: 2px solid var(--ac-today-ring);
-            outline-offset: -2px;
-            background: var(--ac-card-bg);
-        }
-        .ac-day-num {
-            font-size: 0.8125rem;
-            font-weight: 600;
-            color: var(--ac-text-secondary);
-            line-height: 1.4;
-            width: 1.5rem;
-            height: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-        }
-        .ac-cell.today .ac-day-num {
-            background: #f59e0b;
-            color: #fff;
-        }
-        .ac-event-chip {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 0.625rem;
-            font-weight: 500;
-            cursor: pointer;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            max-width: 100%;
-            line-height: 1.6;
-            transition: opacity 0.15s;
-        }
-        .ac-event-chip:hover { opacity: 0.85; }
-        .ac-event-more {
-            font-size: 0.5625rem;
-            color: var(--ac-text-muted);
-            padding: 1px 5px;
-            cursor: pointer;
-        }
-
-        /* ── Week grid ── */
-        .ac-week-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 0.5rem;
-        }
-        .ac-week-col {
-            min-height: 14rem;
-            background: var(--ac-card-bg);
-            border: 1px solid var(--ac-cell-border);
-            border-radius: 0.5rem;
-            padding: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-        .ac-week-col.today { outline: 2px solid var(--ac-today-ring); outline-offset: -2px; }
-        .ac-week-col.weekend { background: var(--ac-weekend-bg); }
-        .ac-week-day-header {
-            text-align: center;
-            padding-bottom: 0.375rem;
-            border-bottom: 1px solid var(--ac-cell-border);
-            margin-bottom: 0.25rem;
-        }
-        .ac-week-event {
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.3rem;
-            font-size: 0.6875rem;
-            font-weight: 500;
-            cursor: pointer;
-            line-height: 1.5;
-            transition: opacity 0.15s;
-        }
-        .ac-week-event:hover { opacity: 0.8; }
-
-        /* ── List view ── */
-        .ac-list-date-group { margin-bottom: 1.25rem; }
-        .ac-list-date-label {
-            font-size: 0.8125rem;
-            font-weight: 700;
-            color: var(--ac-text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .ac-list-event {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.875rem;
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: background 0.1s;
-            margin-bottom: 0.375rem;
-            border: 1px solid var(--ac-card-border);
-            background: var(--ac-card-bg);
-        }
-        .ac-list-event:hover { background: var(--ac-hover-bg); }
-
-        /* ── Event modal ── */
-        .ac-modal-backdrop {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.45);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-        .ac-modal {
-            background: var(--ac-card-bg);
-            border: 1px solid var(--ac-card-border);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            width: 100%;
-            max-width: 28rem;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            position: relative;
-        }
-
-        /* ── Upcoming sidebar ── */
-        .ac-upcoming-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            padding: 0.625rem 0;
-            border-bottom: 1px solid var(--ac-cell-border);
-        }
-        .ac-upcoming-item:last-child { border-bottom: none; }
-
-        /* ── Subject select ── */
-        .ac-select {
-            padding: 0.375rem 0.625rem;
-            border-radius: 0.5rem;
-            border: 1px solid var(--ac-card-border);
-            background: var(--ac-card-bg);
-            color: var(--ac-text-primary);
-            font-size: 0.8125rem;
-            cursor: pointer;
-            outline: none;
-        }
-        .ac-select:focus { border-color: #f59e0b; }
-
-        /* ── Responsive ── */
-        @media (max-width: 900px) {
-            .ac-layout       { flex-direction: column !important; }
-            .ac-sidebar      { width: 100% !important; }
-            .ac-cell         { min-height: 3.5rem; }
-            .ac-week-col     { min-height: 8rem; }
-        }
-        @media (max-width: 640px) {
-            .ac-controls-row { flex-wrap: wrap; }
-            .ac-month-grid   { gap: 1px; }
-            .ac-cell         { min-height: 2.75rem; padding: 0.25rem; }
-            .ac-day-num      { font-size: 0.6875rem; width: 1.25rem; height: 1.25rem; }
-            .ac-event-chip   { display: none; }
-            .ac-cell-dot     { display: flex !important; }
-            .ac-week-grid    { grid-template-columns: 1fr; }
-        }
-    </style>
-
-    @php
+@php
         $data         = $this->getPageData();
         $student      = $data['student'];
         $currentClass = $data['currentClass'];
@@ -302,11 +21,11 @@
         $dowNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
         $categories = [
-            'assessment'  => ['label' => 'Avaliações',    'color' => '#3b82f6', 'icon' => 'heroicon-o-pencil-square'],
-            'holiday'     => ['label' => 'Feriados',      'color' => '#ef4444', 'icon' => 'heroicon-o-flag'],
-            'recess'      => ['label' => 'Recessos',      'color' => '#8b5cf6', 'icon' => 'heroicon-o-sun'],
-            'school_event'=> ['label' => 'Eventos',       'color' => '#10b981', 'icon' => 'heroicon-o-star'],
-            'period'      => ['label' => 'Período Letivo','color' => '#10b981', 'icon' => 'heroicon-o-academic-cap'],
+            'assessment'  => ['label' => 'Avaliações',    'color' => '#3b82f6', 'icon' => 'fas-pen-to-square'],
+            'holiday'     => ['label' => 'Feriados',      'color' => '#ef4444', 'icon' => 'fas-flag'],
+            'recess'      => ['label' => 'Recessos',      'color' => '#0284c7', 'icon' => 'fas-sun'],
+            'school_event'=> ['label' => 'Eventos',       'color' => '#10b981', 'icon' => 'fas-star'],
+            'period'      => ['label' => 'Período Letivo','color' => '#10b981', 'icon' => 'fas-graduation-cap'],
         ];
 
         // Group list events by date
@@ -321,7 +40,7 @@
     @if(!$student || !$currentClass)
         <div class="ac-card" style="padding:3rem;text-align:center">
             <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @svg('heroicon-o-calendar-days', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
+                @svg('fas-calendar-days', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
             </div>
             <h3 style="font-size:1.125rem;font-weight:600;color:var(--ac-text-primary);margin:0 0 0.5rem">
                 Nenhuma turma ativa encontrada
@@ -348,7 +67,7 @@
                 {{-- Class info --}}
                 <div style="display:flex;align-items:center;gap:0.875rem">
                     <div style="width:2.5rem;height:2.5rem;border-radius:0.625rem;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                        @svg('heroicon-o-calendar-days', '', ['style' => 'width:1.35rem;height:1.35rem;color:#f59e0b'])
+                        @svg('fas-calendar-days', '', ['style' => 'width:1.35rem;height:1.35rem;color:#f59e0b'])
                     </div>
                     <div>
                         <h2 style="font-size:1rem;font-weight:700;color:var(--ac-text-primary);margin:0">
@@ -371,7 +90,7 @@
                         style="display:flex;align-items:center;gap:0.375rem;padding:0.375rem 0.75rem;border-radius:0.5rem;border:1px solid var(--ac-card-border);background:var(--ac-card-bg);color:var(--ac-text-secondary);font-size:0.75rem;font-weight:500;cursor:pointer;transition:all 0.15s"
                         onmouseover="this.style.background='var(--ac-hover-bg)'" onmouseout="this.style.background='var(--ac-card-bg)'"
                     >
-                        @svg('heroicon-o-document-arrow-down', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                        @svg('fas-file-arrow-down', '', ['style' => 'width:0.875rem;height:0.875rem'])
                         PDF
                     </button>
                     <button
@@ -380,7 +99,7 @@
                         style="display:flex;align-items:center;gap:0.375rem;padding:0.375rem 0.75rem;border-radius:0.5rem;border:1px solid var(--ac-card-border);background:var(--ac-card-bg);color:var(--ac-text-secondary);font-size:0.75rem;font-weight:500;cursor:pointer;transition:all 0.15s"
                         onmouseover="this.style.background='var(--ac-hover-bg)'" onmouseout="this.style.background='var(--ac-card-bg)'"
                     >
-                        @svg('heroicon-o-arrow-down-tray', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                        @svg('fas-download', '', ['style' => 'width:0.875rem;height:0.875rem'])
                         iCal
                     </button>
                 </div>
@@ -394,15 +113,15 @@
                 {{-- View mode tabs --}}
                 <div style="display:flex;align-items:center;gap:0.25rem;background:var(--ac-cell-bg);border-radius:0.625rem;padding:0.25rem">
                     <button wire:click="setViewMode('month')" class="ac-tab {{ $this->viewMode === 'month' ? 'active' : '' }}">
-                        @svg('heroicon-o-squares-2x2', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                        @svg('fas-table-cells-large', '', ['style' => 'width:0.875rem;height:0.875rem'])
                         Mês
                     </button>
                     <button wire:click="setViewMode('week')" class="ac-tab {{ $this->viewMode === 'week' ? 'active' : '' }}">
-                        @svg('heroicon-o-view-columns', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                        @svg('fas-table-columns', '', ['style' => 'width:0.875rem;height:0.875rem'])
                         Semana
                     </button>
                     <button wire:click="setViewMode('list')" class="ac-tab {{ $this->viewMode === 'list' ? 'active' : '' }}">
-                        @svg('heroicon-o-list-bullet', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                        @svg('fas-list', '', ['style' => 'width:0.875rem;height:0.875rem'])
                         Lista
                     </button>
                 </div>
@@ -411,23 +130,23 @@
                 <div style="display:flex;align-items:center;gap:0.5rem">
                     @if($this->viewMode === 'week')
                         <button wire:click="previousWeek" class="ac-nav-btn" title="Semana anterior">
-                            @svg('heroicon-o-chevron-left', '', ['style' => 'width:1rem;height:1rem'])
+                            @svg('fas-chevron-left', '', ['style' => 'width:1rem;height:1rem'])
                         </button>
                         <span style="font-size:0.875rem;font-weight:600;color:var(--ac-text-primary);min-width:12rem;text-align:center">
                             {{ $weekLabel }}
                         </span>
                         <button wire:click="nextWeek" class="ac-nav-btn" title="Próxima semana">
-                            @svg('heroicon-o-chevron-right', '', ['style' => 'width:1rem;height:1rem'])
+                            @svg('fas-chevron-right', '', ['style' => 'width:1rem;height:1rem'])
                         </button>
                     @else
                         <button wire:click="previousMonth" class="ac-nav-btn" title="Mês anterior">
-                            @svg('heroicon-o-chevron-left', '', ['style' => 'width:1rem;height:1rem'])
+                            @svg('fas-chevron-left', '', ['style' => 'width:1rem;height:1rem'])
                         </button>
                         <span style="font-size:0.9375rem;font-weight:700;color:var(--ac-text-primary);min-width:10rem;text-align:center;text-transform:capitalize">
                             {{ $monthName }}
                         </span>
                         <button wire:click="nextMonth" class="ac-nav-btn" title="Próximo mês">
-                            @svg('heroicon-o-chevron-right', '', ['style' => 'width:1rem;height:1rem'])
+                            @svg('fas-chevron-right', '', ['style' => 'width:1rem;height:1rem'])
                         </button>
                     @endif
                     <button wire:click="goToToday" class="ac-nav-btn" style="width:auto;padding:0 0.75rem;font-size:0.75rem;font-weight:500" title="Ir para hoje">
@@ -579,7 +298,7 @@
                                         </div>
                                     @empty
                                         <div style="flex:1;display:flex;align-items:center;justify-content:center;opacity:0.25">
-                                            @svg('heroicon-o-minus', '', ['style' => 'width:1.25rem;height:1.25rem;color:var(--ac-text-muted)'])
+                                            @svg('fas-minus', '', ['style' => 'width:1.25rem;height:1.25rem;color:var(--ac-text-muted)'])
                                         </div>
                                     @endforelse
                                 </div>
@@ -592,7 +311,7 @@
                     <div class="ac-card" style="padding:1.25rem">
                         @if(empty($groupedList))
                             <div style="text-align:center;padding:3rem 1rem;color:var(--ac-text-muted)">
-                                @svg('heroicon-o-calendar', '', ['style' => 'width:2.5rem;height:2.5rem;margin:0 auto 0.75rem;display:block'])
+                                @svg('fas-calendar', '', ['style' => 'width:2.5rem;height:2.5rem;margin:0 auto 0.75rem;display:block'])
                                 <p style="margin:0;font-size:0.9375rem">Nenhum evento neste período</p>
                             </div>
                         @else
@@ -626,7 +345,7 @@
                                                     </span>
                                                     @if($ev['time'])
                                                         <span style="font-size:0.75rem;color:var(--ac-text-muted);white-space:nowrap">
-                                                            @svg('heroicon-o-clock', '', ['style' => 'width:0.75rem;height:0.75rem;display:inline'])
+                                                            @svg('fas-clock', '', ['style' => 'width:0.75rem;height:0.75rem;display:inline'])
                                                             {{ $ev['time'] }}
                                                         </span>
                                                     @endif
@@ -642,7 +361,7 @@
                                                     @endif
                                                     @if($ev['impacts_grade'])
                                                         <span style="font-size:0.6rem;color:#3b82f6;display:flex;align-items:center;gap:2px">
-                                                            @svg('heroicon-o-academic-cap', '', ['style' => 'width:0.625rem;height:0.625rem'])
+                                                            @svg('fas-graduation-cap', '', ['style' => 'width:0.625rem;height:0.625rem'])
                                                             Impacta nota
                                                         </span>
                                                     @endif
@@ -679,7 +398,7 @@
             {{-- ── Upcoming events sidebar ── --}}
             <div class="ac-sidebar ac-card" style="width:17rem;flex-shrink:0;padding:1.125rem">
                 <h3 style="font-size:0.8125rem;font-weight:700;color:var(--ac-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.875rem;display:flex;align-items:center;gap:0.5rem">
-                    @svg('heroicon-o-bell', '', ['style' => 'width:0.875rem;height:0.875rem'])
+                    @svg('fas-bell', '', ['style' => 'width:0.875rem;height:0.875rem'])
                     Próximos Eventos
                 </h3>
 
@@ -718,7 +437,7 @@
                     </div>
                 @empty
                     <div style="text-align:center;padding:1.5rem 0;color:var(--ac-text-muted)">
-                        @svg('heroicon-o-check-circle', '', ['style' => 'width:2rem;height:2rem;margin:0 auto 0.5rem;display:block;color:#22c55e'])
+                        @svg('fas-circle-check', '', ['style' => 'width:2rem;height:2rem;margin:0 auto 0.5rem;display:block;color:#22c55e'])
                         <p style="font-size:0.8125rem;margin:0">Nenhum evento nos próximos 14 dias</p>
                     </div>
                 @endforelse
@@ -753,7 +472,7 @@
                             </div>
                         </div>
                         <button x-on:click="closeEvent()" style="width:1.75rem;height:1.75rem;border-radius:0.375rem;border:1px solid var(--ac-card-border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--ac-text-muted)">
-                            @svg('heroicon-o-x-mark', '', ['style' => 'width:1rem;height:1rem'])
+                            @svg('fas-xmark', '', ['style' => 'width:1rem;height:1rem'])
                         </button>
                     </div>
 
@@ -762,7 +481,7 @@
 
                         {{-- Date --}}
                         <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
-                            @svg('heroicon-o-calendar', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                            @svg('fas-calendar', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
                             <span x-text="selectedEvent.date"></span>
                             <template x-if="selectedEvent.date_end && selectedEvent.date_end !== selectedEvent.date">
                                 <span x-text="'→ ' + selectedEvent.date_end" style="color:var(--ac-text-muted)"></span>
@@ -772,7 +491,7 @@
                         {{-- Time --}}
                         <template x-if="selectedEvent.time">
                             <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
-                                @svg('heroicon-o-clock', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                                @svg('fas-clock', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
                                 <span x-text="selectedEvent.time"></span>
                             </div>
                         </template>
@@ -780,7 +499,7 @@
                         {{-- Subject --}}
                         <template x-if="selectedEvent.subject">
                             <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
-                                @svg('heroicon-o-book-open', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                                @svg('fas-book-open', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
                                 <span x-text="selectedEvent.subject"></span>
                             </div>
                         </template>
@@ -788,7 +507,7 @@
                         {{-- Teacher --}}
                         <template x-if="selectedEvent.teacher">
                             <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
-                                @svg('heroicon-o-user', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                                @svg('fas-user', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
                                 <span x-text="selectedEvent.teacher"></span>
                             </div>
                         </template>
@@ -796,7 +515,7 @@
                         {{-- Location --}}
                         <template x-if="selectedEvent.location">
                             <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
-                                @svg('heroicon-o-map-pin', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                                @svg('fas-location-dot', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
                                 <span x-text="selectedEvent.location"></span>
                             </div>
                         </template>
@@ -804,7 +523,7 @@
                         {{-- Weight (assessments) --}}
                         <template x-if="selectedEvent.weight !== null && selectedEvent.weight !== undefined">
                             <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
-                                @svg('heroicon-o-scale', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
+                                @svg('fas-scale-balanced', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
                                 <span>Peso: <strong x-text="selectedEvent.weight"></strong></span>
                             </div>
                         </template>
@@ -820,13 +539,13 @@
                         <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;flex-wrap:wrap">
                             <template x-if="selectedEvent.impacts_grade">
                                 <span style="font-size:0.6875rem;font-weight:500;padding:3px 8px;border-radius:999px;background:rgba(59,130,246,0.12);color:#3b82f6;display:flex;align-items:center;gap:4px">
-                                    @svg('heroicon-o-academic-cap', '', ['style' => 'width:0.75rem;height:0.75rem'])
+                                    @svg('fas-graduation-cap', '', ['style' => 'width:0.75rem;height:0.75rem'])
                                     Impacta nota
                                 </span>
                             </template>
                             <template x-if="selectedEvent.impacts_freq">
                                 <span style="font-size:0.6875rem;font-weight:500;padding:3px 8px;border-radius:999px;background:rgba(234,179,8,0.12);color:#ca8a04;display:flex;align-items:center;gap:4px">
-                                    @svg('heroicon-o-user-group', '', ['style' => 'width:0.75rem;height:0.75rem'])
+                                    @svg('fas-user-group', '', ['style' => 'width:0.75rem;height:0.75rem'])
                                     Impacta frequência
                                 </span>
                             </template>

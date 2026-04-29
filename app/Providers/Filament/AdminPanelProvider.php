@@ -8,12 +8,14 @@ use App\Http\Middleware\RedirectUserByRole;
 use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use CraftForge\FilamentLanguageSwitcher\FilamentLanguageSwitcherPlugin;
+use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Assets\Js;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -23,6 +25,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Foundation\Vite;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -34,6 +37,17 @@ class AdminPanelProvider extends PanelProvider
             ->path('lumina')
             ->brandName('Portal Lumina')
             ->login()
+            ->font(
+                'Inter Variable',
+                url: asset('fonts/filament/filament/inter/index.css'),
+                provider: LocalFontProvider::class,
+            )
+            ->viteTheme('resources/css/filament/lumina/theme.css')
+            ->assets([
+                Js::make('student-animations')->html(app(Vite::class)(
+                    'resources/js/filament/student-animations.js',
+                )),
+            ])
             ->colors([
                 'primary' => Color::Amber,
             ])

@@ -41,23 +41,23 @@ class StudentGradesStatsWidget extends BaseWidget
         return [
             Stat::make('Média Geral', $averageScore ? number_format($averageScore, 2, ',', '.') : '-')
                 ->description('Média de todas as avaliações')
-                ->descriptionIcon('heroicon-m-chart-bar')
+                ->descriptionIcon('fas-chart-bar')
                 ->color($averageScore >= 7.0 ? 'success' : ($averageScore >= 5.0 ? 'warning' : 'danger'))
                 ->chart($this->getScoresTrend()),
 
             Stat::make('Disciplinas', $subjects)
                 ->description('Disciplinas cursando')
-                ->descriptionIcon('heroicon-m-book-open')
+                ->descriptionIcon('fas-book-open')
                 ->color('info'),
 
             Stat::make('Maior Nota', $highestScore ? number_format($highestScore, 2, ',', '.') : '-')
                 ->description('Melhor desempenho')
-                ->descriptionIcon('heroicon-m-arrow-trending-up')
+                ->descriptionIcon('fas-arrow-trend-up')
                 ->color('success'),
 
             Stat::make('Aproveitamento', $passingRate . '%')
                 ->description('Notas acima de 7.0')
-                ->descriptionIcon('heroicon-m-check-circle')
+                ->descriptionIcon('fas-circle-check')
                 ->color($passingRate >= 70 ? 'success' : ($passingRate >= 50 ? 'warning' : 'danger')),
         ];
     }

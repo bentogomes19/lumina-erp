@@ -19,7 +19,7 @@ class GradeLevelResource extends BaseAdminResource
     protected static ?string $model = GradeLevel::class;
 
     protected static string|null|\UnitEnum $navigationGroup = 'Configurações Acadêmicas';
-    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-academic-cap';
+    protected static string|null|BackedEnum $navigationIcon = 'fas-graduation-cap';
     protected static ?string $slug = 'grade-levels';
     protected static ?string $navigationLabel = 'Séries / Etapas';
     protected static ?string $pluralModelLabel = 'Séries / Etapas';

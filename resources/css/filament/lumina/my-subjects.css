@@ -1,0 +1,57 @@
+/* ── Light mode (default — sem classe .dark no html) ── */
+        :root {
+            --ms-card-bg:        #ffffff;
+            --ms-card-border:    #e2e8f0;
+            --ms-cell-bg:        #f1f5f9;
+            --ms-bar-bg:         #e2e8f0;
+            --ms-text-primary:   #1e293b;
+            --ms-text-secondary: #64748b;
+            --ms-text-muted:     #94a3b8;
+            --ms-hover-bg:       #f8fafc;
+        }
+
+        /* ── Dark mode — controlado pela classe .dark do Filament ── */
+        .dark {
+            --ms-card-bg:        #080a0c;
+            --ms-card-border:    #334155;
+            --ms-cell-bg:        #0f172a;
+            --ms-bar-bg:         #10141d;
+            --ms-text-primary:   #f1f5f9;
+            --ms-text-secondary: #94a3b8;
+            --ms-text-muted:     #64748b;
+            --ms-hover-bg:       #0a0d11;
+        }
+
+        /* ── Base card styles ── */
+        .ms-card {
+            background: var(--ms-card-bg);
+            border: 1px solid var(--ms-card-border);
+            border-radius: 0.75rem;
+        }
+
+        /* ── Subject card (link) ── */
+        a.ms-subject-card {
+            background: var(--ms-card-bg);
+            border: 1px solid var(--ms-card-border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            text-decoration: none;
+            display: block;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        a.ms-subject-card:hover {
+            background: var(--ms-hover-bg);
+            border-color: color-mix(in srgb, var(--ms-card-border) 60%, currentColor 40%);
+        }
+
+        /* ── Responsive grid ── */
+        @media (max-width: 768px) {
+            .ms-stats-grid  { grid-template-columns: repeat(2, 1fr) !important; }
+            .ms-subject-grid { grid-template-columns: 1fr !important; }
+        }
+
+        .ms-icon-xs { width: 0.875rem !important; height: 0.875rem !important; }
+        .ms-icon-sm { width: 1rem !important; height: 1rem !important; }
+        .ms-icon-md { width: 1.125rem !important; height: 1.125rem !important; }
+        .ms-icon-lg { width: 1.4rem !important; height: 1.4rem !important; }
+        .ms-icon-xl { width: 1.75rem !important; height: 1.75rem !important; }

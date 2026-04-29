@@ -1,0 +1,278 @@
+/* ── CSS Variables ── */
+        :root {
+            --ac-card-bg:        #ffffff;
+            --ac-card-border:    #e2e8f0;
+            --ac-cell-bg:        #f8fafc;
+            --ac-cell-border:    #e2e8f0;
+            --ac-bar-bg:         #e2e8f0;
+            --ac-text-primary:   #1e293b;
+            --ac-text-secondary: #64748b;
+            --ac-text-muted:     #94a3b8;
+            --ac-hover-bg:       #f1f5f9;
+            --ac-today-ring:     #f59e0b;
+            --ac-weekend-bg:     #f8fafc;
+        }
+        .dark {
+            --ac-card-bg:        #080a0c;
+            --ac-card-border:    #334155;
+            --ac-cell-bg:        #0c1019;
+            --ac-cell-border:    #1e293b;
+            --ac-bar-bg:         #10141d;
+            --ac-text-primary:   #f1f5f9;
+            --ac-text-secondary: #94a3b8;
+            --ac-text-muted:     #64748b;
+            --ac-hover-bg:       #0a0d11;
+            --ac-today-ring:     #f59e0b;
+            --ac-weekend-bg:     #0a0d11;
+        }
+
+        .ac-card {
+            background: var(--ac-card-bg);
+            border: 1px solid var(--ac-card-border);
+            border-radius: 0.75rem;
+        }
+
+        /* ── View mode tabs ── */
+        .ac-tab {
+            padding: 0.4rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--ac-text-secondary);
+            background: transparent;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            transition: all 0.15s;
+        }
+        .ac-tab:hover   { background: var(--ac-hover-bg); color: var(--ac-text-primary); }
+        .ac-tab.active  { background: #f59e0b; color: #fff; }
+
+        /* ── Navigation button ── */
+        .ac-nav-btn {
+            width: 2rem; height: 2rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--ac-card-border);
+            background: var(--ac-card-bg);
+            color: var(--ac-text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .ac-nav-btn:hover { background: var(--ac-hover-bg); color: var(--ac-text-primary); }
+
+        /* ── Category filter pill ── */
+        .ac-filter-pill {
+            display: flex; align-items: center; gap: 0.375rem;
+            padding: 0.3125rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1.5px solid var(--ac-card-border);
+            background: var(--ac-card-bg);
+            color: var(--ac-text-secondary);
+            transition: all 0.15s;
+        }
+        .ac-filter-pill:hover { background: var(--ac-hover-bg); }
+        .ac-filter-pill.active { border-color: currentColor; }
+
+        /* ── Month grid ── */
+        .ac-month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        .ac-dow-header {
+            text-align: center;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--ac-text-muted);
+            padding: 0.375rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .ac-cell {
+            min-height: 5.5rem;
+            background: var(--ac-card-bg);
+            border: 1px solid var(--ac-cell-border);
+            border-radius: 0.375rem;
+            padding: 0.375rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            position: relative;
+            transition: background 0.1s;
+        }
+        .ac-cell:hover { background: var(--ac-hover-bg); }
+        .ac-cell.empty { background: var(--ac-cell-bg); opacity: 0.4; border-color: transparent; }
+        .ac-cell.weekend { background: var(--ac-weekend-bg); }
+        .ac-cell.today {
+            outline: 2px solid var(--ac-today-ring);
+            outline-offset: -2px;
+            background: var(--ac-card-bg);
+        }
+        .ac-day-num {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--ac-text-secondary);
+            line-height: 1.4;
+            width: 1.5rem;
+            height: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .ac-cell.today .ac-day-num {
+            background: #f59e0b;
+            color: #fff;
+        }
+        .ac-event-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 0.625rem;
+            font-weight: 500;
+            cursor: pointer;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            line-height: 1.6;
+            transition: opacity 0.15s;
+        }
+        .ac-event-chip:hover { opacity: 0.85; }
+        .ac-event-more {
+            font-size: 0.5625rem;
+            color: var(--ac-text-muted);
+            padding: 1px 5px;
+            cursor: pointer;
+        }
+
+        /* ── Week grid ── */
+        .ac-week-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+        .ac-week-col {
+            min-height: 14rem;
+            background: var(--ac-card-bg);
+            border: 1px solid var(--ac-cell-border);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .ac-week-col.today { outline: 2px solid var(--ac-today-ring); outline-offset: -2px; }
+        .ac-week-col.weekend { background: var(--ac-weekend-bg); }
+        .ac-week-day-header {
+            text-align: center;
+            padding-bottom: 0.375rem;
+            border-bottom: 1px solid var(--ac-cell-border);
+            margin-bottom: 0.25rem;
+        }
+        .ac-week-event {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.3rem;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            cursor: pointer;
+            line-height: 1.5;
+            transition: opacity 0.15s;
+        }
+        .ac-week-event:hover { opacity: 0.8; }
+
+        /* ── List view ── */
+        .ac-list-date-group { margin-bottom: 1.25rem; }
+        .ac-list-date-label {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--ac-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .ac-list-event {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.875rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.1s;
+            margin-bottom: 0.375rem;
+            border: 1px solid var(--ac-card-border);
+            background: var(--ac-card-bg);
+        }
+        .ac-list-event:hover { background: var(--ac-hover-bg); }
+
+        /* ── Event modal ── */
+        .ac-modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .ac-modal {
+            background: var(--ac-card-bg);
+            border: 1px solid var(--ac-card-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 28rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        /* ── Upcoming sidebar ── */
+        .ac-upcoming-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.625rem 0;
+            border-bottom: 1px solid var(--ac-cell-border);
+        }
+        .ac-upcoming-item:last-child { border-bottom: none; }
+
+        /* ── Subject select ── */
+        .ac-select {
+            padding: 0.375rem 0.625rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--ac-card-border);
+            background: var(--ac-card-bg);
+            color: var(--ac-text-primary);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            outline: none;
+        }
+        .ac-select:focus { border-color: #f59e0b; }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .ac-layout       { flex-direction: column !important; }
+            .ac-sidebar      { width: 100% !important; }
+            .ac-cell         { min-height: 3.5rem; }
+            .ac-week-col     { min-height: 8rem; }
+        }
+        @media (max-width: 640px) {
+            .ac-controls-row { flex-wrap: wrap; }
+            .ac-month-grid   { gap: 1px; }
+            .ac-cell         { min-height: 2.75rem; padding: 0.25rem; }
+            .ac-day-num      { font-size: 0.6875rem; width: 1.25rem; height: 1.25rem; }
+            .ac-event-chip   { display: none; }
+            .ac-cell-dot     { display: flex !important; }
+            .ac-week-grid    { grid-template-columns: 1fr; }
+        }

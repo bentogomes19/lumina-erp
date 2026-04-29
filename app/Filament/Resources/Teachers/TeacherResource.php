@@ -20,7 +20,7 @@ class TeacherResource extends BaseAdminResource
 {
     protected static ?string $model = Teacher::class;
     protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
-    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-user-group';
+    protected static string|null|BackedEnum $navigationIcon = 'fas-user-group';
     protected static ?int $navigationSort = 2;
 
     protected static ?string $navigationLabel = 'Professores';

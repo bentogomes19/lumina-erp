@@ -73,7 +73,7 @@ class StudentsTable
                 EditAction::make(),
                 Action::make('criarUsuario')
                     ->label('Criar usuário')
-                    ->icon('heroicon-o-user-plus')
+                    ->icon('fas-user-plus')
                     ->visible(fn($record) => !$record->user_id)
                     ->modalHeading(fn($record) => "Criar usuário para {$record->name}")
                     ->form([
@@ -161,7 +161,7 @@ class StudentsTable
                         }),
                     BulkAction::make('bulkStatus')
                         ->label('Alterar status (selecionados)')
-                        ->icon('heroicon-o-adjustments-vertical')
+                        ->icon('fas-sliders')
                         ->form([
                             \Filament\Forms\Components\Select::make('status')
                                 ->label('Novo status')

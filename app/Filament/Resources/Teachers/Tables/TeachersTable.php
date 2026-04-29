@@ -67,7 +67,7 @@ class TeachersTable
                 EditAction::make(),
                 Action::make('criarUsuario')
                     ->label('Criar usuário')
-                    ->icon('heroicon-o-user-plus')
+                    ->icon('fas-user-plus')
                     ->visible(fn($record) => !$record->user_id) // só mostra se ainda não tiver usuário
                     ->modalHeading(fn($record) => "Criar usuário para {$record->name}")
                     ->form([
@@ -125,7 +125,7 @@ class TeachersTable
                     }),
                 Action::make('vincular')
                     ->label('Vincular a turma/discip.')
-                    ->icon('heroicon-o-link')
+                    ->icon('fas-link')
                     ->visible(fn($record) => !$record->user_id)
                     ->modalHeading(fn($record) => "Vincular {$record->name}")
                     ->form([
@@ -212,7 +212,7 @@ class TeachersTable
 
                     BulkAction::make('alterarStatus')
                         ->label('Alterar status')
-                        ->icon('heroicon-o-adjustments-vertical')
+                        ->icon('fas-sliders')
                         ->modalHeading('Alterar status dos professores selecionados')
                         ->form([
                             Select::make('status')

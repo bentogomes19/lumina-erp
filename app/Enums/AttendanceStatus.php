@@ -32,10 +32,10 @@ enum AttendanceStatus: string
     public function icon(): string
     {
         return match ($this) {
-            self::PRESENT => 'heroicon-o-check-circle',
-            self::ABSENT => 'heroicon-o-x-circle',
-            self::LATE => 'heroicon-o-clock',
-            self::EXCUSED => 'heroicon-o-document-text',
+            self::PRESENT => 'fas-circle-check',
+            self::ABSENT => 'fas-circle-xmark',
+            self::LATE => 'fas-clock',
+            self::EXCUSED => 'fas-file-lines',
         };
     }
 

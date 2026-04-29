@@ -1,96 +1,5 @@
 <x-filament-panels::page>
-    <style>
-        /* ── Light mode ── */
-        :root {
-            --ms-card-bg:        #ffffff;
-            --ms-card-border:    #e2e8f0;
-            --ms-cell-bg:        #f1f5f9;
-            --ms-bar-bg:         #e2e8f0;
-            --ms-text-primary:   #1e293b;
-            --ms-text-secondary: #64748b;
-            --ms-text-muted:     #94a3b8;
-            --ms-hover-bg:       #f8fafc;
-        }
-        /* ── Dark mode via Filament .dark ── */
-        .dark {
-            --ms-card-bg:        #080a0c;
-            --ms-card-border:    #334155;
-            --ms-cell-bg:        #0f172a;
-            --ms-bar-bg:         #10141d;
-            --ms-text-primary:   #f1f5f9;
-            --ms-text-secondary: #94a3b8;
-            --ms-text-muted:     #64748b;
-            --ms-hover-bg:       #0a0d11;
-        }
-
-        .ms-card {
-            background: var(--ms-card-bg);
-            border: 1px solid var(--ms-card-border);
-            border-radius: 0.75rem;
-        }
-
-        /* ── Period filter pill ── */
-        .ms-period-btn {
-            padding: 0.375rem 0.875rem;
-            border-radius: 999px;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            cursor: pointer;
-            border: 1px solid var(--ms-card-border);
-            background: var(--ms-card-bg);
-            color: var(--ms-text-secondary);
-            transition: all 0.15s;
-        }
-        .ms-period-btn:hover   { background: var(--ms-hover-bg); }
-        .ms-period-btn.active  {
-            background: #f59e0b;
-            border-color: #f59e0b;
-            color: #fff;
-        }
-
-        /* ── Calendar grid ── */
-        .ms-cal-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 3px;
-        }
-        .ms-cal-day {
-            aspect-ratio: 1;
-            border-radius: 0.375rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6875rem;
-            font-weight: 500;
-            color: var(--ms-text-secondary);
-            background: var(--ms-cell-bg);
-        }
-        .ms-cal-day.today      { outline: 2px solid #f59e0b; outline-offset: 1px; }
-        .ms-cal-day.present    { background: rgba(34,197,94,0.20);  color: #16a34a; font-weight: 700; }
-        .ms-cal-day.absent     { background: rgba(239,68,68,0.20);  color: #dc2626; font-weight: 700; }
-        .ms-cal-day.late       { background: rgba(234,179,8,0.20);  color: #ca8a04; font-weight: 700; }
-        .ms-cal-day.excused    { background: rgba(6,182,212,0.20);  color: #0891b2; font-weight: 700; }
-        .ms-cal-day.weekend    { opacity: 0.35; }
-        .ms-cal-day.empty      { background: transparent; }
-
-        /* ── Subject frequency bar ── */
-        .ms-freq-bar-track {
-            width: 100%;
-            height: 6px;
-            border-radius: 999px;
-            background: var(--ms-bar-bg);
-            overflow: hidden;
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 768px) {
-            .ms-stats-grid    { grid-template-columns: repeat(2, 1fr) !important; }
-            .ms-subject-grid  { grid-template-columns: 1fr !important; }
-            .ms-calendar-grid { grid-template-columns: 1fr !important; }
-        }
-    </style>
-
-    @php
+@php
         $data         = $this->getPageData();
         $stats        = $data['stats'];
         $student      = $data['student'];
@@ -117,7 +26,7 @@
         {{-- Empty state --}}
         <div class="ms-card" style="padding:3rem;text-align:center">
             <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @svg('heroicon-o-calendar-days', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
+                @svg('fas-calendar-days', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
             </div>
             <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">
                 Nenhuma turma ativa encontrada
@@ -134,7 +43,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
                     <div style="display:flex;align-items:center;gap:1rem">
                         <div style="width:2.75rem;height:2.75rem;border-radius:0.5rem;background:rgba(217,119,6,0.15);display:flex;align-items:center;justify-content:center">
-                            @svg('heroicon-o-academic-cap', '', ['style' => 'width:1.4rem;height:1.4rem;color:#fbbf24'])
+                            @svg('fas-graduation-cap', '', ['style' => 'width:1.4rem;height:1.4rem;color:#fbbf24'])
                         </div>
                         <div>
                             <h2 style="font-size:1.125rem;font-weight:700;color:var(--ms-text-primary);margin:0">
@@ -149,7 +58,7 @@
                         </div>
                     </div>
                     <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;color:var(--ms-text-secondary)">
-                        @svg('heroicon-o-identification', '', ['style' => 'width:1rem;height:1rem'])
+                        @svg('fas-id-card', '', ['style' => 'width:1rem;height:1rem'])
                         <span>Matrícula: <strong style="color:var(--ms-text-primary)">{{ $student->registration_number }}</strong></span>
                     </div>
                 </div>
@@ -176,7 +85,7 @@
                     $alreadyFailed = $stats['remaining_absences'] < 0;
                 @endphp
                 <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-left:4px solid #ef4444;border-radius:0.75rem;padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:0.75rem">
-                    @svg('heroicon-s-exclamation-triangle', '', ['style' => 'width:1.25rem;height:1.25rem;color:#ef4444;flex-shrink:0;margin-top:1px'])
+                    @svg('fas-triangle-exclamation', '', ['style' => 'width:1.25rem;height:1.25rem;color:#ef4444;flex-shrink:0;margin-top:1px'])
                     <div>
                         <p style="font-size:0.9375rem;font-weight:600;color:#ef4444;margin:0 0 0.25rem">
                             @if($alreadyFailed)
@@ -201,11 +110,11 @@
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem">
                 @php
                     $overallCards = [
-                        ['icon'=>'heroicon-o-calendar-days', 'value'=>$stats['total'],   'label'=>'Total de Aulas',  'color'=>'#f59e0b'],
-                        ['icon'=>'heroicon-o-check-circle',  'value'=>$stats['present'], 'label'=>'Presenças',       'color'=>'#22c55e'],
-                        ['icon'=>'heroicon-o-x-circle',      'value'=>$stats['absent'],  'label'=>'Faltas',          'color'=>'#ef4444'],
-                        ['icon'=>'heroicon-o-clock',         'value'=>$stats['late'],    'label'=>'Atrasos',         'color'=>'#eab308'],
-                        ['icon'=>'heroicon-o-document-check','value'=>$stats['excused'], 'label'=>'Justificadas',    'color'=>'#06b6d4'],
+                        ['icon'=>'fas-calendar-days', 'value'=>$stats['total'],   'label'=>'Total de Aulas',  'color'=>'#f59e0b'],
+                        ['icon'=>'fas-circle-check',  'value'=>$stats['present'], 'label'=>'Presenças',       'color'=>'#22c55e'],
+                        ['icon'=>'fas-circle-xmark',      'value'=>$stats['absent'],  'label'=>'Faltas',          'color'=>'#ef4444'],
+                        ['icon'=>'fas-clock',         'value'=>$stats['late'],    'label'=>'Atrasos',         'color'=>'#eab308'],
+                        ['icon'=>'fas-file-circle-check','value'=>$stats['excused'], 'label'=>'Justificadas',    'color'=>'#06b6d4'],
                     ];
                 @endphp
                 @foreach($overallCards as $card)
@@ -229,7 +138,7 @@
                 <div class="ms-card" style="padding:1.25rem">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem">
                         <div style="display:flex;align-items:center;gap:0.5rem">
-                            @svg('heroicon-o-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:'.$rc])
+                            @svg('fas-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:'.$rc])
                             <span style="font-size:1rem;font-weight:600;color:var(--ms-text-primary)">Frequência Geral — {{ $periodLabel }}</span>
                         </div>
                         <div style="display:flex;align-items:baseline;gap:0.25rem">
@@ -253,7 +162,7 @@
                     {{-- Remaining absences indicator --}}
                     @if(!$stats['alert'] && $stats['total'] > 0)
                         <div style="margin-top:0.875rem;padding:0.625rem 0.875rem;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:0.5rem;display:inline-flex;align-items:center;gap:0.5rem">
-                            @svg('heroicon-o-shield-check', '', ['style' => 'width:1rem;height:1rem;color:#22c55e'])
+                            @svg('fas-shield-halved', '', ['style' => 'width:1rem;height:1rem;color:#22c55e'])
                             <span style="font-size:0.8125rem;color:var(--ms-text-secondary)">
                                 Você ainda pode faltar
                                 <strong style="color:#22c55e">{{ $stats['remaining_absences'] }} {{ $stats['remaining_absences'] === 1 ? 'vez' : 'vezes' }}</strong>
@@ -292,7 +201,7 @@
                                         <span style="font-size:1.375rem;font-weight:700;color:{{ $sc }}">{{ $ss['rate'] }}%</span>
                                         @if($ss['alert'])
                                             <div style="display:flex;align-items:center;gap:0.25rem;justify-content:flex-end;margin-top:0.125rem">
-                                                @svg('heroicon-s-exclamation-triangle', '', ['style' => 'width:0.75rem;height:0.75rem;color:#ef4444'])
+                                                @svg('fas-triangle-exclamation', '', ['style' => 'width:0.75rem;height:0.75rem;color:#ef4444'])
                                                 <span style="font-size:0.5625rem;color:#ef4444;font-weight:600">ABAIXO DO MÍNIMO</span>
                                             </div>
                                         @endif

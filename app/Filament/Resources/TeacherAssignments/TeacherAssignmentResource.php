@@ -18,7 +18,7 @@ class TeacherAssignmentResource extends BaseAdminResource
     protected static ?string $model = TeacherAssignment::class;
 
     protected static string|null|\UnitEnum $navigationGroup = 'Configurações Acadêmicas';
-    protected static string|null|BackedEnum $navigationIcon = 'heroicon-o-user-group';
+    protected static string|null|BackedEnum $navigationIcon = 'fas-user-group';
     protected static ?string $navigationLabel = 'Alocação de Professores';
     protected static ?string $pluralModelLabel = 'Alocação de Professores';
     protected static ?string $modelLabel = 'Alocação do Professor';

@@ -16,7 +16,7 @@ class AcademicCalendar extends Page
     protected static ?string $navigationLabel = 'Calendário';
     protected static ?string $title = 'Calendário Acadêmico';
     protected static ?string $slug = 'academic-calendar';
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar';
+    protected static string|\BackedEnum|null $navigationIcon = 'fas-calendar';
     protected static ?int $navigationSort = 4;
 
     // ── State ────────────────────────────────────────────────────────────────
@@ -303,7 +303,7 @@ class AcademicCalendar extends Page
                     HolidayType::NATIONAL_HOLIDAY  => ['#ef4444', '#fef2f2', '#b91c1c'],
                     HolidayType::STATE_HOLIDAY     => ['#f97316', '#fff7ed', '#c2410c'],
                     HolidayType::MUNICIPAL_HOLIDAY => ['#f59e0b', '#fffbeb', '#b45309'],
-                    HolidayType::SCHOOL_RECESS     => ['#8b5cf6', '#f5f3ff', '#6d28d9'],
+                    HolidayType::SCHOOL_RECESS     => ['#0284c7', '#e0f2fe', '#0369a1'],
                     HolidayType::SCHOOL_EVENT      => ['#10b981', '#ecfdf5', '#047857'],
                     HolidayType::EXAM_PERIOD       => ['#6366f1', '#eef2ff', '#4338ca'],
                     default                        => ['#6b7280', '#f9fafb', '#374151'],
@@ -458,7 +458,7 @@ class AcademicCalendar extends Page
                 'date'           => $holiday->start_date->format('Y-m-d'),
                 'category_label' => $holiday->type->label(),
                 'subject'        => null,
-                'dot_color'      => '#8b5cf6',
+                'dot_color'      => '#0284c7',
                 'days_until'     => max(0, (int) now()->startOfDay()->diffInDays($holiday->start_date->startOfDay(), false)),
             ]);
         }

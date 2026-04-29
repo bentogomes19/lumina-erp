@@ -16,7 +16,7 @@ class SubjectDetail extends Page
     protected static ?string $navigationLabel = null;
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $slug = 'subject-detail';
-    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-book-open';
+    protected static string|null|\BackedEnum $navigationIcon = 'fas-book-open';
 
     public ?int $subjectId = null;
 

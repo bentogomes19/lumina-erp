@@ -113,7 +113,7 @@
     @if (count($gradesByTerm) === 0)
         <div class="bg-white rounded-lg shadow-md p-8 text-center">
             <div class="inline-block">
-                <div class="text-5xl mb-3">📚</div>
+                @svg('fas-book-open', 'w-12 h-12 mb-3 mx-auto text-blue-600')
                 <p class="text-gray-500 text-lg">Nenhuma nota registrada ainda.</p>
             </div>
         </div>
@@ -122,9 +122,7 @@
     <!-- Legenda -->
     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mt-6 border-l-4 border-blue-500">
         <p class="text-sm font-semibold text-gray-800 mb-4 flex items-center">
-            <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0zm3 0a1 1 0 11-2 0 1 1 0 012 0zm3 0a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd" />
-            </svg>
+            @svg('fas-comment-dots', 'w-5 h-5 mr-2 text-blue-600')
             Legenda de Classificação
         </p>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -152,4 +150,3 @@
         </div>
     </div>
 </div>
-

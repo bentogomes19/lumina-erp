@@ -89,7 +89,7 @@ class SubjectsTable
             ->recordActions([
                 Action::make('vincularTurmaProfessor')
                     ->label('Vincular turma/professor')
-                    ->icon('heroicon-o-link')
+                    ->icon('fas-link')
                     ->modalHeading(fn ($record) => "Vincular {$record->name}")
                     ->form([
                         FormSelect::make('class_id')
@@ -139,7 +139,7 @@ class SubjectsTable
                     // status em massa
                     BulkAction::make('alterarStatus')
                         ->label('Alterar status')
-                        ->icon('heroicon-o-adjustments-vertical')
+                        ->icon('fas-sliders')
                         ->modalHeading('Alterar status das disciplinas selecionadas')
                         ->form([
                             FormSelect::make('status')
@@ -166,7 +166,7 @@ class SubjectsTable
                 ]),
                 BulkAction::make('ofertarEmTurma')
                     ->label('Ofertar em turma (sem professor)')
-                    ->icon('heroicon-o-academic-cap')
+                    ->icon('fas-graduation-cap')
                     ->modalHeading('Adicionar disciplinas selecionadas à turma')
                     ->form([
                         FormSelect::make('class_id')
