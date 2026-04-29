@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use App\Enums\SchoolYearStatus;
-use Illuminate\Database\Eloquent\Model;
 
-class SchoolYear extends Model
+class SchoolYear extends BaseModel
 {
+    /**
+     * Campos que podem ser preenchidos em massa pela aplicação.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'year',
         'starts_at',
@@ -15,6 +19,11 @@ class SchoolYear extends Model
         'status',
     ];
 
+    /**
+     * Conversões automáticas de tipos dos atributos.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'starts_at' => 'date',
         'ends_at'   => 'date',
@@ -22,7 +31,9 @@ class SchoolYear extends Model
         'status'    => SchoolYearStatus::class,
     ];
 
-    /** Ao ativar um ano letivo, garante que nenhum outro fique ativo */
+    /**
+     * Ao ativar um ano letivo, garante que nenhum outro fique ativo.
+     */
     protected static function booted(): void
     {
         static::saving(function (self $year) {
@@ -43,39 +54,59 @@ class SchoolYear extends Model
         });
     }
 
+    /**
+     * Retorna os períodos avaliativos do ano letivo.
+     */
     public function terms()
     {
         return $this->hasMany(SchoolYearTerm::class)->orderBy('sequence');
     }
 
+    /**
+     * Retorna o nível/série associado ao ano letivo.
+     */
     public function gradeLevel()
     {
         return $this->belongsTo(GradeLevel::class);
     }
 
+    /**
+     * Retorna as turmas vinculadas ao ano letivo.
+     */
     public function classes()
     {
         return $this->hasMany(SchoolClass::class);
     }
 
+    /**
+     * Retorna as matrículas vinculadas ao ano letivo.
+     */
     public function enrollments()
     {
         return $this->hasMany(Enrollment::class);
     }
 
-    /** Retorna o ano letivo com status ativo */
+    /**
+     * Retorna o ano letivo com status ativo.
+     */
     public static function current(): ?self
     {
         return static::where('status', SchoolYearStatus::ACTIVE->value)->first();
     }
 
-    /** @deprecated Use current() */
+    /**
+     * Retorna o ano letivo ativo.
+     *
+     * @deprecated Use current().
+     */
     public static function active(): ?self
     {
         return static::current();
     }
 
-    /** Retorna o período avaliativo aberto para lançamento de notas hoje */
+    /**
+     * Retorna o período avaliativo aberto para lançamento de notas hoje.
+     */
     public function currentTerm(): ?SchoolYearTerm
     {
         return $this->terms()

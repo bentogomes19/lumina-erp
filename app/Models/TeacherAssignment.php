@@ -2,31 +2,46 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class TeacherAssignment extends Model
+class TeacherAssignment extends BaseModel
 {
+    /**
+     * Campos que podem ser preenchidos em massa pela aplicação.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'teacher_id',
         'class_id',
         'subject_id',
     ];
 
+    /**
+     * Retorna o professor vinculado à atribuição.
+     */
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);
     }
 
+    /**
+     * Retorna a disciplina vinculada à atribuição.
+     */
     public function subject()
     {
         return $this->belongsTo(Subject::class);
     }
 
+    /**
+     * Retorna a turma vinculada à atribuição.
+     */
     public function schoolClass()
     {
         return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
+    /**
+     * Sincroniza a disciplina da turma ao criar ou remover atribuições.
+     */
     protected static function booted()
     {
         // Quando criar um vínculo professor+turma+disciplina,

@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
 /**
  * Log de auditoria de matrículas.
  * Registros imutáveis — sem updated_at.
@@ -18,11 +16,18 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $ip_origem
  * @property \Carbon\Carbon $created_at
  */
-class EnrollmentLog extends Model
+class EnrollmentLog extends BaseModel
 {
-    // Logs são imutáveis — somente created_at
+    /**
+     * Indica que logs são imutáveis e possuem somente created_at controlado manualmente.
+     */
     public $timestamps = false;
 
+    /**
+     * Campos que podem ser preenchidos em massa pela aplicação.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'enrollment_id',
         'operador_id',
@@ -34,32 +39,39 @@ class EnrollmentLog extends Model
         'created_at',
     ];
 
+    /**
+     * Conversões automáticas de tipos dos atributos.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'created_at' => 'datetime',
     ];
 
-    // ── Relações ──────────────────────────────────────────────────────────────
-
+    /**
+     * Retorna a matrícula relacionada ao log.
+     */
     public function enrollment()
     {
         return $this->belongsTo(Enrollment::class);
     }
 
+    /**
+     * Retorna o operador que registrou a ação.
+     */
     public function operador()
     {
         return $this->belongsTo(User::class, 'operador_id');
     }
 
-    // ── Helper estático ───────────────────────────────────────────────────────
-
     /**
      * Registra uma entrada de auditoria para a matrícula.
      *
-     * @param  Enrollment   $enrollment    Matrícula afetada
-     * @param  string       $acao          Tipo de ação (ex: 'trancamento', 'cancelamento')
-     * @param  string|null  $statusAnterior Status antes da ação
-     * @param  string|null  $statusNovo     Status após a ação
-     * @param  string|null  $observacao     Justificativa do operador
+     * @param  Enrollment  $enrollment  Matrícula afetada.
+     * @param  string  $acao  Tipo de ação, como trancamento ou cancelamento.
+     * @param  string|null  $statusAnterior  Status antes da ação.
+     * @param  string|null  $statusNovo  Status após a ação.
+     * @param  string|null  $observacao  Justificativa do operador.
      */
     public static function registrar(
         Enrollment $enrollment,
@@ -69,14 +81,14 @@ class EnrollmentLog extends Model
         ?string $observacao = null,
     ): void {
         static::create([
-            'enrollment_id'  => $enrollment->id,
-            'operador_id'    => auth()->id(),
-            'acao'           => $acao,
+            'enrollment_id'   => $enrollment->id,
+            'operador_id'     => auth()->id(),
+            'acao'            => $acao,
             'status_anterior' => $statusAnterior,
-            'status_novo'    => $statusNovo,
-            'observacao'     => $observacao,
-            'ip_origem'      => request()->ip(),
-            'created_at'     => now(),
+            'status_novo'     => $statusNovo,
+            'observacao'      => $observacao,
+            'ip_origem'       => request()->ip(),
+            'created_at'      => now(),
         ]);
     }
 }

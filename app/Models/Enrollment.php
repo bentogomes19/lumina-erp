@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use App\Enums\EnrollmentStatus;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Enrollment extends Model
+class Enrollment extends BaseModel
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
+    /**
+     * Campos que podem ser preenchidos em massa pela aplicação.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'student_id',
         'class_id',
@@ -34,71 +37,102 @@ class Enrollment extends Model
         'operated_by_user_id',
     ];
 
+    /**
+     * Conversões automáticas de tipos dos atributos.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'enrollment_date' => 'date',
-        'lock_expires_at' => 'date',
+        'lock_expires_at'  => 'date',
         'status'          => EnrollmentStatus::class,
     ];
 
-    // ── Relações ──────────────────────────────────────────────────────────────
-
+    /**
+     * Retorna o aluno vinculado à matrícula.
+     */
     public function student()
     {
         return $this->belongsTo(Student::class);
     }
 
+    /**
+     * Retorna a turma vinculada à matrícula.
+     */
     public function class()
     {
         return $this->belongsTo(SchoolClass::class);
     }
 
+    /**
+     * Retorna a turma vinculada à matrícula pelo campo class_id.
+     */
     public function schoolClass()
     {
         return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
+    /**
+     * Retorna o ano letivo da matrícula.
+     */
     public function schoolYear()
     {
         return $this->belongsTo(SchoolYear::class);
     }
 
+    /**
+     * Retorna as notas vinculadas à matrícula.
+     */
     public function grades()
     {
         return $this->hasMany(Grade::class);
     }
 
+    /**
+     * Retorna os logs de auditoria da matrícula.
+     */
     public function logs()
     {
         return $this->hasMany(EnrollmentLog::class)->orderByDesc('created_at');
     }
 
+    /**
+     * Retorna os documentos da matrícula.
+     */
     public function documents()
     {
         return $this->hasMany(EnrollmentDocument::class)->orderBy('tipo');
     }
 
-    /** Matrícula anterior (origem da rematrícula ou transferência interna) */
+    /**
+     * Retorna a matrícula anterior usada como origem da rematrícula ou transferência interna.
+     */
     public function previousEnrollment()
     {
         return $this->belongsTo(Enrollment::class, 'previous_enrollment_id');
     }
 
-    /** Operador responsável pela última ação */
+    /**
+     * Retorna o operador responsável pela última ação na matrícula.
+     */
     public function operatedBy()
     {
         return $this->belongsTo(User::class, 'operated_by_user_id');
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    /** Próximo número de chamada disponível dentro da turma */
+    /**
+     * Retorna o próximo número de chamada disponível dentro da turma.
+     */
     public static function nextRollNumberFor(int $classId): int
     {
         $max = static::where('class_id', $classId)->max('roll_number');
+
         return (int) $max + 1;
     }
 
-    /** Gera registration_number no formato ANO + ID com 6 dígitos (ex: 2025000042) */
+    /**
+     * Gera o número de matrícula no formato ano mais ID com seis dígitos.
+     */
     public static function generateRegistrationNumber(self $enr): string
     {
         $year = $enr->schoolYear?->year
@@ -110,7 +144,6 @@ class Enrollment extends Model
 
     /**
      * Verifica se há vagas disponíveis na turma informada.
-     * TI pode ultrapassar o limite mediante confirmação explícita.
      */
     public static function classHasSlot(int $classId): bool
     {
@@ -131,8 +164,7 @@ class Enrollment extends Model
     }
 
     /**
-     * Retorna o percentual de ocupação da turma (0-100).
-     * Útil para alertas visuais (80% / 100%).
+     * Retorna o percentual de ocupação da turma.
      */
     public static function classOccupancyPercent(int $classId): ?int
     {
@@ -152,8 +184,9 @@ class Enrollment extends Model
         return (int) round(($ocupadas / $class->capacity) * 100);
     }
 
-    // ── Booted hooks ─────────────────────────────────────────────────────────
-
+    /**
+     * Define valores padrão e registra auditoria durante o ciclo de vida da matrícula.
+     */
     protected static function booted()
     {
         static::creating(function (self $enr) {
