@@ -14,7 +14,6 @@ class MyClasses extends Page
     protected static ?string $title = 'Minhas Turmas';
     protected static ?string $slug = 'teacher-my-classes';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-chalkboard-user';
-    protected static string|null|\UnitEnum $navigationGroup = 'Portal do Professor';
     protected static ?int $navigationSort = 2;
     protected static ?string $teacherPortalPermission = 'teacher.classes.view';
 

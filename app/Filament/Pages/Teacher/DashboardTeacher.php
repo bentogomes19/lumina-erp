@@ -18,7 +18,6 @@ class DashboardTeacher extends Page
     protected static ?string $title = 'Portal do Professor';
     protected static ?string $slug = 'dashboard-teacher';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-chart-line';
-    protected static string|null|\UnitEnum $navigationGroup = 'Portal do Professor';
     protected static ?int $navigationSort = 1;
     protected static ?string $teacherPortalPermission = 'teacher.dashboard.view';
 

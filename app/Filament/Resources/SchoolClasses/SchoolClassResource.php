@@ -20,7 +20,6 @@ class SchoolClassResource extends BaseAdminResource
 {
     protected static ?string $model = SchoolClass::class;
 
-    protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-user-group';
     protected static ?string $navigationLabel = 'Turmas';
     protected static ?string $pluralModelLabel = 'Turmas';

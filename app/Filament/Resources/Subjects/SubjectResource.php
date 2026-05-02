@@ -18,7 +18,6 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class SubjectResource extends BaseAdminResource
 {
     protected static ?string $model = Subject::class;
-    protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
     protected static string|null|BackedEnum $navigationIcon = 'fas-book-open';
     protected static ?int $navigationSort = 3;
     protected static ?string $navigationLabel = 'Disciplinas';
