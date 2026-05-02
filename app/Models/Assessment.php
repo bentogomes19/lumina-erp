@@ -20,6 +20,7 @@ class Assessment extends BaseModel
         'title',
         'description',
         'assessment_type',
+        'date',
         'scheduled_at',
         'max_score',
         'weight',
@@ -32,6 +33,7 @@ class Assessment extends BaseModel
      * @var array<string, string>
      */
     protected $casts = [
+        'date' => 'date',
         'scheduled_at' => 'datetime',
         'max_score'    => 'decimal:2',
         'weight'       => 'decimal:2',
