@@ -8,6 +8,7 @@ use App\Models\Attendance;
 use App\Models\Grade;
 use App\Models\Lesson;
 use App\Services\GradeCalculationService;
+use App\Support\PermissionAccess;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Cache;
 
@@ -21,12 +22,12 @@ class DashboardStudent extends Page
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->hasRole('student');
+        return PermissionAccess::can('student.dashboard.view');
     }
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasRole('student') ?? false;
+        return PermissionAccess::can('student.dashboard.view');
     }
 
     public function getView(): string

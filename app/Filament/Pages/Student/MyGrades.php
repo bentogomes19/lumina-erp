@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Student;
 
 use App\Models\Grade;
 use App\Services\GradeCalculationService;
+use App\Support\PermissionAccess;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
@@ -19,12 +20,12 @@ class MyGrades extends Page
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->hasRole('student');
+        return PermissionAccess::can('student.grades.view');
     }
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasRole('student') ?? false;
+        return PermissionAccess::can('student.grades.view');
     }
 
     public function getView(): string
@@ -54,6 +55,7 @@ class MyGrades extends Page
                 ->label('Baixar Boletim (PDF)')
                 ->icon('fas-download')
                 ->color('success')
+                ->visible(fn () => PermissionAccess::can('student.report-card.download'))
                 ->action(fn() => $this->downloadReportCard()),
         ];
     }

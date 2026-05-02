@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\Grade;
 use App\Models\Student;
 use App\Models\TeacherAssignment;
+use App\Support\PermissionAccess;
 use Filament\Pages\Page;
 
 class MySubjects extends Page
@@ -18,12 +19,12 @@ class MySubjects extends Page
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasRole('student') ?? false;
+        return PermissionAccess::can('student.subjects.view');
     }
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasRole('student') ?? false;
+        return PermissionAccess::can('student.subjects.view');
     }
 
     public function getView(): string

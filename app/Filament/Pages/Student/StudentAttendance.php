@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Student;
 
 use App\Enums\AttendanceStatus;
 use App\Models\Attendance;
+use App\Support\PermissionAccess;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
@@ -26,12 +27,12 @@ class StudentAttendance extends Page implements HasTable
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasRole('student') ?? false;
+        return PermissionAccess::can('student.attendance.view');
     }
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasRole('student') ?? false;
+        return PermissionAccess::can('student.attendance.view');
     }
 
     public function getView(): string

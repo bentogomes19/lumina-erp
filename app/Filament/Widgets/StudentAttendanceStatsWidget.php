@@ -11,7 +11,7 @@ class StudentAttendanceStatsWidget extends BaseWidget
 {
     public static function canView(): bool
     {
-        return auth()->check() && auth()->user()->hasRole('student');
+        return \App\Support\PermissionAccess::can('student.attendance.view');
     }
 
     protected function getStats(): array

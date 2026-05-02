@@ -26,7 +26,7 @@ class TeacherAttendanceWidget extends TableWidget
 
     public static function canView(): bool
     {
-        return auth()->check() && auth()->user()->hasRole('teacher');
+        return \App\Support\PermissionAccess::can('teacher.attendance.create');
     }
 
     public function table(Table $table): Table

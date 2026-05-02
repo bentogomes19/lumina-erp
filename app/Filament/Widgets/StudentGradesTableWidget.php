@@ -20,7 +20,7 @@ class StudentGradesTableWidget extends Widget
 
     public static function canView(): bool
     {
-        return auth()->check() && auth()->user()->hasRole('student');
+        return \App\Support\PermissionAccess::can('student.grades.view');
     }
 
     public function getViewData(): array

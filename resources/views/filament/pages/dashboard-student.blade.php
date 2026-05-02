@@ -11,6 +11,10 @@
         $recentGrades        = $data['recentGrades'];
 
         $now = now();
+        $canViewGrades = \App\Support\PermissionAccess::can('student.grades.view');
+        $canViewAttendance = \App\Support\PermissionAccess::can('student.attendance.view');
+        $canViewSubjects = \App\Support\PermissionAccess::can('student.subjects.view');
+        $canViewCalendar = \App\Support\PermissionAccess::can('student.calendar.view');
 
         // Cor por percentual
         $freqColor  = fn($r) => $r >= 75 ? '#22c55e' : ($r >= 60 ? '#eab308' : '#ef4444');
@@ -103,35 +107,41 @@
 
                     {{-- Indicadores rápidos --}}
                     <div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap">
-                        <div style="text-align:center">
-                            <p style="font-size:0.6875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;color:var(--ms-text-muted);margin:0">Frequência</p>
-                            <p style="font-size:1.75rem;font-weight:800;color:{{ $freqC }};margin:0.125rem 0 0;line-height:1">
-                                {{ $freqRate > 0 ? number_format($freqRate, 1, ',', '') . '%' : '—' }}
-                            </p>
-                            @if($attendance['alert'] ?? false)
-                                <p style="font-size:0.5625rem;color:#ef4444;margin:0;font-weight:600">ABAIXO DO MÍNIMO</p>
-                            @endif
-                        </div>
-                        <div style="width:1px;height:3rem;background:var(--ms-bar-bg)"></div>
-                        <div style="text-align:center">
-                            <p style="font-size:0.6875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;color:var(--ms-text-muted);margin:0">Média Geral</p>
-                            <p style="font-size:1.75rem;font-weight:800;color:{{ $gradeC }};margin:0.125rem 0 0;line-height:1">
-                                {{ $gradeAvg !== null ? number_format($gradeAvg, 1, ',', '') : '—' }}
-                            </p>
-                            @if($grades['failed'] > 0)
-                                <p style="font-size:0.5625rem;color:#ef4444;margin:0;font-weight:600">{{ $grades['failed'] }} REPROVADA(S)</p>
-                            @elseif($grades['recovery'] > 0)
-                                <p style="font-size:0.5625rem;color:#eab308;margin:0;font-weight:600">{{ $grades['recovery'] }} EM RECUPERAÇÃO</p>
-                            @endif
-                        </div>
+                        @if($canViewAttendance)
+                            <div style="text-align:center">
+                                <p style="font-size:0.6875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;color:var(--ms-text-muted);margin:0">Frequência</p>
+                                <p style="font-size:1.75rem;font-weight:800;color:{{ $freqC }};margin:0.125rem 0 0;line-height:1">
+                                    {{ $freqRate > 0 ? number_format($freqRate, 1, ',', '') . '%' : '—' }}
+                                </p>
+                                @if($attendance['alert'] ?? false)
+                                    <p style="font-size:0.5625rem;color:#ef4444;margin:0;font-weight:600">ABAIXO DO MÍNIMO</p>
+                                @endif
+                            </div>
+                        @endif
+                        @if($canViewAttendance && $canViewGrades)
+                            <div style="width:1px;height:3rem;background:var(--ms-bar-bg)"></div>
+                        @endif
+                        @if($canViewGrades)
+                            <div style="text-align:center">
+                                <p style="font-size:0.6875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;color:var(--ms-text-muted);margin:0">Média Geral</p>
+                                <p style="font-size:1.75rem;font-weight:800;color:{{ $gradeC }};margin:0.125rem 0 0;line-height:1">
+                                    {{ $gradeAvg !== null ? number_format($gradeAvg, 1, ',', '') : '—' }}
+                                </p>
+                                @if($grades['failed'] > 0)
+                                    <p style="font-size:0.5625rem;color:#ef4444;margin:0;font-weight:600">{{ $grades['failed'] }} REPROVADA(S)</p>
+                                @elseif($grades['recovery'] > 0)
+                                    <p style="font-size:0.5625rem;color:#eab308;margin:0;font-weight:600">{{ $grades['recovery'] }} EM RECUPERAÇÃO</p>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
 
             {{-- ▸ Alertas críticos --}}
-            @if(($attendance['alert'] ?? false) || $grades['failed'] > 0)
+            @if(($canViewAttendance && ($attendance['alert'] ?? false)) || ($canViewGrades && $grades['failed'] > 0))
                 <div style="display:flex;flex-direction:column;gap:0.5rem">
-                    @if($attendance['alert'] ?? false)
+                    @if($canViewAttendance && ($attendance['alert'] ?? false))
                         <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-left:4px solid #ef4444;border-radius:0.75rem;padding:0.875rem 1.125rem;display:flex;align-items:center;gap:0.75rem">
                             @svg('fas-triangle-exclamation', '', ['style' => 'width:1.125rem;height:1.125rem;color:#ef4444;flex-shrink:0'])
                             <p style="font-size:0.875rem;color:var(--ms-text-primary);margin:0">
@@ -139,7 +149,7 @@
                             </p>
                         </div>
                     @endif
-                    @if($grades['failed'] > 0)
+                    @if($canViewGrades && $grades['failed'] > 0)
                         <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-left:4px solid #ef4444;border-radius:0.75rem;padding:0.875rem 1.125rem;display:flex;align-items:center;gap:0.75rem">
                             @svg('fas-circle-xmark', '', ['style' => 'width:1.125rem;height:1.125rem;color:#ef4444;flex-shrink:0'])
                             <p style="font-size:0.875rem;color:var(--ms-text-primary);margin:0">
@@ -154,20 +164,31 @@
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
                 @php
                     $summaryCards = [
+                    ];
+
+                    if ($canViewAttendance) {
+                        $summaryCards[] =
                         [
                             'icon'  => 'fas-circle-check',
                             'value' => $freqRate > 0 ? number_format($freqRate, 1, ',', '') . '%' : '—',
                             'label' => 'Frequência',
                             'color' => $freqC,
                             'sub'   => ($attendance['total'] ?? 0) . ' aulas registradas',
-                        ],
+                        ];
+                    }
+
+                    if ($canViewGrades) {
+                        $summaryCards[] =
                         [
                             'icon'  => 'fas-chart-bar',
                             'value' => $gradeAvg !== null ? number_format($gradeAvg, 1, ',', '') : '—',
                             'label' => 'Média Geral',
                             'color' => $gradeC,
                             'sub'   => ($grades['total'] ?? 0) . ' disciplinas',
-                        ],
+                        ];
+                    }
+
+                    $summaryCards = array_merge($summaryCards, [
                         [
                             'icon'  => 'fas-calendar-days',
                             'value' => $todayLessons->count(),
@@ -182,7 +203,7 @@
                             'color' => '#0f766e',
                             'sub'   => 'nos próximos 7 dias',
                         ],
-                    ];
+                    ]);
                 @endphp
                 @foreach($summaryCards as $sc)
                     <div class="ms-card" style="padding:1rem">
@@ -318,48 +339,50 @@
             {{-- ▸ Grade secundária: Últimas Notas + Atalhos --}}
             <div class="ms-two-col" style="display:grid;grid-template-columns:3fr 2fr;gap:1rem">
 
-                {{-- Últimas notas --}}
-                <div class="ms-card" style="padding:1.25rem">
-                    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
-                        @svg('fas-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#22c55e'])
-                        <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Últimas Notas Lançadas</h3>
-                        <a href="{{ url('/lumina/my-grades') }}" style="font-size:0.75rem;color:#f59e0b;margin-left:auto;text-decoration:none">Ver todas →</a>
-                    </div>
+                @if($canViewGrades)
+                    {{-- Últimas notas --}}
+                    <div class="ms-card" style="padding:1.25rem">
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
+                            @svg('fas-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#22c55e'])
+                            <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Últimas Notas Lançadas</h3>
+                            <a href="{{ url('/lumina/my-grades') }}" style="font-size:0.75rem;color:#f59e0b;margin-left:auto;text-decoration:none">Ver todas →</a>
+                        </div>
 
-                    @if($recentGrades->isEmpty())
-                        <div style="padding:1.5rem;text-align:center">
-                            <p style="font-size:0.875rem;color:var(--ms-text-secondary);margin:0">Nenhuma nota lançada ainda.</p>
-                        </div>
-                    @else
-                        <div style="display:flex;flex-direction:column;gap:0">
-                            @foreach($recentGrades as $grade)
-                                @php
-                                    $gc = $grade->score >= 6.0 ? '#22c55e' : ($grade->score >= 4.0 ? '#eab308' : '#ef4444');
-                                    $typeLabel = $assessmentTypeLabels[$grade->assessment_type?->value ?? ''] ?? 'Avaliação';
-                                @endphp
-                                <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid var(--ms-bar-bg)">
-                                    <div style="width:2.25rem;height:2.25rem;border-radius:50%;background:{{ $gc }}1a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                        <span style="font-size:0.8125rem;font-weight:700;color:{{ $gc }}">{{ number_format($grade->score, 1, ',', '') }}</span>
+                        @if($recentGrades->isEmpty())
+                            <div style="padding:1.5rem;text-align:center">
+                                <p style="font-size:0.875rem;color:var(--ms-text-secondary);margin:0">Nenhuma nota lançada ainda.</p>
+                            </div>
+                        @else
+                            <div style="display:flex;flex-direction:column;gap:0">
+                                @foreach($recentGrades as $grade)
+                                    @php
+                                        $gc = $grade->score >= 6.0 ? '#22c55e' : ($grade->score >= 4.0 ? '#eab308' : '#ef4444');
+                                        $typeLabel = $assessmentTypeLabels[$grade->assessment_type?->value ?? ''] ?? 'Avaliação';
+                                    @endphp
+                                    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid var(--ms-bar-bg)">
+                                        <div style="width:2.25rem;height:2.25rem;border-radius:50%;background:{{ $gc }}1a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                            <span style="font-size:0.8125rem;font-weight:700;color:{{ $gc }}">{{ number_format($grade->score, 1, ',', '') }}</span>
+                                        </div>
+                                        <div style="flex:1;min-width:0">
+                                            <p style="font-size:0.875rem;font-weight:600;color:var(--ms-text-primary);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                                                {{ $grade->subject?->name ?? '—' }}
+                                            </p>
+                                            <p style="font-size:0.6875rem;color:var(--ms-text-muted);margin:0">
+                                                {{ $typeLabel }}
+                                                @if($grade->date_recorded)
+                                                    · {{ \Carbon\Carbon::parse($grade->date_recorded)->format('d/m/Y') }}
+                                                @endif
+                                            </p>
+                                        </div>
+                                        <div style="text-align:right;flex-shrink:0">
+                                            <span style="font-size:0.75rem;color:var(--ms-text-muted)">/{{ number_format($grade->max_score ?? 10, 0) }}</span>
+                                        </div>
                                     </div>
-                                    <div style="flex:1;min-width:0">
-                                        <p style="font-size:0.875rem;font-weight:600;color:var(--ms-text-primary);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                                            {{ $grade->subject?->name ?? '—' }}
-                                        </p>
-                                        <p style="font-size:0.6875rem;color:var(--ms-text-muted);margin:0">
-                                            {{ $typeLabel }}
-                                            @if($grade->date_recorded)
-                                                · {{ \Carbon\Carbon::parse($grade->date_recorded)->format('d/m/Y') }}
-                                            @endif
-                                        </p>
-                                    </div>
-                                    <div style="text-align:right;flex-shrink:0">
-                                        <span style="font-size:0.75rem;color:var(--ms-text-muted)">/{{ number_format($grade->max_score ?? 10, 0) }}</span>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endif
 
                 {{-- Atalhos rápidos --}}
                 <div class="ms-card" style="padding:1.25rem">
@@ -371,15 +394,31 @@
                     <div style="display:flex;flex-direction:column;gap:0.5rem">
                         @php
                             $shortcuts = [
+                            ];
+
+                            if ($canViewGrades) {
+                                $shortcuts[] =
                                 ['href' => '/lumina/my-grades',         'icon' => 'fas-chart-bar',        'label' => 'Minhas Notas',       'color' => '#22c55e',
                                  'badge' => $grades['failed'] > 0 ? $grades['failed'] : ($grades['recovery'] > 0 ? $grades['recovery'] : null),
-                                 'badgeColor' => $grades['failed'] > 0 ? '#ef4444' : '#eab308'],
-                                ['href' => '/lumina/my-subjects',       'icon' => 'fas-book-open',        'label' => 'Minhas Disciplinas', 'color' => '#06b6d4', 'badge' => null],
+                                 'badgeColor' => $grades['failed'] > 0 ? '#ef4444' : '#eab308'];
+                            }
+
+                            if ($canViewSubjects) {
+                                $shortcuts[] =
+                                ['href' => '/lumina/my-subjects',       'icon' => 'fas-book-open',        'label' => 'Minhas Disciplinas', 'color' => '#06b6d4', 'badge' => null];
+                            }
+
+                            if ($canViewAttendance) {
+                                $shortcuts[] =
                                 ['href' => '/lumina/student-attendance','icon' => 'fas-calendar-days',   'label' => 'Frequência',         'color' => '#f59e0b',
                                  'badge' => ($attendance['alert'] ?? false) ? '!' : null,
-                                 'badgeColor' => '#ef4444'],
-                                ['href' => '/lumina/academic-calendar', 'icon' => 'fas-calendar',         'label' => 'Calendário Escolar', 'color' => '#0f766e', 'badge' => null],
-                            ];
+                                 'badgeColor' => '#ef4444'];
+                            }
+
+                            if ($canViewCalendar) {
+                                $shortcuts[] =
+                                ['href' => '/lumina/academic-calendar', 'icon' => 'fas-calendar',         'label' => 'Calendário Escolar', 'color' => '#0f766e', 'badge' => null];
+                            }
                         @endphp
                         @foreach($shortcuts as $sh)
                             <a href="{{ url($sh['href']) }}" class="ms-shortcut">

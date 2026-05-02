@@ -12,7 +12,7 @@ class TeacherStats extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->hasRole('teacher') ?? false;
+        return \App\Support\PermissionAccess::can('teacher.dashboard.view');
     }
 
     protected function getStats(): array
