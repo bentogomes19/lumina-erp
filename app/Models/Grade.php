@@ -13,6 +13,7 @@ class Grade extends BaseModel
      * @var array<int, string>
      */
     protected $fillable = [
+        'assessment_id',
         'enrollment_id',
         'student_id',
         'class_id',
@@ -50,6 +51,14 @@ class Grade extends BaseModel
     public function schoolClass()
     {
         return $this->belongsTo(SchoolClass::class, 'class_id');
+    }
+
+    /**
+     * Retorna a avaliação vinculada à nota.
+     */
+    public function assessment()
+    {
+        return $this->belongsTo(Assessment::class);
     }
 
     /**

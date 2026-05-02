@@ -27,6 +27,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class TeacherAssessments extends Page implements HasTable
@@ -325,6 +326,9 @@ class TeacherAssessments extends Page implements HasTable
             'title' => trim((string) ($data['title'] ?? '')),
             'description' => $data['description'] ?? null,
             'assessment_type' => $data['assessment_type'] ?? 'outro',
+            'date' => isset($data['scheduled_at'])
+                ? Carbon::parse($data['scheduled_at'])->toDateString()
+                : null,
             'scheduled_at' => $data['scheduled_at'] ?? null,
             'max_score' => $maxScore,
             'weight' => (float) ($data['weight'] ?? 1),

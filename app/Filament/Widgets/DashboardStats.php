@@ -2,14 +2,12 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Resources\Grades\GradeResource;
 use App\Filament\Resources\SchoolClasses\SchoolClassResource;
 use App\Filament\Resources\Students\StudentResource;
 use App\Filament\Resources\Subjects\SubjectResource;
 use App\Filament\Resources\Teachers\TeacherResource;
 use App\Filament\Resources\Enrollments\EnrollmentResource;
 use App\Filament\Resources\Users\UserResource;
-use App\Models\Grade;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\Subject;
@@ -46,12 +44,6 @@ class DashboardStats extends StatsOverviewWidget
                 ->icon('fas-book-open')
                 ->color('primary')
                 ->url(SubjectResource::getUrl('index')),
-
-            Stat::make('Notas Lançadas', Grade::count())
-                ->description('Registros de avaliações')
-                ->icon('fas-pen-to-square')
-                ->color('gray')
-                ->url(GradeResource::getUrl('index')),
 
             Stat::make('Total de Usuários', User::count())
                 ->description('Usuários cadastrados')
