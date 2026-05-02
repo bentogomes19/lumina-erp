@@ -8,6 +8,7 @@ use App\Models\Lesson;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\TeacherAssignment;
+use App\Support\PermissionAccess;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
 
@@ -22,7 +23,7 @@ class SubjectDetail extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasRole('student') ?? false;
+        return PermissionAccess::can('student.subjects.view');
     }
 
     public function getView(): string

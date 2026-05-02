@@ -26,8 +26,12 @@ RUN apt-get update && apt-get install -y \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Node.js 22 (Vite 7 exige Node >=20.19 ou >=22.12)
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs
+ARG NODE_MAJOR=22
+RUN curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - \
+    && apt-get install -y nodejs \
+    && node -e "const [major, minor] = process.versions.node.split('.').map(Number); if (major < 22 || (major === 22 && minor < 12)) { throw new Error('Node.js >= 22.12 is required for Vite 7'); }" \
+    && npm --version \
+    && rm -rf /var/lib/apt/lists/*
 
 # Criar usuário dev
 RUN useradd -ms /bin/zsh dev

@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\Teacher;
 
 use App\Filament\Widgets\TeacherAttendanceWidget;
+use App\Support\PermissionAccess;
 use Filament\Pages\Page;
 
 class TeacherAttendance extends Page
@@ -14,7 +15,12 @@ class TeacherAttendance extends Page
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->hasRole('teacher');
+        return PermissionAccess::can('teacher.attendance.create');
+    }
+
+    public static function canAccess(): bool
+    {
+        return PermissionAccess::can('teacher.attendance.create');
     }
 
     protected function getHeaderWidgets(): array

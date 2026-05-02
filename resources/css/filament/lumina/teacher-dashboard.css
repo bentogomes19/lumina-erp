@@ -1,0 +1,303 @@
+.teacher-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.teacher-dashboard-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    overflow: hidden;
+}
+
+.teacher-dashboard-accent {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 4px;
+    background: linear-gradient(90deg, #f59e0b, #0f766e);
+}
+
+.teacher-dashboard-identity {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.teacher-dashboard-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    color: #fff;
+    background: linear-gradient(135deg, #f59e0b, #b45309);
+    border-radius: 999px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    box-shadow: 0 0 0 4px var(--lumina-primary-soft);
+    flex-shrink: 0;
+}
+
+.teacher-dashboard-identity h2 {
+    color: var(--ms-text-primary);
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.teacher-dashboard-identity p {
+    color: var(--ms-text-secondary);
+    font-size: 0.8125rem;
+    margin: 0.25rem 0 0;
+}
+
+.teacher-dashboard-hero-metrics {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.teacher-dashboard-hero-metrics div {
+    min-width: 6rem;
+    padding: 0.75rem 1rem;
+    background: var(--ms-cell-bg);
+    border: 1px solid var(--ms-card-border);
+    border-radius: 0.625rem;
+    text-align: center;
+}
+
+.teacher-dashboard-hero-metrics span {
+    display: block;
+    color: var(--lumina-primary);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.teacher-dashboard-hero-metrics small {
+    color: var(--ms-text-secondary);
+    font-size: 0.6875rem;
+}
+
+.teacher-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.teacher-dashboard-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 1rem;
+}
+
+.teacher-dashboard-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: var(--teacher-card-color);
+    background: color-mix(in srgb, var(--teacher-card-color) 14%, transparent);
+    border-radius: 0.625rem;
+    flex-shrink: 0;
+}
+
+.teacher-dashboard-card-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.teacher-dashboard-card strong,
+.teacher-dashboard-card span,
+.teacher-dashboard-card small {
+    display: block;
+}
+
+.teacher-dashboard-card strong {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.teacher-dashboard-card span {
+    color: var(--ms-text-primary);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    margin-top: 0.125rem;
+}
+
+.teacher-dashboard-card small {
+    color: var(--ms-text-muted);
+    font-size: 0.6875rem;
+    margin-top: 0.125rem;
+}
+
+.teacher-dashboard-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.teacher-dashboard-panel {
+    padding: 1.25rem;
+}
+
+.teacher-dashboard-panel header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.teacher-dashboard-panel header svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--lumina-primary);
+}
+
+.teacher-dashboard-panel h3 {
+    color: var(--ms-text-primary);
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.teacher-dashboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.teacher-dashboard-list-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--ms-bar-bg);
+}
+
+.teacher-dashboard-list-item:last-child {
+    border-bottom: 0;
+}
+
+.teacher-dashboard-date {
+    min-width: 3rem;
+    padding: 0.375rem 0.5rem;
+    background: var(--lumina-primary-soft);
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.teacher-dashboard-date strong,
+.teacher-dashboard-date span {
+    display: block;
+}
+
+.teacher-dashboard-date strong {
+    color: var(--lumina-primary);
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.teacher-dashboard-date span {
+    color: var(--ms-text-secondary);
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.teacher-dashboard-list-item > div:last-child {
+    min-width: 0;
+}
+
+.teacher-dashboard-list-item > div:last-child strong {
+    display: block;
+    color: var(--ms-text-primary);
+    font-size: 0.875rem;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.teacher-dashboard-list-item > div:last-child span,
+.teacher-dashboard-panel-empty,
+.teacher-dashboard-empty p {
+    color: var(--ms-text-secondary);
+    font-size: 0.8125rem;
+}
+
+.teacher-dashboard-panel-empty {
+    padding: 1.5rem;
+    background: var(--ms-cell-bg);
+    border-radius: 0.625rem;
+    text-align: center;
+}
+
+.teacher-dashboard-empty {
+    padding: 3rem;
+    text-align: center;
+}
+
+.teacher-dashboard-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+    color: var(--lumina-primary);
+    background: var(--lumina-primary-soft);
+    border-radius: 999px;
+}
+
+.teacher-dashboard-empty-icon svg {
+    width: 2rem;
+    height: 2rem;
+}
+
+.teacher-dashboard-empty h3 {
+    color: var(--ms-text-primary);
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+}
+
+.teacher-dashboard-empty p {
+    margin: 0;
+}
+
+@media (max-width: 1024px) {
+    .teacher-dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .teacher-dashboard-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .teacher-dashboard-hero {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .teacher-dashboard-hero-metrics,
+    .teacher-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .teacher-dashboard-hero-metrics {
+        display: grid;
+    }
+}

@@ -48,9 +48,16 @@ class RolesPermissionsSeeder extends Seeder
             Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
         }
 
+        $matrixPermissions = collect(config('lumina-permissions', []));
+        $matrixPermissionNames = $matrixPermissions->pluck('name')->all();
+
+        foreach ($matrixPermissionNames as $p) {
+            Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
+        }
+
         // ── TI: acesso total a todos os módulos ──────────────────────────────────
         $ti = Role::firstOrCreate(['name' => 'ti', 'guard_name' => 'web']);
-        $ti->syncPermissions(Permission::whereIn('name', $allAdminPerms)->get());
+        $ti->syncPermissions(Permission::whereIn('name', array_merge($allAdminPerms, $matrixPermissionNames))->get());
 
         // ── Secretaria: total na maioria, sem Perfis de Acesso, leitura em Usuários
         $secretariaPerms = [];
@@ -66,7 +73,11 @@ class RolesPermissionsSeeder extends Seeder
             }
         }
         $secretaria = Role::firstOrCreate(['name' => 'secretaria', 'guard_name' => 'web']);
-        $secretaria->syncPermissions(Permission::whereIn('name', $secretariaPerms)->get());
+        $secretariaMatrixPerms = $matrixPermissions
+            ->whereIn('module', ['Secretaria Acadêmica', 'Professores - Administrativo', 'Relatórios'])
+            ->pluck('name')
+            ->all();
+        $secretaria->syncPermissions(Permission::whereIn('name', array_merge($secretariaPerms, $secretariaMatrixPerms))->get());
 
         // ── Financeiro: total em Matrículas, leitura em Ano Letivo/Turmas/Alunos ─
         $financeiroPerms = [];
@@ -80,11 +91,15 @@ class RolesPermissionsSeeder extends Seeder
             }
         }
         $financeiro = Role::firstOrCreate(['name' => 'financeiro', 'guard_name' => 'web']);
-        $financeiro->syncPermissions(Permission::whereIn('name', $financeiroPerms)->get());
+        $financeiroMatrixPerms = $matrixPermissions
+            ->where('module', 'Financeiro')
+            ->pluck('name')
+            ->all();
+        $financeiro->syncPermissions(Permission::whereIn('name', array_merge($financeiroPerms, $financeiroMatrixPerms))->get());
 
         // ── admin: alias de TI (mantido para compatibilidade com seeders existentes)
         $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $admin->syncPermissions(Permission::whereIn('name', $allAdminPerms)->get());
+        $admin->syncPermissions(Permission::whereIn('name', array_merge($allAdminPerms, $matrixPermissionNames))->get());
 
         // ── teacher ──────────────────────────────────────────────────────────────
         $teacherPerms = [
@@ -93,10 +108,18 @@ class RolesPermissionsSeeder extends Seeder
             'attendance.mark.own', 'classes.view.own', 'subjects.view.own',
         ];
         $teacher = Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
-        $teacher->syncPermissions(Permission::whereIn('name', $teacherPerms)->get());
+        $teacherMatrixPerms = $matrixPermissions
+            ->where('module', 'Portal do Professor')
+            ->pluck('name')
+            ->all();
+        $teacher->syncPermissions(Permission::whereIn('name', array_merge($teacherPerms, $teacherMatrixPerms))->get());
 
         // ── student ──────────────────────────────────────────────────────────────
         $student = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
-        $student->syncPermissions(Permission::whereIn('name', ['grades.view.self', 'subjects.view.self'])->get());
+        $studentMatrixPerms = $matrixPermissions
+            ->where('module', 'Portal do Aluno')
+            ->pluck('name')
+            ->all();
+        $student->syncPermissions(Permission::whereIn('name', array_merge(['grades.view.self', 'subjects.view.self'], $studentMatrixPerms))->get());
     }
 }

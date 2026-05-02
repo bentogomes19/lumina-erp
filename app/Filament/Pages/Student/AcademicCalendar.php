@@ -7,6 +7,7 @@ use App\Models\Assessment;
 use App\Models\SchoolHoliday;
 use App\Models\Subject;
 use App\Models\TeacherAssignment;
+use App\Support\PermissionAccess;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -32,12 +33,12 @@ class AcademicCalendar extends Page
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasRole('student') ?? false;
+        return PermissionAccess::can('student.calendar.view');
     }
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasRole('student') ?? false;
+        return PermissionAccess::can('student.calendar.view');
     }
 
     public function getView(): string

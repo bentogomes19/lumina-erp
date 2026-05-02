@@ -12,6 +12,11 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class StudentProfileWidget extends StatsOverviewWidget
 {
+    public static function canView(): bool
+    {
+        return \App\Support\PermissionAccess::can('student.profile.view');
+    }
+
     protected function getStats(): array
     {
         $user = auth()->user();

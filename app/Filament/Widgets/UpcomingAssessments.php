@@ -14,7 +14,7 @@ class UpcomingAssessments extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->hasRole('student') ?? false;
+        return \App\Support\PermissionAccess::can('student.assessments.view');
     }
 
     public function table(Table $table): Table
