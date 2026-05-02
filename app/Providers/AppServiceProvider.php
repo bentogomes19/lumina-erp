@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Models\Permission;
 use App\Models\Role;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,12 @@ class AppServiceProvider extends ServiceProvider
             ->setPermissionClass(Permission::class)
             ->setRoleClass(Role::class);
 
-        //
+        Event::listen(Login::class, function (Login $event): void {
+            $user = $event->user;
+
+            if (method_exists($user, 'registerSuccessfulLogin')) {
+                $user->registerSuccessfulLogin();
+            }
+        });
     }
 }
