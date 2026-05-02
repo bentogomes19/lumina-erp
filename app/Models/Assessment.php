@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Assessment extends BaseModel
@@ -12,11 +13,17 @@ class Assessment extends BaseModel
      * @var array<int, string>
      */
     protected $fillable = [
+        'teacher_id',
         'class_id',
         'subject_id',
+        'school_year_id',
         'title',
+        'description',
+        'assessment_type',
         'scheduled_at',
+        'max_score',
         'weight',
+        'status',
     ];
 
     /**
@@ -26,6 +33,8 @@ class Assessment extends BaseModel
      */
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'max_score'    => 'decimal:2',
+        'weight'       => 'decimal:2',
     ];
 
     /**
@@ -49,6 +58,14 @@ class Assessment extends BaseModel
     }
 
     /**
+     * Retorna o ano letivo da avaliação.
+     */
+    public function schoolYear(): BelongsTo
+    {
+        return $this->belongsTo(SchoolYear::class);
+    }
+
+    /**
      * Retorna o professor responsável pela avaliação.
      *
      * @return BelongsTo
@@ -56,5 +73,21 @@ class Assessment extends BaseModel
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);
+    }
+
+    /**
+     * Indica se a avaliação está fechada.
+     */
+    public function isClosed(): bool
+    {
+        return $this->status === 'closed';
+    }
+
+    /**
+     * Limita a consulta ao professor informado.
+     */
+    public function scopeForTeacher(Builder $query, int $teacherId): Builder
+    {
+        return $query->where('teacher_id', $teacherId);
     }
 }

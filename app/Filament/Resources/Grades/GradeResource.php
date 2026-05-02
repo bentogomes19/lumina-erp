@@ -17,7 +17,6 @@ use Filament\Tables\Table;
 class GradeResource extends BaseAdminResource
 {
     protected static ?string $model = Grade::class;
-    protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
     protected static string|null|BackedEnum $navigationIcon = 'fas-chart-bar';
     protected static ?int $navigationSort = 4;
     protected static ?string $navigationLabel = 'Notas';

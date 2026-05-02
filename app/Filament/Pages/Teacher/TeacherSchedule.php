@@ -17,7 +17,6 @@ class TeacherSchedule extends Page
     protected static ?string $title = 'Agenda de Aulas';
     protected static ?string $slug = 'teacher-schedule';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-calendar-days';
-    protected static string|null|\UnitEnum $navigationGroup = 'Portal do Professor';
     protected static ?int $navigationSort = 3;
     protected static ?string $teacherPortalPermission = 'teacher.schedule.view';
 

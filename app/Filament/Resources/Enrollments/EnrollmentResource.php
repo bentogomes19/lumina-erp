@@ -18,7 +18,6 @@ use Filament\Tables\Table;
 class EnrollmentResource extends BaseAdminResource
 {
     protected static ?string $model = Enrollment::class;
-    protected static string|null|\UnitEnum $navigationGroup = 'Acadêmico';
     protected static string|null|BackedEnum $navigationIcon = 'fas-layer-group';
     protected static ?int $navigationSort = 5;
     protected static ?string $navigationLabel = 'Matrículas';
