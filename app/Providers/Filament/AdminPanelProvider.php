@@ -2,12 +2,8 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\DashboardAdmin;
-use App\Filament\Resources\Shield\RoleResource;
+use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RedirectUserByRole;
-use BezhanSalleh\FilamentShield\Middleware\SyncShieldTenant;
-use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
-use CraftForge\FilamentLanguageSwitcher\FilamentLanguageSwitcherPlugin;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -22,26 +18,29 @@ use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Vite;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Illuminate\Foundation\Vite;
 
-class AdminPanelProvider extends PanelProvider
-{
-    public function panel(Panel $panel): Panel
-    {
+class AdminPanelProvider extends PanelProvider {
+
+    /**
+     * Configura o painel administrativo do Lumina com autenticação, tema, ativos e middleware.
+     *
+     * @param Panel $panel
+     *
+     * @return Panel
+     * @throws \Exception
+     */
+    public function panel(Panel $panel): Panel {
         return $panel
             ->default()
             ->id('lumina')
             ->path('lumina')
             ->brandName('Portal Lumina')
             ->login()
-            ->font(
-                'Inter Variable',
-                url: asset('fonts/filament/filament/inter/index.css'),
-                provider: LocalFontProvider::class,
-            )
+            ->font('Inter Variable', url: asset('fonts/filament/filament/inter/index.css'), provider: LocalFontProvider::class,)
             ->viteTheme('resources/css/filament/lumina/theme.css')
             ->assets([
                 Js::make('student-animations')->html(app(Vite::class)(
@@ -71,6 +70,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([])
             ->authMiddleware([
+                EnsureUserIsActive::class,
                 Authenticate::class,
                 RedirectUserByRole::class,
             ]);

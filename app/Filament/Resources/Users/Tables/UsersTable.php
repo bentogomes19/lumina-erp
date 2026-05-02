@@ -23,17 +23,15 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-class UsersTable
-{
-    public static function configure(Table $table): Table
-    {
+class UsersTable {
+    public static function configure(Table $table): Table {
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
                 ImageColumn::make('avatar')
                     ->label('')
                     ->circular()
-                    ->defaultImageUrl(fn ($record) => "https://ui-avatars.com/api/?name=" . urlencode($record->name) . "&background=random")
+                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name='.urlencode($record->name).'&background=random')
                     ->size(36),
 
                 TextColumn::make('name')
@@ -83,7 +81,7 @@ class UsersTable
                     ->falseColor('success')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                // Status: mostra bloqueado com prioridade sobre ativo/inativo
+                /* Status: mostra bloqueado com prioridade sobre ativo/inativo */
                 TextColumn::make('status_display')
                     ->label('Status')
                     ->badge()
@@ -91,13 +89,14 @@ class UsersTable
                         if ($record->locked_at) {
                             return 'Bloqueado';
                         }
+
                         return $record->active ? 'Ativo' : 'Inativo';
                     })
                     ->color(fn (string $state): string => match ($state) {
-                        'Ativo'      => 'success',
-                        'Inativo'    => 'gray',
-                        'Bloqueado'  => 'danger',
-                        default      => 'gray',
+                        'Ativo'     => 'success',
+                        'Inativo'   => 'gray',
+                        'Bloqueado' => 'danger',
+                        default     => 'gray',
                     }),
 
                 TextColumn::make('created_at')
@@ -111,9 +110,7 @@ class UsersTable
                 SelectFilter::make('role')
                     ->label('Perfil')
                     ->options(UserForm::ROLE_LABELS)
-                    ->query(fn ($query, $data) => $data['value']
-                        ? $query->whereHas('roles', fn ($q) => $q->where('name', $data['value']))
-                        : $query
+                    ->query(fn ($query, $data) => $data['value'] ? $query->whereHas('roles', fn ($q) => $q->where('name', $data['value'])) : $query
                     ),
 
                 TernaryFilter::make('active')
@@ -138,16 +135,16 @@ class UsersTable
                         DatePicker::make('from')->label('De'),
                         DatePicker::make('until')->label('Até'),
                     ])
-                    ->query(fn ($query, $data) => $query
-                        ->when($data['from'],  fn ($q) => $q->whereDate('created_at', '>=', $data['from']))
-                        ->when($data['until'], fn ($q) => $q->whereDate('created_at', '<=', $data['until']))
+                    ->query(fn($query, $data) => $query
+                        ->when($data['from'], fn($q)  => $q->whereDate('created_at', '>=', $data['from']))
+                        ->when($data['until'], fn($q) => $q->whereDate('created_at', '<=', $data['until']))
                     ),
 
                 TrashedFilter::make(),
             ])
 
             ->recordActions([
-                // Ação: Resetar Senha (gera senha temporária + force_password_change)
+                /* Ação: Resetar Senha (gera senha temporária + force_password_change) */
                 Action::make('reset_password')
                     ->label('Resetar Senha')
                     ->icon('fas-key')
@@ -155,7 +152,7 @@ class UsersTable
                     ->requiresConfirmation()
                     ->modalHeading('Resetar senha do usuário')
                     ->modalDescription('Uma senha temporária será gerada e o usuário será obrigado a trocá-la no próximo acesso.')
-                    ->action(function (User $record) {
+                    ->action(function(User $record) {
                         $tempPassword = $record->resetToTemporaryPassword();
 
                         Notification::make()
@@ -167,7 +164,7 @@ class UsersTable
                     })
                     ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
 
-                // Ação: Desbloquear (somente TI/admin)
+                /* Ação: Desbloquear (somente TI/admin) */
                 Action::make('unlock')
                     ->label('Desbloquear')
                     ->icon('fas-lock-open')
@@ -175,18 +172,17 @@ class UsersTable
                     ->requiresConfirmation()
                     ->modalHeading('Desbloquear usuário')
                     ->modalDescription('O contador de tentativas será zerado e o bloqueio removido.')
-                    ->action(function (User $record) {
+                    ->action(function(User $record) {
                         $record->unlock();
                         Notification::make()
                             ->title('Usuário desbloqueado')
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (User $record) =>
-                        $record->locked_at && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                    ->visible(fn (User $record) => $record->locked_at && auth()->user()?->hasAnyRole(['admin', 'ti'])
                     ),
 
-                // Ação: Inativar com motivo
+                /* Ação: Inativar com motivo */
                 Action::make('inactivate')
                     ->label('Inativar')
                     ->icon('fas-circle-xmark')
@@ -199,20 +195,17 @@ class UsersTable
                             ->placeholder('Ex.: Solicitação do usuário, encerramento de contrato...'),
                     ])
                     ->action(function (User $record, array $data) {
-                        $record->updateQuietly([
-                            'active'          => false,
-                            'inactive_reason' => $data['inactive_reason'],
-                        ]);
+                        $record->inactivate($data['inactive_reason']);
+
                         Notification::make()
                             ->title('Usuário inativado')
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (User $record) =>
-                        $record->active && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                    ->visible(fn (User $record) => $record->active && auth()->user()?->hasAnyRole(['admin', 'ti'])
                     ),
 
-                // Ação: Reativar (somente TI/admin)
+                /* Ação: Reativar (somente TI/admin) */
                 Action::make('activate')
                     ->label('Reativar')
                     ->icon('fas-circle-check')
@@ -220,20 +213,15 @@ class UsersTable
                     ->requiresConfirmation()
                     ->modalHeading('Reativar usuário')
                     ->modalDescription('O usuário voltará a ter acesso ao sistema.')
-                    ->action(function (User $record) {
-                        $record->updateQuietly([
-                            'active'          => true,
-                            'inactive_reason' => null,
-                            'locked_at'       => null,
-                            'login_attempts'  => 0,
-                        ]);
+                    ->action(function(User $record) {
+                        $record->activate();
+
                         Notification::make()
                             ->title('Usuário reativado')
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (User $record) =>
-                        ! $record->active && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                    ->visible(fn(User $record) => !$record->active && auth()->user()?->hasAnyRole(['admin', 'ti'])
                     ),
 
                 EditAction::make()->label('Editar'),
@@ -252,33 +240,31 @@ class UsersTable
                                 ->required()
                                 ->rows(2),
                         ])
-                        ->action(fn ($records, array $data) => $records->each->updateQuietly([
-                            'active'          => false,
-                            'inactive_reason' => $data['inactive_reason'],
-                        ]))
+                        ->action(fn($records, array $data) => $records->each(
+                            fn(User $record) => $record->inactivate($data['inactive_reason'])
+                        ))
                         ->deselectRecordsAfterCompletion()
-                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn() => auth()->user()?->hasAnyRole(['admin', 'ti'])),
 
                     BulkAction::make('bulk_activate')
                         ->label('Reativar selecionados')
                         ->icon('fas-circle-check')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->action(fn ($records) => $records->each->updateQuietly([
-                            'active'          => true,
-                            'inactive_reason' => null,
-                        ]))
+                        ->action(fn($records) => $records->each(
+                            fn(User $record) => $record->activate()
+                        ))
                         ->deselectRecordsAfterCompletion()
-                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn() => auth()->user()?->hasAnyRole(['admin', 'ti'])),
 
                     DeleteBulkAction::make()
-                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn() => auth()->user()?->hasAnyRole(['admin', 'ti'])),
 
                     ForceDeleteBulkAction::make()
-                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn() => auth()->user()?->hasAnyRole(['admin', 'ti'])),
 
                     RestoreBulkAction::make()
-                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn() => auth()->user()?->hasAnyRole(['admin', 'ti'])),
                 ]),
             ]);
     }
