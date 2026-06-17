@@ -17,7 +17,7 @@ services:
     image: nginx:alpine
     container_name: lumina-nginx
     ports:
-      - "${APP_PORT:-8000}:80"
+      - "${APP_PORT:-80}:80"
     volumes:
       - .:/dev/lumina-erp:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro

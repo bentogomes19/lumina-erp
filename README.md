@@ -17,7 +17,15 @@ cd lumina-erp
 make bootstrap
 ```
 
-Depois abra **http://localhost:8000** no browser.
+Depois abra **http://lumina/** no browser.
+
+Para abrir pelo nome local `lumina/` no Windows, adicione esta linha no arquivo `C:\Windows\System32\drivers\etc\hosts` executando o editor como administrador:
+
+```text
+127.0.0.1 lumina
+```
+
+O nginx publica a porta HTTP padrão `80`, então não é necessário informar `:8000` na URL.
 
 O `make bootstrap` cria o `.env` (se não existir), sobe os containers (app, nginx, MySQL), instala dependências e roda as migrations com seeders.
 

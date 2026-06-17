@@ -66,6 +66,21 @@ Se preferir HTTPS e não querer digitar senha a cada push:
 - **Git**
 - **Make** (opcional; no Windows pode usar os comandos equivalentes em PowerShell ou o script abaixo)
 
+
+### Host local no Windows
+
+Para acessar a aplicação digitando **http://lumina/** no navegador, adicione o host local do projeto no Windows:
+
+1. Abra o Bloco de Notas, VS Code ou outro editor como administrador.
+2. Edite o arquivo `C:\Windows\System32\drivers\etc\hosts`.
+3. Adicione a linha:
+
+```text
+127.0.0.1 lumina
+```
+
+O nginx do projeto publica a porta HTTP padrão `80`, então não é necessário informar `:8000` na URL.
+
 ---
 
 ## 3. Do clone ao primeiro refresh no browser
@@ -87,7 +102,7 @@ O `make bootstrap`:
 3. Espera o banco ficar saudável
 4. Roda `composer install`, `php artisan key:generate`, `migrate --seed`
 
-Depois, abra no browser: **http://localhost:8000** (ou a porta em `APP_PORT` no `.env`).
+Depois, abra no browser: **http://lumina/**.
 
 ### Sem Make (PowerShell / Bash)
 
@@ -109,7 +124,7 @@ sleep 25
 docker exec lumina-app sh -c "composer install && php artisan key:generate && php artisan migrate --seed"
 ```
 
-Em seguida: **http://localhost:8000**.
+Em seguida: **http://lumina/**.
 
 ---
 
@@ -137,6 +152,6 @@ Em seguida: **http://localhost:8000**.
 1. **Autenticação (uma vez):** SSH ou `gh auth login`.
 2. **Clone:** `git clone ...` (de preferência via SSH).
 3. **Subir e instalar:** `make bootstrap`.
-4. **Abrir:** http://localhost:8000.
+4. **Abrir:** http://lumina/.
 
 Isso reduz o tempo entre “clonagem” e “primeiro refresh no browser” ao mínimo possível, com um único comando após o clone.

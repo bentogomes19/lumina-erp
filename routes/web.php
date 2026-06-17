@@ -3,6 +3,8 @@
 use App\Http\Controllers\Pdf\EnrollmentPdfController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', fn () => redirect()->route('filament.lumina.auth.login'));
+
 Route::get('/login', fn () => redirect()->route('filament.lumina.auth.login'))
     ->name('login');
 

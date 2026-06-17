@@ -42,7 +42,7 @@ bootstrap:
 	@echo "Aguardando containers..."
 	@sleep 10
 	docker exec $(APP_CONTAINER) sh -c "composer install && npm ci && npm run build && php artisan key:generate && php artisan migrate --seed"
-	@echo "Pronto. Abra http://localhost:8000 no browser."
+	@echo "Pronto. Abra http://lumina/ no browser."
 
 build:
 	docker compose build --no-cache
