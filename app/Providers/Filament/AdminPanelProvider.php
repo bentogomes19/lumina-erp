@@ -18,7 +18,6 @@ use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
-use Illuminate\Foundation\Vite;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
@@ -43,9 +42,10 @@ class AdminPanelProvider extends PanelProvider {
             ->font('Inter Variable', url: asset('fonts/filament/filament/inter/index.css'), provider: LocalFontProvider::class,)
             ->viteTheme('resources/css/filament/lumina/theme.css')
             ->assets([
-                Js::make('student-animations')->html(app(Vite::class)(
-                    'resources/js/filament/student-animations.js',
-                )),
+                Js::make(
+                    'student-animations',
+                    resource_path('js/filament/student-animations.js'),
+                ),
             ])
             ->colors([
                 'primary' => Color::Amber,

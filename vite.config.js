@@ -9,7 +9,6 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/css/filament/lumina/theme.css',
                 'resources/js/app.js',
-                'resources/js/filament/student-animations.js',
             ],
             refresh: true,
         }),

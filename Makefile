@@ -35,14 +35,40 @@ key:
 clear:
 	docker exec $(APP_CONTAINER) php artisan optimize:clear
 
-# Depois do clone: cria .env, sobe containers, instala deps e roda migrate --seed
+# Depois do clone:
+# 1. cria .env
+# 2. sobe os containers
+# 3. instala Composer sem executar scripts do Laravel
+# 4. compila os assets Vite
+# 5. inicializa Laravel/Filament
+# 6. executa migrations e seeders
 bootstrap:
 	@test -f .env || cp .env.example .env
+	@echo "Subindo containers..."
 	docker compose up -d --build
-	@echo "Aguardando containers..."
-	@sleep 10
-	docker exec $(APP_CONTAINER) sh -c "composer install && npm ci && npm run build && php artisan key:generate && php artisan migrate --seed"
-	@echo "Pronto. Abra http://lumina/ no browser."
+	@echo "Instalando dependências PHP..."
+	docker exec $(APP_CONTAINER) composer install \
+		--no-interaction \
+		--prefer-dist \
+		--optimize-autoloader \
+		--no-scripts
+	@echo "Instalando dependências JavaScript..."
+	docker exec $(APP_CONTAINER) npm ci
+	@echo "Compilando assets com Vite..."
+	docker exec $(APP_CONTAINER) npm run build
+	@echo "Gerando a chave da aplicação..."
+	docker exec $(APP_CONTAINER) sh -c \
+		"grep -q '^APP_KEY=' .env 2>/dev/null || echo 'APP_KEY=' >> .env; \
+		php artisan key:generate --force"
+	@echo "Descobrindo pacotes Laravel..."
+	docker exec $(APP_CONTAINER) php artisan package:discover --ansi
+	@echo "▶ Publicando assets do Filament..."
+	docker exec $(APP_CONTAINER) php artisan filament:assets --ansi
+	@echo "▶ Executando migrations e seeders..."
+	docker exec $(APP_CONTAINER) php artisan migrate --seed --force
+	@echo "▶ Limpando caches..."
+	docker exec $(APP_CONTAINER) php artisan optimize:clear
+	@echo "✅ Bootstrap concluído."
 
 build:
 	docker compose build --no-cache
@@ -65,7 +91,21 @@ shell:
 	docker exec -it $(APP_CONTAINER) zsh
 
 install:
-	docker exec -it $(APP_CONTAINER) sh -c "composer install && npm ci && npm run build && php artisan key:generate"
+	@echo "▶ Instalando dependências PHP..."
+	docker exec $(APP_CONTAINER) composer install \
+		--no-interaction \
+		--prefer-dist \
+		--optimize-autoloader \
+		--no-scripts
+	@echo "▶ Compilando..."
+	docker exec $(APP_CONTAINER) npm ci
+	docker exec $(APP_CONTAINER) npm run build
+	@echo "▶ Finalizando Laravel e Filament..."
+	docker exec $(APP_CONTAINER) php artisan package:discover --ansi
+	docker exec $(APP_CONTAINER) php artisan filament:assets --ansi
+	docker exec $(APP_CONTAINER) php artisan key:generate --force
+	docker exec $(APP_CONTAINER) php artisan optimize:clear
+	@echo "✅ Dependências instaladas."
 
 migrate:
 	docker exec -it $(APP_CONTAINER) php artisan migrate
