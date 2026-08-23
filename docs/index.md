@@ -12,6 +12,8 @@ Bem-vindo à documentação do **Lumina ERP**, sistema de gestão escolar.
 ## Seções principais
 
 - [Visão Geral](./visao-geral.md)
+- [Análise geral e fluxos de cadastro](./analise-geral-e-fluxos-de-cadastro.md)
+- [Portal do Aluno](./portal-do-aluno.md)
 - [Domínio Escolar](./dominio-escolar/visao-geral-dominio.md)
 - [Arquitetura](./arquitetura/arquitetura-geral.md)
 - [Banco de Dados](./banco-de-dados/modelo-relacional.md)
