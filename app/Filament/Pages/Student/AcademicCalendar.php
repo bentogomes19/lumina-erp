@@ -12,8 +12,17 @@ use Carbon\Carbon;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
 
-class AcademicCalendar extends Page
-{
+class AcademicCalendar extends Page {
+
+    /* ------------------------------------ *
+     *      PROTECTED STATIC ATTRIBUTES     *
+     * ------------------------------------ */
+
+
+    /* ==================================== *
+     *      PROTECTED STATIC ATTRIBUTES     *
+     * ==================================== */
+
     protected static ?string $navigationLabel = 'Calendário';
     protected static ?string $title = 'Calendário Acadêmico';
     protected static ?string $slug = 'academic-calendar';
@@ -31,25 +40,21 @@ class AcademicCalendar extends Page
 
     // ── Access ───────────────────────────────────────────────────────────────
 
-    public static function shouldRegisterNavigation(): bool
-    {
+    public static function shouldRegisterNavigation(): bool {
         return PermissionAccess::can('student.calendar.view');
     }
 
-    public static function canAccess(): bool
-    {
+    public static function canAccess(): bool {
         return PermissionAccess::can('student.calendar.view');
     }
 
-    public function getView(): string
-    {
+    public function getView(): string {
         return 'filament.pages.student.academic-calendar';
     }
 
     // ── Lifecycle ────────────────────────────────────────────────────────────
 
-    public function mount(): void
-    {
+    public function mount(): void {
         $this->currentMonth = (int) now()->format('m');
         $this->currentYear  = (int) now()->format('Y');
         $this->weekStart    = now()->startOfWeek(Carbon::SUNDAY)->format('Y-m-d');
@@ -57,15 +62,13 @@ class AcademicCalendar extends Page
 
     // ── Month navigation ─────────────────────────────────────────────────────
 
-    public function previousMonth(): void
-    {
+    public function previousMonth(): void {
         $date = Carbon::create($this->currentYear, $this->currentMonth, 1)->subMonth();
         $this->currentMonth = $date->month;
         $this->currentYear  = $date->year;
     }
 
-    public function nextMonth(): void
-    {
+    public function nextMonth(): void {
         $date = Carbon::create($this->currentYear, $this->currentMonth, 1)->addMonth();
         $this->currentMonth = $date->month;
         $this->currentYear  = $date->year;
@@ -73,8 +76,7 @@ class AcademicCalendar extends Page
 
     // ── Week navigation ──────────────────────────────────────────────────────
 
-    public function previousWeek(): void
-    {
+    public function previousWeek(): void {
         $date            = Carbon::parse($this->weekStart)->subWeek();
         $this->weekStart = $date->format('Y-m-d');
         // keep month/year in sync so the month grid is consistent when switching back
@@ -82,8 +84,7 @@ class AcademicCalendar extends Page
         $this->currentYear  = $date->year;
     }
 
-    public function nextWeek(): void
-    {
+    public function nextWeek(): void {
         $date            = Carbon::parse($this->weekStart)->addWeek();
         $this->weekStart = $date->format('Y-m-d');
         $this->currentMonth = $date->month;
@@ -92,8 +93,7 @@ class AcademicCalendar extends Page
 
     // ── Go to today ───────────────────────────────────────────────────────────
 
-    public function goToToday(): void
-    {
+    public function goToToday(): void {
         $this->currentMonth = (int) now()->format('m');
         $this->currentYear  = (int) now()->format('Y');
         $this->weekStart    = now()->startOfWeek(Carbon::SUNDAY)->format('Y-m-d');
@@ -101,20 +101,16 @@ class AcademicCalendar extends Page
 
     // ── View mode ────────────────────────────────────────────────────────────
 
-    public function setViewMode(string $mode): void
-    {
+    public function setViewMode(string $mode): void {
         $this->viewMode = $mode;
 
         if ($mode === 'week') {
-            // Sync weekStart to the week that contains the 1st of the displayed month
             $this->weekStart = Carbon::create($this->currentYear, $this->currentMonth, 1)
                 ->startOfWeek(Carbon::SUNDAY)
                 ->format('Y-m-d');
         }
 
         if ($mode === 'month' || $mode === 'list') {
-            // Snap displayed month to the week's midpoint (Thursday) so the month
-            // always reflects the week the user was looking at in week view.
             $midWeek = Carbon::parse($this->weekStart)->addDays(3);
             $this->currentMonth = $midWeek->month;
             $this->currentYear  = $midWeek->year;
@@ -123,8 +119,7 @@ class AcademicCalendar extends Page
 
     // ── Filter actions ───────────────────────────────────────────────────────
 
-    public function toggleCategory(string $category): void
-    {
+    public function toggleCategory(string $category): void {
         if (in_array($category, $this->activeCategories)) {
             $this->activeCategories = array_values(
                 array_filter($this->activeCategories, fn ($c) => $c !== $category)
@@ -134,32 +129,26 @@ class AcademicCalendar extends Page
         }
     }
 
-    public function setSubjectFilter(?int $subjectId): void
-    {
+    public function setSubjectFilter(?int $subjectId): void {
         $this->filterSubjectId = $subjectId;
     }
 
     // ── Export stubs ─────────────────────────────────────────────────────────
 
-    public function exportPdf(): void
-    {
-        // TODO: generate and stream PDF for the current month
+    public function exportPdf(): void {
         $this->dispatch('notify', ['message' => 'Exportação em PDF em breve.', 'type' => 'info']);
     }
 
-    public function exportIcal(): void
-    {
-        // TODO: generate and stream .ics for the current period
+    public function exportIcal(): void {
         $this->dispatch('notify', ['message' => 'Exportação iCal em breve.', 'type' => 'info']);
     }
 
     // ── Data ─────────────────────────────────────────────────────────────────
 
-    public function getPageData(): array
-    {
+    public function getPageData(): array {
         $student = auth()->user()?->student;
 
-        if (! $student) {
+        if (!$student) {
             return $this->emptyData();
         }
 
@@ -168,7 +157,7 @@ class AcademicCalendar extends Page
             ->with(['schoolYear', 'gradeLevel'])
             ->first();
 
-        if (! $currentClass) {
+        if (!$currentClass) {
             return array_merge($this->emptyData(), ['student' => $student]);
         }
 
@@ -193,9 +182,7 @@ class AcademicCalendar extends Page
 
         // Build calendar grid
         $grid     = $this->viewMode !== 'week' ? $this->buildMonthGrid($monthStart, $events) : [];
-        $weekGrid = $this->viewMode === 'week'
-            ? $this->buildWeekGrid(Carbon::parse($this->weekStart), $events)
-            : [];
+        $weekGrid = $this->viewMode === 'week' ? $this->buildWeekGrid(Carbon::parse($this->weekStart), $events) : [];
 
         // List view: all events sorted by date
         $listEvents = $events->sortBy('date')->values();
@@ -223,8 +210,7 @@ class AcademicCalendar extends Page
 
     // ── Private: teacher map ─────────────────────────────────────────────────
 
-    private function loadTeacherMap(int $classId): array
-    {
+    private function loadTeacherMap(int $classId): array {
         try {
             return TeacherAssignment::where('class_id', $classId)
                 ->with('teacher.user')
@@ -241,8 +227,7 @@ class AcademicCalendar extends Page
 
     // ── Private: event collection ────────────────────────────────────────────
 
-    private function collectEvents($currentClass, $schoolYear, Carbon $start, Carbon $end, array $teacherMap = []): Collection
-    {
+    private function collectEvents($currentClass, $schoolYear, Carbon $start, Carbon $end, array $teacherMap = []): Collection {
         $events = collect();
 
         // 1. Assessments (Avaliações)
@@ -354,9 +339,8 @@ class AcademicCalendar extends Page
         return $events;
     }
 
-    private function getSchoolYearEvents($schoolYear): array
-    {
-        if (! $schoolYear->starts_at || ! $schoolYear->ends_at) {
+    private function getSchoolYearEvents($schoolYear): array {
+        if (!$schoolYear->starts_at || !$schoolYear->ends_at) {
             return [];
         }
 
@@ -366,9 +350,9 @@ class AcademicCalendar extends Page
         $quarter   = (int) ($totalDays / 4);
 
         $base = [
-            'time' => null, 'category' => 'period', 'category_label' => 'Período Letivo',
-            'subject' => null, 'teacher' => null, 'weight' => null, 'location' => null,
-            'date_end' => null, 'impacts_grade' => false, 'impacts_freq' => false,
+            'time'     => null, 'category'      => 'period', 'category_label' => 'Período Letivo',
+            'subject'  => null, 'teacher'       => null,     'weight'         => null, 'location' => null,
+            'date_end' => null, 'impacts_grade' => false,    'impacts_freq'   => false,
         ];
 
         return [
@@ -420,8 +404,7 @@ class AcademicCalendar extends Page
         ];
     }
 
-    private function getUpcomingEvents($currentClass, $schoolYear, array $teacherMap = []): Collection
-    {
+    private function getUpcomingEvents($currentClass, $schoolYear, array $teacherMap = []): Collection {
         $start = now()->startOfDay();
         $end   = now()->addDays(14)->endOfDay();
 
@@ -469,8 +452,7 @@ class AcademicCalendar extends Page
 
     // ── Private: calendar grids ───────────────────────────────────────────────
 
-    private function buildMonthGrid(Carbon $monthStart, Collection $events): array
-    {
+    private function buildMonthGrid(Carbon $monthStart, Collection $events): array {
         $daysInMonth    = $monthStart->daysInMonth;
         $firstDayOfWeek = $monthStart->dayOfWeek; // 0 = Sunday
 
@@ -505,8 +487,7 @@ class AcademicCalendar extends Page
         return $cells;
     }
 
-    private function buildWeekGrid(Carbon $weekStartDate, Collection $events): array
-    {
+    private function buildWeekGrid(Carbon $weekStartDate, Collection $events): array {
         $eventsByDate = $this->groupEventsByDate($events);
         $today        = now()->format('Y-m-d');
         $cells        = [];
@@ -529,8 +510,7 @@ class AcademicCalendar extends Page
         return $cells;
     }
 
-    private function groupEventsByDate(Collection $events): array
-    {
+    private function groupEventsByDate(Collection $events): array {
         $byDate = [];
         foreach ($events as $event) {
             $byDate[$event['date']][] = $event;
@@ -551,8 +531,7 @@ class AcademicCalendar extends Page
 
     // ── Private: subjects in class ───────────────────────────────────────────
 
-    private function getClassSubjects(int $classId): Collection
-    {
+    private function getClassSubjects(int $classId): Collection {
         $subjectIds = TeacherAssignment::where('class_id', $classId)
             ->pluck('subject_id')
             ->unique();
@@ -564,8 +543,7 @@ class AcademicCalendar extends Page
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function emptyData(): array
-    {
+    private function emptyData(): array {
         $monthStart = Carbon::create($this->currentYear, $this->currentMonth, 1);
 
         return [

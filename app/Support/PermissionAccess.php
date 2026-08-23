@@ -14,6 +14,15 @@ class PermissionAccess
             return false;
         }
 
+        // Permissoes dos portais representam a identidade com que o usuario
+        // esta operando, nao privilegios administrativos. Um administrador pode
+        // gerenciar alunos e professores sem assumir o portal pessoal deles.
+        $requiredPortalRole = self::requiredPortalRole($permission);
+
+        if ($requiredPortalRole && ! $user->hasRole($requiredPortalRole)) {
+            return false;
+        }
+
         if ($user->roles()
             ->whereHas('permissions', fn ($query) => $query->where('name', $permission))
             ->exists()) {
@@ -38,6 +47,15 @@ class PermissionAccess
         }
 
         return self::legacyRoleFallback($permission);
+    }
+
+    private static function requiredPortalRole(string $permission): ?string
+    {
+        return match (true) {
+            str_starts_with($permission, 'student.') => 'student',
+            str_starts_with($permission, 'teacher.') => 'teacher',
+            default => null,
+        };
     }
 
     private static function catalog(): Collection

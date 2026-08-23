@@ -12,17 +12,13 @@ class MyClassesTable extends BaseWidget
     protected static ?string $heading = 'Minhas Turmas';
     protected int|string|array $columnSpan = 'full';
 
-    public static function canView(): bool
-    {
-        return \App\Support\PermissionAccess::can('teacher.classes.view');
+    public static function canView(): bool {
+        return PermissionAccess::can('teacher.classes.view');
     }
 
-    public function table(Table $table): Table
-    {
-        $teacher = auth()->user()?->teacher;
-        $classIds = $teacher
-            ? TeacherAssignment::where('teacher_id', $teacher->id)->pluck('class_id')->unique()
-            : collect([-1]);
+    public function table(Table $table): Table {
+        $teacher  = auth()->user()?->teacher;
+        $classIds = $teacher ? TeacherAssignment::where('teacher_id', $teacher->id)->pluck('class_id')->unique() : collect([-1]);
 
         return $table
             ->query(

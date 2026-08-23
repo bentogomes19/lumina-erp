@@ -16,10 +16,8 @@ use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class DashboardStats extends StatsOverviewWidget
-{
-    protected function getStats(): array
-    {
+class DashboardStats extends StatsOverviewWidget {
+    protected function getStats(): array {
         return [
             Stat::make('Total de Alunos', Student::count())
                 ->description('Alunos cadastrados')
@@ -51,7 +49,6 @@ class DashboardStats extends StatsOverviewWidget
                 ->color('primary')
                 ->url(UserResource::getUrl('index')),
 
-            // Ações Rápidas
             Stat::make('Novo Aluno', '✓')
                 ->description('Cadastrar aluno')
                 ->icon('fas-user-plus')
