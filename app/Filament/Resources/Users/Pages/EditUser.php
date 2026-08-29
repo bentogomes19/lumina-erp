@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Services\Auth\FirstAccessInvitationService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -22,7 +23,8 @@ class EditUser extends EditRecord {
      */
     protected function getHeaderActions(): array {
         return [
-            $this->getResetPasswordAction(),
+            $this->getSendInvitationAction(),
+            $this->getRevokeInvitationAction(),
             $this->getUnlockAction(),
             $this->getInactivateAction(),
             $this->getActivateAction(),
@@ -33,29 +35,64 @@ class EditUser extends EditRecord {
     }
 
     /**
-     * Retorna a ação usada para redefinir a senha do usuário.
+     * Retorna a ação usada para enviar ou reenviar o convite de acesso.
      *
      * @return Action
      */
-    private function getResetPasswordAction(): Action {
-        return Action::make('reset_password')
-            ->label('Resetar Senha')
+    private function getSendInvitationAction(): Action {
+        return Action::make('send_first_access_invitation')
+            ->label('Enviar/Reenviar convite')
             ->icon('fas-key')
             ->color('warning')
             ->requiresConfirmation()
-            ->modalHeading('Resetar senha')
-            ->modalDescription('Uma senha temporária será gerada. O usuário deverá trocá-la no próximo acesso.')
+            ->modalHeading('Enviar convite de acesso')
+            ->modalDescription('O link anterior será revogado. O novo convite expirará e poderá ser usado somente uma vez.')
             ->action(function () {
-                $tempPassword = $this->record->resetToTemporaryPassword();
+                $url = app(FirstAccessInvitationService::class)->issue($this->record);
 
                 Notification::make()
-                    ->title('Senha redefinida com sucesso')
-                    ->body("Senha temporária: **{$tempPassword}**")
+                    ->title('Convite enviado')
+                    ->body('O link foi enviado por e-mail e pode ser entregue ao usuário por um canal seguro.')
+                    ->actions([
+                        Action::make('openInvitation')
+                            ->label('Abrir link do convite')
+                            ->url($url)
+                            ->openUrlInNewTab(),
+                    ])
                     ->success()
-                    ->persistent()
+                    ->duration(15000)
+                    ->send();
+
+                $this->refreshFormData(['force_password_change']);
+            })
+            ->visible(fn () => !$this->record->trashed()
+                && $this->record->active
+                && !$this->record->is_locked
+                && $this->isAdminOrTi());
+    }
+
+    /**
+     * Retorna a ação usada para revogar o convite emitido.
+     *
+     * @return Action
+     */
+    private function getRevokeInvitationAction(): Action {
+        return Action::make('revoke_first_access_invitation')
+            ->label('Revogar convite')
+            ->icon('fas-link-slash')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('Revogar convite de acesso')
+            ->modalDescription('O link emitido deixará de funcionar. O usuário continuará sem acesso até receber um novo convite.')
+            ->action(function () {
+                app(FirstAccessInvitationService::class)->revoke($this->record);
+
+                Notification::make()
+                    ->title('Convite revogado')
+                    ->success()
                     ->send();
             })
-            ->visible(fn () => $this->isAdminOrTi());
+            ->visible(fn () => $this->record->force_password_change && $this->isAdminOrTi());
     }
 
     /**

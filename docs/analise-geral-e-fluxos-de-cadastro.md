@@ -104,7 +104,7 @@ As permissões `student.*` e `teacher.*` são contextuais: além da permissão, 
 
 - cadastro e manutenção de usuários;
 - ativação, inativação e desbloqueio;
-- geração de senha temporária;
+- envio, reenvio e revogação de convite descartável para definição de senha;
 - papéis e permissões;
 - matriz de permissões organizada por módulos.
 
@@ -236,11 +236,12 @@ Ao concluir:
 6. gera um número de matrícula anual após obter o ID;
 7. registra um log de criação;
 8. se o aluno não tiver usuário, cria uma conta ativa com papel `student`;
-9. copia as permissões do papel de aluno para o usuário.
+9. copia as permissões do papel de aluno para o usuário;
+10. envia um convite de primeiro acesso, válido por 60 minutos e utilizável uma única vez.
 
 Este é atualmente o caminho mais próximo de um onboarding completo do aluno, pois produz aluno, matrícula e acesso ao portal.
 
-Há, entretanto, uma ressalva: a senha inicial é aleatória e não é exibida. A mensagem orienta o aluno a usar “Esqueci minha senha”, mas o painel está configurado apenas com `login()` e não foi localizada habilitação explícita de recuperação de senha. Esse fluxo deve ser validado antes do uso real.
+O usuário define a própria senha pelo convite enviado ao e-mail informado. O painel também disponibiliza “Esqueci minha senha”. Os dois fluxos usam tokens armazenados como hash, com expiração e uso único. Contas com troca obrigatória não acessam o ERP antes da redefinição.
 
 ### 5.5 Matrícula de aluno existente
 
@@ -351,7 +352,7 @@ Sem aluno vinculado, matrícula ou turma no ano ativo, o portal permanece sem da
 ### Prioridade alta
 
 1. **Unificar o onboarding de aluno e professor.** Há caminhos que criam somente a entidade, outros criam usuário mais entidade e o assistente de matrícula cria aluno, matrícula e usuário. Isso pode gerar registros sem acesso, vínculos incompletos e suporte operacional difícil.
-2. **Validar a entrega da senha inicial.** O fluxo de matrícula gera senha aleatória não comunicada e depende de recuperação de senha aparentemente não habilitada.
+2. **Monitorar a entrega dos convites de acesso.** O operador pode reenviar ou revogar o convite na gestão de usuários; em ambiente sem entrega de e-mail, o link temporário fica disponível somente na notificação da operação.
 3. **Autorizar as rotas de PDF por registro.** As rotas exigem autenticação, mas não demonstram middleware de permissão ou policy na definição da rota. Um usuário autenticado não deve obter documento de matrícula apenas conhecendo o ID.
 4. **Consolidar permissões.** Recursos administrativos usam nomes como `students.view`, enquanto a matriz nova contém `academic.students.view_any`, `academic.students.create` etc. Os dois catálogos coexistem, e alterar a matriz pode não alterar efetivamente a autorização do Resource correspondente.
 

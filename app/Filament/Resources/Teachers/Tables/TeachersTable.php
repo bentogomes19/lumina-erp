@@ -6,6 +6,8 @@ use App\Enums\TeacherStatus;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\TeacherAssignment;
+use App\Models\User;
+use App\Services\Auth\FirstAccessInvitationService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -23,7 +25,11 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 
 class TeachersTable {
 
@@ -82,49 +88,53 @@ class TeachersTable {
                             ->dehydrated(false),
 
                         TextInput::make('email')
-                            ->label('E-mail institucional (opcional)')
+                            ->label('E-mail de acesso')
                             ->email()
                             ->default(fn ($record) => $record->email)   /* <-- vem do professor. */
-                            ->nullable()
-                            ->rule(Rule::unique('users', 'email')),
-
-                        TextInput::make('password')
-                            ->label('Senha')
-                            ->password()
                             ->required()
-                            ->minLength(8),
+                            ->rule(Rule::unique('users', 'email')),
                     ])
                     ->action(function (\App\Models\Teacher $record, array $data) {
-                        DB::transaction(function () use ($record, $data) {
+                        $user = DB::transaction(function () use ($record, $data): User {
+                            $email = $data['email'];
 
-                            $email = filled($data['email']) ? $data['email'] : $record->email;
-
-                            /* (opcional) validação manual extra se quiser. */
-                            if ($email && \App\Models\User::where('email', $email)->exists()) {
-                                throw \Illuminate\Validation\ValidationException::withMessages([
+                            if (User::withTrashed()->where('email', $email)->exists()) {
+                                throw ValidationException::withMessages([
                                     'email' => 'Este e-mail já está em uso por outro usuário.',
                                 ]);
                             }
 
-                            $user = \App\Models\User::create([
-                                'name'     => $record->name,
-                                'email'    => $email,                  /* <-- usa do professor por padrão. */
-                                'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
-                                'active'   => true,
+                            $user = User::create([
+                                'name'                  => $record->name,
+                                'email'                 => $email,
+                                'password'              => Hash::make(Str::random(64)),
+                                'active'                => true,
+                                'force_password_change' => true,
                             ]);
 
                             $user->syncRoles(['teacher']);
-                            if ($role = \Spatie\Permission\Models\Role::where('name', 'teacher')->with('permissions')->first()) {
+                            if ($role = Role::where('name', 'teacher')->with('permissions')->first()) {
                                 $user->syncPermissions($role->permissions);
                             }
 
                             $record->user()->associate($user)->save();
+
+                            return $user;
                         });
 
-                        \Filament\Notifications\Notification::make()
-                            ->title('Usuário criado com sucesso')
-                            ->body('O professor agora tem acesso como “teacher”.')
+                        $url = app(FirstAccessInvitationService::class)->issue($user);
+
+                        Notification::make()
+                            ->title('Usuário criado e convite enviado')
+                            ->body('O professor deve usar o link descartável para definir a própria senha.')
+                            ->actions([
+                                Action::make('openInvitation')
+                                    ->label('Abrir link do convite')
+                                    ->url($url)
+                                    ->openUrlInNewTab(),
+                            ])
                             ->success()
+                            ->duration(15000)
                             ->send();
                     }),
                 Action::make('vincular')
