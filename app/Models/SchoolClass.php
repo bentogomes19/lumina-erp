@@ -98,6 +98,15 @@ class SchoolClass extends BaseModel {
     }
 
     /**
+     * Retorna as matrículas vinculadas diretamente à turma.
+     *
+     * @return mixed
+     */
+    public function enrollments() {
+        return $this->hasMany(Enrollment::class, 'class_id');
+    }
+
+    /**
      * Retorna as disciplinas vinculadas por atribuições de professor.
      *
      * @return mixed

@@ -2,8 +2,10 @@
 
 namespace App\Services\Enrollments;
 
+use App\Enums\EnrollmentStatus;
 use App\Enums\StudentStatus;
 use App\Models\Enrollment;
+use App\Models\EnrollmentLog;
 use App\Models\Role;
 use App\Models\SchoolClass;
 use App\Models\Student;
@@ -42,15 +44,12 @@ class StudentEnrollmentService {
                 $student     = $this->resolveStudent($data);
 
                 $this->ensureStudentIsNotEnrolled($student, $schoolClass);
-
-                $enrollment = Enrollment::create([
+                $enrollment = $this->createEnrollmentInClass($schoolClass, [
                     'student_id'       => $student->id,
-                    'class_id'         => $schoolClass->id,
-                    'school_year_id'   => $schoolClass->school_year_id,
                     'submission_token' => $submissionToken,
                     'enrollment_date'  => $data['enrollment_date'] ?? now(),
                     'roll_number'      => $data['roll_number'] ?? Enrollment::nextRollNumberFor($schoolClass->id),
-                    'status'           => $data['status'] ?? 'Ativa',
+                    'status'           => $data['status'] ?? EnrollmentStatus::ACTIVE,
                 ]);
 
                 $userCreated = $this->ensureStudentUser($student);
@@ -82,6 +81,239 @@ class StudentEnrollmentService {
 
             throw $exception;
         }
+    }
+
+    /**
+     * Vincula um aluno existente a uma turma respeitando a capacidade disponível.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return Enrollment
+     */
+    public function enrollExistingStudent(array $data): Enrollment {
+        return DB::transaction(function () use ($data): Enrollment {
+            $schoolClass = $this->findAndLockSchoolClass((int) $data['class_id']);
+            $student     = Student::query()->lockForUpdate()->find($data['student_id'] ?? null);
+
+            if (!$student) {
+                throw ValidationException::withMessages([
+                    'student_id' => 'O aluno selecionado não está disponível.',
+                ]);
+            }
+
+            $this->ensureStudentIsNotEnrolled($student, $schoolClass);
+
+            return $this->createEnrollmentInClass($schoolClass, $data);
+        }, attempts: 3);
+    }
+
+    /**
+     * Transfere uma matrícula para outra turma em uma operação atômica.
+     *
+     * @param Enrollment $enrollment
+     * @param int $targetClassId
+     * @param string $reason
+     * @param int|null $operatorId
+     *
+     * @return Enrollment
+     */
+    public function transfer(
+        Enrollment $enrollment,
+        int $targetClassId,
+        string $reason,
+        ?int $operatorId = null,
+    ): Enrollment {
+        return DB::transaction(function () use ($enrollment, $targetClassId, $reason, $operatorId): Enrollment {
+            $classes = SchoolClass::query()
+                ->whereIn('id', [$enrollment->class_id, $targetClassId])
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+            $source      = Enrollment::query()->lockForUpdate()->findOrFail($enrollment->id);
+            $targetClass = $classes->get($targetClassId);
+
+            if (!$targetClass || $targetClass->school_year_id !== $source->school_year_id) {
+                throw ValidationException::withMessages([
+                    'class_id' => 'A turma de destino deve pertencer ao mesmo ano letivo da matrícula.',
+                ]);
+            }
+
+            if ($source->status !== EnrollmentStatus::ACTIVE) {
+                throw ValidationException::withMessages([
+                    'class_id' => 'Somente matrículas ativas podem ser transferidas entre turmas.',
+                ]);
+            }
+
+            $this->ensureStudentIsNotEnrolled($source->student()->firstOrFail(), $targetClass);
+            $this->ensureClassHasSlot($targetClass, EnrollmentStatus::ACTIVE);
+
+            $statusAnterior  = $source->status->value;
+            $sourceClassName = $classes->get($source->class_id)?->name ?? 'turma de origem';
+            $source->update([
+                'status'              => EnrollmentStatus::TRANSFERRED_INTERNAL,
+                'transfer_type'       => 'internal',
+                'transfer_reason'     => $reason,
+                'operated_by_user_id' => $operatorId,
+            ]);
+
+            $newEnrollment = $this->createEnrollmentInClass($targetClass, [
+                'student_id'             => $source->student_id,
+                'enrollment_date'        => now(),
+                'status'                 => EnrollmentStatus::ACTIVE,
+                'previous_enrollment_id' => $source->id,
+                'operated_by_user_id'    => $operatorId,
+            ]);
+
+            EnrollmentLog::registrar(
+                enrollment: $source,
+                acao: 'transferencia_interna',
+                statusAnterior: $statusAnterior,
+                statusNovo: EnrollmentStatus::TRANSFERRED_INTERNAL->value,
+                observacao: "Transferido de {$sourceClassName} para {$targetClass->name}. Nova matrícula: {$newEnrollment->registration_number}. Motivo: {$reason}",
+            );
+
+            return $newEnrollment;
+        }, attempts: 3);
+    }
+
+    /**
+     * Cria uma rematrícula em outra turma e ano letivo com disputa segura de vaga.
+     *
+     * @param Enrollment $enrollment
+     * @param int $targetClassId
+     * @param int $schoolYearId
+     * @param int|null $operatorId
+     *
+     * @return Enrollment
+     */
+    public function reenroll(
+        Enrollment $enrollment,
+        int $targetClassId,
+        int $schoolYearId,
+        ?int $operatorId = null,
+    ): Enrollment {
+        return DB::transaction(function () use ($enrollment, $targetClassId, $schoolYearId, $operatorId): Enrollment {
+            $targetClass = $this->findAndLockSchoolClass($targetClassId);
+            $source      = Enrollment::query()->lockForUpdate()->findOrFail($enrollment->id);
+
+            if (!in_array($source->status, [EnrollmentStatus::ACTIVE, EnrollmentStatus::COMPLETED], true)) {
+                throw ValidationException::withMessages([
+                    'class_id' => 'Esta matrícula não está elegível para rematrícula.',
+                ]);
+            }
+
+            if ($targetClass->school_year_id !== $schoolYearId) {
+                throw ValidationException::withMessages([
+                    'class_id' => 'A turma selecionada não pertence ao ano letivo de destino.',
+                ]);
+            }
+
+            $alreadyEnrolled = Enrollment::query()
+                ->where('student_id', $source->student_id)
+                ->where('school_year_id', $schoolYearId)
+                ->whereIn('status', EnrollmentStatus::occupyingValues())
+                ->exists();
+
+            if ($alreadyEnrolled) {
+                throw ValidationException::withMessages([
+                    'class_id' => 'O aluno já possui matrícula que ocupa vaga no ano letivo de destino.',
+                ]);
+            }
+
+            $this->ensureStudentIsNotEnrolled($source->student()->firstOrFail(), $targetClass);
+
+            return $this->createEnrollmentInClass($targetClass, [
+                'student_id'             => $source->student_id,
+                'enrollment_date'        => now(),
+                'status'                 => EnrollmentStatus::ACTIVE,
+                'previous_enrollment_id' => $source->id,
+                'operated_by_user_id'    => $operatorId,
+            ]);
+        }, attempts: 3);
+    }
+
+    /**
+     * Atualiza o status da matrícula validando a retomada de uma vaga liberada.
+     *
+     * @param Enrollment $enrollment
+     * @param EnrollmentStatus|string $status
+     * @param array<string, mixed> $attributes
+     *
+     * @return Enrollment
+     */
+    public function updateStatus(
+        Enrollment $enrollment,
+        EnrollmentStatus|string $status,
+        array $attributes = [],
+    ): Enrollment {
+        $targetStatus = $status instanceof EnrollmentStatus ? $status : EnrollmentStatus::from($status);
+
+        return DB::transaction(function () use ($enrollment, $targetStatus, $attributes): Enrollment {
+            $schoolClass = $this->findAndLockSchoolClass((int) $enrollment->class_id);
+            $locked      = Enrollment::query()->lockForUpdate()->findOrFail($enrollment->id);
+            $oldStatus   = $locked->status;
+
+            if (!$oldStatus->occupiesSlot() && $targetStatus->occupiesSlot()) {
+                $this->ensureClassHasSlot($schoolClass, $targetStatus);
+            }
+
+            $locked->update(array_merge($attributes, ['status' => $targetStatus]));
+
+            return $locked->refresh();
+        }, attempts: 3);
+    }
+
+    /**
+     * Retorna a quantidade de matrículas que ocupam vaga na turma.
+     *
+     * @param SchoolClass $schoolClass
+     *
+     * @return int
+     */
+    public function occupiedSlots(SchoolClass $schoolClass): int {
+        if (array_key_exists('occupied_slots_count', $schoolClass->getAttributes())) {
+            return (int) $schoolClass->getAttribute('occupied_slots_count');
+        }
+
+        return Enrollment::query()
+            ->where('class_id', $schoolClass->id)
+            ->whereIn('status', EnrollmentStatus::occupyingValues())
+            ->count();
+    }
+
+    /**
+     * Retorna as vagas restantes ou nulo quando a turma é ilimitada.
+     *
+     * @param SchoolClass $schoolClass
+     *
+     * @return int|null
+     */
+    public function remainingSlots(SchoolClass $schoolClass): ?int {
+        if (!$schoolClass->capacity) {
+            return null;
+        }
+
+        return max(0, $schoolClass->capacity - $this->occupiedSlots($schoolClass));
+    }
+
+    /**
+     * Formata capacidade, ocupação e vagas restantes para exibição nos formulários.
+     *
+     * @param SchoolClass $schoolClass
+     *
+     * @return string
+     */
+    public function capacitySummary(SchoolClass $schoolClass): string {
+        $occupied = $this->occupiedSlots($schoolClass);
+
+        if (!$schoolClass->capacity) {
+            return "Ocupação: {$occupied} | Vagas: ilimitadas";
+        }
+
+        $remaining = max(0, $schoolClass->capacity - $occupied);
+
+        return "Ocupação: {$occupied}/{$schoolClass->capacity} | Vagas restantes: {$remaining}";
     }
 
     /**
@@ -118,6 +350,53 @@ class StudentEnrollmentService {
         }
 
         return $schoolClass;
+    }
+
+    /**
+     * Cria uma matrícula na turma previamente bloqueada após validar sua capacidade.
+     *
+     * @param SchoolClass $schoolClass
+     * @param array<string, mixed> $data
+     *
+     * @return Enrollment
+     */
+    private function createEnrollmentInClass(SchoolClass $schoolClass, array $data): Enrollment {
+        $status = $data['status'] ?? EnrollmentStatus::ACTIVE;
+        $status = $status instanceof EnrollmentStatus ? $status : EnrollmentStatus::from($status);
+
+        $this->ensureClassHasSlot($schoolClass, $status);
+
+        return Enrollment::create(array_merge($data, [
+            'class_id'       => $schoolClass->id,
+            'school_year_id' => $schoolClass->school_year_id,
+            'status'         => $status,
+        ]));
+    }
+
+    /**
+     * Impede a ocupação de uma turma que já atingiu sua capacidade.
+     *
+     * @param SchoolClass $schoolClass
+     * @param EnrollmentStatus $status
+     *
+     * @return void
+     */
+    private function ensureClassHasSlot(SchoolClass $schoolClass, EnrollmentStatus $status): void {
+        if (!$status->occupiesSlot() || !$schoolClass->capacity) {
+            return;
+        }
+
+        $occupied = $this->occupiedSlots($schoolClass);
+
+        if ($occupied < $schoolClass->capacity) {
+            return;
+        }
+
+        $slotLabel = $schoolClass->capacity === 1 ? 'vaga' : 'vagas';
+
+        throw ValidationException::withMessages([
+            'class_id' => "A turma {$schoolClass->name} atingiu a capacidade de {$schoolClass->capacity} {$slotLabel}. Ocupação atual: {$occupied}.",
+        ]);
     }
 
     /**
