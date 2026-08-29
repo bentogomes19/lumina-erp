@@ -19,6 +19,7 @@ class Enrollment extends BaseModel {
         'class_id',
         'school_year_id',
         'registration_number',
+        'submission_token',
         'enrollment_date',
         'roll_number',
         'status',
@@ -39,6 +40,15 @@ class Enrollment extends BaseModel {
         /* Rastreabilidade. */
         'previous_enrollment_id',
         'operated_by_user_id',
+    ];
+
+    /**
+     * Campos omitidos nas serializações da matrícula.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'submission_token',
     ];
 
     /**

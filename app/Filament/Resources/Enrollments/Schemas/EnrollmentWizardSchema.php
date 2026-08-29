@@ -10,6 +10,7 @@ use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Services\IbgeLocalidadesService;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
@@ -21,6 +22,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard\Step;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class EnrollmentWizardSchema {
 
@@ -35,6 +37,9 @@ class EnrollmentWizardSchema {
                 ->description('Aluno já cadastrado ou novo cadastro na secretaria')
                 ->icon('fas-circle-user')
                 ->schema([
+                    Hidden::make('submission_token')
+                        ->default(fn (): string => (string) Str::uuid()),
+
                     Radio::make('student_source')
                         ->label('Tipo de cadastro')
                         ->options([
