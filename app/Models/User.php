@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -161,14 +163,23 @@ class User extends Authenticatable implements FilamentUser {
      * @return void
      */
     public function registerFailedLogin(): void {
-        $attempts = $this->login_attempts + 1;
-        $data     = ['login_attempts' => $attempts];
+        DB::transaction(function (): void {
+            $user = self::query()->lockForUpdate()->find($this->getKey());
 
-        if ($attempts >= self::MAX_LOGIN_ATTEMPTS) {
-            $data['locked_at'] = now();
-        }
+            if (!$user || $user->is_locked) {
+                return;
+            }
 
-        $this->updateQuietly($data);
+            $attempts = min($user->login_attempts + 1, self::MAX_LOGIN_ATTEMPTS);
+            $data     = ['login_attempts' => $attempts];
+
+            if ($attempts >= self::MAX_LOGIN_ATTEMPTS) {
+                $data['locked_at'] = now();
+            }
+
+            $user->updateQuietly($data);
+            $this->setRawAttributes($user->getAttributes(), true);
+        });
     }
 
     /**
@@ -184,7 +195,7 @@ class User extends Authenticatable implements FilamentUser {
     }
 
     /**
-     * Desbloqueia o usuário. Apenas perfil TI pode executar esta ação.
+     * Desbloqueia o usuário e registra a ação administrativa de segurança.
      *
      * @return void
      */
@@ -192,6 +203,12 @@ class User extends Authenticatable implements FilamentUser {
         $this->updateQuietly([
             'locked_at'      => null,
             'login_attempts' => 0,
+        ]);
+
+        Log::notice('security.user.unlocked', [
+            'target_user_id' => $this->getKey(),
+            'actor_user_id'  => auth()->id(),
+            'ip'             => request()->ip(),
         ]);
     }
 

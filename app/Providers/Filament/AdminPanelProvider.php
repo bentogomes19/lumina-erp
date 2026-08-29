@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\RequestPasswordReset;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -41,7 +42,7 @@ class AdminPanelProvider extends PanelProvider {
             ->id('lumina')
             ->path('lumina')
             ->brandName('Portal Lumina')
-            ->login()
+            ->login(Login::class)
             ->passwordReset(RequestPasswordReset::class)
             ->font('Inter Variable', url: asset('fonts/filament/filament/inter/index.css'), provider: LocalFontProvider::class, )
             ->viteTheme('resources/css/filament/lumina/theme.css')
