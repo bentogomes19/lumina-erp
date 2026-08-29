@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use App\Services\Enrollments\StudentEnrollmentService;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
@@ -106,15 +107,26 @@ class EnrollmentForm {
                         Select::make('class_id')
                             ->label('Turma')
                             ->options(function (Get $get) {
-                                $query = SchoolClass::query()->with('gradeLevel', 'schoolYear')->orderBy('name');
+                                $query = SchoolClass::query()
+                                    ->with('gradeLevel', 'schoolYear')
+                                    ->withCount([
+                                        'enrollments as occupied_slots_count' => fn ($enrollments) => $enrollments
+                                            ->whereIn('status', EnrollmentStatus::occupyingValues()),
+                                    ])
+                                    ->orderBy('name');
                                 if ($get('school_year_id')) {
                                     $query->where('school_year_id', $get('school_year_id'));
                                 }
-                                return $query->get()->mapWithKeys(fn ($c) => [
-                                    $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
-                                ]);
+                                return $query->get()->mapWithKeys(function ($schoolClass) {
+                                    $capacity = app(StudentEnrollmentService::class)->capacitySummary($schoolClass);
+
+                                    return [
+                                        $schoolClass->id => "{$schoolClass->name} — {$schoolClass->gradeLevel?->name} ({$schoolClass->schoolYear?->year}) | {$capacity}",
+                                    ];
+                                });
                             })
                             ->required()
+                            ->disabledOn('edit')
                             ->live()
                             ->afterStateUpdated(function ($state, callable $set) {
                                 if ($state) {
@@ -146,6 +158,7 @@ class EnrollmentForm {
                             ->options(EnrollmentStatus::options())
                             ->default(EnrollmentStatus::ACTIVE->value)
                             ->required()
+                            ->disabledOn('edit')
                             ->helperText('Para trancamentos, transferências ou cancelamentos, use as ações específicas na barra superior da página de edição — elas registram o histórico automaticamente.')
                             ->columnSpanFull(),
                     ]),

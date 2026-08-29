@@ -8,6 +8,7 @@ use App\Models\Enrollment;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use App\Services\Enrollments\StudentEnrollmentService;
 use App\Services\IbgeLocalidadesService;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
@@ -130,13 +131,23 @@ class EnrollmentWizardSchema {
                             Select::make('class_id')
                                 ->label('Turma')
                                 ->options(function (Get $get) {
-                                    $query = SchoolClass::query()->with('gradeLevel', 'schoolYear')->orderBy('name');
+                                    $query = SchoolClass::query()
+                                        ->with('gradeLevel', 'schoolYear')
+                                        ->withCount([
+                                            'enrollments as occupied_slots_count' => fn ($enrollments) => $enrollments
+                                                ->whereIn('status', EnrollmentStatus::occupyingValues()),
+                                        ])
+                                        ->orderBy('name');
                                     if ($get('school_year_id')) {
                                         $query->where('school_year_id', $get('school_year_id'));
                                     }
-                                    return $query->get()->mapWithKeys(fn ($c) => [
-                                        $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
-                                    ]);
+                                    return $query->get()->mapWithKeys(function ($schoolClass) {
+                                        $capacity = app(StudentEnrollmentService::class)->capacitySummary($schoolClass);
+
+                                        return [
+                                            $schoolClass->id => "{$schoolClass->name} — {$schoolClass->gradeLevel?->name} ({$schoolClass->schoolYear?->year}) | {$capacity}",
+                                        ];
+                                    });
                                 })
                                 ->required()
                                 ->live()
@@ -399,7 +410,13 @@ class EnrollmentWizardSchema {
                                 return '—';
                             }
                             $c = SchoolClass::with('gradeLevel', 'schoolYear')->find($id);
-                            return $c ? "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})" : '—';
+                            if (!$c) {
+                                return '—';
+                            }
+
+                            $capacity = app(StudentEnrollmentService::class)->capacitySummary($c);
+
+                            return "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year}) | {$capacity}";
                         }),
 
                     Placeholder::make('review_date')

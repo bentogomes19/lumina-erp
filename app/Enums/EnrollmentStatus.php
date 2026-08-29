@@ -24,6 +24,31 @@ enum EnrollmentStatus: string {
     case COMPLETED            = 'Completa';
 
     /**
+     * Retorna os valores dos status que ocupam vaga em uma turma.
+     *
+     * @return array<int, string>
+     */
+    public static function occupyingValues(): array {
+        return array_map(
+            fn (self $status): string => $status->value,
+            array_filter(self::cases(), fn (self $status): bool => $status->occupiesSlot()),
+        );
+    }
+
+    /**
+     * Indica se o status mantém uma vaga ocupada na turma.
+     *
+     * @return bool
+     */
+    public function occupiesSlot(): bool {
+        return in_array($this, [
+            self::ACTIVE,
+            self::SUSPENDED,
+            self::LOCKED,
+        ], true);
+    }
+
+    /**
      * Retorna os status de matrícula disponíveis para seleção.
      *
      * @return array

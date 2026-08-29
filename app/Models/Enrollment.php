@@ -172,54 +172,6 @@ class Enrollment extends BaseModel {
     }
 
     /**
-     * Verifica se há vagas disponíveis na turma informada.
-     *
-     * @param int $classId
-     *
-     * @return bool
-     */
-    public static function classHasSlot(int $classId): bool {
-        $class = SchoolClass::find($classId);
-        if (!$class || !$class->capacity) {
-            return true; /* Sem limite configurado. */
-        }
-
-        $ocupadas = static::where('class_id', $classId)
-            ->whereIn('status', [
-                EnrollmentStatus::ACTIVE->value,
-                EnrollmentStatus::SUSPENDED->value,
-                EnrollmentStatus::LOCKED->value,
-            ])
-            ->count();
-
-        return $ocupadas < $class->capacity;
-    }
-
-    /**
-     * Retorna o percentual de ocupação da turma.
-     *
-     * @param int $classId
-     *
-     * @return int|null
-     */
-    public static function classOccupancyPercent(int $classId): ?int {
-        $class = SchoolClass::find($classId);
-        if (!$class || !$class->capacity) {
-            return null;
-        }
-
-        $ocupadas = static::where('class_id', $classId)
-            ->whereIn('status', [
-                EnrollmentStatus::ACTIVE->value,
-                EnrollmentStatus::SUSPENDED->value,
-                EnrollmentStatus::LOCKED->value,
-            ])
-            ->count();
-
-        return (int) round(($ocupadas / $class->capacity) * 100);
-    }
-
-    /**
      * Define valores padrão e registra auditoria durante o ciclo de vida da matrícula.
      *
      * @return void

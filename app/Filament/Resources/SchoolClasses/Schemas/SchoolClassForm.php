@@ -87,7 +87,7 @@ class SchoolClassForm {
                         ->numeric()
                         ->minValue(1)
                         ->maxValue(60)
-                        ->helperText('Limite recomendado RM: 25~40 por turma, conforme etapa.'), /* ajuste sua regra. */
+                        ->helperText('Deixe em branco para uma turma ilimitada. Faixa recomendada: 25 a 40 alunos.'),
                 ])->collapsible(),
             ]);
     }

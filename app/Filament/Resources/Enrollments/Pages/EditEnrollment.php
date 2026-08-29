@@ -8,6 +8,7 @@ use App\Filament\Resources\Enrollments\EnrollmentResource;
 use App\Models\Enrollment;
 use App\Models\EnrollmentLog;
 use App\Models\SchoolClass;
+use App\Services\Enrollments\StudentEnrollmentService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
@@ -137,12 +138,15 @@ class EditEnrollment extends EditRecord {
                         $record         = $this->record;
                         $statusAnterior = $record->status?->value;
 
-                        $record->update([
-                            'status'              => EnrollmentStatus::ACTIVE,
-                            'locked_reason'       => null,
-                            'lock_expires_at'     => null,
-                            'operated_by_user_id' => auth()->id(),
-                        ]);
+                        $record = app(StudentEnrollmentService::class)->updateStatus(
+                            $record,
+                            EnrollmentStatus::ACTIVE,
+                            [
+                                'locked_reason'       => null,
+                                'lock_expires_at'     => null,
+                                'operated_by_user_id' => auth()->id(),
+                            ],
+                        );
 
                         EnrollmentLog::registrar(
                             enrollment: $record,
@@ -175,20 +179,18 @@ class EditEnrollment extends EditRecord {
                             ->options(function () {
                                 $record = $this->record;
                                 return SchoolClass::with('gradeLevel', 'schoolYear')
+                                    ->withCount([
+                                        'enrollments as occupied_slots_count' => fn ($enrollments) => $enrollments
+                                            ->whereIn('status', EnrollmentStatus::occupyingValues()),
+                                    ])
                                     ->where('school_year_id', $record->school_year_id)
                                     ->where('id', '!=', $record->class_id)
                                     ->get()
                                     ->mapWithKeys(function ($c) {
-                                        $vagas = $c->capacity
-                                            ? ($c->capacity - Enrollment::where('class_id', $c->id)
-                                                ->whereIn('status', [
-                                                    EnrollmentStatus::ACTIVE->value,
-                                                    EnrollmentStatus::SUSPENDED->value,
-                                                    EnrollmentStatus::LOCKED->value,
-                                                ])->count())
-                                            : '∞';
+                                        $capacity = app(StudentEnrollmentService::class)->capacitySummary($c);
+
                                         return [
-                                            $c->id => "{$c->name} — {$c->gradeLevel?->name} | Turno: {$c->shift?->label()} | Vagas: {$vagas}",
+                                            $c->id => "{$c->name} — {$c->gradeLevel?->name} | Turno: {$c->shift?->label()} | {$capacity}",
                                         ];
                                     });
                             })
@@ -202,67 +204,11 @@ class EditEnrollment extends EditRecord {
                     ])
                     ->action(function (array $data): void {
                         $record = $this->record;
-
-                        if (!Enrollment::classHasSlot((int) $data['class_id'])) {
-                            if (!auth()->user()?->hasAnyRole(['admin', 'ti'])) {
-                                Notification::make()
-                                    ->title('Turma sem vagas')
-                                    ->body('A turma de destino atingiu a capacidade máxima. Contate o perfil TI para forçar a transferência.')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
-                        }
-
-                        $jaMatriculado = Enrollment::where('student_id', $record->student_id)
-                            ->where('class_id', $data['class_id'])
-                            ->whereIn('status', [
-                                EnrollmentStatus::ACTIVE->value,
-                                EnrollmentStatus::LOCKED->value,
-                            ])
-                            ->exists();
-
-                        if ($jaMatriculado) {
-                            Notification::make()
-                                ->title('Aluno já matriculado na turma destino')
-                                ->danger()
-                                ->send();
-                            return;
-                        }
-
-                        $statusAnterior  = $record->status?->value;
-                        $turmaOrigemNome = $record->class?->name;
-
-                        $record->update([
-                            'status'              => EnrollmentStatus::TRANSFERRED_INTERNAL,
-                            'transfer_type'       => 'internal',
-                            'transfer_reason'     => $data['transfer_reason'],
-                            'operated_by_user_id' => auth()->id(),
-                        ]);
-
-                        $novaMatricula = Enrollment::create([
-                            'student_id'             => $record->student_id,
-                            'class_id'               => $data['class_id'],
-                            'school_year_id'         => $record->school_year_id,
-                            'enrollment_date'        => now(),
-                            'status'                 => EnrollmentStatus::ACTIVE,
-                            'previous_enrollment_id' => $record->id,
-                            'operated_by_user_id'    => auth()->id(),
-                        ]);
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'transferencia_interna',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::TRANSFERRED_INTERNAL->value,
-                            observacao: "Transferido de {$turmaOrigemNome} para turma ID {$data['class_id']}. Nova matrícula: {$novaMatricula->registration_number}. Motivo: {$data['transfer_reason']}",
-                        );
-
-                        EnrollmentLog::registrar(
-                            enrollment: $novaMatricula,
-                            acao: 'criacao',
-                            statusNovo: EnrollmentStatus::ACTIVE->value,
-                            observacao: "Criada por transferência interna a partir da matrícula {$record->registration_number}.",
+                        $novaMatricula = app(StudentEnrollmentService::class)->transfer(
+                            $record,
+                            (int) $data['class_id'],
+                            $data['transfer_reason'],
+                            auth()->id(),
                         );
 
                         Notification::make()
@@ -412,12 +358,15 @@ class EditEnrollment extends EditRecord {
                         $record         = $this->record;
                         $statusAnterior = $record->status?->value;
 
-                        $record->update([
-                            'status'              => EnrollmentStatus::ACTIVE,
-                            'cancel_reason'       => null,
-                            'cancel_observations' => null,
-                            'operated_by_user_id' => auth()->id(),
-                        ]);
+                        $record = app(StudentEnrollmentService::class)->updateStatus(
+                            $record,
+                            EnrollmentStatus::ACTIVE,
+                            [
+                                'cancel_reason'       => null,
+                                'cancel_observations' => null,
+                                'operated_by_user_id' => auth()->id(),
+                            ],
+                        );
 
                         EnrollmentLog::registrar(
                             enrollment: $record,

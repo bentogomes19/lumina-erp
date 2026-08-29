@@ -188,6 +188,43 @@ class CreateEnrollmentTest extends TestCase {
     }
 
     /**
+     * Verifica que o Wizard não cria registros parciais quando a turma está cheia.
+     *
+     * @return void
+     */
+    public function test_wizard_rejects_full_class_without_creating_student(): void {
+        $schoolClass = $this->schoolClass();
+        $schoolClass->update(['capacity' => 1]);
+        $occupant = Student::create([
+            'uuid'                => (string) Str::uuid(),
+            'registration_number' => 'ALU-OCUPANTE',
+            'name'                => 'Aluno Ocupante',
+            'status'              => 'active',
+        ]);
+        Enrollment::create([
+            'student_id'     => $occupant->id,
+            'class_id'       => $schoolClass->id,
+            'school_year_id' => $schoolClass->school_year_id,
+            'status'         => 'Ativa',
+        ]);
+        $this->createStudentRole();
+
+        try {
+            $this->service()->create($this->newStudentData($schoolClass));
+            $this->fail('O Wizard deveria rejeitar uma turma cheia.');
+        } catch (ValidationException $exception) {
+            $this->assertSame(
+                'A turma Turma A atingiu a capacidade de 1 vaga. Ocupação atual: 1.',
+                $exception->errors()['class_id'][0],
+            );
+        }
+
+        $this->assertDatabaseCount('students', 1);
+        $this->assertDatabaseCount('enrollments', 1);
+        $this->assertDatabaseMissing('students', ['name' => 'Aluno da Silva']);
+    }
+
+    /**
      * Retorna uma instância do serviço exercitado pelos testes.
      *
      * @return StudentEnrollmentService

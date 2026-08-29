@@ -5,8 +5,9 @@ namespace App\Filament\Resources\SchoolClasses\Tables;
 use App\Enums\ClassShift;
 use App\Enums\ClassStatus;
 use App\Enums\EnrollmentStatus;
-use App\Models\Enrollment;
+use App\Models\SchoolClass;
 use App\Models\Student;
+use App\Services\Enrollments\StudentEnrollmentService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -14,15 +15,16 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 use Illuminate\Validation\Rules\Enum as EnumRule;
-use Illuminate\Support\Facades\DB;
 
 class SchoolClassesTable {
 
@@ -35,6 +37,10 @@ class SchoolClassesTable {
      */
     public static function configure(Table $table): Table {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->withCount([
+                'enrollments as occupied_slots_count' => fn (Builder $enrollments) => $enrollments
+                    ->whereIn('status', EnrollmentStatus::occupyingValues()),
+            ]))
             ->columns([
                 TextColumn::make('code')
                     ->label('Código')
@@ -80,7 +86,19 @@ class SchoolClassesTable {
 
                 TextColumn::make('homeroomTeacher.name')->label('Professor Resp.')->toggleable(),
 
-                TextColumn::make('capacity')->label('Cap.')->numeric()->alignRight()->toggleable(),
+                TextColumn::make('occupied_slots_count')
+                    ->label('Ocupação')
+                    ->state(fn (SchoolClass $record): string => $record->capacity
+                        ? app(StudentEnrollmentService::class)->occupiedSlots($record)."/{$record->capacity}"
+                        : app(StudentEnrollmentService::class)->occupiedSlots($record).'/∞')
+                    ->alignRight(),
+
+                TextColumn::make('remaining_slots')
+                    ->label('Vagas restantes')
+                    ->state(fn (SchoolClass $record): string => (string) (
+                        app(StudentEnrollmentService::class)->remainingSlots($record) ?? 'Ilimitadas'
+                    ))
+                    ->alignRight(),
             ])
             ->filters([
                 TrashedFilter::make(),
@@ -90,8 +108,13 @@ class SchoolClassesTable {
                 Action::make('matricularAluno')
                     ->label('Vincular Aluno')
                     ->icon('fas-user-plus')
-                    ->modalHeading('Vincular Student')
+                    ->modalHeading('Vincular Aluno')
                     ->form([
+                        Placeholder::make('capacity_summary')
+                            ->label('Disponibilidade da turma')
+                            ->content(fn (SchoolClass $record): string => app(StudentEnrollmentService::class)
+                                ->capacitySummary($record)),
+
                         Select::make('student_id')
                             ->label('Aluno')
                             ->options(fn () => Student::orderBy('name')->pluck('name', 'id'))
@@ -121,30 +144,12 @@ class SchoolClassesTable {
                             ->rule(new EnumRule(EnrollmentStatus::class))
                             ->default(EnrollmentStatus::ACTIVE->value),
                     ])
-                    ->action(function (\App\Models\SchoolClass $record, array $data) {
-                        DB::transaction(function () use ($record, $data) {
+                    ->action(function (SchoolClass $record, array $data): void {
+                        app(StudentEnrollmentService::class)->enrollExistingStudent(array_merge($data, [
+                            'class_id' => $record->id,
+                        ]));
 
-                            /* evita duplicidade. */
-                            $already = Enrollment::where([
-                                'class_id'   => $record->id,
-                                'student_id' => $data['student_id'],
-                            ])->exists();
-
-                            if ($already) {
-                                Notification::make()->title('Aluno já está matriculado nesta turma.')->warning()->send();
-                                return;
-                            }
-
-                            Enrollment::create([
-                                'class_id'        => $record->id,
-                                'student_id'      => $data['student_id'],
-                                'enrollment_date' => $data['enrollment_date'],
-                                'roll_number'     => $data['roll_number'] ?? null,
-                                'status'          => $data['status'],
-                            ]);
-
-                            Notification::make()->title('Matrícula realizada com sucesso.')->success()->send();
-                        });
+                        Notification::make()->title('Matrícula realizada com sucesso.')->success()->send();
                     }),
                 Action::make('verDisciplinas')
                     ->label('Ver disciplinas')

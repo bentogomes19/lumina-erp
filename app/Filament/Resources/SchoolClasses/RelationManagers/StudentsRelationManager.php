@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\SchoolClasses\RelationManagers;
 
+use App\Enums\EnrollmentStatus;
+use App\Models\Enrollment;
+use App\Services\Enrollments\StudentEnrollmentService;
 use Filament\Actions\DetachAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -42,19 +45,25 @@ class StudentsRelationManager extends RelationManager {
                     ->form([
                         DatePicker::make('enrollment_date')->label('Data de matrícula')->required(),
                         TextInput::make('roll_number')->label('Nº chamada')->numeric()->minValue(1),
-                        Select::make('status')->label('Status')->options([
-                            'Ativa'     => 'Ativa',
-                            'Suspensa'  => 'Suspensa',
-                            'Cancelada' => 'Cancelada',
-                            'Completa'  => 'Completa',
-                        ])->required(),
+                        Select::make('status')
+                            ->label('Status')
+                            ->options(EnrollmentStatus::options())
+                            ->required(),
                     ])
                     ->using(function ($record, array $data) {
-                        $record->pivot->update([
-                            'enrollment_date' => $data['enrollment_date'],
-                            'roll_number'     => $data['roll_number'] ?? null,
-                            'status'          => $data['status'],
-                        ]);
+                        $enrollment = Enrollment::query()
+                            ->where('class_id', $this->getOwnerRecord()->id)
+                            ->where('student_id', $record->id)
+                            ->firstOrFail();
+
+                        app(StudentEnrollmentService::class)->updateStatus(
+                            $enrollment,
+                            $data['status'],
+                            [
+                                'enrollment_date' => $data['enrollment_date'],
+                                'roll_number'     => $data['roll_number'] ?? null,
+                            ],
+                        );
                     }),
 
                 DetachAction::make()
