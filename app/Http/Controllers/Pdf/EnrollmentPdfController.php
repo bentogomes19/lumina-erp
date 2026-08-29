@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Gera os documentos PDF do módulo de matrículas.
@@ -16,9 +17,9 @@ class EnrollmentPdfController extends Controller
     // ── Helpers compartilhados ────────────────────────────────────────────────
 
     /** Carrega a matrícula com todas as relações necessárias para os documentos */
-    private function load(int $id): Enrollment
+    private function load(Enrollment $enrollment): Enrollment
     {
-        return Enrollment::with([
+        return $enrollment->load([
             'student',
             'class.gradeLevel',
             'class.schoolYear',
@@ -27,7 +28,7 @@ class EnrollmentPdfController extends Controller
             'previousEnrollment.class.gradeLevel',
             'grades.subject',
             'documents',
-        ])->findOrFail($id);
+        ]);
     }
 
     /** Gera e retorna um PDF como download inline (abre no browser) */
@@ -45,8 +46,10 @@ class EnrollmentPdfController extends Controller
      * Comprovante de Matrícula ou Rematrícula.
      * Visível para matrículas com qualquer status.
      */
-    public function comprovante(int $enrollment): Response
+    public function comprovante(Enrollment $enrollment): Response
     {
+        Gate::authorize('viewDocument', $enrollment);
+
         $enr = $this->load($enrollment);
 
         $isRematricula = (bool) $enr->previous_enrollment_id;
@@ -54,10 +57,10 @@ class EnrollmentPdfController extends Controller
         return $this->pdf(
             view: 'pdf.enrollment.comprovante',
             data: [
-                'enrollment'    => $enr,
+                'enrollment' => $enr,
                 'isRematricula' => $isRematricula,
-                'generatedAt'   => now(),
-                'operator'      => auth()->user(),
+                'generatedAt' => now(),
+                'operator' => auth()->user(),
             ],
             filename: "comprovante-matricula-{$enr->registration_number}.pdf",
         );
@@ -67,8 +70,10 @@ class EnrollmentPdfController extends Controller
      * Comprovante de Transferência entre Turmas (interna).
      * Disponível somente para matrículas com status 'Transferida Interna'.
      */
-    public function transferenciaInterna(int $enrollment): Response
+    public function transferenciaInterna(Enrollment $enrollment): Response
     {
+        Gate::authorize('viewDocument', $enrollment);
+
         $enr = $this->load($enrollment);
 
         // Carrega a nova matrícula gerada pela transferência (filha)
@@ -79,10 +84,10 @@ class EnrollmentPdfController extends Controller
         return $this->pdf(
             view: 'pdf.enrollment.transferencia-interna',
             data: [
-                'enrollment'    => $enr,
+                'enrollment' => $enr,
                 'novaMatricula' => $novaMatricula,
-                'generatedAt'   => now(),
-                'operator'      => auth()->user(),
+                'generatedAt' => now(),
+                'operator' => auth()->user(),
             ],
             filename: "transferencia-interna-{$enr->registration_number}.pdf",
         );
@@ -92,8 +97,10 @@ class EnrollmentPdfController extends Controller
      * Declaração de Transferência Externa.
      * Inclui histórico de notas do aluno.
      */
-    public function transferenciaExterna(int $enrollment): Response
+    public function transferenciaExterna(Enrollment $enrollment): Response
     {
+        Gate::authorize('viewDocument', $enrollment);
+
         $enr = $this->load($enrollment);
 
         // Agrupa notas por disciplina para o histórico
@@ -101,17 +108,17 @@ class EnrollmentPdfController extends Controller
             ->groupBy(fn ($g) => $g->subject?->name ?? 'Sem disciplina')
             ->map(fn ($grades) => [
                 'subject' => $grades->first()->subject?->name ?? '—',
-                'grades'  => $grades,
-                'media'   => round($grades->avg('score'), 1),
+                'grades' => $grades,
+                'media' => round($grades->avg('score'), 1),
             ]);
 
         return $this->pdf(
             view: 'pdf.enrollment.transferencia-externa',
             data: [
-                'enrollment'     => $enr,
+                'enrollment' => $enr,
                 'historicoNotas' => $historicoNotas,
-                'generatedAt'    => now(),
-                'operator'       => auth()->user(),
+                'generatedAt' => now(),
+                'operator' => auth()->user(),
             ],
             filename: "declaracao-transferencia-{$enr->registration_number}.pdf",
         );
@@ -120,16 +127,18 @@ class EnrollmentPdfController extends Controller
     /**
      * Comprovante de Trancamento de Matrícula.
      */
-    public function trancamento(int $enrollment): Response
+    public function trancamento(Enrollment $enrollment): Response
     {
+        Gate::authorize('viewDocument', $enrollment);
+
         $enr = $this->load($enrollment);
 
         return $this->pdf(
             view: 'pdf.enrollment.trancamento',
             data: [
-                'enrollment'  => $enr,
+                'enrollment' => $enr,
                 'generatedAt' => now(),
-                'operator'    => auth()->user(),
+                'operator' => auth()->user(),
             ],
             filename: "trancamento-{$enr->registration_number}.pdf",
         );
@@ -138,16 +147,18 @@ class EnrollmentPdfController extends Controller
     /**
      * Termo de Cancelamento de Matrícula.
      */
-    public function cancelamento(int $enrollment): Response
+    public function cancelamento(Enrollment $enrollment): Response
     {
+        Gate::authorize('viewDocument', $enrollment);
+
         $enr = $this->load($enrollment);
 
         return $this->pdf(
             view: 'pdf.enrollment.cancelamento',
             data: [
-                'enrollment'  => $enr,
+                'enrollment' => $enr,
                 'generatedAt' => now(),
-                'operator'    => auth()->user(),
+                'operator' => auth()->user(),
             ],
             filename: "cancelamento-{$enr->registration_number}.pdf",
         );
