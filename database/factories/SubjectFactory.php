@@ -8,15 +8,14 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Subject>
  */
-class SubjectFactory extends Factory
-{
+class SubjectFactory extends Factory {
+
     /**
-     * Define the model's default state.
+     * Retorna os dados padrão gerados pela fábrica.
      *
      * @return array<string, mixed>
      */
-    public function definition(): array
-    {
+    public function definition(): array {
         $categories = [
             SubjectCategory::LINGUAGENS,
             SubjectCategory::MATEMATICA,
@@ -26,52 +25,52 @@ class SubjectFactory extends Factory
 
         $subjectsMap = [
             SubjectCategory::LINGUAGENS->value => [
-                'Português' => 'PT',
-                'Inglês' => 'EN',
-                'Espanhol' => 'ES',
-                'Francês' => 'FR',
-                'Artes' => 'AR',
+                'Português'       => 'PT',
+                'Inglês'          => 'EN',
+                'Espanhol'        => 'ES',
+                'Francês'         => 'FR',
+                'Artes'           => 'AR',
                 'Educação Física' => 'EF',
-                'Redação' => 'RED',
+                'Redação'         => 'RED',
             ],
             SubjectCategory::MATEMATICA->value => [
-                'Matemática' => 'MAT',
-                'Álgebra' => 'ALG',
-                'Geometria' => 'GEO',
+                'Matemática'    => 'MAT',
+                'Álgebra'       => 'ALG',
+                'Geometria'     => 'GEO',
                 'Trigonometria' => 'TRI',
-                'Estatística' => 'STAT',
+                'Estatística'   => 'STAT',
             ],
             SubjectCategory::CIENCIAS_EXATAS->value => [
-                'Física' => 'FIS',
-                'Química' => 'QUI',
+                'Física'   => 'FIS',
+                'Química'  => 'QUI',
                 'Biologia' => 'BIO',
                 'Ciências' => 'CI',
             ],
             SubjectCategory::CIENCIAS_HUMANAS->value => [
-                'História' => 'HIS',
-                'Geografia' => 'GEO',
+                'História'   => 'HIS',
+                'Geografia'  => 'GEO',
                 'Sociologia' => 'SOC',
-                'Filosofia' => 'FIL',
-                'Economia' => 'ECO',
+                'Filosofia'  => 'FIL',
+                'Economia'   => 'ECO',
             ],
         ];
 
-        $category = $this->faker->randomElement($categories);
-        $categoryValue = $category->value;
+        $category          = $this->faker->randomElement($categories);
+        $categoryValue     = $category->value;
         $availableSubjects = $subjectsMap[$categoryValue];
-        
+
         $subjectName = $this->faker->randomElement(array_keys($availableSubjects));
-        $code = $availableSubjects[$subjectName];
+        $code        = $availableSubjects[$subjectName];
 
         return [
-            'code' => strtoupper($code),
-            'normalized_code' => strtolower($code),
-            'name' => $subjectName,
-            'category' => $category,
-            'status' => 'active',
-            'bncc_code' => strtoupper($code),
+            'code'               => strtoupper($code),
+            'normalized_code'    => strtolower($code),
+            'name'               => $subjectName,
+            'category'           => $category,
+            'status'             => 'active',
+            'bncc_code'          => strtoupper($code),
             'bncc_reference_url' => 'https://bncc.mec.gov.br/',
-            'tags' => json_encode(['educação', 'aprendizagem']),
+            'tags'               => json_encode(['educação', 'aprendizagem']),
         ];
     }
 }

@@ -50,6 +50,8 @@ class GradeLevel extends BaseModel {
     /**
      * Ordena os níveis/séries pela ordem de exibição.
      *
+     * @param mixed $query
+     *
      * @return self
      */
     public function scopeOrdered($query): self {

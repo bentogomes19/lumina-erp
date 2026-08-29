@@ -5,12 +5,11 @@ namespace Database\Seeders\Academic;
 use App\Models\Lesson;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
-use App\Models\TeacherAssignment;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
-class LessonSeeder extends Seeder
-{
+class LessonSeeder extends Seeder {
+
     /**
      * Horários padrão por turno
      */
@@ -19,7 +18,7 @@ class LessonSeeder extends Seeder
             ['07:00', '07:50'],
             ['07:50', '08:40'],
             ['08:40', '09:30'],
-            ['09:50', '10:40'], // após intervalo
+            ['09:50', '10:40'], /* após intervalo. */
             ['10:40', '11:30'],
             ['11:30', '12:20'],
         ],
@@ -27,7 +26,7 @@ class LessonSeeder extends Seeder
             ['13:00', '13:50'],
             ['13:50', '14:40'],
             ['14:40', '15:30'],
-            ['15:50', '16:40'], // após intervalo
+            ['15:50', '16:40'], /* após intervalo. */
             ['16:40', '17:30'],
             ['17:30', '18:20'],
         ],
@@ -35,7 +34,7 @@ class LessonSeeder extends Seeder
             ['18:30', '19:20'],
             ['19:20', '20:10'],
             ['20:10', '21:00'],
-            ['21:10', '22:00'], // após intervalo
+            ['21:10', '22:00'], /* após intervalo. */
             ['22:00', '22:50'],
         ],
     ];
@@ -107,18 +106,19 @@ class LessonSeeder extends Seeder
     ];
 
     /**
-     * Run the database seeds.
+     * Cria as aulas previstas para as turmas disponíveis.
+     *
+     * @return void
      */
-    public function run(): void
-    {
+    public function run(): void {
         $activeYear = SchoolYear::where('is_active', true)->first();
-        
+
         if (!$activeYear) {
             $this->command?->warn('LessonSeeder: nenhum ano letivo ativo encontrado.');
             return;
         }
 
-        // Pegar turmas do ano ativo
+        /* Pegar turmas do ano ativo. */
         $classes = SchoolClass::where('school_year_id', $activeYear->id)
             ->with(['teacherAssignments.teacher', 'teacherAssignments.subject'])
             ->get();
@@ -134,16 +134,16 @@ class LessonSeeder extends Seeder
 
         foreach ($classes as $class) {
             $assignments = $class->teacherAssignments;
-            
+
             if ($assignments->isEmpty()) {
                 $this->command?->warn("Turma {$class->name} sem atribuições de professor.");
                 continue;
             }
 
-            // Gerar aulas dos últimos 60 dias até 30 dias no futuro
+            /* Gerar aulas dos últimos 60 dias até 30 dias no futuro. */
             $startDate = now()->subDays(60);
-            $endDate = now()->addDays(30);
-            
+            $endDate   = now()->addDays(30);
+
             $generatedForClass = $this->generateLessonsForClass(
                 $class,
                 $assignments,
@@ -159,7 +159,14 @@ class LessonSeeder extends Seeder
     }
 
     /**
-     * Gerar aulas para uma turma específica
+     * Gera as aulas previstas para uma turma.
+     *
+     * @param SchoolClass $class
+     * @param mixed $assignments
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     *
+     * @return int
      */
     private function generateLessonsForClass(
         SchoolClass $class,
@@ -169,76 +176,77 @@ class LessonSeeder extends Seeder
     ): int {
         $count = 0;
         $shift = $class->shift->value;
-        
+
         if (!isset($this->schedules[$shift])) {
             $this->command?->warn("Turno '{$shift}' não configurado.");
             return 0;
         }
 
         $scheduleSlots = $this->schedules[$shift];
-        
-        // Distribuir disciplinas nos dias da semana (seg-sex)
-        $weekDays = [1, 2, 3, 4, 5]; // Segunda a sexta
+
+        /* Distribuir disciplinas nos dias da semana (seg-sex) */
+        $weekDays         = [1, 2, 3, 4, 5]; /* Segunda a sexta. */
         $assignmentsArray = $assignments->shuffle()->toArray();
-        $assignmentIndex = 0;
+        $assignmentIndex  = 0;
         $totalAssignments = count($assignmentsArray);
 
         if ($totalAssignments === 0) {
             return 0;
         }
 
-        // Percorrer todos os dias do período
+        /* Percorrer todos os dias do período. */
         $currentDate = $startDate->copy();
 
         while ($currentDate->lte($endDate)) {
-            // Verificar se é dia letivo (não é fim de semana nem feriado)
+
+            /* Verificar se é dia letivo (não é fim de semana nem feriado) */
             if (!\App\Models\SchoolHoliday::isSchoolDay($currentDate)) {
                 $currentDate->addDay();
                 continue;
             }
 
-            // Definir quantas aulas terão neste dia (entre 4 e 6 aulas)
+            /* Definir quantas aulas terão neste dia (entre 4 e 6 aulas) */
             $lessonsPerDay = rand(4, min(6, count($scheduleSlots)));
-            
+
             for ($slotIndex = 0; $slotIndex < $lessonsPerDay; $slotIndex++) {
                 $assignment = $assignmentsArray[$assignmentIndex % $totalAssignments];
                 $assignmentIndex++;
 
                 $schedule = $scheduleSlots[$slotIndex];
-                
-                // Definir status da aula
-                $isPast = $currentDate->lt(now()->subDays(1));
-                $isToday = $currentDate->isToday();
+
+                /* Definir status da aula. */
+                $isPast   = $currentDate->lt(now()->subDays(1));
+                $isToday  = $currentDate->isToday();
                 $isFuture = $currentDate->isFuture();
-                
+
                 if ($isPast) {
-                    $status = 'completed';
-                    $attendanceTaken = rand(1, 10) <= 8; // 80% das aulas passadas têm chamada
+                    $status          = 'completed';
+                    $attendanceTaken = rand(1, 10) <= 8; /* 80% das aulas passadas têm chamada. */
                 } elseif ($isToday) {
-                    $status = 'scheduled';
+                    $status          = 'scheduled';
                     $attendanceTaken = false;
                 } else {
-                    $status = 'scheduled';
+                    $status          = 'scheduled';
                     $attendanceTaken = false;
                 }
 
-                // Obter tópicos
+                /* Obter tópicos. */
                 $subjectName = $assignment['subject']['name'] ?? 'Disciplina';
-                $topicsList = $this->topics[$subjectName] ?? ['Conteúdo programático'];
-                $topic = $topicsList[array_rand($topicsList)];
+                $topicsList  = $this->topics[$subjectName] ?? ['Conteúdo programático'];
+                $topic       = $topicsList[array_rand($topicsList)];
 
                 $lessonData = [
-                    'uuid' => \Illuminate\Support\Str::uuid(),
-                    'teacher_id' => $assignment['teacher_id'],
-                    'class_id' => $class->id,
-                    'subject_id' => $assignment['subject_id'],
-                    'school_year_id' => $class->school_year_id,
-                    'date' => $currentDate->format('Y-m-d'),
-                    'start_time' => $schedule[0],
-                    'end_time' => $schedule[1],
-                    'topic' => $topic,
-                    'status' => $status,
-                    'attendance_taken' => $attendanceTaken,
+                    'uuid'                => \Illuminate\Support\Str::uuid(),
+                    'teacher_id'          => $assignment['teacher_id'],
+                    'class_id'            => $class->id,
+                    'subject_id'          => $assignment['subject_id'],
+                    'school_year_id'      => $class->school_year_id,
+                    'date'                => $currentDate->format('Y-m-d'),
+                    'start_time'          => $schedule[0],
+                    'end_time'            => $schedule[1],
+                    'topic'               => $topic,
+                    'status'              => $status,
+                    'attendance_taken'    => $attendanceTaken,
                     'attendance_taken_at' => $attendanceTaken ? $currentDate->copy()->setTimeFromTimeString($schedule[1])->addMinutes(5) : null,
                 ];
 

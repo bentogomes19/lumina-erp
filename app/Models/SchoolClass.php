@@ -7,8 +7,8 @@ use App\Enums\ClassStatus;
 use App\Enums\ClassType;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SchoolClass extends BaseModel
-{
+class SchoolClass extends BaseModel {
+
     use SoftDeletes;
 
     protected $table = 'classes';
@@ -44,41 +44,54 @@ class SchoolClass extends BaseModel
 
     /**
      * Filtra turmas abertas.
+     *
+     * @param mixed $q
+     *
+     * @return mixed
      */
-    public function scopeActive($q)
-    {
+    public function scopeActive($q) {
         return $q->where('status', ClassStatus::OPEN);
     }
 
     /**
      * Filtra turmas por ano letivo.
+     *
+     * @param mixed $q
+     * @param int $yearId
+     *
+     * @return mixed
      */
-    public function scopeByYear($q, int $yearId)
-    {
+    public function scopeByYear($q, int $yearId) {
         return $q->where('school_year_id', $yearId);
     }
 
     /**
      * Filtra turmas por turno.
+     *
+     * @param mixed $q
+     * @param ClassShift $shift
+     *
+     * @return mixed
      */
-    public function scopeByShift($q, ClassShift $shift)
-    {
+    public function scopeByShift($q, ClassShift $shift) {
         return $q->where('shift', $shift->value);
     }
 
     /**
      * Retorna o professor responsável pela turma.
+     *
+     * @return mixed
      */
-    public function homeroomTeacher()
-    {
+    public function homeroomTeacher() {
         return $this->belongsTo(Teacher::class, 'homeroom_teacher_id');
     }
 
     /**
      * Retorna os alunos matriculados na turma.
+     *
+     * @return mixed
      */
-    public function students()
-    {
+    public function students() {
         return $this->belongsToMany(Student::class, 'enrollments', 'class_id', 'student_id')
             ->withPivot(['enrollment_date', 'roll_number', 'status'])
             ->withTimestamps();
@@ -86,9 +99,10 @@ class SchoolClass extends BaseModel
 
     /**
      * Retorna as disciplinas vinculadas por atribuições de professor.
+     *
+     * @return mixed
      */
-    public function subjectsByAssignments()
-    {
+    public function subjectsByAssignments() {
         return $this->belongsToMany(
             Subject::class,
             'teacher_assignments',
@@ -99,33 +113,37 @@ class SchoolClass extends BaseModel
 
     /**
      * Retorna o ano letivo da turma.
+     *
+     * @return mixed
      */
-    public function schoolYear()
-    {
+    public function schoolYear() {
         return $this->belongsTo(SchoolYear::class);
     }
 
     /**
      * Retorna o nível/série da turma.
+     *
+     * @return mixed
      */
-    public function gradeLevel()
-    {
+    public function gradeLevel() {
         return $this->belongsTo(GradeLevel::class);
     }
 
     /**
      * Retorna as atribuições de professores da turma.
+     *
+     * @return mixed
      */
-    public function teacherAssignments()
-    {
+    public function teacherAssignments() {
         return $this->hasMany(TeacherAssignment::class, 'class_id');
     }
 
     /**
      * Retorna os professores atribuídos à turma.
+     *
+     * @return mixed
      */
-    public function teachers()
-    {
+    public function teachers() {
         return $this->belongsToMany(Teacher::class, 'teacher_assignments', 'class_id', 'teacher_id')
             ->withPivot('subject_id')
             ->withTimestamps();
@@ -133,9 +151,10 @@ class SchoolClass extends BaseModel
 
     /**
      * Retorna as disciplinas vinculadas diretamente à turma.
+     *
+     * @return mixed
      */
-    public function subjects()
-    {
+    public function subjects() {
         return $this->belongsToMany(Subject::class, 'class_subjects', 'class_id', 'subject_id')
             ->withTimestamps();
     }

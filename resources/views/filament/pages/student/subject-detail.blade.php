@@ -28,7 +28,7 @@
     @endphp
 
     @if(!$subject)
-        {{-- Error state --}}
+        {{-- Estado de erro --}}
         <div class="ms-card" style="padding:3rem;text-align:center">
             <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
                 @svg('fas-triangle-exclamation', '', ['style' => 'width:2rem;height:2rem;color:#ef4444'])
@@ -43,7 +43,7 @@
     @else
         <div style="display:flex;flex-direction:column;gap:1.5rem">
 
-            {{-- ▸ Back button --}}
+            {{-- Botão para voltar --}}
             <div>
                 <a href="{{ url('/lumina/my-subjects') }}" class="ms-back-btn">
                     @svg('fas-arrow-left', '', ['style' => 'width:1rem;height:1rem'])
@@ -51,7 +51,7 @@
                 </a>
             </div>
 
-            {{-- ▸ Subject header --}}
+            {{-- Cabeçalho da disciplina --}}
             <div class="ms-card" style="overflow:hidden">
                 <div style="height:4px;background:{{ $cs['accent'] }}"></div>
                 <div style="padding:1.5rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;flex-wrap:wrap">
@@ -90,7 +90,7 @@
                         </div>
                     </div>
 
-                    {{-- Quick stats badges --}}
+                    {{-- Indicadores rápidos --}}
                     <div style="display:flex;gap:0.75rem;flex-shrink:0">
                         @if($overallAverage !== null)
                             @php
@@ -120,7 +120,7 @@
                 </div>
             </div>
 
-            {{-- ▸ Stats overview cards --}}
+            {{-- Cartões com visão geral das estatísticas --}}
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
                 @php
                     $statCards = [
@@ -145,7 +145,7 @@
                 @endforeach
             </div>
 
-            {{-- ▸ Term grades --}}
+            {{-- Notas por período --}}
             @if(collect($termAverages)->filter(fn($t) => $t['average'] !== null)->isNotEmpty())
                 <div class="ms-card" style="padding:1.25rem">
                     <h3 style="font-size:1rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem">
@@ -183,7 +183,7 @@
                 </div>
             @endif
 
-            {{-- ▸ Syllabus & Description --}}
+            {{-- Ementa e descrição --}}
             @if($subject->description || $syllabus || $objectives)
                 <div class="ms-card" style="padding:1.25rem">
                     <h3 style="font-size:1rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem">
@@ -237,7 +237,7 @@
                 </div>
             @endif
 
-            {{-- ▸ Lessons list --}}
+            {{-- Lista de aulas --}}
             <div class="ms-card" data-lumina-no-enter style="padding:1.25rem">
                 <h3 style="font-size:1rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem">
                     @svg('fas-calendar-days', '', ['style' => 'width:1.125rem;height:1.125rem;color:#22c55e'])

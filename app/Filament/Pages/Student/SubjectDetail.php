@@ -10,65 +10,83 @@ use App\Models\Subject;
 use App\Models\TeacherAssignment;
 use App\Support\PermissionAccess;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\DB;
 
-class SubjectDetail extends Page
-{
-    protected static ?string $navigationLabel = null;
-    protected static bool $shouldRegisterNavigation = false;
-    protected static ?string $slug = 'subject-detail';
+class SubjectDetail extends Page {
+
+    protected static ?string $navigationLabel                = null;
+    protected static bool $shouldRegisterNavigation          = false;
+    protected static ?string $slug                           = 'subject-detail';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-book-open';
 
     public ?int $subjectId = null;
 
-    public static function canAccess(): bool
-    {
+    /**
+     * Determina se o usuário atual pode acessar a página.
+     *
+     * @return bool
+     */
+    public static function canAccess(): bool {
         return PermissionAccess::can('student.subjects.view');
     }
 
-    public function getView(): string
-    {
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
+    public function getView(): string {
         return 'filament.pages.student.subject-detail';
     }
 
-    public function mount(?int $subject = null): void
-    {
+    /**
+     * Inicializa o estado necessário para exibir a página.
+     *
+     * @param int|null $subject
+     *
+     * @return void
+     */
+    public function mount(?int $subject = null): void {
         $this->subjectId = $subject ?? request()->query('subject');
 
-        if (! $this->subjectId) {
+        if (!$this->subjectId) {
             abort(404, 'Disciplina não especificada');
         }
 
         $student = Student::where('user_id', auth()->id())->first();
-        if (! $student) {
+        if (!$student) {
             abort(403, 'Estudante não encontrado');
         }
 
-        // Verify student is enrolled in a class that has this subject
+        /* Verifica se o aluno está matriculado em uma turma que possui esta disciplina. */
         $hasAccess = $student->classes()
             ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
             ->whereHas('subjects', fn ($q) => $q->where('subjects.id', $this->subjectId))
             ->exists();
 
-        if (! $hasAccess) {
+        if (!$hasAccess) {
             abort(403, 'Você não tem acesso a esta disciplina');
         }
     }
 
-    public function getTitle(): string
-    {
+    /**
+     * Retorna o título exibido na página.
+     *
+     * @return string
+     */
+    public function getTitle(): string {
         $subject = Subject::find($this->subjectId);
         return $subject?->name ?? 'Detalhes da Disciplina';
     }
 
     /**
-     * Get comprehensive subject data: info, teacher, grades, attendance, lessons
+     * Retorna os dados completos da disciplina, incluindo professor, notas, frequência e aulas.
+     *
+     * @return array
      */
-    public function getSubjectData(): array
-    {
+    public function getSubjectData(): array {
         $student = Student::where('user_id', auth()->id())->first();
 
-        if (! $student || ! $this->subjectId) {
+        if (!$student || !$this->subjectId) {
             return $this->emptyData();
         }
 
@@ -78,29 +96,29 @@ class SubjectDetail extends Page
             ->with(['schoolYear', 'gradeLevel'])
             ->first();
 
-        if (! $currentClass) {
+        if (!$currentClass) {
             return $this->emptyData();
         }
 
         $subject = Subject::with(['gradeLevels'])->find($this->subjectId);
 
-        if (! $subject) {
+        if (!$subject) {
             return $this->emptyData();
         }
 
-        // Teacher assignment
+        /* Atribuição do professor. */
         $assignment = TeacherAssignment::where('class_id', $currentClass->id)
             ->where('subject_id', $subject->id)
             ->with('teacher')
             ->first();
 
-        // Weekly hours from pivot
+        /* Carga horária semanal obtida da tabela associativa. */
         $gradeLevelPivot = $subject->gradeLevels
             ->where('id', $currentClass->grade_level_id)
             ->first();
         $hoursWeekly = $gradeLevelPivot?->pivot?->hours_weekly;
 
-        // Grades
+        /* Notas. */
         $grades = Grade::where('student_id', $student->id)
             ->where('class_id', $currentClass->id)
             ->where('subject_id', $subject->id)
@@ -110,30 +128,30 @@ class SubjectDetail extends Page
 
         $termAverages = [];
         foreach (['b1', 'b2', 'b3', 'b4'] as $term) {
-            $termGrades = $grades->filter(fn ($g) => $g->term?->value === $term);
+            $termGrades          = $grades->filter(fn ($g) => $g->term?->value === $term);
             $termAverages[$term] = [
                 'average' => $termGrades->isNotEmpty() ? round($termGrades->avg('score'), 1) : null,
-                'grades' => $termGrades,
+                'grades'  => $termGrades,
             ];
         }
 
         $overallAverage = $grades->isNotEmpty() ? round($grades->avg('score'), 1) : null;
 
-        // Attendance
+        /* Frequência. */
         $attendances = Attendance::where('student_id', $student->id)
             ->where('class_id', $currentClass->id)
             ->where('subject_id', $subject->id)
             ->get();
 
-        $totalClasses = $attendances->count();
-        $presences = $attendances->where('status', 'present')->count();
-        $absences = $attendances->where('status', 'absent')->count();
-        $lates = $attendances->where('status', 'late')->count();
+        $totalClasses      = $attendances->count();
+        $presences         = $attendances->where('status', 'present')->count();
+        $absences          = $attendances->where('status', 'absent')->count();
+        $lates             = $attendances->where('status', 'late')->count();
         $attendancePercent = $totalClasses > 0
             ? round((($presences + $lates) / $totalClasses) * 100, 1)
             : null;
 
-        // Lessons with attendance status
+        /* Aulas com o status de frequência. */
         $lessons = Lesson::where('class_id', $currentClass->id)
             ->where('subject_id', $subject->id)
             ->with(['teacher', 'schoolYear'])
@@ -141,7 +159,8 @@ class SubjectDetail extends Page
             ->orderBy('start_time', 'desc')
             ->get()
             ->map(function ($lesson) use ($student) {
-                // Get attendance for this lesson
+
+                /* Obtém a frequência registrada para esta aula. */
                 $attendance = Attendance::where('student_id', $student->id)
                     ->where('lesson_id', $lesson->id)
                     ->first();
@@ -150,15 +169,15 @@ class SubjectDetail extends Page
                 return $lesson;
             });
 
-        // Statistics by month
+        /* Estatísticas por mês. */
         $monthlyStats = $attendances->groupBy(function ($att) {
             return $att->created_at?->format('Y-m') ?? 'unknown';
         })->map(function ($group) {
             return [
-                'total' => $group->count(),
+                'total'   => $group->count(),
                 'present' => $group->where('status', 'present')->count(),
-                'absent' => $group->where('status', 'absent')->count(),
-                'late' => $group->where('status', 'late')->count(),
+                'absent'  => $group->where('status', 'absent')->count(),
+                'late'    => $group->where('status', 'late')->count(),
                 'percent' => $group->count() > 0
                     ? round((($group->where('status', 'present')->count() + $group->where('status', 'late')->count()) / $group->count()) * 100, 1)
                     : 0,
@@ -166,46 +185,50 @@ class SubjectDetail extends Page
         });
 
         return [
-            'student' => $student,
-            'currentClass' => $currentClass,
-            'subject' => $subject,
-            'teacher' => $assignment?->teacher,
-            'hours_weekly' => $hoursWeekly,
-            'grades' => $grades,
-            'term_averages' => $termAverages,
-            'overall_average' => $overallAverage,
-            'total_classes' => $totalClasses,
-            'presences' => $presences,
-            'absences' => $absences,
-            'lates' => $lates,
+            'student'            => $student,
+            'currentClass'       => $currentClass,
+            'subject'            => $subject,
+            'teacher'            => $assignment?->teacher,
+            'hours_weekly'       => $hoursWeekly,
+            'grades'             => $grades,
+            'term_averages'      => $termAverages,
+            'overall_average'    => $overallAverage,
+            'total_classes'      => $totalClasses,
+            'presences'          => $presences,
+            'absences'           => $absences,
+            'lates'              => $lates,
             'attendance_percent' => $attendancePercent,
-            'lessons' => $lessons,
-            'monthly_stats' => $monthlyStats,
-            'syllabus' => $gradeLevelPivot?->pivot?->syllabus,
-            'objectives' => $gradeLevelPivot?->pivot?->objectives,
+            'lessons'            => $lessons,
+            'monthly_stats'      => $monthlyStats,
+            'syllabus'           => $gradeLevelPivot?->pivot?->syllabus,
+            'objectives'         => $gradeLevelPivot?->pivot?->objectives,
         ];
     }
 
-    private function emptyData(): array
-    {
+    /**
+     * Retorna a estrutura vazia de dados da página.
+     *
+     * @return array
+     */
+    private function emptyData(): array {
         return [
-            'student' => null,
-            'currentClass' => null,
-            'subject' => null,
-            'teacher' => null,
-            'hours_weekly' => null,
-            'grades' => collect(),
-            'term_averages' => [],
-            'overall_average' => null,
-            'total_classes' => 0,
-            'presences' => 0,
-            'absences' => 0,
-            'lates' => 0,
+            'student'            => null,
+            'currentClass'       => null,
+            'subject'            => null,
+            'teacher'            => null,
+            'hours_weekly'       => null,
+            'grades'             => collect(),
+            'term_averages'      => [],
+            'overall_average'    => null,
+            'total_classes'      => 0,
+            'presences'          => 0,
+            'absences'           => 0,
+            'lates'              => 0,
             'attendance_percent' => null,
-            'lessons' => collect(),
-            'monthly_stats' => collect(),
-            'syllabus' => null,
-            'objectives' => null,
+            'lessons'            => collect(),
+            'monthly_stats'      => collect(),
+            'syllabus'           => null,
+            'objectives'         => null,
         ];
     }
 }

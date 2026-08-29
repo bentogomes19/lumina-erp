@@ -27,7 +27,7 @@
 <div class="grades-wrapper">
             @foreach ($gradesByTerm as $term => $disciplines)
                 <div class="grades-card">
-                    {{-- Header do Bimestre --}}
+                    {{-- Cabeçalho do bimestre --}}
                     <div class="grades-header">
                         <h3>{{ $termLabels[$term] ?? $term }}</h3>
                         <div style="text-align: right;">

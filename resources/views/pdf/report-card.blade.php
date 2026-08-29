@@ -9,7 +9,7 @@
 <body>
 <div class="page">
 
-    {{-- ── Header ── --}}
+    {{-- Cabeçalho --}}
     <div class="header">
         <div class="header-top">
             <div>
@@ -23,7 +23,7 @@
         </div>
     </div>
 
-    {{-- ── Student info ── --}}
+    {{-- Dados do aluno --}}
     <div class="student-info">
         <div class="info-grid">
             <div class="info-item"><label>Nome do Aluno</label><span>{{ $student->name }}</span></div>
@@ -36,7 +36,7 @@
         </div>
     </div>
 
-    {{-- ── Summary ── --}}
+    {{-- Resumo --}}
     @php
         $col        = collect($subjects);
         $approved   = $col->where('status', 'approved')->count();
@@ -61,7 +61,7 @@
         @endif
     </div>
 
-    {{-- ── Grades table ── --}}
+    {{-- Tabela de notas --}}
     <table>
         <thead>
             <tr>
@@ -95,7 +95,7 @@
         </tbody>
     </table>
 
-    {{-- ── Signatures ── --}}
+    {{-- Assinaturas --}}
     <div class="signatures">
         <div class="sig-line">
             <div class="line"></div>
@@ -107,7 +107,7 @@
         </div>
     </div>
 
-    {{-- ── Footer ── --}}
+    {{-- Rodapé --}}
     <div class="footer">
         <span>Gerado em {{ $generatedAt->format('d/m/Y \à\s H:i') }}</span>
         <span>{{ config('app.name', 'Lumina ERP') }} — Documento de uso exclusivo da instituição</span>

@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Enums\TermType;
 
-class SchoolYearTerm extends BaseModel
-{
+class SchoolYearTerm extends BaseModel {
+
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
      *
@@ -39,17 +39,19 @@ class SchoolYearTerm extends BaseModel
 
     /**
      * Retorna o ano letivo ao qual o período pertence.
+     *
+     * @return mixed
      */
-    public function schoolYear()
-    {
+    public function schoolYear() {
         return $this->belongsTo(SchoolYear::class);
     }
 
     /**
      * Verifica se a data atual está dentro do período de lançamento de notas.
+     *
+     * @return bool
      */
-    public function isGradeEntryOpen(): bool
-    {
+    public function isGradeEntryOpen(): bool {
         return $this->grade_entry_starts_at?->lte(now())
             && $this->grade_entry_ends_at?->gte(now());
     }

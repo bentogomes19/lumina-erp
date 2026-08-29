@@ -31,12 +31,19 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class EnrollmentsTable
-{
-    public static function configure(Table $table): Table
-    {
+class EnrollmentsTable {
+
+    /**
+     * Configura as colunas, os filtros e as ações da tabela de matrículas.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function configure(Table $table): Table {
         return $table
-            ->query(fn () => Enrollment::query()
+            ->query(
+                fn () => Enrollment::query()
                 ->with([
                     'student',
                     'class.gradeLevel',
@@ -45,7 +52,7 @@ class EnrollmentsTable
             )
             ->defaultSort('enrollment_date', 'desc')
 
-            // ── Colunas ───────────────────────────────────────────────────────
+            /* Colunas. */
             ->columns([
                 TextColumn::make('registration_number')
                     ->label('Nº Matrícula')
@@ -92,7 +99,7 @@ class EnrollmentsTable
                     ->sortable(),
             ])
 
-            // ── Filtros ───────────────────────────────────────────────────────
+            /* Filtros. */
             ->filters([
                 SelectFilter::make('school_year_id')
                     ->label('Ano letivo')
@@ -137,18 +144,18 @@ class EnrollmentsTable
                     }),
             ])
 
-            // ── Ações individuais por registro (agrupadas no menu ⋯) ────────────
+            /* Ações individuais por registro (agrupadas no menu ⋯) */
             ->recordActions([
                 ActionGroup::make([
 
-                    // ── Visualização / Edição ─────────────────────────────────
+                    /* Visualização / Edição. */
                     ViewAction::make()
                         ->label('Ver detalhes')
                         ->modalHeading(fn (Enrollment $record) => "Matrícula — {$record->registration_number}")
                         ->modalWidth('2xl')
                         ->infolist([
 
-                            // ── Cabeçalho: número, status e data ─────────────
+                            /* Cabeçalho: número, status e data. */
                             InfoSection::make()->schema([
                                 TextEntry::make('registration_number')
                                     ->label('Nº de Matrícula')
@@ -172,7 +179,7 @@ class EnrollmentsTable
                                     ->date('d/m/Y'),
                             ])->columns(3),
 
-                            // ── Dados do aluno ────────────────────────────────
+                            /* Dados do aluno. */
                             InfoSection::make('Aluno')
                                 ->icon('fas-user')
                                 ->columns(3)
@@ -197,7 +204,7 @@ class EnrollmentsTable
                                         ->placeholder('—'),
                                 ]),
 
-                            // ── Dados acadêmicos ──────────────────────────────
+                            /* Dados acadêmicos. */
                             InfoSection::make('Dados Acadêmicos')
                                 ->icon('fas-graduation-cap')
                                 ->columns(3)
@@ -229,7 +236,7 @@ class EnrollmentsTable
                                         ->icon('fas-circle-user'),
                                 ]),
 
-                            // ── Dados de trancamento (somente se Trancada) ────
+                            /* Dados de trancamento (somente se Trancada) */
                             InfoSection::make('Dados do Trancamento')
                                 ->icon('fas-lock')
                                 ->columns(2)
@@ -246,7 +253,7 @@ class EnrollmentsTable
                                 ])
                                 ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::LOCKED),
 
-                            // ── Dados da transferência interna ────────────────
+                            /* Dados da transferência interna. */
                             InfoSection::make('Dados da Transferência')
                                 ->icon('fas-right-left')
                                 ->schema([
@@ -256,7 +263,7 @@ class EnrollmentsTable
                                 ])
                                 ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::TRANSFERRED_INTERNAL),
 
-                            // ── Dados da transferência externa ────────────────
+                            /* Dados da transferência externa. */
                             InfoSection::make('Dados da Transferência Externa')
                                 ->icon('fas-up-right-from-square')
                                 ->columns(2)
@@ -271,7 +278,7 @@ class EnrollmentsTable
                                 ])
                                 ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::TRANSFERRED_EXTERNAL),
 
-                            // ── Dados do cancelamento ─────────────────────────
+                            /* Dados do cancelamento. */
                             InfoSection::make('Dados do Cancelamento')
                                 ->icon('fas-circle-xmark')
                                 ->schema([
@@ -288,7 +295,7 @@ class EnrollmentsTable
 
                     EditAction::make()->label('Editar'),
 
-                    // ── Documentos PDF ────────────────────────────────────────
+                    /* Documentos PDF. */
                     Action::make('pdfComprovante')
                         ->label('Emitir Comprovante')
                         ->icon('fas-file-arrow-down')
@@ -328,9 +335,9 @@ class EnrollmentsTable
                         ->url(fn (Enrollment $record) => route('pdf.enrollment.cancelamento', $record->id))
                         ->openUrlInNewTab(),
 
-                    // ── Operações de status ───────────────────────────────────
+                    /* Operações de status. */
 
-                    // ── Trancar matrícula ─────────────────────────────────────
+                    /* Trancar matrícula. */
                 Action::make('trancar')
                     ->label('Trancar')
                     ->icon('fas-lock')
@@ -358,9 +365,9 @@ class EnrollmentsTable
                         $statusAnterior = $record->status?->value;
 
                         $record->update([
-                            'status'          => EnrollmentStatus::LOCKED,
-                            'locked_reason'   => $data['locked_reason'],
-                            'lock_expires_at' => $data['lock_expires_at'] ?? null,
+                            'status'              => EnrollmentStatus::LOCKED,
+                            'locked_reason'       => $data['locked_reason'],
+                            'lock_expires_at'     => $data['lock_expires_at'] ?? null,
                             'operated_by_user_id' => auth()->id(),
                         ]);
 
@@ -379,7 +386,7 @@ class EnrollmentsTable
                             ->send();
                     }),
 
-                // ── Reativar matrícula (de Trancada → Ativa) ─────────────────
+                /* Reativar matrícula (de Trancada → Ativa) */
                 Action::make('reativar')
                     ->label('Reativar')
                     ->icon('fas-lock-open')
@@ -397,9 +404,9 @@ class EnrollmentsTable
                         $statusAnterior = $record->status?->value;
 
                         $record->update([
-                            'status'          => EnrollmentStatus::ACTIVE,
-                            'locked_reason'   => null,
-                            'lock_expires_at' => null,
+                            'status'              => EnrollmentStatus::ACTIVE,
+                            'locked_reason'       => null,
+                            'lock_expires_at'     => null,
                             'operated_by_user_id' => auth()->id(),
                         ]);
 
@@ -418,7 +425,7 @@ class EnrollmentsTable
                             ->send();
                     }),
 
-                // ── Transferência interna (entre turmas) ──────────────────────
+                /* Transferência interna (entre turmas) */
                 Action::make('transferirTurma')
                     ->label('Transferir Turma')
                     ->icon('fas-right-left')
@@ -457,11 +464,13 @@ class EnrollmentsTable
                             ->rows(3),
                     ])
                     ->action(function (array $data, Enrollment $record): void {
-                        // Verifica disponibilidade de vagas na turma destino
-                        if (! Enrollment::classHasSlot((int) $data['class_id'])) {
+
+                        /* Verifica disponibilidade de vagas na turma destino. */
+                        if (!Enrollment::classHasSlot((int) $data['class_id'])) {
                             $user = auth()->user();
-                            // Somente TI pode ultrapassar o limite de vagas
-                            if (! $user?->hasAnyRole(['admin', 'ti'])) {
+
+                            /* Somente TI pode ultrapassar o limite de vagas. */
+                            if (!$user?->hasAnyRole(['admin', 'ti'])) {
                                 Notification::make()
                                     ->title('Turma sem vagas')
                                     ->body('A turma de destino atingiu a capacidade máxima. Contate o perfil TI para forçar a transferência.')
@@ -471,7 +480,7 @@ class EnrollmentsTable
                             }
                         }
 
-                        // Verifica se o aluno já possui matrícula ativa na turma destino
+                        /* Verifica se o aluno já possui matrícula ativa na turma destino. */
                         $jaMatriculado = Enrollment::where('student_id', $record->student_id)
                             ->where('class_id', $data['class_id'])
                             ->whereIn('status', [
@@ -489,18 +498,18 @@ class EnrollmentsTable
                             return;
                         }
 
-                        $statusAnterior = $record->status?->value;
+                        $statusAnterior  = $record->status?->value;
                         $turmaOrigemNome = $record->class?->name;
 
-                        // Encerra a matrícula atual como Transferida Interna
+                        /* Encerra a matrícula atual como Transferida Interna. */
                         $record->update([
-                            'status'          => EnrollmentStatus::TRANSFERRED_INTERNAL,
-                            'transfer_type'   => 'internal',
-                            'transfer_reason' => $data['transfer_reason'],
+                            'status'              => EnrollmentStatus::TRANSFERRED_INTERNAL,
+                            'transfer_type'       => 'internal',
+                            'transfer_reason'     => $data['transfer_reason'],
                             'operated_by_user_id' => auth()->id(),
                         ]);
 
-                        // Cria nova matrícula na turma destino vinculando ao histórico anterior
+                        /* Cria nova matrícula na turma destino vinculando ao histórico anterior. */
                         $novaMatricula = Enrollment::create([
                             'student_id'             => $record->student_id,
                             'class_id'               => $data['class_id'],
@@ -533,7 +542,7 @@ class EnrollmentsTable
                             ->send();
                     }),
 
-                // ── Transferência externa (outra instituição) ─────────────────
+                /* Transferência externa (outra instituição) */
                 Action::make('transferirExterna')
                     ->label('Transferência Externa')
                     ->icon('fas-up-right-from-square')
@@ -588,7 +597,7 @@ class EnrollmentsTable
                             ->send();
                     }),
 
-                // ── Cancelar matrícula ────────────────────────────────────────
+                /* Cancelar matrícula. */
                 Action::make('cancelar')
                     ->label('Cancelar')
                     ->icon('fas-circle-xmark')
@@ -617,10 +626,10 @@ class EnrollmentsTable
                         $statusAnterior = $record->status?->value;
 
                         $record->update([
-                            'status'               => EnrollmentStatus::CANCELED,
-                            'cancel_reason'        => $data['cancel_reason'],
-                            'cancel_observations'  => $data['cancel_observations'] ?? null,
-                            'operated_by_user_id'  => auth()->id(),
+                            'status'              => EnrollmentStatus::CANCELED,
+                            'cancel_reason'       => $data['cancel_reason'],
+                            'cancel_observations' => $data['cancel_observations'] ?? null,
+                            'operated_by_user_id' => auth()->id(),
                         ]);
 
                         EnrollmentLog::registrar(
@@ -638,12 +647,13 @@ class EnrollmentsTable
                             ->send();
                     }),
 
-                // ── Reverter cancelamento (somente TI) ───────────────────────
+                /* Reverter cancelamento (somente TI) */
                 Action::make('reverterCancelamento')
                     ->label('Reverter Cancelamento')
                     ->icon('fas-rotate-left')
                     ->color('warning')
-                    ->visible(fn (Enrollment $record) => $record->status === EnrollmentStatus::CANCELED
+                    ->visible(
+                        fn (Enrollment $record) => $record->status === EnrollmentStatus::CANCELED
                         && auth()->user()?->hasAnyRole(['admin', 'ti'])
                     )
                     ->modalHeading('Reverter Cancelamento — Perfil TI')
@@ -655,8 +665,9 @@ class EnrollmentsTable
                             ->rows(3),
                     ])
                     ->action(function (array $data, Enrollment $record): void {
-                        // Dupla verificação de autorização no backend
-                        if (! auth()->user()?->hasAnyRole(['admin', 'ti'])) {
+
+                        /* Dupla verificação de autorização no backend. */
+                        if (!auth()->user()?->hasAnyRole(['admin', 'ti'])) {
                             Notification::make()->title('Acesso negado')->danger()->send();
                             return;
                         }
@@ -664,10 +675,10 @@ class EnrollmentsTable
                         $statusAnterior = $record->status?->value;
 
                         $record->update([
-                            'status'               => EnrollmentStatus::ACTIVE,
-                            'cancel_reason'        => null,
-                            'cancel_observations'  => null,
-                            'operated_by_user_id'  => auth()->id(),
+                            'status'              => EnrollmentStatus::ACTIVE,
+                            'cancel_reason'       => null,
+                            'cancel_observations' => null,
+                            'operated_by_user_id' => auth()->id(),
                         ]);
 
                         EnrollmentLog::registrar(
@@ -685,14 +696,14 @@ class EnrollmentsTable
                             ->send();
                     }),
 
-                ]) // fecha ActionGroup::make([...])
+                ])
             ])
 
-            // ── Ações em lote ─────────────────────────────────────────────────
+            /* Ações em lote. */
             ->toolbarActions([
                 BulkActionGroup::make([
 
-                    // Rematrícula em lote
+                    /* Rematrícula em lote. */
                     BulkAction::make('rematricula')
                         ->label('Rematrícula em Lote')
                         ->icon('fas-rotate')
@@ -707,7 +718,8 @@ class EnrollmentsTable
                             Select::make('class_id')
                                 ->label('Turma de Destino')
                                 ->helperText('Deixe em branco para manter a mesma série/turma equivalente.')
-                                ->options(fn () => SchoolClass::with('gradeLevel', 'schoolYear')
+                                ->options(
+                                    fn () => SchoolClass::with('gradeLevel', 'schoolYear')
                                     ->get()
                                     ->mapWithKeys(fn ($c) => [
                                         $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
@@ -717,12 +729,13 @@ class EnrollmentsTable
                                 ->searchable(),
                         ])
                         ->action(function ($records, array $data) {
-                            $criadas  = 0;
+                            $criadas   = 0;
                             $ignoradas = 0;
 
                             foreach ($records as $enrollment) {
-                                // Apenas matrículas ativas ou concluídas são elegíveis
-                                if (! in_array($enrollment->status, [
+
+                                /* Apenas matrículas ativas ou concluídas são elegíveis. */
+                                if (!in_array($enrollment->status, [
                                     EnrollmentStatus::ACTIVE,
                                     EnrollmentStatus::COMPLETED,
                                 ])) {
@@ -732,7 +745,7 @@ class EnrollmentsTable
 
                                 $classId = $data['class_id'] ?? $enrollment->class_id;
 
-                                // Verifica se já existe matrícula ativa no ano destino
+                                /* Verifica se já existe matrícula ativa no ano destino. */
                                 $jaExiste = Enrollment::where('student_id', $enrollment->student_id)
                                     ->where('school_year_id', $data['school_year_id'])
                                     ->whereIn('status', [
@@ -746,8 +759,8 @@ class EnrollmentsTable
                                     continue;
                                 }
 
-                                // Verifica vagas
-                                if (! Enrollment::classHasSlot((int) $classId)) {
+                                /* Verifica vagas. */
+                                if (!Enrollment::classHasSlot((int) $classId)) {
                                     $ignoradas++;
                                     continue;
                                 }
@@ -772,7 +785,7 @@ class EnrollmentsTable
                                 ->send();
                         }),
 
-                    // Alteração de status em lote (uso administrativo)
+                    /* Alteração de status em lote (uso administrativo) */
                     BulkAction::make('bulkStatus')
                         ->label('Alterar status')
                         ->icon('fas-sliders')

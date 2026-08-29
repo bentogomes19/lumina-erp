@@ -2,28 +2,36 @@
 
 namespace App\Enums;
 
-enum ClassType: string
-{
-    case REGULAR = 'regular';
+enum ClassType: string {
+
+    case REGULAR   = 'regular';
     case FULL_TIME = 'full_time';
-    case EJA = 'eja';
+    case EJA       = 'eja';
     case TECHNICAL = 'technical';
 
-    public function label(): string
-    {
+    /**
+     * Retorna o rótulo legível do tipo de turma.
+     *
+     * @return string
+     */
+    public function label(): string {
         return match ($this) {
-            self::REGULAR => 'Regular',
+            self::REGULAR   => 'Regular',
             self::FULL_TIME => 'Integral',
-            self::EJA => 'EJA',
+            self::EJA       => 'EJA',
             self::TECHNICAL => 'Técnico',
         };
     }
 
-    public static function options(): array
-    {
+    /**
+     * Retorna os tipos de turma disponíveis para seleção.
+     *
+     * @return array
+     */
+    public static function options(): array {
         return array_combine(
-            array_map(fn($c) => $c->value, self::cases()),
-            array_map(fn($c) => $c->label(), self::cases()),
+            array_map(fn ($c) => $c->value, self::cases()),
+            array_map(fn ($c) => $c->label(), self::cases()),
         );
     }
 }

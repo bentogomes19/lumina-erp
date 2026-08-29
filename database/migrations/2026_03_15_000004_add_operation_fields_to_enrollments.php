@@ -15,19 +15,24 @@ use Illuminate\Support\Facades\Schema;
  * - Soft deletes (deleted_at)
  * - Migra status 'Transferida' → 'Transferida Interna' para consistência com novos cases do enum
  */
-return new class extends Migration
-{
-    public function up(): void
-    {
+return new class () extends Migration {
+
+    /**
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
+     */
+    public function up(): void {
         Schema::table('enrollments', function (Blueprint $table) {
-            // ── Campos de trancamento ─────────────────────────────────────────
+
+            /* Campos de trancamento. */
             $table->string('locked_reason', 50)->nullable()->after('status')
                 ->comment('Motivo do trancamento: saude, trabalho, financeiro, outros');
 
             $table->date('lock_expires_at')->nullable()->after('locked_reason')
                 ->comment('Prazo máximo do trancamento (padrão: fim do ano letivo)');
 
-            // ── Campos de transferência ───────────────────────────────────────
+            /* Campos de transferência. */
             $table->string('transfer_type', 20)->nullable()->after('lock_expires_at')
                 ->comment('Tipo de transferência: internal (entre turmas) ou external (outra instituição)');
 
@@ -37,14 +42,14 @@ return new class extends Migration
             $table->text('transfer_reason')->nullable()->after('transfer_destination')
                 ->comment('Motivo da transferência');
 
-            // ── Campos de cancelamento ────────────────────────────────────────
+            /* Campos de cancelamento. */
             $table->text('cancel_reason')->nullable()->after('transfer_reason')
                 ->comment('Motivo do cancelamento (obrigatório no ato)');
 
             $table->text('cancel_observations')->nullable()->after('cancel_reason')
                 ->comment('Observações adicionais sobre o cancelamento');
 
-            // ── Vínculo histórico ─────────────────────────────────────────────
+            /* Vínculo histórico. */
             $table->unsignedBigInteger('previous_enrollment_id')->nullable()->after('cancel_observations')
                 ->comment('Matrícula anterior (para rematrícula ou transferência interna)');
 
@@ -53,7 +58,7 @@ return new class extends Migration
                 ->on('enrollments')
                 ->nullOnDelete();
 
-            // ── Rastreabilidade ───────────────────────────────────────────────
+            /* Rastreabilidade. */
             $table->unsignedBigInteger('operated_by_user_id')->nullable()->after('previous_enrollment_id')
                 ->comment('Último operador que realizou uma ação na matrícula');
 
@@ -62,27 +67,31 @@ return new class extends Migration
                 ->on('users')
                 ->nullOnDelete();
 
-            // ── Soft deletes ──────────────────────────────────────────────────
+            /* Soft deletes. */
             $table->softDeletes();
         });
 
-        // Expande o ENUM para incluir os novos status antes de atualizar os dados.
-        // A ordem importa: o ENUM precisa aceitar os novos valores antes do UPDATE.
+        /* Expande o ENUM para incluir os novos status antes de atualizar os dados A ordem importa: o ENUM precisa aceitar os novos valores antes do UPDATE. */
         DB::statement("ALTER TABLE enrollments MODIFY COLUMN status ENUM(
             'Ativa','Suspensa','Trancada',
             'Transferida Interna','Transferida Externa',
             'Cancelada','Completa'
         ) NOT NULL DEFAULT 'Ativa'");
 
-        // Migra status legado 'Transferida' → 'Transferida Interna'
+        /* Migra status legado 'Transferida' → 'Transferida Interna'. */
         DB::table('enrollments')
             ->where('status', 'Transferida')
             ->update(['status' => 'Transferida Interna']);
     }
 
-    public function down(): void
-    {
-        // Reverte dados antes de remover os campos e restaurar o ENUM
+    /**
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
+     */
+    public function down(): void {
+
+        /* Reverte dados antes de remover os campos e restaurar o ENUM. */
         DB::table('enrollments')
             ->where('status', 'Transferida Interna')
             ->update(['status' => 'Ativa']);
@@ -91,7 +100,7 @@ return new class extends Migration
             ->where('status', 'Transferida Externa')
             ->update(['status' => 'Ativa']);
 
-        // Restaura o ENUM original (sem os novos valores)
+        /* Restaura o ENUM original (sem os novos valores) */
         DB::statement("ALTER TABLE enrollments MODIFY COLUMN status ENUM(
             'Ativa','Suspensa','Trancada','Transferida','Cancelada','Completa'
         ) NOT NULL DEFAULT 'Ativa'");

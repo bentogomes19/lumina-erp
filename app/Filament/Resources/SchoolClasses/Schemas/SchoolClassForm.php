@@ -5,19 +5,22 @@ namespace App\Filament\Resources\SchoolClasses\Schemas;
 use App\Enums\ClassShift;
 use App\Enums\ClassStatus;
 use App\Enums\ClassType;
-use App\Models\GradeLevel;
-use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Validation\Rules\Enum as EnumRule;
-use App\Models\SchoolYear;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
-class SchoolClassForm
-{
-    public static function configure(Schema $schema): Schema
-    {
+class SchoolClassForm {
+
+    /**
+     * Configura os campos do formulário de turmas.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function configure(Schema $schema): Schema {
         return $schema
             ->components([
                 Section::make('Identificação')->schema([
@@ -36,8 +39,8 @@ class SchoolClassForm
                     Select::make('grade_level_id')
                         ->label('Série / Etapa')
                         ->relationship('gradeLevel', 'name')
-                        ->getOptionLabelFromRecordUsing(fn ($record) =>
-                            $record->name.' — '.($record->stage?->label() ?? strtoupper($record->stage?->value ?? ''))
+                        ->getOptionLabelFromRecordUsing(
+                            fn ($record) => $record->name.' — '.($record->stage?->label() ?? strtoupper($record->stage?->value ?? ''))
                         )
                         ->searchable()
                         ->preload()
@@ -84,7 +87,7 @@ class SchoolClassForm
                         ->numeric()
                         ->minValue(1)
                         ->maxValue(60)
-                        ->helperText('Limite recomendado RM: 25~40 por turma, conforme etapa.'), // ajuste sua regra
+                        ->helperText('Limite recomendado RM: 25~40 por turma, conforme etapa.'), /* ajuste sua regra. */
                 ])->collapsible(),
             ]);
     }

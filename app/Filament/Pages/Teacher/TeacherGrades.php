@@ -21,20 +21,20 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-class TeacherGrades extends Page
-{
+class TeacherGrades extends Page {
+
     use HasTeacherPortalAccess;
 
-    protected static ?string $navigationLabel = 'Lançar Notas';
-    protected static ?string $title = 'Lançar Notas';
-    protected static ?string $slug = 'teacher-grades';
+    protected static ?string $navigationLabel                = 'Lançar Notas';
+    protected static ?string $title                          = 'Lançar Notas';
+    protected static ?string $slug                           = 'teacher-grades';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-pen-to-square';
-    protected static string|null|\UnitEnum $navigationGroup = 'Portal do Professor';
-    protected static ?int $navigationSort = 5;
-    protected static ?string $teacherPortalPermission = 'teacher.grades.view';
+    protected static string|null|\UnitEnum $navigationGroup  = 'Portal do Professor';
+    protected static ?int $navigationSort                    = 5;
+    protected static ?string $teacherPortalPermission        = 'teacher.grades.view';
 
-    public ?int $selectedClassId = null;
-    public ?int $selectedSubjectId = null;
+    public ?int $selectedClassId      = null;
+    public ?int $selectedSubjectId    = null;
     public ?int $selectedAssessmentId = null;
 
     /**
@@ -44,93 +44,125 @@ class TeacherGrades extends Page
 
     public ?array $saveSummary = null;
 
-    public static function shouldRegisterNavigation(): bool
-    {
+    /**
+     * Determina se a página deve ser registrada na navegação.
+     *
+     * @return bool
+     */
+    public static function shouldRegisterNavigation(): bool {
         return PermissionAccess::can('teacher.grades.view');
     }
 
-    public static function canAccess(): bool
-    {
+    /**
+     * Determina se o usuário atual pode acessar a página.
+     *
+     * @return bool
+     */
+    public static function canAccess(): bool {
         return PermissionAccess::can('teacher.grades.view');
     }
 
-    public function mount(): void
-    {
-        $teacher = $this->currentTeacher();
-        $assignments = $this->teacherAssignments($teacher);
+    /**
+     * Inicializa o estado necessário para exibir a página.
+     *
+     * @return void
+     */
+    public function mount(): void {
+        $teacher         = $this->currentTeacher();
+        $assignments     = $this->teacherAssignments($teacher);
         $firstAssignment = $assignments->first();
 
-        $this->selectedClassId = $firstAssignment?->class_id;
-        $this->selectedSubjectId = $firstAssignment?->subject_id;
+        $this->selectedClassId      = $firstAssignment?->class_id;
+        $this->selectedSubjectId    = $firstAssignment?->subject_id;
         $this->selectedAssessmentId = $this->firstAvailableAssessmentId($teacher, $this->selectedClassId, $this->selectedSubjectId);
 
         $this->syncGradeRows();
     }
 
-    public function updatedSelectedClassId(): void
-    {
-        $this->selectedSubjectId = $this->firstAvailableSubjectId($this->selectedClassId);
+    /**
+     * Atualiza as disciplinas e avaliações após a seleção de uma turma.
+     *
+     * @return void
+     */
+    public function updatedSelectedClassId(): void {
+        $this->selectedSubjectId    = $this->firstAvailableSubjectId($this->selectedClassId);
         $this->selectedAssessmentId = $this->firstAvailableAssessmentId($this->currentTeacher(), $this->selectedClassId, $this->selectedSubjectId);
-        $this->saveSummary = null;
+        $this->saveSummary          = null;
         $this->syncGradeRows();
     }
 
-    public function updatedSelectedSubjectId(): void
-    {
+    /**
+     * Atualiza as avaliações após a seleção de uma disciplina.
+     *
+     * @return void
+     */
+    public function updatedSelectedSubjectId(): void {
         $this->selectedAssessmentId = $this->firstAvailableAssessmentId($this->currentTeacher(), $this->selectedClassId, $this->selectedSubjectId);
+        $this->saveSummary          = null;
+        $this->syncGradeRows();
+    }
+
+    /**
+     * Carrega as notas após a seleção de uma avaliação.
+     *
+     * @return void
+     */
+    public function updatedSelectedAssessmentId(): void {
         $this->saveSummary = null;
         $this->syncGradeRows();
     }
 
-    public function updatedSelectedAssessmentId(): void
-    {
-        $this->saveSummary = null;
-        $this->syncGradeRows();
-    }
-
-    public function getView(): string
-    {
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
+    public function getView(): string {
         return 'filament.pages.teacher.teacher-grades';
     }
 
-    public function getPageData(): array
-    {
-        $teacher = $this->currentTeacher();
+    /**
+     * Retorna os dados necessários para montar a página.
+     *
+     * @return array
+     */
+    public function getPageData(): array {
+        $teacher     = $this->currentTeacher();
         $assignments = $this->teacherAssignments($teacher);
-        $context = $this->resolveContext($teacher, $assignments);
+        $context     = $this->resolveContext($teacher, $assignments);
 
-        if (! $teacher || $assignments->isEmpty()) {
+        if (!$teacher || $assignments->isEmpty()) {
             return [
-                'teacher' => $teacher,
-                'assignments' => $assignments,
-                'classes' => [],
-                'subjects' => [],
-                'assessments' => [],
-                'context' => null,
-                'students' => collect(),
-                'summary' => $this->emptySummary(),
-                'canSave' => false,
-                'canPublish' => false,
-                'isBlocked' => $this->teacherIsBlocked($teacher),
-                'contextError' => ! $teacher ? 'Nenhum professor vinculado ao usuário atual.' : 'Você não possui turmas ou disciplinas atribuídas.',
-                'saveSummary' => $this->saveSummary,
+                'teacher'      => $teacher,
+                'assignments'  => $assignments,
+                'classes'      => [],
+                'subjects'     => [],
+                'assessments'  => [],
+                'context'      => null,
+                'students'     => collect(),
+                'summary'      => $this->emptySummary(),
+                'canSave'      => false,
+                'canPublish'   => false,
+                'isBlocked'    => $this->teacherIsBlocked($teacher),
+                'contextError' => !$teacher ? 'Nenhum professor vinculado ao usuário atual.' : 'Você não possui turmas ou disciplinas atribuídas.',
+                'saveSummary'  => $this->saveSummary,
             ];
         }
 
-        $students = collect();
-        $summary = $this->emptySummary();
-        $contextError = null;
-        $isBlocked = $this->teacherIsBlocked($teacher);
+        $students         = collect();
+        $summary          = $this->emptySummary();
+        $contextError     = null;
+        $isBlocked        = $this->teacherIsBlocked($teacher);
         $assessmentClosed = false;
         $schoolYearClosed = false;
-        $hasLockedGrades = false;
+        $hasLockedGrades  = false;
 
         if ($context) {
-            $students = $this->buildStudents($context['assessment']);
-            $summary = $this->buildSummary($students);
+            $students         = $this->buildStudents($context['assessment']);
+            $summary          = $this->buildSummary($students);
             $assessmentClosed = $context['assessment']->isClosed();
             $schoolYearClosed = $context['schoolYear']?->status === SchoolYearStatus::CLOSED;
-            $hasLockedGrades = Grade::query()
+            $hasLockedGrades  = Grade::query()
                 ->where('assessment_id', $context['assessment']->id)
                 ->whereNotNull('locked_at')
                 ->exists();
@@ -138,58 +170,72 @@ class TeacherGrades extends Page
             $contextError = 'Selecione uma avaliação vinculada ao seu cadastro.';
         }
 
-        $canSavePermission = PermissionAccess::can('teacher.grades.create') || PermissionAccess::can('teacher.grades.update');
+        $canSavePermission    = PermissionAccess::can('teacher.grades.create') || PermissionAccess::can('teacher.grades.update');
         $canPublishPermission = PermissionAccess::can('teacher.grades.publish');
 
         $canSave = $canSavePermission
-            && ! $isBlocked
-            && ! $assessmentClosed
-            && ! $schoolYearClosed
-            && ! $hasLockedGrades
+            && !$isBlocked
+            && !$assessmentClosed
+            && !$schoolYearClosed
+            && !$hasLockedGrades
             && $students->isNotEmpty();
 
         $canPublish = $canPublishPermission
-            && ! $isBlocked
-            && ! $assessmentClosed
-            && ! $schoolYearClosed
+            && !$isBlocked
+            && !$assessmentClosed
+            && !$schoolYearClosed
             && $students->isNotEmpty();
 
         return [
-            'teacher' => $teacher,
-            'assignments' => $assignments,
-            'classes' => $this->classOptions($assignments),
-            'subjects' => $this->subjectOptions($assignments, $this->selectedClassId),
-            'assessments' => $this->assessmentOptions($teacher, $this->selectedClassId, $this->selectedSubjectId),
-            'context' => $context,
-            'students' => $students,
-            'summary' => $summary,
-            'canSave' => $canSave,
-            'canPublish' => $canPublish,
-            'isBlocked' => $isBlocked,
+            'teacher'          => $teacher,
+            'assignments'      => $assignments,
+            'classes'          => $this->classOptions($assignments),
+            'subjects'         => $this->subjectOptions($assignments, $this->selectedClassId),
+            'assessments'      => $this->assessmentOptions($teacher, $this->selectedClassId, $this->selectedSubjectId),
+            'context'          => $context,
+            'students'         => $students,
+            'summary'          => $summary,
+            'canSave'          => $canSave,
+            'canPublish'       => $canPublish,
+            'isBlocked'        => $isBlocked,
             'assessmentClosed' => $assessmentClosed,
             'schoolYearClosed' => $schoolYearClosed,
-            'hasLockedGrades' => $hasLockedGrades,
-            'contextError' => $contextError,
-            'saveSummary' => $this->saveSummary,
+            'hasLockedGrades'  => $hasLockedGrades,
+            'contextError'     => $contextError,
+            'saveSummary'      => $this->saveSummary,
         ];
     }
 
-    public function saveDraft(): void
-    {
+    /**
+     * Salva as notas como rascunho.
+     *
+     * @return void
+     */
+    public function saveDraft(): void {
         $this->saveGrades(false);
     }
 
-    public function publishGrades(): void
-    {
+    /**
+     * Publica as notas lançadas na avaliação.
+     *
+     * @return void
+     */
+    public function publishGrades(): void {
         $this->saveGrades(true);
     }
 
-    private function saveGrades(bool $publish): void
-    {
-        $teacher = $this->currentTeacher();
+    /**
+     * Valida e salva as notas lançadas na avaliação.
+     *
+     * @param bool $publish
+     *
+     * @return void
+     */
+    private function saveGrades(bool $publish): void {
+        $teacher     = $this->currentTeacher();
         $assignments = $this->teacherAssignments($teacher);
 
-        if (! $teacher) {
+        if (!$teacher) {
             throw ValidationException::withMessages([
                 'teacher' => 'Nenhum professor vinculado ao usuário atual.',
             ]);
@@ -203,7 +249,7 @@ class TeacherGrades extends Page
 
         $context = $this->resolveContext($teacher, $assignments, true);
 
-        if (! $context) {
+        if (!$context) {
             throw ValidationException::withMessages([
                 'assessment' => 'Selecione uma avaliação válida.',
             ]);
@@ -231,22 +277,22 @@ class TeacherGrades extends Page
             ]);
         }
 
-        if (! PermissionAccess::can('teacher.grades.create') && ! PermissionAccess::can('teacher.grades.update')) {
+        if (!PermissionAccess::can('teacher.grades.create') && !PermissionAccess::can('teacher.grades.update')) {
             throw ValidationException::withMessages([
                 'permission' => 'Você não tem permissão para salvar notas.',
             ]);
         }
 
-        if ($publish && ! PermissionAccess::can('teacher.grades.publish')) {
+        if ($publish && !PermissionAccess::can('teacher.grades.publish')) {
             throw ValidationException::withMessages([
                 'permission' => 'Você não tem permissão para publicar notas.',
             ]);
         }
 
-        $maxScore = (float) ($assessment->max_score ?? 10);
-        $term = $this->resolveTerm($assessment);
+        $maxScore       = (float) ($assessment->max_score ?? 10);
+        $term           = $this->resolveTerm($assessment);
         $assessmentType = $this->mapAssessmentType($assessment->assessment_type);
-        $sequence = 1;
+        $sequence       = 1;
 
         $created = 0;
         $updated = 0;
@@ -254,8 +300,8 @@ class TeacherGrades extends Page
         DB::transaction(function () use ($students, $assessment, $maxScore, $term, $assessmentType, $sequence, $publish, $teacher, &$created, &$updated) {
             foreach ($students as $student) {
                 $studentId = (int) $student['student_id'];
-                $score = $this->gradeRows[$studentId]['score'] ?? null;
-                $comment = $this->gradeRows[$studentId]['comment'] ?? null;
+                $score     = $this->gradeRows[$studentId]['score'] ?? null;
+                $comment   = $this->gradeRows[$studentId]['comment'] ?? null;
 
                 if ($score === null || $score === '') {
                     throw ValidationException::withMessages([
@@ -278,31 +324,31 @@ class TeacherGrades extends Page
                 }
 
                 $attributes = [
-                    'enrollment_id' => $student['enrollment_id'],
-                    'subject_id' => $assessment->subject_id,
-                    'term' => $term,
+                    'enrollment_id'   => $student['enrollment_id'],
+                    'subject_id'      => $assessment->subject_id,
+                    'term'            => $term,
                     'assessment_type' => $assessmentType,
-                    'sequence' => $sequence,
+                    'sequence'        => $sequence,
                 ];
 
                 $data = [
-                    'assessment_id' => $assessment->id,
-                    'enrollment_id' => $student['enrollment_id'],
-                    'class_id' => $assessment->class_id,
-                    'subject_id' => $assessment->subject_id,
-                    'teacher_id' => $teacher->id,
-                    'term' => $term,
+                    'assessment_id'   => $assessment->id,
+                    'enrollment_id'   => $student['enrollment_id'],
+                    'class_id'        => $assessment->class_id,
+                    'subject_id'      => $assessment->subject_id,
+                    'teacher_id'      => $teacher->id,
+                    'term'            => $term,
                     'assessment_type' => $assessmentType,
-                    'sequence' => $sequence,
-                    'student_id' => $studentId,
-                    'score' => $scoreValue,
-                    'max_score' => $maxScore,
-                    'weight' => (float) ($assessment->weight ?? 1),
-                    'comment' => $comment,
-                    'date_recorded' => now()->toDateString(),
-                    'posted_by' => $publish ? auth()->id() : null,
-                    'locked_at' => $publish ? now() : null,
-                    'origin' => 'manual',
+                    'sequence'        => $sequence,
+                    'student_id'      => $studentId,
+                    'score'           => $scoreValue,
+                    'max_score'       => $maxScore,
+                    'weight'          => (float) ($assessment->weight ?? 1),
+                    'comment'         => $comment,
+                    'date_recorded'   => now()->toDateString(),
+                    'posted_by'       => $publish ? auth()->id() : null,
+                    'locked_at'       => $publish ? now() : null,
+                    'origin'          => 'manual',
                 ];
 
                 $existing = Grade::query()->where($attributes)->lockForUpdate()->first();
@@ -324,9 +370,9 @@ class TeacherGrades extends Page
         });
 
         $this->saveSummary = [
-            'created' => $created,
-            'updated' => $updated,
-            'total' => $created + $updated,
+            'created'   => $created,
+            'updated'   => $updated,
+            'total'     => $created + $updated,
             'published' => $publish,
         ];
 
@@ -339,19 +385,35 @@ class TeacherGrades extends Page
             ->send();
     }
 
-    private function currentTeacher(): ?Teacher
-    {
+    /**
+     * Retorna o professor autenticado no portal.
+     *
+     * @return Teacher|null
+     */
+    private function currentTeacher(): ?Teacher {
         return app(CurrentTeacherService::class)->current();
     }
 
-    private function teacherAssignments(?Teacher $teacher = null): Collection
-    {
+    /**
+     * Retorna as atribuições do professor autenticado.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return Collection
+     */
+    private function teacherAssignments(?Teacher $teacher = null): Collection {
         return app(CurrentTeacherService::class)->assignments($teacher);
     }
 
-    private function teacherIsBlocked(?Teacher $teacher): bool
-    {
-        if (! $teacher) {
+    /**
+     * Determina se o professor está impedido de realizar lançamentos.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return bool
+     */
+    private function teacherIsBlocked(?Teacher $teacher): bool {
+        if (!$teacher) {
             return true;
         }
 
@@ -362,9 +424,17 @@ class TeacherGrades extends Page
         ], true);
     }
 
-    private function resolveContext(?Teacher $teacher, Collection $assignments, bool $strict = false): ?array
-    {
-        if (! $teacher || $assignments->isEmpty() || ! $this->selectedClassId || ! $this->selectedSubjectId || ! $this->selectedAssessmentId) {
+    /**
+     * Resolve a turma, a disciplina e o período usados na operação.
+     *
+     * @param Teacher|null $teacher
+     * @param Collection $assignments
+     * @param bool $strict
+     *
+     * @return array|null
+     */
+    private function resolveContext(?Teacher $teacher, Collection $assignments, bool $strict = false): ?array {
+        if (!$teacher || $assignments->isEmpty() || !$this->selectedClassId || !$this->selectedSubjectId || !$this->selectedAssessmentId) {
             return null;
         }
 
@@ -373,7 +443,7 @@ class TeacherGrades extends Page
                 && (int) $item->subject_id === (int) $this->selectedSubjectId;
         });
 
-        if (! $assignment) {
+        if (!$assignment) {
             return null;
         }
 
@@ -385,7 +455,7 @@ class TeacherGrades extends Page
             ->with(['schoolYear'])
             ->first();
 
-        if (! $assessment) {
+        if (!$assessment) {
             return null;
         }
 
@@ -395,8 +465,14 @@ class TeacherGrades extends Page
         ];
     }
 
-    private function buildStudents(Assessment $assessment): Collection
-    {
+    /**
+     * Monta os dados dos alunos usados nos lançamentos.
+     *
+     * @param Assessment $assessment
+     *
+     * @return Collection
+     */
+    private function buildStudents(Assessment $assessment): Collection {
         $enrollments = Enrollment::query()
             ->where('class_id', $assessment->class_id)
             ->whereIn('status', [
@@ -414,7 +490,7 @@ class TeacherGrades extends Page
             ->keyBy('student_id');
 
         return $enrollments->map(function (Enrollment $enrollment) use ($existing, $assessment) {
-            $grade = $existing->get($enrollment->student_id);
+            $grade   = $existing->get($enrollment->student_id);
             $student = $enrollment->student;
 
             $score = $this->gradeRows[$enrollment->student_id]['score']
@@ -425,31 +501,35 @@ class TeacherGrades extends Page
                 ?? null;
 
             $this->gradeRows[$enrollment->student_id] = [
-                'score' => $score,
+                'score'   => $score,
                 'comment' => $comment,
             ];
 
             return [
-                'enrollment_id' => $enrollment->id,
-                'student_id' => $enrollment->student_id,
-                'student_name' => $student?->name ?? '—',
+                'enrollment_id'       => $enrollment->id,
+                'student_id'          => $enrollment->student_id,
+                'student_name'        => $student?->name ?? '—',
                 'registration_number' => $student?->registration_number ?? '—',
-                'roll_number' => $enrollment->roll_number,
-                'score' => $score,
-                'comment' => $comment,
-                'locked' => (bool) $grade?->locked_at,
-                'max_score' => (float) ($assessment->max_score ?? 10),
+                'roll_number'         => $enrollment->roll_number,
+                'score'               => $score,
+                'comment'             => $comment,
+                'locked'              => (bool) $grade?->locked_at,
+                'max_score'           => (float) ($assessment->max_score ?? 10),
             ];
         });
     }
 
-    private function syncGradeRows(): void
-    {
-        $teacher = $this->currentTeacher();
+    /**
+     * Sincroniza as linhas de notas com os alunos carregados.
+     *
+     * @return void
+     */
+    private function syncGradeRows(): void {
+        $teacher     = $this->currentTeacher();
         $assignments = $this->teacherAssignments($teacher);
-        $context = $this->resolveContext($teacher, $assignments);
+        $context     = $this->resolveContext($teacher, $assignments);
 
-        if (! $context) {
+        if (!$context) {
             $this->gradeRows = [];
 
             return;
@@ -460,15 +540,21 @@ class TeacherGrades extends Page
         $this->gradeRows = $students->mapWithKeys(function (array $row) {
             return [
                 $row['student_id'] => [
-                    'score' => $row['score'],
+                    'score'   => $row['score'],
                     'comment' => $row['comment'],
                 ],
             ];
         })->all();
     }
 
-    private function classOptions(Collection $assignments): array
-    {
+    /**
+     * Retorna as turmas disponíveis para lançamento de notas.
+     *
+     * @param Collection $assignments
+     *
+     * @return array
+     */
+    private function classOptions(Collection $assignments): array {
         return $assignments
             ->pluck('schoolClass')
             ->filter()
@@ -480,8 +566,15 @@ class TeacherGrades extends Page
             ->all();
     }
 
-    private function subjectOptions(Collection $assignments, ?int $classId = null): array
-    {
+    /**
+     * Retorna as disciplinas disponíveis na turma selecionada.
+     *
+     * @param Collection $assignments
+     * @param int|null $classId
+     *
+     * @return array
+     */
+    private function subjectOptions(Collection $assignments, ?int $classId = null): array {
         $filtered = $assignments;
 
         if ($classId) {
@@ -497,9 +590,17 @@ class TeacherGrades extends Page
             ->all();
     }
 
-    private function assessmentOptions(?Teacher $teacher, ?int $classId, ?int $subjectId): array
-    {
-        if (! $teacher) {
+    /**
+     * Retorna as avaliações disponíveis para a turma e a disciplina selecionadas.
+     *
+     * @param Teacher|null $teacher
+     * @param int|null $classId
+     * @param int|null $subjectId
+     *
+     * @return array
+     */
+    private function assessmentOptions(?Teacher $teacher, ?int $classId, ?int $subjectId): array {
+        if (!$teacher) {
             return [];
         }
 
@@ -521,9 +622,15 @@ class TeacherGrades extends Page
             ->all();
     }
 
-    private function firstAvailableSubjectId(?int $classId): ?int
-    {
-        if (! $classId) {
+    /**
+     * Retorna o identificador da primeira disciplina disponível.
+     *
+     * @param int|null $classId
+     *
+     * @return int|null
+     */
+    private function firstAvailableSubjectId(?int $classId): ?int {
+        if (!$classId) {
             return null;
         }
 
@@ -536,9 +643,17 @@ class TeacherGrades extends Page
             ?->subject_id;
     }
 
-    private function firstAvailableAssessmentId(?Teacher $teacher, ?int $classId, ?int $subjectId): ?int
-    {
-        if (! $teacher) {
+    /**
+     * Retorna o identificador da primeira avaliação disponível.
+     *
+     * @param Teacher|null $teacher
+     * @param int|null $classId
+     * @param int|null $subjectId
+     *
+     * @return int|null
+     */
+    private function firstAvailableAssessmentId(?Teacher $teacher, ?int $classId, ?int $subjectId): ?int {
+        if (!$teacher) {
             return null;
         }
 
@@ -547,53 +662,75 @@ class TeacherGrades extends Page
         return array_key_first($options);
     }
 
-    private function resolveTerm(Assessment $assessment): string
-    {
+    /**
+     * Resolve o período letivo correspondente à avaliação.
+     *
+     * @param Assessment $assessment
+     *
+     * @return string
+     */
+    private function resolveTerm(Assessment $assessment): string {
         $term = $assessment->schoolYear?->currentTerm();
 
-        if (! $term) {
+        if (!$term) {
             return Term::B1->value;
         }
 
         return match ((int) $term->sequence) {
-            1 => Term::B1->value,
-            2 => Term::B2->value,
-            3 => Term::B3->value,
-            4 => Term::B4->value,
+            1       => Term::B1->value,
+            2       => Term::B2->value,
+            3       => Term::B3->value,
+            4       => Term::B4->value,
             default => Term::B1->value,
         };
     }
 
-    private function mapAssessmentType(?string $assessmentType): string
-    {
+    /**
+     * Converte o tipo da avaliação para o valor aceito pelo formulário.
+     *
+     * @param string|null $assessmentType
+     *
+     * @return string
+     */
+    private function mapAssessmentType(?string $assessmentType): string {
         return match ($assessmentType) {
-            'prova' => AssessmentType::TEST->value,
-            'trabalho' => AssessmentType::WORK->value,
-            'atividade' => AssessmentType::QUIZ->value,
-            'seminario' => AssessmentType::PARTICIPATION->value,
-            'projeto' => AssessmentType::PROJECT->value,
+            'prova'       => AssessmentType::TEST->value,
+            'trabalho'    => AssessmentType::WORK->value,
+            'atividade'   => AssessmentType::QUIZ->value,
+            'seminario'   => AssessmentType::PARTICIPATION->value,
+            'projeto'     => AssessmentType::PROJECT->value,
             'recuperacao' => AssessmentType::RECOVERY->value,
-            default => AssessmentType::TEST->value,
+            default       => AssessmentType::TEST->value,
         };
     }
 
-    private function buildSummary(Collection $students): array
-    {
-        $total = $students->count();
+    /**
+     * Retorna o resumo calculado para exibição.
+     *
+     * @param Collection $students
+     *
+     * @return array
+     */
+    private function buildSummary(Collection $students): array {
+        $total  = $students->count();
         $filled = $students->filter(fn (array $row) => $row['score'] !== null && $row['score'] !== '')->count();
 
         return [
-            'total' => $total,
-            'filled' => $filled,
+            'total'     => $total,
+            'filled'    => $filled,
             'remaining' => max($total - $filled, 0),
         ];
     }
 
-    private function emptySummary(): array
-    {
+    /**
+     * Retorna a estrutura vazia do resumo.
+     *
+     * @return array
+     */
+    private function emptySummary(): array {
         return [
-            'total' => 0,
-            'filled' => 0,
+            'total'     => 0,
+            'filled'    => 0,
             'remaining' => 0,
         ];
     }

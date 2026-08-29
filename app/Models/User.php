@@ -15,7 +15,11 @@ use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser {
-    use HasFactory, HasRoles, Notifiable, SoftDeletes;
+
+    use HasFactory;
+    use HasRoles;
+    use Notifiable;
+    use SoftDeletes;
 
     /**
      * Número máximo de tentativas antes do bloqueio automático.
@@ -194,6 +198,8 @@ class User extends Authenticatable implements FilamentUser {
     /**
      * Indica se o usuário pode acessar o painel Filament.
      *
+     * @param Panel $panel
+     *
      * @return bool
      */
     public function canAccessPanel(Panel $panel): bool {
@@ -204,6 +210,7 @@ class User extends Authenticatable implements FilamentUser {
      * Inativa o usuário e mantém os perfis acadêmicos sincronizados.
      *
      * @param string $reason
+     *
      * @return void
      */
     public function inactivate(string $reason): void {

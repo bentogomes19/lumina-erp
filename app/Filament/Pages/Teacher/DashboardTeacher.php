@@ -10,34 +10,42 @@ use App\Models\Lesson;
 use App\Services\CurrentTeacherService;
 use Filament\Pages\Page;
 
-class DashboardTeacher extends Page
-{
+class DashboardTeacher extends Page {
+
     use HasTeacherPortalAccess;
 
-    protected static ?string $navigationLabel = 'Portal do Professor';
-    protected static ?string $title = 'Portal do Professor';
-    protected static ?string $slug = 'dashboard-teacher';
+    protected static ?string $navigationLabel                = 'Portal do Professor';
+    protected static ?string $title                          = 'Portal do Professor';
+    protected static ?string $slug                           = 'dashboard-teacher';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-chart-line';
-    protected static ?int $navigationSort = 1;
-    protected static ?string $teacherPortalPermission = 'teacher.dashboard.view';
+    protected static ?int $navigationSort                    = 1;
+    protected static ?string $teacherPortalPermission        = 'teacher.dashboard.view';
 
-    public function getView(): string
-    {
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
+    public function getView(): string {
         return 'filament.pages.teacher.dashboard-teacher';
     }
 
-    public function getPageData(): array
-    {
+    /**
+     * Retorna os dados necessários para montar a página.
+     *
+     * @return array
+     */
+    public function getPageData(): array {
         $service = app(CurrentTeacherService::class);
         $teacher = $service->current();
 
-        if (! $teacher) {
+        if (!$teacher) {
             return $this->emptyData();
         }
 
         $assignments = $service->assignments($teacher);
-        $classIds = $assignments->pluck('class_id')->filter()->unique()->values();
-        $subjectIds = $assignments->pluck('subject_id')->filter()->unique()->values();
+        $classIds    = $assignments->pluck('class_id')->filter()->unique()->values();
+        $subjectIds  = $assignments->pluck('subject_id')->filter()->unique()->values();
 
         if ($assignments->isEmpty()) {
             return array_merge($this->emptyData(), [
@@ -46,7 +54,7 @@ class DashboardTeacher extends Page
         }
 
         $weekStart = now()->startOfWeek();
-        $weekEnd = now()->endOfWeek();
+        $weekEnd   = now()->endOfWeek();
 
         $lessonsThisWeek = Lesson::query()
             ->where(function ($query) use ($teacher, $classIds, $subjectIds) {
@@ -104,85 +112,89 @@ class DashboardTeacher extends Page
             ->count();
 
         return [
-            'teacher' => $teacher,
-            'assignments' => $assignments,
-            'classes' => $assignments->pluck('schoolClass')->filter()->unique('id')->values(),
-            'subjects' => $assignments->pluck('subject')->filter()->unique('id')->values(),
-            'lessonsThisWeek' => $lessonsThisWeek,
-            'assessments' => $assessments,
+            'teacher'            => $teacher,
+            'assignments'        => $assignments,
+            'classes'            => $assignments->pluck('schoolClass')->filter()->unique('id')->values(),
+            'subjects'           => $assignments->pluck('subject')->filter()->unique('id')->values(),
+            'lessonsThisWeek'    => $lessonsThisWeek,
+            'assessments'        => $assessments,
             'recordedAttendance' => $recordedAttendance,
-            'cards' => [
+            'cards'              => [
                 [
-                    'label' => 'Minhas Turmas',
-                    'value' => $classIds->count(),
-                    'icon' => 'fas-users',
-                    'color' => '#f59e0b',
+                    'label'       => 'Minhas Turmas',
+                    'value'       => $classIds->count(),
+                    'icon'        => 'fas-users',
+                    'color'       => '#f59e0b',
                     'description' => 'turmas vinculadas',
                 ],
                 [
-                    'label' => 'Disciplinas',
-                    'value' => $subjectIds->count(),
-                    'icon' => 'fas-book-open',
-                    'color' => '#06b6d4',
+                    'label'       => 'Disciplinas',
+                    'value'       => $subjectIds->count(),
+                    'icon'        => 'fas-book-open',
+                    'color'       => '#06b6d4',
                     'description' => 'disciplinas atribuídas',
                 ],
                 [
-                    'label' => 'Aulas da Semana',
-                    'value' => $lessonsThisWeek->count(),
-                    'icon' => 'fas-calendar-week',
-                    'color' => '#0f766e',
+                    'label'       => 'Aulas da Semana',
+                    'value'       => $lessonsThisWeek->count(),
+                    'icon'        => 'fas-calendar-week',
+                    'color'       => '#0f766e',
                     'description' => 'aulas programadas',
                 ],
                 [
-                    'label' => 'Avaliações',
-                    'value' => $assessments->count(),
-                    'icon' => 'fas-clipboard-list',
-                    'color' => '#8b5cf6',
+                    'label'       => 'Avaliações',
+                    'value'       => $assessments->count(),
+                    'icon'        => 'fas-clipboard-list',
+                    'color'       => '#8b5cf6',
                     'description' => 'próximas avaliações',
                 ],
                 [
-                    'label' => 'Notas Pendentes',
-                    'value' => $pendingGrades,
-                    'icon' => 'fas-pen-to-square',
-                    'color' => '#eab308',
+                    'label'       => 'Notas Pendentes',
+                    'value'       => $pendingGrades,
+                    'icon'        => 'fas-pen-to-square',
+                    'color'       => '#eab308',
                     'description' => 'lançamentos incompletos',
                 ],
                 [
-                    'label' => 'Frequências Pendentes',
-                    'value' => $pendingAttendance,
-                    'icon' => 'fas-clipboard-check',
-                    'color' => '#ef4444',
+                    'label'       => 'Frequências Pendentes',
+                    'value'       => $pendingAttendance,
+                    'icon'        => 'fas-clipboard-check',
+                    'color'       => '#ef4444',
                     'description' => 'chamadas a registrar',
                 ],
                 [
-                    'label' => 'Comunicados',
-                    'value' => 0,
-                    'icon' => 'fas-bullhorn',
-                    'color' => '#0284c7',
+                    'label'       => 'Comunicados',
+                    'value'       => 0,
+                    'icon'        => 'fas-bullhorn',
+                    'color'       => '#0284c7',
                     'description' => 'não lidos',
                 ],
                 [
-                    'label' => 'Pendências',
-                    'value' => $pendingGrades + $pendingAttendance,
-                    'icon' => 'fas-triangle-exclamation',
-                    'color' => '#dc2626',
+                    'label'       => 'Pendências',
+                    'value'       => $pendingGrades + $pendingAttendance,
+                    'icon'        => 'fas-triangle-exclamation',
+                    'color'       => '#dc2626',
                     'description' => 'itens exigem atenção',
                 ],
             ],
         ];
     }
 
-    private function emptyData(): array
-    {
+    /**
+     * Retorna a estrutura vazia de dados da página.
+     *
+     * @return array
+     */
+    private function emptyData(): array {
         return [
-            'teacher' => null,
-            'assignments' => collect(),
-            'classes' => collect(),
-            'subjects' => collect(),
-            'lessonsThisWeek' => collect(),
-            'assessments' => collect(),
+            'teacher'            => null,
+            'assignments'        => collect(),
+            'classes'            => collect(),
+            'subjects'           => collect(),
+            'lessonsThisWeek'    => collect(),
+            'assessments'        => collect(),
             'recordedAttendance' => 0,
-            'cards' => [],
+            'cards'              => [],
         ];
     }
 }

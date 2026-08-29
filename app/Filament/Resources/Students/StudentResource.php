@@ -16,40 +16,88 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class StudentResource extends BaseAdminResource
-{
-    protected static ?string $model = Student::class;
+class StudentResource extends BaseAdminResource {
+
+    protected static ?string $model                         = Student::class;
     protected static string|null|BackedEnum $navigationIcon = 'fas-graduation-cap';
-    protected static ?int $navigationSort = 1;
-    protected static ?string $navigationLabel = 'Alunos';
-    protected static ?string $pluralModelLabel = 'Alunos';
-    protected static ?string $modelLabel = 'Aluno';
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?int $navigationSort                   = 1;
+    protected static ?string $navigationLabel               = 'Alunos';
+    protected static ?string $pluralModelLabel              = 'Alunos';
+    protected static ?string $modelLabel                    = 'Aluno';
+    protected static ?string $recordTitleAttribute          = 'name';
 
-    protected static function viewPermission(): string   { return 'students.view'; }
-    protected static function createPermission(): string { return 'students.create'; }
-    protected static function editPermission(): string   { return 'students.edit'; }
-    protected static function deletePermission(): string { return 'students.delete'; }
+    /**
+     * Retorna o nome da permissão necessária para visualizar o recurso.
+     *
+     * @return string
+     */
+    protected static function viewPermission(): string {
+        return 'students.view';
+    }
+    /**
+     * Retorna a permissão necessária para criar registros do recurso.
+     *
+     * @return string
+     */
+    protected static function createPermission(): string {
+        return 'students.create';
+    }
+    /**
+     * Retorna o nome da permissão necessária para editar o recurso.
+     *
+     * @return string
+     */
+    protected static function editPermission(): string {
+        return 'students.edit';
+    }
+    /**
+     * Retorna a permissão necessária para excluir registros do recurso.
+     *
+     * @return string
+     */
+    protected static function deletePermission(): string {
+        return 'students.delete';
+    }
 
-    public static function form(Schema $schema): Schema
-    {
+    /**
+     * Configura o formulário do recurso.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function form(Schema $schema): Schema {
         return StudentForm::configure($schema);
     }
 
-    public static function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function table(Table $table): Table {
         return StudentsTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
+    /**
+     * Retorna os gerenciadores de relações do recurso.
+     *
+     * @return array
+     */
+    public static function getRelations(): array {
         return [
             EnrollmentsRelationManager::class,
         ];
     }
 
-    public static function getPages(): array
-    {
+    /**
+     * Retorna as páginas registradas no recurso.
+     *
+     * @return array
+     */
+    public static function getPages(): array {
         return [
             'index'  => ListStudents::route('/'),
             'create' => CreateStudent::route('/create'),
@@ -57,8 +105,12 @@ class StudentResource extends BaseAdminResource
         ];
     }
 
-    public static function getRecordRouteBindingEloquentQuery(): Builder
-    {
+    /**
+     * Retorna a consulta usada para carregar os registros.
+     *
+     * @return Builder
+     */
+    public static function getRecordRouteBindingEloquentQuery(): Builder {
         return parent::getRecordRouteBindingEloquentQuery()
             ->withoutGlobalScopes([SoftDeletingScope::class]);
     }

@@ -3,14 +3,17 @@
 namespace Database\Seeders\Core;
 
 use App\Enums\EducationStage;
-use App\Enums\GradeLevelName;
 use App\Models\GradeLevel;
 use Illuminate\Database\Seeder;
 
-class GradeLevelSeeder extends Seeder
-{
-    public function run(): void
-    {
+class GradeLevelSeeder extends Seeder {
+
+    /**
+     * Cria os níveis e as séries de ensino iniciais.
+     *
+     * @return void
+     */
+    public function run(): void {
         $levels = [
             ['name' => '1º Ano', 'stage' => EducationStage::FUND_I, 'display_order' => 1],
             ['name' => '2º Ano', 'stage' => EducationStage::FUND_I, 'display_order' => 2],

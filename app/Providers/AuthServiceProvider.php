@@ -19,8 +19,8 @@ use App\Policies\StudentPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
-class AuthServiceProvider extends ServiceProvider
-{
+class AuthServiceProvider extends ServiceProvider {
+
     protected $policies = [
         User::class              => UserPolicy::class,
         Role::class              => AdminOnlyPolicy::class,
@@ -29,25 +29,28 @@ class AuthServiceProvider extends ServiceProvider
         Subject::class           => AdminOnlyPolicy::class,
         SchoolYear::class        => AdminOnlyPolicy::class,
         SchoolClass::class       => AdminOnlyPolicy::class,
-        Enrollment::class       => EnrollmentPolicy::class,
+        Enrollment::class        => EnrollmentPolicy::class,
         TeacherAssignment::class => AdminOnlyPolicy::class,
 
-        // Exemplo com regras “own/self”
-        Grade::class             => GradePolicy::class,
+        /* Exemplo com regras “own/self”. */
+        Grade::class => GradePolicy::class,
     ];
     /**
-     * Register services.
+     * Registra os serviços de autenticação e autorização.
+     *
+     * @return void
      */
-    public function register(): void
-    {
-        //usuário ele já automáticamente ele cadastre com o nome, senha
+    public function register(): void {
+
+        /* usuário ele já automáticamente ele cadastre com o nome, senha. */
     }
 
     /**
-     * Bootstrap services.
+     * Inicializa as políticas e regras de autorização.
+     *
+     * @return void
      */
-    public function boot(): void
-    {
+    public function boot(): void {
         $this->registerPolicies();
     }
 }

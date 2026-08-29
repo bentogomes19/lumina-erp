@@ -55,12 +55,12 @@ class Subject extends BaseModel {
      *
      * @return BelongsToMany
      */
-    public function schoolClasses() : BelongsToMany {
+    public function schoolClasses(): BelongsToMany {
         return $this->belongsToMany(
             SchoolClass::class,
-            'class_subjects',  // mesma pivot usada em SchoolClass::subjects()
-            'subject_id',      // FK de Subject na pivot
-            'class_id',        // FK de SchoolClass na pivot
+            'class_subjects',  /* mesma pivot usada em SchoolClass::subjects() */
+            'subject_id',      /* FK de Subject na pivot. */
+            'class_id',        /* FK de SchoolClass na pivot. */
         )->withTimestamps();
     }
 
@@ -98,7 +98,8 @@ class Subject extends BaseModel {
     /**
      * Filtra disciplinas ativas.
      *
-     * @param  Builder  $q
+     * @param Builder $q
+     *
      * @return Builder
      */
     public function scopeActive(Builder $q): Builder {
@@ -108,9 +109,11 @@ class Subject extends BaseModel {
     /**
      * Filtra disciplinas inativas.
      *
+     * @param mixed $q
+     *
      * @return Builder
      */
-    public function scopeInactive($q) : Builder {
+    public function scopeInactive($q): Builder {
         return $q->where('status', 'inactive');
     }
 
@@ -126,12 +129,13 @@ class Subject extends BaseModel {
     /**
      * Normaliza o código da disciplina e seu índice de busca.
      *
-     * @param  string  $value
+     * @param string $value
+     *
      * @return void
      */
     public function setCodeAttribute(string $value): void {
         $this->attributes['code']            = $value ? strtoupper(trim($value)) : null;
-        $this->attributes['normalized_code'] = $value  ? preg_replace('/[^A-Z0-9]/', '', strtoupper($value)) : null;
+        $this->attributes['normalized_code'] = $value ? preg_replace('/[^A-Z0-9]/', '', strtoupper($value)) : null;
     }
 
     /**

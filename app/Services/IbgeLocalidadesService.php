@@ -5,32 +5,33 @@ namespace App\Services;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
-class IbgeLocalidadesService
-{
-    protected const ESTADOS_URL = 'https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome';
-    protected const CACHE_ESTADOS_KEY = 'ibge_estados';
+class IbgeLocalidadesService {
+
+    protected const ESTADOS_URL             = 'https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome';
+    protected const CACHE_ESTADOS_KEY       = 'ibge_estados';
     protected const CACHE_MUNICIPIOS_PREFIX = 'ibge_municipios_';
-    protected const CACHE_TTL_SECONDS = 86400; // 24 horas
+    protected const CACHE_TTL_SECONDS       = 86400; /* 24 horas. */
 
     /**
      * Retorna lista de estados: sigla => "Nome (UF)"
-     * Ex.: "SP" => "São Paulo (SP)"
+     * Ex.: "SP" => "São Paulo (SP)".
+     *
+     * @return array
      */
-    public static function getEstadosOptions(): array
-    {
+    public static function getEstadosOptions(): array {
         return Cache::remember(self::CACHE_ESTADOS_KEY, self::CACHE_TTL_SECONDS, function () {
             $response = Http::timeout(10)->get(self::ESTADOS_URL);
             if ($response->failed()) {
                 return self::estadosFallback();
             }
             $estados = $response->json();
-            if (! is_array($estados)) {
+            if (!is_array($estados)) {
                 return self::estadosFallback();
             }
             $options = [];
             foreach ($estados as $e) {
-                $sigla = $e['sigla'] ?? '';
-                $nome = $e['nome'] ?? $sigla;
+                $sigla           = $e['sigla'] ?? '';
+                $nome            = $e['nome'] ?? $sigla;
                 $options[$sigla] = "{$nome} ({$sigla})";
             }
             return $options;
@@ -39,10 +40,13 @@ class IbgeLocalidadesService
 
     /**
      * Retorna lista de municípios de um estado (por sigla UF): nome => nome
-     * Ex.: "São Paulo" => "São Paulo"
+     * Ex.: "São Paulo" => "São Paulo".
+     *
+     * @param string $uf
+     *
+     * @return array
      */
-    public static function getMunicipiosOptions(string $uf): array
-    {
+    public static function getMunicipiosOptions(string $uf): array {
         $uf = strtoupper(trim($uf));
         if (strlen($uf) !== 2) {
             return [];
@@ -51,13 +55,13 @@ class IbgeLocalidadesService
         $key = self::CACHE_MUNICIPIOS_PREFIX . $uf;
 
         return Cache::remember($key, self::CACHE_TTL_SECONDS, function () use ($uf) {
-            $url = "https://servicodados.ibge.gov.br/api/v1/localidades/estados/{$uf}/municipios?orderBy=nome";
+            $url      = "https://servicodados.ibge.gov.br/api/v1/localidades/estados/{$uf}/municipios?orderBy=nome";
             $response = Http::timeout(15)->get($url);
             if ($response->failed()) {
                 return [];
             }
             $municipios = $response->json();
-            if (! is_array($municipios)) {
+            if (!is_array($municipios)) {
                 return [];
             }
             $options = [];
@@ -72,10 +76,11 @@ class IbgeLocalidadesService
     }
 
     /**
-     * Fallback estático caso a API do IBGE esteja indisponível.
+     * Retorna uma lista estática de estados quando a API do IBGE está indisponível.
+     *
+     * @return array
      */
-    protected static function estadosFallback(): array
-    {
+    protected static function estadosFallback(): array {
         return [
             'AC' => 'Acre (AC)',
             'AL' => 'Alagoas (AL)',

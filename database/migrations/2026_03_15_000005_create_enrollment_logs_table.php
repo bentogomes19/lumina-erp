@@ -10,10 +10,14 @@ use Illuminate\Support\Facades\Schema;
  * cancelamento, transferência, reativação e reversão.
  * Registros são imutáveis — sem updated_at.
  */
-return new class extends Migration
-{
-    public function up(): void
-    {
+return new class () extends Migration {
+
+    /**
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
+     */
+    public function up(): void {
         Schema::create('enrollment_logs', function (Blueprint $table) {
             $table->id();
 
@@ -48,13 +52,17 @@ return new class extends Migration
             $table->string('ip_origem', 45)->nullable()
                 ->comment('IP de onde partiu a ação (IPv4 ou IPv6)');
 
-            // Apenas created_at — logs são imutáveis, sem updated_at
+            /* Apenas created_at — logs são imutáveis, sem updated_at. */
             $table->timestamp('created_at')->useCurrent();
         });
     }
 
-    public function down(): void
-    {
+    /**
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
+     */
+    public function down(): void {
         Schema::dropIfExists('enrollment_logs');
     }
 };

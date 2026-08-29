@@ -9,7 +9,6 @@ use Spatie\Permission\Models\Permission as SpatiePermission;
 /**
  * Representa uma permissão de acesso do sistema.
  */
-class Permission extends SpatiePermission
-{
-    //
+class Permission extends SpatiePermission {
+
 }

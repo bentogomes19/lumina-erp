@@ -22,10 +22,14 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard\Step;
 use Illuminate\Support\Facades\Http;
 
-class EnrollmentWizardSchema
-{
-    public static function getSteps(): array
-    {
+class EnrollmentWizardSchema {
+
+    /**
+     * Retorna as etapas exibidas no assistente do formulário.
+     *
+     * @return array
+     */
+    public static function getSteps(): array {
         return [
             Step::make('Identificação do aluno')
                 ->description('Aluno já cadastrado ou novo cadastro na secretaria')
@@ -35,7 +39,7 @@ class EnrollmentWizardSchema
                         ->label('Tipo de cadastro')
                         ->options([
                             'existing' => 'Aluno já cadastrado no sistema',
-                            'new' => 'Novo aluno — preencher cadastro',
+                            'new'      => 'Novo aluno — preencher cadastro',
                         ])
                         ->default('existing')
                         ->live()
@@ -180,7 +184,7 @@ class EnrollmentWizardSchema
                                 ->live(onBlur: true)
                                 ->suffixIcon('fas-magnifying-glass')
                                 ->afterStateUpdated(function ($state, callable $set) {
-                                    if (! $state) {
+                                    if (!$state) {
                                         return;
                                     }
                                     $cep = preg_replace('/[^0-9]/', '', $state);
@@ -259,7 +263,7 @@ class EnrollmentWizardSchema
                                 ->label('Cidade')
                                 ->options(function (Get $get) {
                                     $uf = $get('student_state');
-                                    if (! $uf || strlen($uf) !== 2) {
+                                    if (!$uf || strlen($uf) !== 2) {
                                         return [];
                                     }
                                     return IbgeLocalidadesService::getMunicipiosOptions($uf);
@@ -268,7 +272,7 @@ class EnrollmentWizardSchema
                                 ->preload()
                                 ->placeholder('Primeiro selecione o estado')
                                 ->helperText('Lista de municípios do estado selecionado (fonte: IBGE).')
-                                ->disabled(fn (Get $get) => ! $get('student_state'))
+                                ->disabled(fn (Get $get) => !$get('student_state'))
                                 ->nullable()
                                 ->columnSpan(2),
                         ])
@@ -343,9 +347,9 @@ class EnrollmentWizardSchema
                         ->label('Meio de transporte')
                         ->options([
                             'none' => 'Nenhum',
-                            'car' => 'Carro',
-                            'bus' => 'Ônibus escolar',
-                            'van' => 'Van',
+                            'car'  => 'Carro',
+                            'bus'  => 'Ônibus escolar',
+                            'van'  => 'Van',
                             'walk' => 'A pé',
                             'bike' => 'Bicicleta',
                         ])
@@ -386,7 +390,9 @@ class EnrollmentWizardSchema
                         ->label('Turma / Ano')
                         ->content(function (Get $get) {
                             $id = $get('class_id');
-                            if (!$id) return '—';
+                            if (!$id) {
+                                return '—';
+                            }
                             $c = SchoolClass::with('gradeLevel', 'schoolYear')->find($id);
                             return $c ? "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})" : '—';
                         }),

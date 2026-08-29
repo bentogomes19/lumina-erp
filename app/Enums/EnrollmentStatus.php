@@ -13,8 +13,8 @@ namespace App\Enums;
  *   [Ativa] → [Cancelada]       (irreversível no fluxo normal)
  *   [Ativa] → [Concluída]       (encerramento do ano letivo)
  */
-enum EnrollmentStatus: string
-{
+enum EnrollmentStatus: string {
+
     case ACTIVE               = 'Ativa';
     case SUSPENDED            = 'Suspensa';
     case LOCKED               = 'Trancada';
@@ -23,8 +23,12 @@ enum EnrollmentStatus: string
     case CANCELED             = 'Cancelada';
     case COMPLETED            = 'Completa';
 
-    public static function options(): array
-    {
+    /**
+     * Retorna os status de matrícula disponíveis para seleção.
+     *
+     * @return array
+     */
+    public static function options(): array {
         return [
             self::ACTIVE->value               => 'Ativa',
             self::SUSPENDED->value            => 'Suspensa',
@@ -36,8 +40,12 @@ enum EnrollmentStatus: string
         ];
     }
 
-    public static function colors(): array
-    {
+    /**
+     * Retorna as cores usadas para representar cada status de matrícula.
+     *
+     * @return array
+     */
+    public static function colors(): array {
         return [
             self::ACTIVE->value               => 'success',
             self::SUSPENDED->value            => 'warning',
@@ -49,9 +57,12 @@ enum EnrollmentStatus: string
         ];
     }
 
-    /** Retorna label para exibição no badge */
-    public function label(): string
-    {
+    /**
+     * Retorna o rótulo do status para exibição no indicador visual.
+     *
+     * @return string
+     */
+    public function label(): string {
         return match ($this) {
             self::ACTIVE               => 'Ativa',
             self::SUSPENDED            => 'Suspensa',
@@ -63,8 +74,12 @@ enum EnrollmentStatus: string
         };
     }
 
-    public function color(): string
-    {
+    /**
+     * Retorna a cor usada para representar o status da matrícula.
+     *
+     * @return string
+     */
+    public function color(): string {
         return self::colors()[$this->value] ?? 'gray';
     }
 }

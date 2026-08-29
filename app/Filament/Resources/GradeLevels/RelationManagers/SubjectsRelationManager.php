@@ -12,13 +12,19 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Arr;
 
-class SubjectsRelationManager extends RelationManager
-{
-    protected static string $relationship = 'subjects';
-    protected static ?string $title = 'Disciplinas da Série';
+class SubjectsRelationManager extends RelationManager {
 
-    public function table(Table $table): Table
-    {
+    protected static string $relationship = 'subjects';
+    protected static ?string $title       = 'Disciplinas da Série';
+
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('name')
@@ -30,11 +36,11 @@ class SubjectsRelationManager extends RelationManager
                     ->badge()
                     ->formatStateUsing(fn ($record) => $record->category?->label() ?? '—')
                     ->color(fn ($record) => match ($record->category) {
-                        SubjectCategory::LINGUAGENS => 'info',
-                        SubjectCategory::MATEMATICA => 'warning',
+                        SubjectCategory::LINGUAGENS        => 'info',
+                        SubjectCategory::MATEMATICA        => 'warning',
                         SubjectCategory::CIENCIAS_NATUREZA => 'success',
-                        SubjectCategory::CIENCIAS_HUMANAS => 'gray',
-                        default => 'secondary',
+                        SubjectCategory::CIENCIAS_HUMANAS  => 'gray',
+                        default                            => 'secondary',
                     })
                     ->sortable(),
 
@@ -69,10 +75,12 @@ class SubjectsRelationManager extends RelationManager
                     ])
                     ->action(function ($livewire, array $data) {
                         $gradeLevel = $livewire->ownerRecord;
-                        $ids = Arr::wrap($data['subject_ids'] ?? []);
-                        if (empty($ids)) return;
+                        $ids        = Arr::wrap($data['subject_ids'] ?? []);
+                        if (empty($ids)) {
+                            return;
+                        }
 
-                        $hours = (int) $data['hours_weekly'];
+                        $hours  = (int) $data['hours_weekly'];
                         $attach = [];
                         foreach ($ids as $id) {
                             $attach[(int) $id] = ['hours_weekly' => $hours];
@@ -83,7 +91,8 @@ class SubjectsRelationManager extends RelationManager
                     ->successNotificationTitle('Disciplinas vinculadas com sucesso'),
             ])
             ->recordActions([
-                // ✅ EDITAR SOMENTE O PIVOT
+
+                /* Edita somente os dados do vínculo. */
                 Action::make('editarVinculo')
                     ->label('Editar vínculo')
                     ->icon('fas-pen-to-square')
@@ -103,7 +112,7 @@ class SubjectsRelationManager extends RelationManager
                     })
                     ->successNotificationTitle('Vínculo atualizado'),
 
-                // ✅ DESVINCULAR (detach)
+                /* Remove o vínculo sem excluir a disciplina. */
                 Action::make('removerVinculo')
                     ->label('Remover da série')
                     ->icon('fas-link-slash')

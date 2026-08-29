@@ -2,30 +2,38 @@
 
 namespace App\Enums;
 
-enum AcademicTitle: string
-{
-    case BACHELOR = 'bachelor';
+enum AcademicTitle: string {
+
+    case BACHELOR   = 'bachelor';
     case LICENTIATE = 'licentiate';
     case SPECIALIST = 'specialist';
-    case MASTER = 'master';
-    case DOCTOR = 'doctor';
+    case MASTER     = 'master';
+    case DOCTOR     = 'doctor';
 
-    public function label(): string
-    {
+    /**
+     * Retorna o rótulo legível da titulação acadêmica.
+     *
+     * @return string
+     */
+    public function label(): string {
         return match ($this) {
-            self::BACHELOR => 'Bacharel',
+            self::BACHELOR   => 'Bacharel',
             self::LICENTIATE => 'Licenciado',
             self::SPECIALIST => 'Especialista',
-            self::MASTER => 'Mestre',
-            self::DOCTOR => 'Doutor',
+            self::MASTER     => 'Mestre',
+            self::DOCTOR     => 'Doutor',
         };
     }
 
-    public static function options(): array
-    {
+    /**
+     * Retorna as titulações acadêmicas disponíveis para seleção.
+     *
+     * @return array
+     */
+    public static function options(): array {
         return array_combine(
-            array_map(fn($c) => $c->value, self::cases()),
-            array_map(fn($c) => $c->label(), self::cases()),
+            array_map(fn ($c) => $c->value, self::cases()),
+            array_map(fn ($c) => $c->label(), self::cases()),
         );
     }
 }

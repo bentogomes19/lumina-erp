@@ -18,7 +18,7 @@
 
     <div style="display:flex;flex-direction:column;gap:1.5rem">
 
-        {{-- ▸ Class info header --}}
+        {{-- Cabeçalho com informações da turma --}}
         @if($currentClass)
             <div class="ms-card" style="padding:1.25rem 1.5rem">
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
@@ -51,7 +51,7 @@
             </div>
         @endif
 
-        {{-- ▸ Stats overview cards --}}
+        {{-- Cartões com visão geral das estatísticas --}}
         @if($currentClass && $subjects->isNotEmpty())
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
                 @php
@@ -82,7 +82,7 @@
             </div>
         @endif
 
-        {{-- ▸ Subjects grouped by category --}}
+        {{-- Disciplinas agrupadas por categoria --}}
         @if($subjects->isNotEmpty())
             @php
                 $grouped = $subjects->groupBy(fn($s) => $s->category?->value ?? 'sem_categoria');
@@ -95,7 +95,7 @@
                 @endphp
 
                 <div style="display:flex;flex-direction:column;gap:0.75rem">
-                    {{-- Category header --}}
+                    {{-- Cabeçalho da categoria --}}
                     <div style="display:flex;align-items:center;gap:0.5rem;padding:0 0.25rem">
                         <div
                             style="width:0.625rem;height:0.625rem;border-radius:50%;background:{{ $cs['accent'] }};flex-shrink:0">
@@ -109,7 +109,7 @@
                             {{ $categorySubjects->count() === 1 ? 'disciplina' : 'disciplinas' }}</span>
                     </div>
 
-                    {{-- Subject cards grid --}}
+                    {{-- Grade de cartões das disciplinas --}}
                     <div class="ms-subject-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem">
                         @foreach($categorySubjects as $subject)
                             @php $cs = $categoryStyles[$subject->category?->value ?? ''] ?? $defaultStyle; @endphp
@@ -119,7 +119,7 @@
                                 <div style="height:3px;background:{{ $cs['accent'] }}"></div>
 
                                 <div style="padding:1.25rem;display:flex;flex-direction:column;gap:0.875rem">
-                                    {{-- Subject header --}}
+                                    {{-- Cabeçalho da disciplina --}}
                                     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem">
                                         <div style="display:flex;align-items:center;gap:0.75rem;min-width:0">
                                             <div
@@ -143,7 +143,7 @@
                                             </div>
                                         </div>
 
-                                        {{-- Overall average badge --}}
+                                        {{-- Indicador da média geral --}}
                                         @if($subject->overall_average !== null)
                                             @php
                                                 $badgeBg    = $subject->overall_average >= 7 ? 'rgba(34,197,94,0.15)'  : ($subject->overall_average >= 5 ? 'rgba(234,179,8,0.15)'  : 'rgba(239,68,68,0.15)');
@@ -167,7 +167,7 @@
                                         </div>
                                     @endif
 
-                                    {{-- Term grades --}}
+                                    {{-- Notas por período --}}
                                     @if(collect($subject->term_averages)->filter()->isNotEmpty())
                                         <div style="display:flex;flex-direction:column;gap:0.375rem">
                                             <p
@@ -190,7 +190,7 @@
                                         </div>
                                     @endif
 
-                                    {{-- Attendance bar --}}
+                                    {{-- Barra de frequência --}}
                                     @if($subject->attendance_percent !== null)
                                         @php
                                             $barColor = $subject->attendance_percent >= 75 ? '#22c55e' : ($subject->attendance_percent >= 50 ? '#eab308' : '#ef4444');
@@ -215,7 +215,7 @@
                                         </div>
                                     @endif
 
-                                    {{-- Description --}}
+                                    {{-- Descrição --}}
                                     @if($subject->description)
                                         <p
                                             style="font-size:0.6875rem;color:var(--ms-text-muted);margin:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">
@@ -229,7 +229,7 @@
                 </div>
             @endforeach
         @else
-            {{-- Empty state --}}
+            {{-- Estado sem dados --}}
             <div class="ms-card" style="padding:3rem;text-align:center">
                 <div
                     style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">

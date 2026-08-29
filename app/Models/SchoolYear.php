@@ -4,8 +4,8 @@ namespace App\Models;
 
 use App\Enums\SchoolYearStatus;
 
-class SchoolYear extends BaseModel
-{
+class SchoolYear extends BaseModel {
+
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
      *
@@ -33,15 +33,17 @@ class SchoolYear extends BaseModel
 
     /**
      * Ao ativar um ano letivo, garante que nenhum outro fique ativo.
+     *
+     * @return void
      */
-    protected static function booted(): void
-    {
+    protected static function booted(): void {
         static::saving(function (self $year) {
             if ($year->status === SchoolYearStatus::ACTIVE) {
-                // Sincroniza is_active com status
+
+                /* Sincroniza is_active com status. */
                 $year->is_active = true;
 
-                // Desativa todos os outros
+                /* Desativa todos os outros. */
                 static::where('id', '!=', $year->id)
                     ->where('status', SchoolYearStatus::ACTIVE->value)
                     ->update([
@@ -56,59 +58,66 @@ class SchoolYear extends BaseModel
 
     /**
      * Retorna os períodos avaliativos do ano letivo.
+     *
+     * @return mixed
      */
-    public function terms()
-    {
+    public function terms() {
         return $this->hasMany(SchoolYearTerm::class)->orderBy('sequence');
     }
 
     /**
      * Retorna o nível/série associado ao ano letivo.
+     *
+     * @return mixed
      */
-    public function gradeLevel()
-    {
+    public function gradeLevel() {
         return $this->belongsTo(GradeLevel::class);
     }
 
     /**
      * Retorna as turmas vinculadas ao ano letivo.
+     *
+     * @return mixed
      */
-    public function classes()
-    {
+    public function classes() {
         return $this->hasMany(SchoolClass::class);
     }
 
     /**
      * Retorna as matrículas vinculadas ao ano letivo.
+     *
+     * @return mixed
      */
-    public function enrollments()
-    {
+    public function enrollments() {
         return $this->hasMany(Enrollment::class);
     }
 
     /**
      * Retorna o ano letivo com status ativo.
+     *
+     * @return self|null
      */
-    public static function current(): ?self
-    {
+    public static function current(): ?self {
         return static::where('status', SchoolYearStatus::ACTIVE->value)->first();
     }
 
     /**
      * Retorna o ano letivo ativo.
      *
+     * @return self|null
+     *
      * @deprecated Use current().
      */
-    public static function active(): ?self
-    {
+    public static function active(): ?self {
         return static::current();
     }
 
     /**
      * Retorna o período avaliativo aberto para lançamento de notas hoje.
+     *
+     * @return SchoolYearTerm|null
      */
-    public function currentTerm(): ?SchoolYearTerm
-    {
+    public function currentTerm(): ?SchoolYearTerm {
         return $this->terms()
             ->where('grade_entry_starts_at', '<=', now())
             ->where('grade_entry_ends_at', '>=', now())

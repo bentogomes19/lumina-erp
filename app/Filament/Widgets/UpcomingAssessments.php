@@ -7,19 +7,29 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
-class UpcomingAssessments extends BaseWidget
-{
-    protected static ?string $heading = 'Próximas Avaliações';
+class UpcomingAssessments extends BaseWidget {
+
+    protected static ?string $heading      = 'Próximas Avaliações';
     protected int|string|array $columnSpan = 'full';
 
-    public static function canView(): bool
-    {
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
         return \App\Support\PermissionAccess::can('student.assessments.view');
     }
 
-    public function table(Table $table): Table
-    {
-        $student = auth()->user()?->student;
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
+        $student  = auth()->user()?->student;
         $classIds = $student?->classes()->pluck('classes.id') ?? collect([-1]);
 
         return $table

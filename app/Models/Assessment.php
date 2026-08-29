@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Assessment extends BaseModel
-{
+class Assessment extends BaseModel {
+
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
      *
@@ -33,7 +33,7 @@ class Assessment extends BaseModel
      * @var array<string, string>
      */
     protected $casts = [
-        'date' => 'date',
+        'date'         => 'date',
         'scheduled_at' => 'datetime',
         'max_score'    => 'decimal:2',
         'weight'       => 'decimal:2',
@@ -44,8 +44,7 @@ class Assessment extends BaseModel
      *
      * @return BelongsTo
      */
-    public function schoolClass()
-    {
+    public function schoolClass() {
         return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
@@ -54,16 +53,16 @@ class Assessment extends BaseModel
      *
      * @return BelongsTo
      */
-    public function subject()
-    {
+    public function subject() {
         return $this->belongsTo(Subject::class);
     }
 
     /**
      * Retorna o ano letivo da avaliação.
+     *
+     * @return BelongsTo
      */
-    public function schoolYear(): BelongsTo
-    {
+    public function schoolYear(): BelongsTo {
         return $this->belongsTo(SchoolYear::class);
     }
 
@@ -72,24 +71,28 @@ class Assessment extends BaseModel
      *
      * @return BelongsTo
      */
-    public function teacher()
-    {
+    public function teacher() {
         return $this->belongsTo(Teacher::class);
     }
 
     /**
      * Indica se a avaliação está fechada.
+     *
+     * @return bool
      */
-    public function isClosed(): bool
-    {
+    public function isClosed(): bool {
         return $this->status === 'closed';
     }
 
     /**
      * Limita a consulta ao professor informado.
+     *
+     * @param Builder $query
+     * @param int $teacherId
+     *
+     * @return Builder
      */
-    public function scopeForTeacher(Builder $query, int $teacherId): Builder
-    {
+    public function scopeForTeacher(Builder $query, int $teacherId): Builder {
         return $query->where('teacher_id', $teacherId);
     }
 }

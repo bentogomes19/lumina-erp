@@ -8,19 +8,29 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
-class RecentAttendanceTeacher extends BaseWidget
-{
-    protected static ?string $heading = 'Presenças Recentes (7 dias)';
+class RecentAttendanceTeacher extends BaseWidget {
+
+    protected static ?string $heading      = 'Presenças Recentes (7 dias)';
     protected int|string|array $columnSpan = 'full';
 
-    public static function canView(): bool
-    {
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
         return \App\Support\PermissionAccess::can('teacher.attendance.view');
     }
 
-    public function table(Table $table): Table
-    {
-        $teacher = auth()->user()?->teacher;
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
+        $teacher  = auth()->user()?->teacher;
         $classIds = $teacher
             ? TeacherAssignment::where('teacher_id', $teacher->id)->pluck('class_id')->unique()
             : collect([-1]);
@@ -39,7 +49,7 @@ class RecentAttendanceTeacher extends BaseWidget
                 TextColumn::make('subject.name')->label('Disciplina')->toggleable(),
                 TextColumn::make('status')
                     ->label('Status')
-                    ->formatStateUsing(fn($s) => match($s) {
+                    ->formatStateUsing(fn ($s) => match($s) {
                         'present' => 'Presente',
                         'absent'  => 'Falta',
                         'late'    => 'Atraso',

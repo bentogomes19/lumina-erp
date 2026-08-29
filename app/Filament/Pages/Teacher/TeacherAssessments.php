@@ -8,7 +8,6 @@ use App\Filament\Pages\Teacher\Concerns\HasTeacherPortalAccess;
 use App\Models\Assessment;
 use App\Models\SchoolClass;
 use App\Models\Teacher;
-use App\Models\TeacherAssignment;
 use App\Services\CurrentTeacherService;
 use App\Support\PermissionAccess;
 use Filament\Actions\Action;
@@ -30,26 +29,34 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
-class TeacherAssessments extends Page implements HasTable
-{
+class TeacherAssessments extends Page implements HasTable {
+
     use HasTeacherPortalAccess;
     use InteractsWithTable;
 
-    protected static ?string $navigationLabel = 'Avaliações';
-    protected static ?string $title = 'Avaliações';
-    protected static ?string $slug = 'teacher-assessments';
+    protected static ?string $navigationLabel                = 'Avaliações';
+    protected static ?string $title                          = 'Avaliações';
+    protected static ?string $slug                           = 'teacher-assessments';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-clipboard-question';
-    protected static ?int $navigationSort = 4;
-    protected static ?string $teacherPortalPermission = 'teacher.assessments.view';
+    protected static ?int $navigationSort                    = 4;
+    protected static ?string $teacherPortalPermission        = 'teacher.assessments.view';
 
-    public function getView(): string
-    {
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
+    public function getView(): string {
         return 'filament.pages.teacher.teacher-assessments';
     }
 
-    public function getPageData(): array
-    {
-        $teacher = $this->currentTeacher();
+    /**
+     * Retorna os dados necessários para montar a página.
+     *
+     * @return array
+     */
+    public function getPageData(): array {
+        $teacher     = $this->currentTeacher();
         $assignments = $this->teacherAssignments($teacher);
         $assessments = $this->assessmentQuery($teacher)->get();
 
@@ -59,21 +66,27 @@ class TeacherAssessments extends Page implements HasTable
             ->first();
 
         return [
-            'teacher' => $teacher,
+            'teacher'     => $teacher,
             'assignments' => $assignments,
-            'stats' => [
-                'total' => $assessments->count(),
-                'open' => $assessments->where('status', 'open')->count(),
+            'stats'       => [
+                'total'  => $assessments->count(),
+                'open'   => $assessments->where('status', 'open')->count(),
                 'closed' => $assessments->where('status', 'closed')->count(),
-                'next' => $nextAssessment,
+                'next'   => $nextAssessment,
             ],
             'canCreate' => $this->canCreateAssessments($teacher, $assignments),
             'isBlocked' => $this->teacherIsBlocked($teacher),
         ];
     }
 
-    public function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
         $teacher = $this->currentTeacher();
 
         return $table
@@ -184,19 +197,35 @@ class TeacherAssessments extends Page implements HasTable
             ->defaultPaginationPageOption(10);
     }
 
-    private function currentTeacher(): ?Teacher
-    {
+    /**
+     * Retorna o professor autenticado no portal.
+     *
+     * @return Teacher|null
+     */
+    private function currentTeacher(): ?Teacher {
         return app(CurrentTeacherService::class)->current();
     }
 
-    private function teacherAssignments(?Teacher $teacher = null): Collection
-    {
+    /**
+     * Retorna as atribuições do professor autenticado.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return Collection
+     */
+    private function teacherAssignments(?Teacher $teacher = null): Collection {
         return app(CurrentTeacherService::class)->assignments($teacher);
     }
 
-    private function assessmentQuery(?Teacher $teacher): Builder
-    {
-        if (! $teacher) {
+    /**
+     * Retorna a consulta usada para carregar os registros.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return Builder
+     */
+    private function assessmentQuery(?Teacher $teacher): Builder {
+        if (!$teacher) {
             return Assessment::query()->whereRaw('1 = 0');
         }
 
@@ -205,8 +234,12 @@ class TeacherAssessments extends Page implements HasTable
             ->with(['schoolClass.schoolYear', 'subject', 'teacher']);
     }
 
-    private function assessmentFormSchema(): array
-    {
+    /**
+     * Retorna o esquema de campos usado pelo formulário.
+     *
+     * @return array
+     */
+    private function assessmentFormSchema(): array {
         return [
             Hidden::make('teacher_id'),
             Hidden::make('school_year_id'),
@@ -261,11 +294,18 @@ class TeacherAssessments extends Page implements HasTable
         ];
     }
 
-    private function prepareAssessmentPayload(array $data, ?Assessment $record): array
-    {
+    /**
+     * Prepara os dados usados para salvar a avaliação.
+     *
+     * @param array $data
+     * @param Assessment|null $record
+     *
+     * @return array
+     */
+    private function prepareAssessmentPayload(array $data, ?Assessment $record): array {
         $teacher = $this->currentTeacher();
 
-        if (! $teacher) {
+        if (!$teacher) {
             throw ValidationException::withMessages([
                 'teacher_id' => 'Nenhum professor ativo foi localizado para o usuário atual.',
             ]);
@@ -279,7 +319,7 @@ class TeacherAssessments extends Page implements HasTable
             ]);
         }
 
-        if (! $data['class_id'] || ! $data['subject_id']) {
+        if (!$data['class_id'] || !$data['subject_id']) {
             throw ValidationException::withMessages([
                 'class_id' => 'Selecione uma turma e uma disciplina válidas.',
             ]);
@@ -290,7 +330,7 @@ class TeacherAssessments extends Page implements HasTable
                 && (int) $item->subject_id === (int) $data['subject_id'];
         });
 
-        if (! $assignment) {
+        if (!$assignment) {
             throw ValidationException::withMessages([
                 'subject_id' => 'A disciplina selecionada não está vinculada à turma informada para este professor.',
             ]);
@@ -319,26 +359,32 @@ class TeacherAssessments extends Page implements HasTable
         }
 
         return [
-            'teacher_id' => $teacher->id,
-            'school_year_id' => $schoolYear?->id,
-            'class_id' => (int) $data['class_id'],
-            'subject_id' => (int) $data['subject_id'],
-            'title' => trim((string) ($data['title'] ?? '')),
-            'description' => $data['description'] ?? null,
+            'teacher_id'      => $teacher->id,
+            'school_year_id'  => $schoolYear?->id,
+            'class_id'        => (int) $data['class_id'],
+            'subject_id'      => (int) $data['subject_id'],
+            'title'           => trim((string) ($data['title'] ?? '')),
+            'description'     => $data['description'] ?? null,
             'assessment_type' => $data['assessment_type'] ?? 'outro',
-            'date' => isset($data['scheduled_at'])
+            'date'            => isset($data['scheduled_at'])
                 ? Carbon::parse($data['scheduled_at'])->toDateString()
                 : null,
             'scheduled_at' => $data['scheduled_at'] ?? null,
-            'max_score' => $maxScore,
-            'weight' => (float) ($data['weight'] ?? 1),
-            'status' => $data['status'] ?? 'open',
+            'max_score'    => $maxScore,
+            'weight'       => (float) ($data['weight'] ?? 1),
+            'status'       => $data['status'] ?? 'open',
         ];
     }
 
-    private function closeAssessment(Assessment $record): void
-    {
-        if (! $this->canCloseAssessment($record)) {
+    /**
+     * Encerra a avaliação e bloqueia novos lançamentos.
+     *
+     * @param Assessment $record
+     *
+     * @return void
+     */
+    private function closeAssessment(Assessment $record): void {
+        if (!$this->canCloseAssessment($record)) {
             throw ValidationException::withMessages([
                 'status' => 'Você não tem permissão para fechar esta avaliação.',
             ]);
@@ -349,37 +395,62 @@ class TeacherAssessments extends Page implements HasTable
         ]);
     }
 
-    private function canCreateAssessments(?Teacher $teacher, Collection $assignments): bool
-    {
+    /**
+     * Determina se o professor pode criar avaliações.
+     *
+     * @param Teacher|null $teacher
+     * @param Collection $assignments
+     *
+     * @return bool
+     */
+    private function canCreateAssessments(?Teacher $teacher, Collection $assignments): bool {
         return PermissionAccess::can('teacher.assessments.create')
             && $teacher !== null
-            && ! $this->teacherIsBlocked($teacher)
+            && !$this->teacherIsBlocked($teacher)
             && $assignments->isNotEmpty();
     }
 
-    private function canUpdateAssessment(Assessment $record): bool
-    {
+    /**
+     * Determina se o professor pode atualizar a avaliação informada.
+     *
+     * @param Assessment $record
+     *
+     * @return bool
+     */
+    private function canUpdateAssessment(Assessment $record): bool {
         $teacher = $this->currentTeacher();
 
         return PermissionAccess::can('teacher.assessments.update')
             && $teacher !== null
             && (int) $record->teacher_id === (int) $teacher->id
-            && ! $record->isClosed();
+            && !$record->isClosed();
     }
 
-    private function canCloseAssessment(Assessment $record): bool
-    {
+    /**
+     * Determina se o professor pode encerrar a avaliação informada.
+     *
+     * @param Assessment $record
+     *
+     * @return bool
+     */
+    private function canCloseAssessment(Assessment $record): bool {
         $teacher = $this->currentTeacher();
 
         return PermissionAccess::can('teacher.assessments.close')
             && $teacher !== null
             && (int) $record->teacher_id === (int) $teacher->id
-            && ! $record->isClosed();
+            && !$record->isClosed();
     }
 
-    private function teacherIsBlocked(?Teacher $teacher): bool
-    {
-        if (! $teacher) {
+    /**
+     * Determina se o professor está impedido de realizar lançamentos.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return bool
+     */
+    private function teacherIsBlocked(?Teacher $teacher): bool {
+        if (!$teacher) {
             return true;
         }
 
@@ -390,8 +461,14 @@ class TeacherAssessments extends Page implements HasTable
         ], true);
     }
 
-    private function classOptions(?Teacher $teacher): array
-    {
+    /**
+     * Retorna as turmas disponíveis para o cadastro de avaliações.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return array
+     */
+    private function classOptions(?Teacher $teacher): array {
         return $this->teacherAssignments($teacher)
             ->pluck('schoolClass')
             ->filter()
@@ -403,8 +480,15 @@ class TeacherAssessments extends Page implements HasTable
             ->all();
     }
 
-    private function subjectOptions(?Teacher $teacher, $classId = null): array
-    {
+    /**
+     * Retorna as disciplinas disponíveis na turma selecionada.
+     *
+     * @param Teacher|null $teacher
+     * @param mixed $classId
+     *
+     * @return array
+     */
+    private function subjectOptions(?Teacher $teacher, $classId = null): array {
         $assignments = $this->teacherAssignments($teacher);
 
         if ($classId) {
@@ -422,8 +506,14 @@ class TeacherAssessments extends Page implements HasTable
             ->all();
     }
 
-    private function schoolYearOptions(?Teacher $teacher): array
-    {
+    /**
+     * Retorna os anos letivos disponíveis nas atribuições do professor.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return array
+     */
+    private function schoolYearOptions(?Teacher $teacher): array {
         return $this->teacherAssignments($teacher)
             ->pluck('schoolClass.schoolYear')
             ->filter()
@@ -435,9 +525,15 @@ class TeacherAssessments extends Page implements HasTable
             ->all();
     }
 
-    private function schoolYearIdForClass($classId): ?int
-    {
-        if (! $classId) {
+    /**
+     * Retorna o identificador do ano letivo associado à turma.
+     *
+     * @param mixed $classId
+     *
+     * @return int|null
+     */
+    private function schoolYearIdForClass($classId): ?int {
+        if (!$classId) {
             return null;
         }
 
@@ -446,56 +542,88 @@ class TeacherAssessments extends Page implements HasTable
             ->find($classId)?->schoolYear?->id;
     }
 
-    private function assessmentStatusOptions(): array
-    {
+    /**
+     * Retorna os status disponíveis para uma avaliação.
+     *
+     * @return array
+     */
+    private function assessmentStatusOptions(): array {
         return [
-            'open' => 'Aberta',
+            'open'   => 'Aberta',
             'closed' => 'Fechada',
         ];
     }
 
-    private function assessmentStatusLabel(string $status): string
-    {
+    /**
+     * Retorna o rótulo usado para exibir o status da avaliação.
+     *
+     * @param string $status
+     *
+     * @return string
+     */
+    private function assessmentStatusLabel(string $status): string {
         return $this->assessmentStatusOptions()[$status] ?? ucfirst($status);
     }
 
-    private function assessmentStatusColor(string $status): string
-    {
+    /**
+     * Retorna a cor usada para exibir o status da avaliação.
+     *
+     * @param string $status
+     *
+     * @return string
+     */
+    private function assessmentStatusColor(string $status): string {
         return match ($status) {
-            'open' => 'success',
+            'open'   => 'success',
             'closed' => 'gray',
-            default => 'gray',
+            default  => 'gray',
         };
     }
 
-    private function assessmentTypeOptions(): array
-    {
+    /**
+     * Retorna os tipos de avaliação disponíveis para seleção.
+     *
+     * @return array
+     */
+    private function assessmentTypeOptions(): array {
         return [
-            'prova' => 'Prova',
-            'trabalho' => 'Trabalho',
-            'atividade' => 'Atividade',
-            'seminario' => 'Seminário',
-            'projeto' => 'Projeto',
+            'prova'       => 'Prova',
+            'trabalho'    => 'Trabalho',
+            'atividade'   => 'Atividade',
+            'seminario'   => 'Seminário',
+            'projeto'     => 'Projeto',
             'recuperacao' => 'Recuperação',
-            'outro' => 'Outro',
+            'outro'       => 'Outro',
         ];
     }
 
-    private function assessmentTypeLabel(string $type): string
-    {
+    /**
+     * Retorna o rótulo usado para exibir o tipo de avaliação.
+     *
+     * @param string $type
+     *
+     * @return string
+     */
+    private function assessmentTypeLabel(string $type): string {
         return $this->assessmentTypeOptions()[$type] ?? ucfirst($type);
     }
 
-    private function assessmentTypeColor(string $type): string
-    {
+    /**
+     * Retorna a cor usada para exibir o tipo de avaliação.
+     *
+     * @param string $type
+     *
+     * @return string
+     */
+    private function assessmentTypeColor(string $type): string {
         return match ($type) {
-            'prova' => 'danger',
-            'trabalho' => 'warning',
-            'atividade' => 'info',
-            'seminario' => 'primary',
-            'projeto' => 'success',
+            'prova'       => 'danger',
+            'trabalho'    => 'warning',
+            'atividade'   => 'info',
+            'seminario'   => 'primary',
+            'projeto'     => 'success',
             'recuperacao' => 'gray',
-            default => 'gray',
+            default       => 'gray',
         };
     }
 }

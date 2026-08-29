@@ -7,17 +7,25 @@ use App\Support\PermissionAccess;
 use Mockery;
 use Tests\TestCase;
 
-class PermissionAccessTest extends TestCase
-{
-    protected function tearDown(): void
-    {
+class PermissionAccessTest extends TestCase {
+
+    /**
+     * Restaura o ambiente após a execução do teste.
+     *
+     * @return void
+     */
+    protected function tearDown(): void {
         auth()->forgetUser();
 
         parent::tearDown();
     }
 
-    public function test_administrator_cannot_use_student_portal_permissions(): void
-    {
+    /**
+     * Verifica se um administrador não herda permissões exclusivas do portal do aluno.
+     *
+     * @return void
+     */
+    public function test_administrator_cannot_use_student_portal_permissions(): void {
         $user = Mockery::mock(User::class)->makePartial();
         $user->shouldReceive('hasRole')->once()->with('student')->andReturnFalse();
         $user->shouldNotReceive('roles');
@@ -26,8 +34,12 @@ class PermissionAccessTest extends TestCase
         $this->assertFalse(PermissionAccess::can('student.dashboard.view'));
     }
 
-    public function test_administrator_cannot_use_teacher_portal_permissions(): void
-    {
+    /**
+     * Verifica se um administrador não herda permissões exclusivas do portal do professor.
+     *
+     * @return void
+     */
+    public function test_administrator_cannot_use_teacher_portal_permissions(): void {
         $user = Mockery::mock(User::class)->makePartial();
         $user->shouldReceive('hasRole')->once()->with('teacher')->andReturnFalse();
         $user->shouldNotReceive('roles');

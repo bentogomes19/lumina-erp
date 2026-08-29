@@ -5,8 +5,8 @@ namespace App\Models;
 use App\Enums\AssessmentType;
 use App\Enums\Term;
 
-class Grade extends BaseModel
-{
+class Grade extends BaseModel {
+
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
      *
@@ -47,58 +47,65 @@ class Grade extends BaseModel
 
     /**
      * Retorna a turma vinculada à nota.
+     *
+     * @return mixed
      */
-    public function schoolClass()
-    {
+    public function schoolClass() {
         return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
     /**
      * Retorna a avaliação vinculada à nota.
+     *
+     * @return mixed
      */
-    public function assessment()
-    {
+    public function assessment() {
         return $this->belongsTo(Assessment::class);
     }
 
     /**
      * Retorna a disciplina vinculada à nota.
+     *
+     * @return mixed
      */
-    public function subject()
-    {
+    public function subject() {
         return $this->belongsTo(Subject::class);
     }
 
     /**
      * Retorna a matrícula vinculada à nota.
+     *
+     * @return mixed
      */
-    public function enrollment()
-    {
+    public function enrollment() {
         return $this->belongsTo(Enrollment::class);
     }
 
     /**
      * Retorna o aluno vinculado à nota.
+     *
+     * @return mixed
      */
-    public function student()
-    {
+    public function student() {
         return $this->belongsTo(Student::class);
     }
 
     /**
      * Retorna a nota de origem quando esta nota é recuperação.
+     *
+     * @return mixed
      */
-    public function recoveryOf()
-    {
+    public function recoveryOf() {
         return $this->belongsTo(Grade::class, 'recovery_of_id');
     }
 
     /**
      * Retorna o percentual obtido em relação à nota máxima.
+     *
+     * @return float|null
      */
-    public function getPercentAttribute(): ?float
-    {
-        if (! $this->max_score || $this->max_score == 0) {
+    public function getPercentAttribute(): ?float {
+        if (!$this->max_score || $this->max_score == 0) {
             return null;
         }
 
@@ -107,11 +114,12 @@ class Grade extends BaseModel
 
     /**
      * Preenche automaticamente o aluno com base na matrícula informada.
+     *
+     * @return void
      */
-    protected static function booted()
-    {
+    protected static function booted() {
         static::creating(function (Grade $grade) {
-            if ($grade->enrollment_id && ! $grade->student_id) {
+            if ($grade->enrollment_id && !$grade->student_id) {
                 $enrollment = Enrollment::find($grade->enrollment_id);
 
                 if ($enrollment) {
@@ -121,7 +129,7 @@ class Grade extends BaseModel
         });
 
         static::updating(function (Grade $grade) {
-            if ($grade->enrollment_id && ! $grade->student_id) {
+            if ($grade->enrollment_id && !$grade->student_id) {
                 $enrollment = Enrollment::find($grade->enrollment_id);
 
                 if ($enrollment) {

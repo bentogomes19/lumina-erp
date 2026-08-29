@@ -8,13 +8,19 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class EnrollmentsRelationManager extends RelationManager
-{
-    protected static string $relationship = 'enrollments';
-    protected static ?string $title = 'Matrículas / Turmas';
+class EnrollmentsRelationManager extends RelationManager {
 
-    public function table(Table $table): Table
-    {
+    protected static string $relationship = 'enrollments';
+    protected static ?string $title       = 'Matrículas / Turmas';
+
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('schoolClass.name')
@@ -36,11 +42,11 @@ class EnrollmentsRelationManager extends RelationManager
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state instanceof EnrollmentStatus ? $state->value : $state)
                     ->color(fn ($state) => match ($state instanceof EnrollmentStatus ? $state->value : $state) {
-                        'Ativa' => 'success',
-                        'Suspensa' => 'warning',
+                        'Ativa'     => 'success',
+                        'Suspensa'  => 'warning',
                         'Cancelada' => 'danger',
-                        'Completa' => 'info',
-                        default => 'gray',
+                        'Completa'  => 'info',
+                        default     => 'gray',
                     }),
             ])
             ->defaultSort('enrollment_date', 'desc')

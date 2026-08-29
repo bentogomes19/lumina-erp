@@ -2,20 +2,22 @@
 
 namespace App\Filament\Resources\GradeLevels\Tables;
 
-use App\Models\GradeLevel;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
-class GradeLevelsTable
-{
-    public static function configure(Table $table): Table
-    {
+class GradeLevelsTable {
+
+    /**
+     * Configura as colunas, os filtros e as ações da tabela de níveis de ensino.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function configure(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('name')->label('Nome')->sortable()->searchable(),
@@ -23,7 +25,7 @@ class GradeLevelsTable
                 TextColumn::make('display_order')->label('Ordem')->sortable(),
             ])
             ->filters([
-                //
+
             ])
             ->recordActions([
                 EditAction::make(),

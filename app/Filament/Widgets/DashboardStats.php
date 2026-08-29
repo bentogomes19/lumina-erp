@@ -17,6 +17,12 @@ use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class DashboardStats extends StatsOverviewWidget {
+
+    /**
+     * Retorna os totais acadêmicos e os atalhos exibidos no painel administrativo.
+     *
+     * @return array
+     */
     protected function getStats(): array {
         return [
             Stat::make('Total de Alunos', Student::count())

@@ -4,13 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
+
     /**
-     * Run the migrations.
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
      */
-    public function up(): void
-    {
+    public function up(): void {
         Schema::create('class_subjects', function (Blueprint $table) {
             $table->id();
             $table->foreignId('class_id')->constrained('classes')->cascadeOnDelete();
@@ -21,8 +22,12 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
-    {
+    /**
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
+     */
+    public function down(): void {
         Schema::dropIfExists('class_subjects');
     }
 };

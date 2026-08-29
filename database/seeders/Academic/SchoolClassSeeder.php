@@ -10,23 +10,25 @@ use App\Models\SchoolClass;
 use App\Models\SchoolYear;
 use App\Models\Teacher;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
-class SchoolClassSeeder extends Seeder
-{
-    public function run(): void
-    {
-        // Pega o ano letivo ativo
+class SchoolClassSeeder extends Seeder {
+
+    /**
+     * Cria as turmas escolares iniciais.
+     *
+     * @return void
+     */
+    public function run(): void {
+
+        /* Pega o ano letivo ativo. */
         $year = SchoolYear::where('is_active', true)->first()
-            ?? SchoolYear::orderByDesc('year')->first(); // fallback
+            ?? SchoolYear::orderByDesc('year')->first(); /* valor alternativo. */
 
         $gradeLevels = GradeLevel::all();
-        $teachers = Teacher::all();
+        $teachers    = Teacher::all();
 
-        if (! $year || $gradeLevels->isEmpty() || $teachers->isEmpty()) {
+        if (!$year || $gradeLevels->isEmpty() || $teachers->isEmpty()) {
             $this->command?->warn('SchoolClassSeeder: faltam year/gradeLevels/teachers, seeder pulado.');
             return;
         }
@@ -35,19 +37,19 @@ class SchoolClassSeeder extends Seeder
             $randomShift = fake()->randomElement(ClassShift::cases());
 
             SchoolClass::create([
-                'uuid'               => Str::uuid(),
-                'name'               => $gradeLevel->name . ' - A',
-                'code'               => Str::slug($gradeLevel->name . '-A') . '-' . $year->year,
+                'uuid' => Str::uuid(),
+                'name' => $gradeLevel->name . ' - A',
+                'code' => Str::slug($gradeLevel->name . '-A') . '-' . $year->year,
 
-                'shift'              => $randomShift->value,
+                'shift' => $randomShift->value,
 
-                'homeroom_teacher_id'=> $teachers->random()->id,
-                'capacity'           => 40,
-                'status'            => ClassStatus::OPEN->value,
-                'type'              => ClassType::REGULAR->value,
+                'homeroom_teacher_id' => $teachers->random()->id,
+                'capacity'            => 40,
+                'status'              => ClassStatus::OPEN->value,
+                'type'                => ClassType::REGULAR->value,
 
-                'grade_level_id'     => $gradeLevel->id,
-                'school_year_id'     => $year->id,
+                'grade_level_id' => $gradeLevel->id,
+                'school_year_id' => $year->id,
             ]);
         }
     }

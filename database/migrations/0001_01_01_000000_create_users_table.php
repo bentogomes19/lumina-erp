@@ -4,41 +4,42 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
+
     /**
-     * Run the migrations.
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
      */
-    public function up(): void
-    {
+    public function up(): void {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
 
-            // Identificação principal
+            /* Identificação principal. */
             $table->uuid('uuid')->unique();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
 
-            // Dados pessoais
+            /* Dados pessoais. */
             $table->string('cpf', 14)->nullable()->unique();
             $table->string('rg', 20)->nullable();
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['Masculino', 'Feminino', 'Outro'])->nullable();
 
-            // Endereço
+            /* Endereço. */
             $table->string('address')->nullable();
-            $table->string('district')->nullable(); // Bairro
+            $table->string('district')->nullable(); /* Bairro. */
             $table->string('city')->nullable();
             $table->string('state', 2)->nullable();
             $table->string('postal_code', 9)->nullable();
 
-            // Contatos
+            /* Contatos. */
             $table->string('phone', 20)->nullable();
             $table->string('cellphone', 20)->nullable();
 
-            // Configurações e status
+            /* Configurações e status. */
             $table->string('avatar')->nullable();
             $table->boolean('active')->default(true);
             $table->timestamp('last_login_at')->nullable();
@@ -65,10 +66,11 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
      */
-    public function down(): void
-    {
+    public function down(): void {
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');

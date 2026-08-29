@@ -9,10 +9,14 @@ use Illuminate\Support\Facades\Schema;
  * Controla o checklist de documentos obrigatórios e opcionais por matrícula,
  * com suporte a upload digital (PDF, JPG, PNG — máx. 10MB).
  */
-return new class extends Migration
-{
-    public function up(): void
-    {
+return new class () extends Migration {
+
+    /**
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
+     */
+    public function up(): void {
         Schema::create('enrollment_documents', function (Blueprint $table) {
             $table->id();
 
@@ -53,8 +57,12 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
-    {
+    /**
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
+     */
+    public function down(): void {
         Schema::dropIfExists('enrollment_documents');
     }
 };

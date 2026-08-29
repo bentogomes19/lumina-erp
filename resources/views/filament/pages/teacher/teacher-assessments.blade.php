@@ -171,7 +171,7 @@
             </div>
         @endif
 
-        @if($teacher && ! $canCreate && $assignments->isEmpty())
+        @if($teacher && !$canCreate && $assignments->isEmpty())
             <div class="teacher-assessments-alert">
                 <strong>Sem vínculos disponíveis.</strong> Você ainda não possui turmas e disciplinas atribuídas para criar avaliações.
             </div>

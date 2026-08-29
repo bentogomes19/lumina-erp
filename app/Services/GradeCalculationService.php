@@ -11,8 +11,8 @@ use Illuminate\Support\Collection;
  * As fórmulas são ponderadas por padrão; o assessment_type = RECOVERY é tratado
  * separadamente e nunca entra na média ponderada principal.
  */
-class GradeCalculationService
-{
+class GradeCalculationService {
+
     public const MIN_APPROVAL = 6.0;
     public const MIN_RECOVERY = 4.0;
     public const MAX_SCORE    = 10.0;
@@ -20,62 +20,75 @@ class GradeCalculationService
     /**
      * Calcula a média ponderada de uma coleção de modelos Grade.
      * Notas com score nulo são excluídas (não tratadas como zero).
+     *
+     * @param Collection $grades
+     *
+     * @return float|null
      */
-    public function weightedAverage(Collection $grades): ?float
-    {
-        $scored = $grades->filter(fn($g) => $g->score !== null);
+    public function weightedAverage(Collection $grades): ?float {
+        $scored = $grades->filter(fn ($g) => $g->score !== null);
 
         if ($scored->isEmpty()) {
             return null;
         }
 
-        $totalWeight = $scored->sum(fn($g) => $g->weight ?? 1);
+        $totalWeight = $scored->sum(fn ($g) => $g->weight ?? 1);
 
         if ($totalWeight <= 0) {
             return null;
         }
 
-        $weightedSum = $scored->sum(fn($g) => $g->score * ($g->weight ?? 1));
+        $weightedSum = $scored->sum(fn ($g) => $g->score * ($g->weight ?? 1));
 
         return round($weightedSum / $totalWeight, 2);
     }
 
     /**
      * Determina o status do aluno com base na média.
+     *
+     * @param float|null $average
+     * @param float $minApproval
+     * @param float $minRecovery
+     *
+     * @return string
      */
-    public function status(?float $average, float $minApproval = self::MIN_APPROVAL, float $minRecovery = self::MIN_RECOVERY): string
-    {
-        if ($average === null)        return 'ongoing';
-        if ($average >= $minApproval) return 'approved';
-        if ($average >= $minRecovery) return 'recovery';
+    public function status(?float $average, float $minApproval = self::MIN_APPROVAL, float $minRecovery = self::MIN_RECOVERY): string {
+        if ($average === null) {
+            return 'ongoing';
+        }
+        if ($average >= $minApproval) {
+            return 'approved';
+        }
+        if ($average >= $minRecovery) {
+            return 'recovery';
+        }
 
         return 'failed';
     }
 
     /**
      * Constrói o relatório completo de notas por disciplina.
+     * terms: array<string, array{grades: Collection, average: float|null, recovery: mixed, final_average: float|null, has_grades: bool}>,
+     * overall_average: float|null,
+     * status: string,
+     * points_needed: float|null,
+     * }.
      *
-     * @param  Collection  $grades      Todos os modelos Grade de uma disciplina (qualquer bimestre).
-     * @param  float       $minApproval Média mínima para aprovação direta.
+     * @param Collection $grades Todos os modelos Grade de uma disciplina (qualquer bimestre).
+     * @param float $minApproval Média mínima para aprovação direta.
      *
      * @return array{
-     *   terms: array<string, array{grades: Collection, average: float|null, recovery: mixed, final_average: float|null, has_grades: bool}>,
-     *   overall_average: float|null,
-     *   status: string,
-     *   points_needed: float|null,
-     * }
      */
-    public function subjectReport(Collection $grades, float $minApproval = self::MIN_APPROVAL): array
-    {
-        $regular  = $grades->filter(fn($g) => $g->assessment_type !== AssessmentType::RECOVERY);
-        $recovery = $grades->filter(fn($g) => $g->assessment_type === AssessmentType::RECOVERY);
+    public function subjectReport(Collection $grades, float $minApproval = self::MIN_APPROVAL): array {
+        $regular  = $grades->filter(fn ($g) => $g->assessment_type !== AssessmentType::RECOVERY);
+        $recovery = $grades->filter(fn ($g) => $g->assessment_type === AssessmentType::RECOVERY);
 
         $termData = [];
 
         foreach (['b1', 'b2', 'b3', 'b4'] as $termKey) {
-            $termGrades = $regular->filter(fn($g) => $this->termValue($g) === $termKey);
+            $termGrades = $regular->filter(fn ($g) => $this->termValue($g) === $termKey);
 
-            // Vincula a nota de recuperação: prioriza recovery_of_id, senão usa o mesmo bimestre
+            /* Vincula a nota de recuperação: prioriza recovery_of_id, senão usa o mesmo bimestre. */
             $termRecovery = $recovery->first(function ($rg) use ($termKey, $regular) {
                 if ($rg->recovery_of_id) {
                     $orig = $regular->firstWhere('id', $rg->recovery_of_id);
@@ -99,16 +112,16 @@ class GradeCalculationService
             ];
         }
 
-        $finals  = collect($termData)->pluck('final_average')->filter(fn($v) => $v !== null);
+        $finals  = collect($termData)->pluck('final_average')->filter(fn ($v) => $v !== null);
         $overall = $finals->isNotEmpty() ? round($finals->avg(), 2) : null;
         $status  = $this->status($overall, $minApproval);
 
-        // Estima a pontuação necessária em uma avaliação de peso 1 para atingir a média mínima
+        /* Estima a pontuação necessária em uma avaliação de peso 1 para atingir a média mínima. */
         $pointsNeeded = null;
         if ($overall !== null && $overall < $minApproval) {
-            $scored       = $regular->filter(fn($g) => $g->score !== null);
-            $totalWeight  = $scored->sum(fn($g) => $g->weight ?? 1);
-            $weightedSum  = $scored->sum(fn($g) => $g->score * ($g->weight ?? 1));
+            $scored       = $regular->filter(fn ($g) => $g->score !== null);
+            $totalWeight  = $scored->sum(fn ($g) => $g->weight ?? 1);
+            $weightedSum  = $scored->sum(fn ($g) => $g->score * ($g->weight ?? 1));
             $needed       = $minApproval * ($totalWeight + 1) - $weightedSum;
             $pointsNeeded = min(round(max(0, $needed), 2), self::MAX_SCORE);
         }
@@ -121,11 +134,19 @@ class GradeCalculationService
         ];
     }
 
-    // ── Auxiliares ───────────────────────────────────────────────────────────
+    /* Auxiliares. */
 
-    private function termValue($grade): ?string
-    {
-        if ($grade === null) return null;
+    /**
+     * Retorna o valor numérico correspondente ao período letivo.
+     *
+     * @param mixed $grade
+     *
+     * @return string|null
+     */
+    private function termValue($grade): ?string {
+        if ($grade === null) {
+            return null;
+        }
 
         $term = $grade->term;
 

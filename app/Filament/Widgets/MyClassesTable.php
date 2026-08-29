@@ -7,15 +7,28 @@ use App\Models\TeacherAssignment;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-class MyClassesTable extends BaseWidget
-{
-    protected static ?string $heading = 'Minhas Turmas';
+
+class MyClassesTable extends BaseWidget {
+
+    protected static ?string $heading      = 'Minhas Turmas';
     protected int|string|array $columnSpan = 'full';
 
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
     public static function canView(): bool {
         return PermissionAccess::can('teacher.classes.view');
     }
 
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
     public function table(Table $table): Table {
         $teacher  = auth()->user()?->teacher;
         $classIds = $teacher ? TeacherAssignment::where('teacher_id', $teacher->id)->pluck('class_id')->unique() : collect([-1]);

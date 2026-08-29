@@ -14,41 +14,89 @@ use BackedEnum;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
-class SchoolYearResource extends BaseAdminResource
-{
+class SchoolYearResource extends BaseAdminResource {
+
     protected static ?string $model = SchoolYear::class;
 
     protected static string|null|\UnitEnum $navigationGroup = 'Configurações Acadêmicas';
-    protected static ?string $slug = 'school-years';
+    protected static ?string $slug                          = 'school-years';
     protected static string|null|BackedEnum $navigationIcon = 'fas-calendar';
-    protected static ?string $navigationLabel = 'Ano Letivo';
-    protected static ?string $pluralModelLabel = 'Ano Letivo';
-    protected static ?string $modelLabel = 'Ano Letivo';
+    protected static ?string $navigationLabel               = 'Ano Letivo';
+    protected static ?string $pluralModelLabel              = 'Ano Letivo';
+    protected static ?string $modelLabel                    = 'Ano Letivo';
 
-    protected static function viewPermission(): string   { return 'school_years.view'; }
-    protected static function createPermission(): string { return 'school_years.create'; }
-    protected static function editPermission(): string   { return 'school_years.edit'; }
-    protected static function deletePermission(): string { return 'school_years.delete'; }
+    /**
+     * Retorna o nome da permissão necessária para visualizar o recurso.
+     *
+     * @return string
+     */
+    protected static function viewPermission(): string {
+        return 'school_years.view';
+    }
+    /**
+     * Retorna a permissão necessária para criar registros do recurso.
+     *
+     * @return string
+     */
+    protected static function createPermission(): string {
+        return 'school_years.create';
+    }
+    /**
+     * Retorna o nome da permissão necessária para editar o recurso.
+     *
+     * @return string
+     */
+    protected static function editPermission(): string {
+        return 'school_years.edit';
+    }
+    /**
+     * Retorna a permissão necessária para excluir registros do recurso.
+     *
+     * @return string
+     */
+    protected static function deletePermission(): string {
+        return 'school_years.delete';
+    }
 
-    public static function form(Schema $schema): Schema
-    {
+    /**
+     * Configura o formulário do recurso.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function form(Schema $schema): Schema {
         return SchoolYearForm::configure($schema);
     }
 
-    public static function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function table(Table $table): Table {
         return SchoolYearsTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
+    /**
+     * Retorna os gerenciadores de relações do recurso.
+     *
+     * @return array
+     */
+    public static function getRelations(): array {
         return [
             TermsRelationManager::class,
         ];
     }
 
-    public static function getPages(): array
-    {
+    /**
+     * Retorna as páginas registradas no recurso.
+     *
+     * @return array
+     */
+    public static function getPages(): array {
         return [
             'index'  => ListSchoolYears::route('/'),
             'create' => CreateSchoolYear::route('/create'),

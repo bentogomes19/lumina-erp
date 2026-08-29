@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
-use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -13,8 +12,14 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
 class EditUser extends EditRecord {
+
     protected static string $resource = UserResource::class;
 
+    /**
+     * Retorna as ações exibidas no cabeçalho.
+     *
+     * @return array
+     */
     protected function getHeaderActions(): array {
         return [
             $this->getResetPasswordAction(),
@@ -27,6 +32,11 @@ class EditUser extends EditRecord {
         ];
     }
 
+    /**
+     * Retorna a ação usada para redefinir a senha do usuário.
+     *
+     * @return Action
+     */
     private function getResetPasswordAction(): Action {
         return Action::make('reset_password')
             ->label('Resetar Senha')
@@ -48,6 +58,11 @@ class EditUser extends EditRecord {
             ->visible(fn () => $this->isAdminOrTi());
     }
 
+    /**
+     * Retorna a ação usada para desbloquear o usuário.
+     *
+     * @return Action
+     */
     private function getUnlockAction(): Action {
         return Action::make('unlock')
             ->label('Desbloquear')
@@ -62,6 +77,11 @@ class EditUser extends EditRecord {
             ->visible(fn () => $this->record->locked_at && $this->isAdminOrTi());
     }
 
+    /**
+     * Retorna a ação usada para inativar o usuário.
+     *
+     * @return Action
+     */
     private function getInactivateAction(): Action {
         return Action::make('inactivate')
             ->label('Inativar')
@@ -81,6 +101,11 @@ class EditUser extends EditRecord {
             ->visible(fn () => $this->record->active && $this->isAdminOrTi());
     }
 
+    /**
+     * Retorna a ação usada para reativar o usuário.
+     *
+     * @return Action
+     */
     private function getActivateAction(): Action {
         return Action::make('activate')
             ->label('Reativar')
@@ -96,18 +121,35 @@ class EditUser extends EditRecord {
             ->visible(fn () => !$this->record->active && $this->isAdminOrTi());
     }
 
+    /**
+     * Determina se o usuário atual pertence aos perfis de administrador ou TI.
+     *
+     * @return bool
+     */
     private function isAdminOrTi(): bool {
         return (bool) auth()->user()?->hasAnyRole(['admin', 'ti']);
     }
 
+    /**
+     * Inicializa o estado necessário para exibir a página.
+     *
+     * @param int|string $record
+     *
+     * @return void
+     */
     public function mount(int|string $record): void {
         parent::mount($record);
 
-        if (auth()->user()?->hasRole('secretaria') && ! $this->isAdminOrTi()) {
+        if (auth()->user()?->hasRole('secretaria') && !$this->isAdminOrTi()) {
             $this->redirect($this->getResource()::getUrl('index'));
         }
     }
 
+    /**
+     * Retorna a URL usada após concluir a operação.
+     *
+     * @return string
+     */
     protected function getRedirectUrl(): string {
         return $this->getResource()::getUrl('index');
     }

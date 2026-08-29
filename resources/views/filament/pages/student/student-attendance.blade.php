@@ -23,7 +23,7 @@
     @endphp
 
     @if(!$student || !$currentClass)
-        {{-- Empty state --}}
+        {{-- Estado sem dados --}}
         <div class="ms-card" style="padding:3rem;text-align:center">
             <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
                 @svg('fas-calendar-days', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
@@ -38,7 +38,7 @@
     @else
         <div style="display:flex;flex-direction:column;gap:1.5rem">
 
-            {{-- ▸ Class header --}}
+            {{-- Cabeçalho da turma --}}
             <div class="ms-card" style="padding:1.25rem 1.5rem">
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
                     <div style="display:flex;align-items:center;gap:1rem">
@@ -64,7 +64,7 @@
                 </div>
             </div>
 
-            {{-- ▸ Period filter --}}
+            {{-- Filtro de período --}}
             <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
                 @foreach($periods as $key => $label)
                     <button
@@ -78,7 +78,7 @@
                 </span>
             </div>
 
-            {{-- ▸ Alert: below minimum --}}
+            {{-- Alert: below minimum --}}
             @if($stats['alert'])
                 @php
                     $overLimit = abs($stats['remaining_absences']);
@@ -106,7 +106,7 @@
                 </div>
             @endif
 
-            {{-- ▸ Overall stats --}}
+            {{-- Estatísticas gerais --}}
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem">
                 @php
                     $overallCards = [
@@ -132,7 +132,7 @@
                 @endforeach
             </div>
 
-            {{-- ▸ Overall frequency meter --}}
+            {{-- Indicador da frequência geral --}}
             @if($stats['total'] > 0)
                 @php $rc = $rateColor($stats['rate']); @endphp
                 <div class="ms-card" style="padding:1.25rem">
@@ -173,7 +173,7 @@
                 </div>
             @endif
 
-            {{-- ▸ Per-subject frequency --}}
+            {{-- Frequência por disciplina --}}
             @if(!empty($subjectStats))
                 <div>
                     <h3 style="font-size:0.875rem;font-weight:600;color:var(--ms-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.75rem">
@@ -227,7 +227,7 @@
                 </div>
             @endif
 
-            {{-- ▸ Calendar --}}
+            {{-- Calendário --}}
             @if(!empty($calendar))
                 <div>
                     <h3 style="font-size:0.875rem;font-weight:600;color:var(--ms-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.75rem">
@@ -259,7 +259,7 @@
                                 </div>
 
                                 <div class="ms-cal-grid">
-                                    {{-- Empty cells before first day --}}
+                                    {{-- Células vazias antes do primeiro dia --}}
                                     @for($e = 0; $e < $month['first_dow']; $e++)
                                         <div class="ms-cal-day empty"></div>
                                     @endfor
@@ -284,14 +284,14 @@
                 </div>
             @endif
 
-            {{-- ▸ Justified absences section --}}
+            {{-- Seção de faltas justificadas --}}
             @php
                 $justifiedRecords = collect();
-                // We'll show this block only if there are excused records
-                // The blade accesses the table data through the existing Filament table
+                /* Prepara os registros de faltas justificadas para exibição. */
+                /* A página acessa os dados pela tabela existente do Filament. */
             @endphp
 
-            {{-- ▸ Attendance history table --}}
+            {{-- Tabela do histórico de frequência --}}
             <div>
                 <h3 style="font-size:0.875rem;font-weight:600;color:var(--ms-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.75rem">
                     Histórico Detalhado

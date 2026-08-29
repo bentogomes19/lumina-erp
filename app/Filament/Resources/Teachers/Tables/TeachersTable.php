@@ -6,7 +6,6 @@ use App\Enums\TeacherStatus;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\TeacherAssignment;
-use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -24,14 +23,18 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Role;
 
-class TeachersTable
-{
-    public static function configure(Table $table): Table
-    {
+class TeachersTable {
+
+    /**
+     * Configura as colunas, os filtros e as ações da tabela de professores.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function configure(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('employee_number')->label('Matrícula')->searchable()->copyable()->toggleable(),
@@ -42,18 +45,19 @@ class TeachersTable
                 TextColumn::make('status')->toggleable(true)->searchable()->sortable()
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn($state) => $state
+                    ->formatStateUsing(
+                        fn ($state) => $state
                         ? (is_string($state)
                             ? \App\Enums\TeacherStatus::from($state)->label()
                             : $state->label())
                         : '—'
                     )
-                    ->color(fn($state) => match (is_string($state) ? $state : $state?->value) {
-                        'active' => 'success',
-                        'inactive' => 'gray',
+                    ->color(fn ($state) => match (is_string($state) ? $state : $state?->value) {
+                        'active'     => 'success',
+                        'inactive'   => 'gray',
                         'sabbatical' => 'warning',
                         'terminated' => 'danger',
-                        default => 'secondary',
+                        default      => 'secondary',
                     }),
                 TextColumn::make('created_at')->dateTime()->since()->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -68,21 +72,21 @@ class TeachersTable
                 Action::make('criarUsuario')
                     ->label('Criar usuário')
                     ->icon('fas-user-plus')
-                    ->visible(fn($record) => !$record->user_id) // só mostra se ainda não tiver usuário
-                    ->modalHeading(fn($record) => "Criar usuário para {$record->name}")
+                    ->visible(fn ($record) => !$record->user_id) /* só mostra se ainda não tiver usuário. */
+                    ->modalHeading(fn ($record) => "Criar usuário para {$record->name}")
                     ->form([
                         TextInput::make('name')
                             ->label('Nome')
-                            ->default(fn($record) => $record->name)
+                            ->default(fn ($record) => $record->name)
                             ->disabled()
                             ->dehydrated(false),
 
                         TextInput::make('email')
                             ->label('E-mail institucional (opcional)')
                             ->email()
-                            ->default(fn($record) => $record->email)   // <-- vem do professor
+                            ->default(fn ($record) => $record->email)   /* <-- vem do professor. */
                             ->nullable()
-                            ->rule(Rule::unique('users','email')),
+                            ->rule(Rule::unique('users', 'email')),
 
                         TextInput::make('password')
                             ->label('Senha')
@@ -95,7 +99,7 @@ class TeachersTable
 
                             $email = filled($data['email']) ? $data['email'] : $record->email;
 
-                            // (opcional) validação manual extra se quiser
+                            /* (opcional) validação manual extra se quiser. */
                             if ($email && \App\Models\User::where('email', $email)->exists()) {
                                 throw \Illuminate\Validation\ValidationException::withMessages([
                                     'email' => 'Este e-mail já está em uso por outro usuário.',
@@ -104,13 +108,13 @@ class TeachersTable
 
                             $user = \App\Models\User::create([
                                 'name'     => $record->name,
-                                'email'    => $email,                  // <-- usa do professor por padrão
+                                'email'    => $email,                  /* <-- usa do professor por padrão. */
                                 'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
                                 'active'   => true,
                             ]);
 
                             $user->syncRoles(['teacher']);
-                            if ($role = \Spatie\Permission\Models\Role::where('name','teacher')->with('permissions')->first()) {
+                            if ($role = \Spatie\Permission\Models\Role::where('name', 'teacher')->with('permissions')->first()) {
                                 $user->syncPermissions($role->permissions);
                             }
 
@@ -126,15 +130,16 @@ class TeachersTable
                 Action::make('vincular')
                     ->label('Vincular a turma/discip.')
                     ->icon('fas-link')
-                    ->visible(fn($record) => !$record->user_id)
-                    ->modalHeading(fn($record) => "Vincular {$record->name}")
+                    ->visible(fn ($record) => !$record->user_id)
+                    ->modalHeading(fn ($record) => "Vincular {$record->name}")
                     ->form([
                         Select::make('class_id')
                             ->label('Turma')
-                            ->options(fn() => SchoolClass::query()
+                            ->options(
+                                fn () => SchoolClass::query()
                                 ->with('gradeLevel', 'schoolYear')
                                 ->get()
-                                ->mapWithKeys(fn($c) => [
+                                ->mapWithKeys(fn ($c) => [
                                     $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
                                 ])
                             )
@@ -154,7 +159,8 @@ class TeachersTable
                                         return Subject::whereIn('id', $ids)->orderBy('name')->pluck('name', 'id');
                                     }
                                 }
-                                // fallback
+
+                                /* valor alternativo. */
                                 return Subject::orderBy('name')->pluck('name', 'id');
                             })
                             ->searchable()
@@ -163,24 +169,24 @@ class TeachersTable
 
                         Action::make('ativar')
                             ->label('Ativar')
-                            ->visible(fn($record) => $record->status !== TeacherStatus::ACTIVE->value)
-                            ->action(fn($record) => $record->update(['status' => TeacherStatus::ACTIVE->value])),
+                            ->visible(fn ($record) => $record->status !== TeacherStatus::ACTIVE->value)
+                            ->action(fn ($record) => $record->update(['status' => TeacherStatus::ACTIVE->value])),
 
                         Action::make('inativar')
                             ->label('Inativar')
                             ->color('warning')
-                            ->visible(fn($record) => $record->status !== TeacherStatus::INACTIVE->value)
-                            ->action(fn($record) => $record->update(['status' => TeacherStatus::INACTIVE->value])),
+                            ->visible(fn ($record) => $record->status !== TeacherStatus::INACTIVE->value)
+                            ->action(fn ($record) => $record->update(['status' => TeacherStatus::INACTIVE->value])),
                     ])
                     ->action(function (\App\Models\Teacher $record, array $data) {
                         $teacherId = $record->id;
-                        $classId = (int)$data['class_id'];
+                        $classId   = (int)$data['class_id'];
                         $subjectId = (int)$data['subject_id'];
 
-                        // evita duplicata manualmente (além do índice único no banco)
+                        /* evita duplicata manualmente (além do índice único no banco) */
                         $exists = TeacherAssignment::where([
                             'teacher_id' => $teacherId,
-                            'class_id' => $classId,
+                            'class_id'   => $classId,
                             'subject_id' => $subjectId,
                         ])->exists();
 
@@ -194,7 +200,7 @@ class TeachersTable
 
                         TeacherAssignment::create([
                             'teacher_id' => $teacherId,
-                            'class_id' => $classId,
+                            'class_id'   => $classId,
                             'subject_id' => $subjectId,
                         ]);
 
@@ -217,11 +223,11 @@ class TeachersTable
                         ->form([
                             Select::make('status')
                                 ->label('Novo status')
-                                ->options(TeacherStatus::options()) // ['active'=>'Ativo', ...]
+                                ->options(TeacherStatus::options())
                                 ->required(),
                         ])
                         ->action(function (Collection $records, array $data) {
-                            $novo = $data['status'];
+                            $novo  = $data['status'];
                             $total = 0;
 
                             DB::transaction(function () use ($records, $novo, &$total) {

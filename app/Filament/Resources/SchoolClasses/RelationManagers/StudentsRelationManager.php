@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\SchoolClasses\RelationManagers;
 
-use Filament\Actions\AttachAction;
 use Filament\Actions\DetachAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -12,13 +11,19 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 
-class StudentsRelationManager extends RelationManager
-{
-    protected static string $relationship = 'students';
-    protected static ?string $title = 'Alunos matriculados';
+class StudentsRelationManager extends RelationManager {
 
-    public function table(Table $table): Table
-    {
+    protected static string $relationship = 'students';
+    protected static ?string $title       = 'Alunos matriculados';
+
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('registration_number')->label('Matrícula')->searchable(),

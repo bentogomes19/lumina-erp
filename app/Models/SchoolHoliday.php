@@ -5,8 +5,8 @@ namespace App\Models;
 use App\Enums\HolidayType;
 use Carbon\Carbon;
 
-class SchoolHoliday extends BaseModel
-{
+class SchoolHoliday extends BaseModel {
+
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
      *
@@ -36,33 +36,46 @@ class SchoolHoliday extends BaseModel
 
     /**
      * Retorna o ano letivo vinculado ao feriado ou recesso.
+     *
+     * @return mixed
      */
-    public function schoolYear()
-    {
+    public function schoolYear() {
         return $this->belongsTo(SchoolYear::class);
     }
 
     /**
      * Filtra feriados e recessos ativos.
+     *
+     * @param mixed $query
+     *
+     * @return mixed
      */
-    public function scopeActive($query)
-    {
+    public function scopeActive($query) {
         return $query->where('is_active', true);
     }
 
     /**
      * Filtra feriados e recessos por ano letivo.
+     *
+     * @param mixed $query
+     * @param int $yearId
+     *
+     * @return mixed
      */
-    public function scopeForYear($query, int $yearId)
-    {
+    public function scopeForYear($query, int $yearId) {
         return $query->where('school_year_id', $yearId);
     }
 
     /**
      * Filtra feriados e recessos que intersectam o período informado.
+     *
+     * @param mixed $query
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     *
+     * @return mixed
      */
-    public function scopeInPeriod($query, Carbon $startDate, Carbon $endDate)
-    {
+    public function scopeInPeriod($query, Carbon $startDate, Carbon $endDate) {
         return $query->where(function ($q) use ($startDate, $endDate) {
             $q->whereBetween('start_date', [$startDate, $endDate])
                 ->orWhereBetween('end_date', [$startDate, $endDate])
@@ -75,15 +88,19 @@ class SchoolHoliday extends BaseModel
 
     /**
      * Verifica se uma data é dia letivo.
+     *
+     * @param Carbon $date
+     *
+     * @return bool
      */
-    public static function isSchoolDay(Carbon $date): bool
-    {
-        // Finais de semana não são dias letivos
+    public static function isSchoolDay(Carbon $date): bool {
+
+        /* Finais de semana não são dias letivos. */
         if ($date->isWeekend()) {
             return false;
         }
 
-        // Verificar se existe feriado/recesso nesta data
+        /* Verificar se existe feriado/recesso nesta data. */
         $holiday = static::active()
             ->where('start_date', '<=', $date)
             ->where('end_date', '>=', $date)
@@ -95,13 +112,15 @@ class SchoolHoliday extends BaseModel
     /**
      * Retorna a lista de dias não letivos em um período.
      *
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     *
      * @return array<int, string>
      */
-    public static function getNonSchoolDaysInPeriod(Carbon $startDate, Carbon $endDate): array
-    {
+    public static function getNonSchoolDaysInPeriod(Carbon $startDate, Carbon $endDate): array {
         $nonSchoolDays = [];
 
-        // Dias de feriados/recessos
+        /* Dias de feriados/recessos. */
         $holidays = static::active()
             ->inPeriod($startDate, $endDate)
             ->get();
@@ -114,7 +133,7 @@ class SchoolHoliday extends BaseModel
             }
         }
 
-        // Adicionar finais de semana
+        /* Adicionar finais de semana. */
         $current = $startDate->copy();
         while ($current->lte($endDate)) {
             if ($current->isWeekend()) {
@@ -128,9 +147,12 @@ class SchoolHoliday extends BaseModel
 
     /**
      * Retorna os próximos feriados ou recessos ativos.
+     *
+     * @param int $limit
+     *
+     * @return Illuminate\Database\Eloquent\Collection
      */
-    public static function getUpcoming(int $limit = 5): \Illuminate\Database\Eloquent\Collection
-    {
+    public static function getUpcoming(int $limit = 5): \Illuminate\Database\Eloquent\Collection {
         return static::active()
             ->where('start_date', '>=', now())
             ->orderBy('start_date')
@@ -140,44 +162,52 @@ class SchoolHoliday extends BaseModel
 
     /**
      * Conta os dias letivos em um período.
+     *
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     *
+     * @return int
      */
-    public static function countSchoolDaysInPeriod(Carbon $startDate, Carbon $endDate): int
-    {
-        $totalDays = (int) $startDate->diffInDays($endDate) + 1;
+    public static function countSchoolDaysInPeriod(Carbon $startDate, Carbon $endDate): int {
+        $totalDays     = (int) $startDate->diffInDays($endDate) + 1;
         $nonSchoolDays = count(static::getNonSchoolDaysInPeriod($startDate, $endDate));
-        
+
         return $totalDays - $nonSchoolDays;
     }
 
     /**
      * Indica se o feriado ou recesso ainda está vigente ou futuro.
+     *
+     * @return bool
      */
-    public function isUpcoming(): bool
-    {
+    public function isUpcoming(): bool {
         return $this->end_date->isFuture() || $this->end_date->isToday();
     }
 
     /**
      * Indica se o feriado ou recesso já passou.
+     *
+     * @return bool
      */
-    public function isPast(): bool
-    {
+    public function isPast(): bool {
         return $this->end_date->isPast();
     }
 
     /**
      * Retorna a duração do feriado ou recesso em dias.
+     *
+     * @return int
      */
-    public function getDurationInDays(): int
-    {
+    public function getDurationInDays(): int {
         return $this->start_date->diffInDays($this->end_date) + 1;
     }
 
     /**
      * Retorna o período formatado para exibição.
+     *
+     * @return string
      */
-    public function getFormattedPeriod(): string
-    {
+    public function getFormattedPeriod(): string {
         if ($this->start_date->eq($this->end_date)) {
             return $this->start_date->format('d/m/Y');
         }

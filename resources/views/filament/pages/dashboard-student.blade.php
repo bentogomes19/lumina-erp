@@ -16,11 +16,11 @@
         $canViewSubjects = \App\Support\PermissionAccess::can('student.subjects.view');
         $canViewCalendar = \App\Support\PermissionAccess::can('student.calendar.view');
 
-        // Cor por percentual
+        /* Define as cores conforme o percentual. */
         $freqColor  = fn($r) => $r >= 75 ? '#22c55e' : ($r >= 60 ? '#eab308' : '#ef4444');
         $gradeColor = fn($v) => $v === null ? 'var(--ms-text-muted)' : ($v >= 6.0 ? '#22c55e' : ($v >= 4.0 ? '#eab308' : '#ef4444'));
 
-        // Iniciais do nome
+        /* Obtém as iniciais do nome do aluno. */
         $initials = collect(explode(' ', $student?->name ?? 'A'))
             ->filter()->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
 
@@ -62,7 +62,7 @@
     @else
         <div style="display:flex;flex-direction:column;gap:1.5rem">
 
-            {{-- ▸ Banner de perfil --}}
+            {{-- Banner de perfil --}}
             <div class="ms-card" style="padding:1.5rem;overflow:hidden;position:relative">
                 {{-- Faixa decorativa --}}
                 <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#f59e0b,#d97706)"></div>
@@ -138,7 +138,7 @@
                 </div>
             </div>
 
-            {{-- ▸ Alertas críticos --}}
+            {{-- Alertas críticos --}}
             @if(($canViewAttendance && ($attendance['alert'] ?? false)) || ($canViewGrades && $grades['failed'] > 0))
                 <div style="display:flex;flex-direction:column;gap:0.5rem">
                     @if($canViewAttendance && ($attendance['alert'] ?? false))
@@ -160,7 +160,7 @@
                 </div>
             @endif
 
-            {{-- ▸ Cards de resumo rápido --}}
+            {{-- Cartões de resumo rápido --}}
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
                 @php
                     $summaryCards = [
@@ -221,7 +221,7 @@
                 @endforeach
             </div>
 
-            {{-- ▸ Grade principal: Agenda + Avaliações --}}
+            {{-- Grade principal: Agenda + Avaliações --}}
             <div class="ms-two-col" style="display:grid;grid-template-columns:3fr 2fr;gap:1rem">
 
                 {{-- Agenda do dia --}}
@@ -312,7 +312,7 @@
                                         <p style="font-size:1rem;font-weight:800;color:{{ $urgColor }};margin:0;line-height:1">{{ \Carbon\Carbon::parse($assessment->scheduled_at)->format('d') }}</p>
                                         <p style="font-size:0.5rem;text-transform:uppercase;color:{{ $urgColor }};margin:0">{{ \Carbon\Carbon::parse($assessment->scheduled_at)->translatedFormat('M') }}</p>
                                     </div>
-                                    {{-- Info --}}
+                                    {{-- Informações --}}
                                     <div style="min-width:0;flex:1">
                                         <p style="font-size:0.8125rem;font-weight:600;color:var(--ms-text-primary);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                                             {{ $assessment->title ?? 'Avaliação' }}
@@ -336,7 +336,7 @@
                 </div>
             </div>
 
-            {{-- ▸ Grade secundária: Últimas Notas + Atalhos --}}
+            {{-- Grade secundária: Últimas Notas + Atalhos --}}
             <div class="ms-two-col" style="display:grid;grid-template-columns:3fr 2fr;gap:1rem">
 
                 @if($canViewGrades)

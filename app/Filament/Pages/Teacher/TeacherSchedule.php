@@ -13,8 +13,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class TeacherSchedule extends Page
-{
+class TeacherSchedule extends Page {
+
     use HasTeacherPortalAccess;
 
     protected static ?string $navigationLabel = 'Agenda de Aulas';
@@ -41,10 +41,20 @@ class TeacherSchedule extends Page
 
     public ?int $selectedLessonId = null;
 
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
     public function getView(): string {
         return 'filament.pages.teacher.teacher-schedule-weekly';
     }
 
+    /**
+     * Retorna os dados necessários para montar a página.
+     *
+     * @return array
+     */
     public function getPageData(): array {
         $service = app(CurrentTeacherService::class);
         $teacher = $service->current();
@@ -118,37 +128,83 @@ class TeacherSchedule extends Page
         ];
     }
 
+    /**
+     * Retorna a exibição para a semana anterior.
+     *
+     * @return void
+     */
     public function previousWeek(): void {
         $this->weekOffset--;
         $this->selectedLessonId = null;
     }
 
+    /**
+     * Avança a exibição para a próxima semana.
+     *
+     * @return void
+     */
     public function nextWeek(): void {
         $this->weekOffset++;
         $this->selectedLessonId = null;
     }
 
+    /**
+     * Retorna os dados da semana atual.
+     *
+     * @return void
+     */
     public function currentWeek(): void {
-        $this->weekOffset = 0;
+        $this->weekOffset       = 0;
         $this->selectedLessonId = null;
     }
 
+    /**
+     * Seleciona uma aula para exibir seus detalhes.
+     *
+     * @param int $lessonId
+     *
+     * @return void
+     */
     public function selectLesson(int $lessonId): void {
         $this->selectedLessonId = $lessonId;
     }
 
+    /**
+     * Fecha os detalhes da aula selecionada.
+     *
+     * @return void
+     */
     public function closeLessonDetails(): void {
         $this->selectedLessonId = null;
     }
 
+    /**
+     * Retorna a data inicial da semana atual.
+     *
+     * @return Carbon
+     */
     private function currentWeekStart(): Carbon {
         return now()->startOfWeek(Carbon::MONDAY)->addWeeks($this->weekOffset);
     }
 
+    /**
+     * Retorna os dias que compõem a semana exibida.
+     *
+     * @param Carbon $weekStart
+     *
+     * @return Collection
+     */
     private function weekDays(Carbon $weekStart): Collection {
         return collect(range(0, 4))->map(fn (int $offset) => $weekStart->copy()->addDays($offset));
     }
 
+    /**
+     * Retorna a aula atualmente selecionada.
+     *
+     * @param Collection $lessons
+     *
+     * @return Lesson|null
+     */
     private function selectedLesson(Collection $lessons): ?Lesson {
         if ($lessons->isEmpty() || !$this->selectedLessonId) {
             return null;
@@ -157,13 +213,20 @@ class TeacherSchedule extends Page
         return $lessons->firstWhere('id', $this->selectedLessonId);
     }
 
+    /**
+     * Retorna os valores pedagógicos alternativos da disciplina.
+     *
+     * @param Collection $lessons
+     *
+     * @return Collection
+     */
     private function pedagogicalFallbacks(Collection $lessons): Collection {
-        if ($lessons->isEmpty() || ! Schema::hasTable('grade_level_subject')) {
+        if ($lessons->isEmpty() || !Schema::hasTable('grade_level_subject')) {
             return collect();
         }
 
         $availableColumns = collect(['syllabus', 'objectives', 'program_content'])
-            ->filter(fn(string $column) => Schema::hasColumn('grade_level_subject', $column))
+            ->filter(fn (string $column) => Schema::hasColumn('grade_level_subject', $column))
             ->values();
 
         if ($availableColumns->isEmpty()) {
@@ -194,33 +257,48 @@ class TeacherSchedule extends Page
             ->keyBy(fn ($row) => $this->gradeLevelSubjectKey($row->grade_level_id, $row->subject_id));
     }
 
+    /**
+     * Monta a chave que identifica a disciplina na série.
+     *
+     * @param int|null $gradeLevelId
+     * @param int|null $subjectId
+     *
+     * @return string
+     */
     public function gradeLevelSubjectKey(?int $gradeLevelId, ?int $subjectId): string {
         return "{$gradeLevelId}:{$subjectId}";
     }
 
+    /**
+     * Retorna as opções de ano letivo, turma, disciplina e turno dos filtros da agenda.
+     *
+     * @param mixed $assignments
+     *
+     * @return array
+     */
     private function getFilterOptions($assignments): array {
         $schoolYears = $assignments->pluck('schoolClass.schoolYear')
             ->filter()
             ->unique('id')
-            ->mapWithKeys(fn($y) => [$y->id => $y->name])
+            ->mapWithKeys(fn ($y) => [$y->id => $y->name])
             ->all();
 
         $classes = $assignments->pluck('schoolClass')
             ->filter()
             ->unique('id')
-            ->mapWithKeys(fn($c) => [$c->id => $c->name])
+            ->mapWithKeys(fn ($c) => [$c->id => $c->name])
             ->all();
 
         $subjects = $assignments->pluck('subject')
             ->filter()
             ->unique('id')
-            ->mapWithKeys(fn($s) => [$s->id => $s->name])
+            ->mapWithKeys(fn ($s) => [$s->id => $s->name])
             ->all();
 
         $shifts = $assignments->pluck('schoolClass.shift')
             ->filter()
             ->unique()
-            ->mapWithKeys(fn($s) => [$s->value => $s->label()])
+            ->mapWithKeys(fn ($s) => [$s->value => $s->label()])
             ->all();
 
         return [
@@ -231,22 +309,47 @@ class TeacherSchedule extends Page
         ];
     }
 
+    /**
+     * Recarrega as opções dependentes quando o filtro de ano letivo é alterado.
+     *
+     * @return void
+     */
     public function updatedFilterSchoolYear(): void {
         $this->selectedLessonId = null;
     }
 
+    /**
+     * Recarrega as opções dependentes quando o filtro de turma é alterado.
+     *
+     * @return void
+     */
     public function updatedFilterClass(): void {
         $this->selectedLessonId = null;
     }
 
+    /**
+     * Recarrega a agenda quando o filtro de disciplina é alterado.
+     *
+     * @return void
+     */
     public function updatedFilterSubject(): void {
         $this->selectedLessonId = null;
     }
 
+    /**
+     * Recarrega a agenda quando o filtro de turno é alterado.
+     *
+     * @return void
+     */
     public function updatedFilterShift(): void {
         $this->selectedLessonId = null;
     }
 
+    /**
+     * Restaura os filtros para seus valores padrão.
+     *
+     * @return void
+     */
     public function resetFilters(): void {
         $this->filterSchoolYear = '';
         $this->filterClass      = '';

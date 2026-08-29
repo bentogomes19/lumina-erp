@@ -16,8 +16,8 @@ namespace App\Models;
  * @property string|null $ip_origem
  * @property \Carbon\Carbon $created_at
  */
-class EnrollmentLog extends BaseModel
-{
+class EnrollmentLog extends BaseModel {
+
     /**
      * Indica que logs são imutáveis e possuem somente created_at controlado manualmente.
      */
@@ -50,28 +50,32 @@ class EnrollmentLog extends BaseModel
 
     /**
      * Retorna a matrícula relacionada ao log.
+     *
+     * @return mixed
      */
-    public function enrollment()
-    {
+    public function enrollment() {
         return $this->belongsTo(Enrollment::class);
     }
 
     /**
      * Retorna o operador que registrou a ação.
+     *
+     * @return mixed
      */
-    public function operador()
-    {
+    public function operador() {
         return $this->belongsTo(User::class, 'operador_id');
     }
 
     /**
      * Registra uma entrada de auditoria para a matrícula.
      *
-     * @param  Enrollment  $enrollment  Matrícula afetada.
-     * @param  string  $acao  Tipo de ação, como trancamento ou cancelamento.
-     * @param  string|null  $statusAnterior  Status antes da ação.
-     * @param  string|null  $statusNovo  Status após a ação.
-     * @param  string|null  $observacao  Justificativa do operador.
+     * @param Enrollment $enrollment Matrícula afetada.
+     * @param string $acao Tipo de ação, como trancamento ou cancelamento.
+     * @param string|null $statusAnterior Status antes da ação.
+     * @param string|null $statusNovo Status após a ação.
+     * @param string|null $observacao Justificativa do operador.
+     *
+     * @return void
      */
     public static function registrar(
         Enrollment $enrollment,

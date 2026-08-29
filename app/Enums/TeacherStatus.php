@@ -3,23 +3,34 @@
 namespace App\Enums;
 
 enum TeacherStatus: string {
-    case ACTIVE = 'active';
-    case INACTIVE = 'inactive';
+
+    case ACTIVE     = 'active';
+    case INACTIVE   = 'inactive';
     case SABBATICAL = 'sabbatical';
     case TERMINATED = 'terminated';
 
+    /**
+     * Retorna o rótulo legível do status do professor.
+     *
+     * @return string
+     */
     public function label(): string {
         return match($this) {
-            self::ACTIVE => 'Ativo',
-            self::INACTIVE => 'Inativo',
+            self::ACTIVE     => 'Ativo',
+            self::INACTIVE   => 'Inativo',
             self::SABBATICAL => 'Afastado',
             self::TERMINATED => 'Desligado',
         };
     }
+    /**
+     * Retorna os status de professor disponíveis para seleção.
+     *
+     * @return array
+     */
     public static function options(): array {
         return array_combine(
-            array_map(fn($c) => $c->value, self::cases()),
-            array_map(fn($c) => $c->label(), self::cases()),
+            array_map(fn ($c) => $c->value, self::cases()),
+            array_map(fn ($c) => $c->label(), self::cases()),
         );
     }
 }

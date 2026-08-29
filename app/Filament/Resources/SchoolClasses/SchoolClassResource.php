@@ -16,40 +16,88 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class SchoolClassResource extends BaseAdminResource
-{
+class SchoolClassResource extends BaseAdminResource {
+
     protected static ?string $model = SchoolClass::class;
 
     protected static string|null|\BackedEnum $navigationIcon = 'fas-user-group';
-    protected static ?string $navigationLabel = 'Turmas';
-    protected static ?string $pluralModelLabel = 'Turmas';
-    protected static ?string $modelLabel = 'Turmas';
+    protected static ?string $navigationLabel                = 'Turmas';
+    protected static ?string $pluralModelLabel               = 'Turmas';
+    protected static ?string $modelLabel                     = 'Turmas';
 
-    protected static function viewPermission(): string   { return 'classes.view'; }
-    protected static function createPermission(): string { return 'classes.create'; }
-    protected static function editPermission(): string   { return 'classes.edit'; }
-    protected static function deletePermission(): string { return 'classes.delete'; }
+    /**
+     * Retorna o nome da permissão necessária para visualizar o recurso.
+     *
+     * @return string
+     */
+    protected static function viewPermission(): string {
+        return 'classes.view';
+    }
+    /**
+     * Retorna a permissão necessária para criar registros do recurso.
+     *
+     * @return string
+     */
+    protected static function createPermission(): string {
+        return 'classes.create';
+    }
+    /**
+     * Retorna o nome da permissão necessária para editar o recurso.
+     *
+     * @return string
+     */
+    protected static function editPermission(): string {
+        return 'classes.edit';
+    }
+    /**
+     * Retorna a permissão necessária para excluir registros do recurso.
+     *
+     * @return string
+     */
+    protected static function deletePermission(): string {
+        return 'classes.delete';
+    }
 
-    public static function form(Schema $schema): Schema
-    {
+    /**
+     * Configura o formulário do recurso.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function form(Schema $schema): Schema {
         return SchoolClassForm::configure($schema);
     }
 
-    public static function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function table(Table $table): Table {
         return SchoolClassesTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
+    /**
+     * Retorna os gerenciadores de relações do recurso.
+     *
+     * @return array
+     */
+    public static function getRelations(): array {
         return [
             StudentsRelationManager::class,
             SubjectsRelationManager::class,
         ];
     }
 
-    public static function getPages(): array
-    {
+    /**
+     * Retorna as páginas registradas no recurso.
+     *
+     * @return array
+     */
+    public static function getPages(): array {
         return [
             'index'  => ListSchoolClasses::route('/'),
             'create' => CreateSchoolClass::route('/create'),
@@ -57,8 +105,12 @@ class SchoolClassResource extends BaseAdminResource
         ];
     }
 
-    public static function getRecordRouteBindingEloquentQuery(): Builder
-    {
+    /**
+     * Retorna a consulta usada para carregar os registros.
+     *
+     * @return Builder
+     */
+    public static function getRecordRouteBindingEloquentQuery(): Builder {
         return parent::getRecordRouteBindingEloquentQuery()
             ->withoutGlobalScopes([SoftDeletingScope::class]);
     }

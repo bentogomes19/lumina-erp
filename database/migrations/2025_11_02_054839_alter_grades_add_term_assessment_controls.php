@@ -4,12 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class () extends Migration {
+
     /**
-     * Run the migrations.
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
      */
-    public function up(): void
-    {
+    public function up(): void {
         Schema::table('grades', function (Blueprint $t) {
             if (!Schema::hasColumn('grades', 'enrollment_id')) {
                 $t->foreignId('enrollment_id')->nullable()->after('id')
@@ -44,7 +46,7 @@ return new class extends Migration {
                     ->constrained('grades')->nullOnDelete();
             }
 
-            // índice de unicidade operacional
+            /* índice de unicidade operacional. */
             $t->unique(
                 ['enrollment_id', 'subject_id', 'term', 'assessment_type', 'sequence'],
                 'grades_unique_entry'
@@ -53,14 +55,19 @@ return new class extends Migration {
     }
 
     /**
-     * Reverse the migrations.
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
      */
-    public function down(): void
-    {
+    public function down(): void {
         Schema::table('grades', function (Blueprint $t) {
             $t->dropUnique('grades_unique_entry');
             $cols = ['recovery_of_id', 'origin', 'locked_at', 'posted_by', 'weight', 'sequence', 'assessment_type', 'term', 'enrollment_id'];
-            foreach ($cols as $c) if (Schema::hasColumn('grades', $c)) $t->dropColumn($c);
+            foreach ($cols as $c) {
+                if (Schema::hasColumn('grades', $c)) {
+                    $t->dropColumn($c);
+                }
+            }
         });
     }
 };

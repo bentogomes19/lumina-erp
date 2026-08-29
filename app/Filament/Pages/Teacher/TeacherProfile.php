@@ -12,43 +12,55 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\WithFileUploads;
 
-class TeacherProfile extends Page
-{
+class TeacherProfile extends Page {
+
     use HasTeacherPortalAccess;
     use WithFileUploads;
 
-    protected static ?string $navigationLabel = 'Meu Perfil';
-    protected static ?string $title = 'Meu Perfil';
-    protected static ?string $slug = 'teacher-profile';
+    protected static ?string $navigationLabel                = 'Meu Perfil';
+    protected static ?string $title                          = 'Meu Perfil';
+    protected static ?string $slug                           = 'teacher-profile';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-user-tie';
-    protected static string|null|\UnitEnum $navigationGroup = 'Portal do Professor';
-    protected static ?int $navigationSort = 9;
-    protected static ?string $teacherPortalPermission = 'teacher.profile.view';
+    protected static string|null|\UnitEnum $navigationGroup  = 'Portal do Professor';
+    protected static ?int $navigationSort                    = 9;
+    protected static ?string $teacherPortalPermission        = 'teacher.profile.view';
 
     public ?string $personalEmail = null;
-    public ?string $phone = null;
-    public ?string $mobile = null;
-    public $avatarUpload = null;
+    public ?string $phone         = null;
+    public ?string $mobile        = null;
+    public $avatarUpload          = null;
 
-    public function mount(): void
-    {
+    /**
+     * Inicializa o estado necessário para exibir a página.
+     *
+     * @return void
+     */
+    public function mount(): void {
         $teacher = $this->currentTeacher();
 
         $this->personalEmail = $teacher?->email;
-        $this->phone = $teacher?->phone;
-        $this->mobile = $teacher?->mobile;
+        $this->phone         = $teacher?->phone;
+        $this->mobile        = $teacher?->mobile;
     }
 
-    public function getView(): string
-    {
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
+    public function getView(): string {
         return 'filament.pages.teacher.teacher-profile';
     }
 
-    public function getPageData(): array
-    {
-        $teacher = $this->currentTeacher();
+    /**
+     * Retorna os dados necessários para montar a página.
+     *
+     * @return array
+     */
+    public function getPageData(): array {
+        $teacher     = $this->currentTeacher();
         $assignments = app(CurrentTeacherService::class)->assignments($teacher);
-        $user = $teacher?->user;
+        $user        = $teacher?->user;
 
         $subjects = $assignments->pluck('subject')
             ->filter()
@@ -65,18 +77,22 @@ class TeacherProfile extends Page
         $avatarUrl = $this->resolveAvatarUrl($teacher, $user?->avatar);
 
         return [
-            'teacher' => $teacher,
-            'user' => $user,
-            'subjects' => $subjects,
-            'classes' => $classes,
+            'teacher'   => $teacher,
+            'user'      => $user,
+            'subjects'  => $subjects,
+            'classes'   => $classes,
             'avatarUrl' => $avatarUrl,
-            'canEdit' => PermissionAccess::can('teacher.profile.update-basic'),
+            'canEdit'   => PermissionAccess::can('teacher.profile.update-basic'),
         ];
     }
 
-    public function saveBasic(): void
-    {
-        if (! PermissionAccess::can('teacher.profile.update-basic')) {
+    /**
+     * Salva os dados básicos do perfil do professor.
+     *
+     * @return void
+     */
+    public function saveBasic(): void {
+        if (!PermissionAccess::can('teacher.profile.update-basic')) {
             throw ValidationException::withMessages([
                 'permission' => 'Você não tem permissão para atualizar o perfil.',
             ]);
@@ -84,7 +100,7 @@ class TeacherProfile extends Page
 
         $teacher = $this->currentTeacher();
 
-        if (! $teacher) {
+        if (!$teacher) {
             throw ValidationException::withMessages([
                 'teacher' => 'Nenhum professor vinculado ao usuário atual.',
             ]);
@@ -92,14 +108,14 @@ class TeacherProfile extends Page
 
         $this->validate([
             'personalEmail' => 'nullable|email|max:120',
-            'phone' => 'nullable|string|max:20',
-            'mobile' => 'nullable|string|max:20',
-            'avatarUpload' => 'nullable|image|max:2048',
+            'phone'         => 'nullable|string|max:20',
+            'mobile'        => 'nullable|string|max:20',
+            'avatarUpload'  => 'nullable|image|max:2048',
         ]);
 
         $teacher->update([
-            'email' => $this->personalEmail,
-            'phone' => $this->phone,
+            'email'  => $this->personalEmail,
+            'phone'  => $this->phone,
             'mobile' => $this->mobile,
         ]);
 
@@ -119,13 +135,24 @@ class TeacherProfile extends Page
             ->send();
     }
 
-    private function currentTeacher(): ?Teacher
-    {
+    /**
+     * Retorna o professor autenticado no portal.
+     *
+     * @return Teacher|null
+     */
+    private function currentTeacher(): ?Teacher {
         return app(CurrentTeacherService::class)->current();
     }
 
-    private function resolveAvatarUrl(?Teacher $teacher, ?string $avatarPath): string
-    {
+    /**
+     * Retorna a URL do avatar do professor.
+     *
+     * @param Teacher|null $teacher
+     * @param string|null $avatarPath
+     *
+     * @return string
+     */
+    private function resolveAvatarUrl(?Teacher $teacher, ?string $avatarPath): string {
         $name = urlencode($teacher?->name ?? auth()->user()?->name ?? 'Professor');
 
         if ($avatarPath) {

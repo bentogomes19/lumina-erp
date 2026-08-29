@@ -12,45 +12,66 @@ use App\Support\PermissionAccess;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Cache;
 
-class DashboardStudent extends Page
-{
-    protected static ?string $navigationLabel              = 'Painel do Aluno';
-    protected static ?string $title                        = 'Portal do Aluno';
-    protected static ?string $slug                         = 'dashboard-student';
+class DashboardStudent extends Page {
+
+    protected static ?string $navigationLabel                = 'Painel do Aluno';
+    protected static ?string $title                          = 'Portal do Aluno';
+    protected static ?string $slug                           = 'dashboard-student';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-graduation-cap';
-    protected static ?int $navigationSort                  = 0;
+    protected static ?int $navigationSort                    = 0;
 
-    public static function shouldRegisterNavigation(): bool
-    {
+    /**
+     * Determina se a página deve ser registrada na navegação.
+     *
+     * @return bool
+     */
+    public static function shouldRegisterNavigation(): bool {
         return PermissionAccess::can('student.dashboard.view');
     }
 
-    public static function canAccess(): bool
-    {
+    /**
+     * Determina se o usuário atual pode acessar a página.
+     *
+     * @return bool
+     */
+    public static function canAccess(): bool {
         return PermissionAccess::can('student.dashboard.view');
     }
 
-    public function getView(): string
-    {
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
+    public function getView(): string {
         return 'filament.pages.dashboard-student';
     }
 
-    protected function getHeaderWidgets(): array
-    {
-        return [];
-    }
-
-    protected function getFooterWidgets(): array
-    {
+    /**
+     * Retorna os widgets exibidos no cabeçalho da página.
+     *
+     * @return array
+     */
+    protected function getHeaderWidgets(): array {
         return [];
     }
 
     /**
-     * Retorna todos os dados necessários para o blade do painel.
-     * Os dados são cacheados por 5 minutos por aluno para evitar queries repetitivas.
+     * Retorna os widgets exibidos no rodapé da página.
+     *
+     * @return array
      */
-    public function getPageData(): array
-    {
+    protected function getFooterWidgets(): array {
+        return [];
+    }
+
+    /**
+     * Retorna todos os dados necessários para o modelo Blade do painel.
+     * Os dados são cacheados por 5 minutos por aluno para evitar queries repetitivas.
+     *
+     * @return array
+     */
+    public function getPageData(): array {
         $student = auth()->user()?->student;
 
         if (!$student) {
@@ -61,7 +82,7 @@ class DashboardStudent extends Page
 
         return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($student) {
             $currentClass = $student->classes()
-                ->whereHas('schoolYear', fn($q) => $q->where('is_active', true))
+                ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
                 ->with(['schoolYear', 'gradeLevel'])
                 ->first();
 
@@ -69,36 +90,36 @@ class DashboardStudent extends Page
                 return array_merge($this->emptyData(), ['student' => $student]);
             }
 
-            // Frequência geral
+            /* Frequência geral. */
             $attendanceData = Attendance::calculateFrequency($student->id, $currentClass->id);
 
-            // Médias por disciplina → média geral
+            /* Médias por disciplina → média geral. */
             $allGrades = Grade::where('student_id', $student->id)
                 ->where('class_id', $currentClass->id)
                 ->where('assessment_type', '!=', AssessmentType::RECOVERY->value)
                 ->whereNotNull('score')
                 ->get();
 
-            $bySubject  = $allGrades->groupBy('subject_id');
-            $subjectAvgs = $bySubject->map(fn($g) => $g->avg('score'))->filter();
+            $bySubject   = $allGrades->groupBy('subject_id');
+            $subjectAvgs = $bySubject->map(fn ($g) => $g->avg('score'))->filter();
             $minApproval = GradeCalculationService::MIN_APPROVAL;
 
             $gradeStats = [
                 'average'  => $subjectAvgs->isNotEmpty() ? round($subjectAvgs->avg(), 1) : null,
                 'total'    => $bySubject->count(),
-                'approved' => $subjectAvgs->filter(fn($a) => $a >= $minApproval)->count(),
-                'recovery' => $subjectAvgs->filter(fn($a) => $a >= 4.0 && $a < $minApproval)->count(),
-                'failed'   => $subjectAvgs->filter(fn($a) => $a < 4.0)->count(),
+                'approved' => $subjectAvgs->filter(fn ($a) => $a >= $minApproval)->count(),
+                'recovery' => $subjectAvgs->filter(fn ($a) => $a >= 4.0 && $a < $minApproval)->count(),
+                'failed'   => $subjectAvgs->filter(fn ($a) => $a < 4.0)->count(),
             ];
 
-            // Aulas de hoje
+            /* Aulas de hoje. */
             $todayLessons = Lesson::where('class_id', $currentClass->id)
                 ->whereDate('date', today())
                 ->with(['subject', 'teacher.user'])
                 ->orderBy('start_time')
                 ->get();
 
-            // Próximas avaliações (7 dias)
+            /* Próximas avaliações (7 dias) */
             $upcomingAssessments = Assessment::where('class_id', $currentClass->id)
                 ->where('scheduled_at', '>=', now()->startOfDay())
                 ->where('scheduled_at', '<=', now()->addDays(7)->endOfDay())
@@ -107,7 +128,7 @@ class DashboardStudent extends Page
                 ->limit(8)
                 ->get();
 
-            // Últimas notas lançadas
+            /* Últimas notas lançadas. */
             $recentGrades = Grade::where('student_id', $student->id)
                 ->where('class_id', $currentClass->id)
                 ->whereNotNull('score')
@@ -129,10 +150,14 @@ class DashboardStudent extends Page
         });
     }
 
-    // ── Auxiliares ───────────────────────────────────────────────────────────
+    /* Auxiliares. */
 
-    private function emptyData(): array
-    {
+    /**
+     * Retorna a estrutura vazia de dados da página.
+     *
+     * @return array
+     */
+    private function emptyData(): array {
         return [
             'student'             => null,
             'currentClass'        => null,

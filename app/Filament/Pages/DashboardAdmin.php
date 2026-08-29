@@ -5,40 +5,60 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\DashboardStats;
 use Filament\Pages\Page;
 
-class DashboardAdmin extends Page
-{
-    protected static ?string $navigationLabel = 'Painel do Administrador';
-    protected static ?string $title = 'Painel do Administrador';
-    protected static ?string $slug = 'dashboard-admin';
-    protected static string|null|\BackedEnum $navigationIcon = 'fas-house';
-    protected static ?int $navigationSort = 0;
+class DashboardAdmin extends Page {
 
-    public static function shouldRegisterNavigation(): bool
-    {
+    protected static ?string $navigationLabel                = 'Painel do Administrador';
+    protected static ?string $title                          = 'Painel do Administrador';
+    protected static ?string $slug                           = 'dashboard-admin';
+    protected static string|null|\BackedEnum $navigationIcon = 'fas-house';
+    protected static ?int $navigationSort                    = 0;
+
+    /**
+     * Determina se a página deve ser registrada na navegação.
+     *
+     * @return bool
+     */
+    public static function shouldRegisterNavigation(): bool {
         return auth()->check() && auth()->user()->hasRole('admin');
     }
 
-    public static function canAccess(): bool
-    {
+    /**
+     * Determina se o usuário atual pode acessar a página.
+     *
+     * @return bool
+     */
+    public static function canAccess(): bool {
         return auth()->user()?->hasRole('admin') ?? false;
     }
 
-    public function getView(): string
-    {
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
+    public function getView(): string {
         return 'filament.pages.dashboard-admin';
     }
 
-    protected function getHeaderWidgets(): array
-    {
+    /**
+     * Retorna os widgets exibidos no cabeçalho da página.
+     *
+     * @return array
+     */
+    protected function getHeaderWidgets(): array {
         return [
             DashboardStats::class,
         ];
     }
-        
-        
 
-    public function getHeaderWidgetsColumns(): int | array
-    {
+
+
+    /**
+     * Retorna a quantidade de colunas dos widgets do cabeçalho.
+     *
+     * @return int|array
+     */
+    public function getHeaderWidgetsColumns(): int | array {
         return 2;
     }
 }

@@ -38,7 +38,7 @@
     @else
         <div style="display:flex;flex-direction:column;gap:1.5rem">
 
-            {{-- ▸ Class header --}}
+            {{-- Cabeçalho da turma --}}
             <div class="ms-card" style="padding:1.25rem 1.5rem">
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
                     <div style="display:flex;align-items:center;gap:1rem">
@@ -62,7 +62,7 @@
                 </div>
             </div>
 
-            {{-- ▸ Period filter --}}
+            {{-- Filtro de período --}}
             <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
                 @foreach($periods as $key => $label)
                     <button wire:click="setPeriod('{{ $key }}')" class="ms-period-btn {{ $period === $key ? 'active' : '' }}">
@@ -72,7 +72,7 @@
                 <span style="font-size:0.8125rem;color:var(--ms-text-muted);margin-left:0.25rem">{{ $periodLabel }}</span>
             </div>
 
-            {{-- ▸ Alerts --}}
+            {{-- Alertas --}}
             @if($stats['failed'] > 0 || $stats['recovery'] > 0)
                 <div style="display:flex;flex-direction:column;gap:0.5rem">
                     @if($stats['failed'] > 0)
@@ -97,7 +97,7 @@
                 </div>
             @endif
 
-            {{-- ▸ Overall stats --}}
+            {{-- Estatísticas gerais --}}
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:1rem">
                 @php
                     $overallCards = [
@@ -122,7 +122,7 @@
                     </div>
                 @endforeach
 
-                {{-- Overall average --}}
+                {{-- Média geral --}}
                 @if($stats['average'] !== null)
                     @php $oc = $avgColor($stats['average']); @endphp
                     <div class="ms-card" style="padding:0.875rem;border-color:{{ $oc }}44">
@@ -139,7 +139,7 @@
                 @endif
             </div>
 
-            {{-- ▸ Subject cards --}}
+            {{-- Cartões de disciplinas --}}
             @if(!empty($subjects))
                 <div class="ms-subject-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem">
                     @foreach($subjects as $item)
@@ -158,7 +158,7 @@
 
                             <div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem">
 
-                                {{-- Subject header --}}
+                                {{-- Cabeçalho da disciplina --}}
                                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem">
                                     <div style="min-width:0">
                                         <h4 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">
@@ -173,7 +173,7 @@
                                         <span style="padding:0.25rem 0.625rem;border-radius:999px;font-size:0.6875rem;font-weight:600;background:{{ $sc['bg'] }};color:{{ $sc['color'] }}">
                                             {{ $sc['label'] }}
                                         </span>
-                                        {{-- Overall average circle --}}
+                                        {{-- Indicador circular da média geral --}}
                                         @if($overall !== null)
                                             <div style="width:3rem;height:3rem;border-radius:50%;background:{{ $oc }}1a;border:2px solid {{ $oc }}44;display:flex;align-items:center;justify-content:center">
                                                 <span style="font-size:0.9375rem;font-weight:700;color:{{ $oc }}">{{ number_format($overall, 1, ',', '') }}</span>
@@ -186,7 +186,7 @@
                                     </div>
                                 </div>
 
-                                {{-- Term averages grid (visible when period=all) --}}
+                                {{-- Grade de médias por período, exibida no filtro completo --}}
                                 @if($showAllTerms)
                                     <div class="ms-term-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem">
                                         @foreach($termLabels as $termKey => $termLabel)

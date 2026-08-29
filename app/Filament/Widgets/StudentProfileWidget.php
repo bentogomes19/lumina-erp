@@ -4,22 +4,28 @@ namespace App\Filament\Widgets;
 
 use App\Models\Enrollment;
 use App\Models\Grade;
-use App\Models\SchoolClass;
 use App\Models\SchoolYear;
-use App\Models\Subject;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class StudentProfileWidget extends StatsOverviewWidget
-{
-    public static function canView(): bool
-    {
+class StudentProfileWidget extends StatsOverviewWidget {
+
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
         return \App\Support\PermissionAccess::can('student.profile.view');
     }
 
-    protected function getStats(): array
-    {
-        $user = auth()->user();
+    /**
+     * Retorna o ano letivo, a turma e a média geral do aluno autenticado.
+     *
+     * @return array
+     */
+    protected function getStats(): array {
+        $user    = auth()->user();
         $student = $user->student ?? null;
 
         if (!$student) {
@@ -31,10 +37,10 @@ class StudentProfileWidget extends StatsOverviewWidget
             ];
         }
 
-        // Ano letivo atual (ativo)
+        /* Ano letivo atual (ativo) */
         $currentYear = SchoolYear::where('is_active', true)->first();
 
-        // Matrícula do ano letivo atual
+        /* Matrícula do ano letivo atual. */
         $enrollment = null;
 
         if ($currentYear) {
@@ -45,8 +51,8 @@ class StudentProfileWidget extends StatsOverviewWidget
                 ->first();
         }
 
-        // Fallback: se não achar matrícula no ano ativo, pega a mais recente
-        if (! $enrollment) {
+        /* Usa a matrícula mais recente quando não houver uma no ano letivo ativo. */
+        if (!$enrollment) {
             $enrollment = Enrollment::query()
                 ->where('student_id', $student->id)
                 ->with(['schoolClass.schoolYear', 'schoolClass.gradeLevel'])
@@ -60,7 +66,7 @@ class StudentProfileWidget extends StatsOverviewWidget
         $turmaNome = $schoolClass?->name ?? 'Sem turma';
         $serie     = $schoolClass?->gradeLevel?->name ?? 'Sem série';
 
-        // Notas: se quiser considerar só o ano atual, filtra pelo school_year_id
+        /* Notas: se quiser considerar só o ano atual, filtra pelo school_year_id. */
         $gradesQuery = Grade::query()
             ->where('student_id', $student->id);
 
@@ -68,7 +74,7 @@ class StudentProfileWidget extends StatsOverviewWidget
             $gradesQuery->whereHas('schoolClass', fn ($q) => $q->where('school_year_id', $currentYear->id));
         }
 
-        $mediaNotas = (float) $gradesQuery->avg('score');
+        $mediaNotas  = (float) $gradesQuery->avg('score');
         $disciplinas = $gradesQuery->distinct('subject_id')->count('subject_id');
 
         return [

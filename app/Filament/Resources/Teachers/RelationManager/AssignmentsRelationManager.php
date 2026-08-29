@@ -10,26 +10,29 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Validation\ValidationException;
 
-class AssignmentsRelationManager extends RelationManager
-{
-    protected static string $relationship = 'teacherAssignments';
-    protected static ?string $title = 'Turmas & Disciplinas';
+class AssignmentsRelationManager extends RelationManager {
 
-    public function form(Schema $schema): Schema
-    {
+    protected static string $relationship = 'teacherAssignments';
+    protected static ?string $title       = 'Turmas & Disciplinas';
+
+    /**
+     * Configura o formulário do recurso.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public function form(Schema $schema): Schema {
         return $schema->schema([
             Select::make('class_id')
                 ->label('Turma')
-                ->relationship('schoolClass', 'name') // via TeacherAssignment::schoolClass()
+                ->relationship('schoolClass', 'name') /* via TeacherAssignment::schoolClass() */
                 ->searchable()
                 ->preload()
                 ->required()
@@ -37,8 +40,8 @@ class AssignmentsRelationManager extends RelationManager
 
             Select::make('subject_id')
                 ->label('Disciplina')
-                ->options(fn () =>
-                Subject::orderBy('name')->pluck('name', 'id')
+                ->options(
+                    fn () => Subject::orderBy('name')->pluck('name', 'id')
                 )
                 ->searchable()
                 ->preload()
@@ -46,16 +49,22 @@ class AssignmentsRelationManager extends RelationManager
         ]);
     }
 
-    public function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('schoolClass.name')
                     ->label('Turma')
                     ->searchable()
                     ->sortable()
-                    ->url(fn (TeacherAssignment $record) =>
-                    SchoolClassResource::getUrl('edit', ['record' => $record->class_id])
+                    ->url(
+                        fn (TeacherAssignment $record) => SchoolClassResource::getUrl('edit', ['record' => $record->class_id])
                     )
                     ->openUrlInNewTab()
                     ->color('primary')

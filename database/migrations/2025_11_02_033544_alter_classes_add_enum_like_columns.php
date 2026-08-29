@@ -4,13 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
+
     /**
-     * Run the migrations.
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
      */
-    public function up(): void
-    {
+    public function up(): void {
         Schema::table('classes', function (Blueprint $table) {
             $table->string('shift', 32)->change();
             $table->string('status', 32)->default('open')->change();
@@ -25,14 +26,15 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
      */
-    public function down(): void
-    {
+    public function down(): void {
         Schema::table('classes', function (Blueprint $table) {
             $table->dropUnique('uniq_class_year_grade_name_shift');
-            $table->dropColumn('type');   // se criou
-            $table->dropColumn('code');   // se criou
+            $table->dropColumn('type');   /* se criou. */
+            $table->dropColumn('code');   /* se criou. */
         });
     }
 };

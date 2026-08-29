@@ -10,10 +10,16 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
-class SchoolYearsTable
-{
-    public static function configure(Table $table): Table
-    {
+class SchoolYearsTable {
+
+    /**
+     * Configura as colunas, os filtros e as ações da tabela de anos letivos.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function configure(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('year')

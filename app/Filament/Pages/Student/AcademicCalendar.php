@@ -14,93 +14,131 @@ use Illuminate\Support\Collection;
 
 class AcademicCalendar extends Page {
 
-    /* ------------------------------------ *
-     *      PROTECTED STATIC ATTRIBUTES     *
-     * ------------------------------------ */
-
-
-    /* ==================================== *
-     *      PROTECTED STATIC ATTRIBUTES     *
-     * ==================================== */
-
-    protected static ?string $navigationLabel = 'Calendário';
-    protected static ?string $title = 'Calendário Acadêmico';
-    protected static ?string $slug = 'academic-calendar';
+    protected static ?string $navigationLabel                = 'Calendário';
+    protected static ?string $title                          = 'Calendário Acadêmico';
+    protected static ?string $slug                           = 'academic-calendar';
     protected static string|\BackedEnum|null $navigationIcon = 'fas-calendar';
-    protected static ?int $navigationSort = 4;
-
-    // ── State ────────────────────────────────────────────────────────────────
+    protected static ?int $navigationSort                    = 4;
 
     public int    $currentMonth;
     public int    $currentYear;
-    public string $viewMode       = 'month'; // month | week | list
-    public string $weekStart      = '';      // ISO date of the Sunday starting the displayed week
+    public string $viewMode         = 'month'; /* mês | semana | lista. */
+    public string $weekStart        = '';      /* Data ISO do domingo que inicia a semana exibida. */
     public array  $activeCategories = ['assessment', 'holiday', 'recess', 'school_event', 'period'];
     public ?int   $filterSubjectId  = null;
 
-    // ── Access ───────────────────────────────────────────────────────────────
-
+    /**
+     * Determina se a página deve ser registrada na navegação.
+     *
+     * @return bool
+     */
     public static function shouldRegisterNavigation(): bool {
         return PermissionAccess::can('student.calendar.view');
     }
 
+    /**
+     * Determina se o usuário atual pode acessar a página.
+     *
+     * @return bool
+     */
     public static function canAccess(): bool {
         return PermissionAccess::can('student.calendar.view');
     }
 
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
     public function getView(): string {
         return 'filament.pages.student.academic-calendar';
     }
 
-    // ── Lifecycle ────────────────────────────────────────────────────────────
-
+    /**
+     * Inicializa o estado necessário para exibir a página.
+     *
+     * @return void
+     */
     public function mount(): void {
         $this->currentMonth = (int) now()->format('m');
         $this->currentYear  = (int) now()->format('Y');
         $this->weekStart    = now()->startOfWeek(Carbon::SUNDAY)->format('Y-m-d');
     }
 
-    // ── Month navigation ─────────────────────────────────────────────────────
-
+    /**
+     * Retorna a exibição para o mês anterior.
+     *
+     * @return void
+     */
     public function previousMonth(): void {
-        $date = Carbon::create($this->currentYear, $this->currentMonth, 1)->subMonth();
+        $date               = Carbon::create($this->currentYear, $this->currentMonth, 1)->subMonth();
         $this->currentMonth = $date->month;
         $this->currentYear  = $date->year;
     }
 
+    /**
+     * Avança a exibição para o próximo mês.
+     *
+     * @return void
+     */
     public function nextMonth(): void {
-        $date = Carbon::create($this->currentYear, $this->currentMonth, 1)->addMonth();
+        $date               = Carbon::create($this->currentYear, $this->currentMonth, 1)->addMonth();
         $this->currentMonth = $date->month;
         $this->currentYear  = $date->year;
     }
 
-    // ── Week navigation ──────────────────────────────────────────────────────
-
+    /**
+     * Retorna a exibição para a semana anterior.
+     *
+     * @return void
+     */
     public function previousWeek(): void {
         $date            = Carbon::parse($this->weekStart)->subWeek();
         $this->weekStart = $date->format('Y-m-d');
-        // keep month/year in sync so the month grid is consistent when switching back
+
+        /* Mantém o mês e o ano sincronizados ao retornar para a grade mensal. */
         $this->currentMonth = $date->month;
         $this->currentYear  = $date->year;
     }
 
+    /**
+     * Avança a exibição para a próxima semana.
+     *
+     * @return void
+     */
     public function nextWeek(): void {
-        $date            = Carbon::parse($this->weekStart)->addWeek();
-        $this->weekStart = $date->format('Y-m-d');
+        $date               = Carbon::parse($this->weekStart)->addWeek();
+        $this->weekStart    = $date->format('Y-m-d');
         $this->currentMonth = $date->month;
         $this->currentYear  = $date->year;
     }
 
-    // ── Go to today ───────────────────────────────────────────────────────────
+    /* ---------------------------------------- *
+     *               DATA ATUAL                 *
+     * ---------------------------------------- */
 
+    /**
+     * Reposiciona o calendário na data atual.
+     *
+     * @return void
+     */
     public function goToToday(): void {
         $this->currentMonth = (int) now()->format('m');
         $this->currentYear  = (int) now()->format('Y');
         $this->weekStart    = now()->startOfWeek(Carbon::SUNDAY)->format('Y-m-d');
     }
 
-    // ── View mode ────────────────────────────────────────────────────────────
+    /* ---------------------------------------- *
+     *          MODO DE VISUALIZAÇÃO            *
+     * ---------------------------------------- */
 
+    /**
+     * Define o modo de visualização do calendário.
+     *
+     * @param string $mode
+     *
+     * @return void
+     */
     public function setViewMode(string $mode): void {
         $this->viewMode = $mode;
 
@@ -111,14 +149,23 @@ class AcademicCalendar extends Page {
         }
 
         if ($mode === 'month' || $mode === 'list') {
-            $midWeek = Carbon::parse($this->weekStart)->addDays(3);
+            $midWeek            = Carbon::parse($this->weekStart)->addDays(3);
             $this->currentMonth = $midWeek->month;
             $this->currentYear  = $midWeek->year;
         }
     }
 
-    // ── Filter actions ───────────────────────────────────────────────────────
+    /* ---------------------------------------- *
+     *                 FILTROS                  *
+     * ---------------------------------------- */
 
+    /**
+     * Ativa ou desativa uma categoria de eventos do calendário.
+     *
+     * @param string $category
+     *
+     * @return void
+     */
     public function toggleCategory(string $category): void {
         if (in_array($category, $this->activeCategories)) {
             $this->activeCategories = array_values(
@@ -129,22 +176,48 @@ class AcademicCalendar extends Page {
         }
     }
 
+    /**
+     * Define a disciplina usada para filtrar os dados.
+     *
+     * @param int|null $subjectId
+     *
+     * @return void
+     */
     public function setSubjectFilter(?int $subjectId): void {
         $this->filterSubjectId = $subjectId;
     }
 
-    // ── Export stubs ─────────────────────────────────────────────────────────
+    /* ---------------------------------------- *
+     *               EXPORTAÇÕES                *
+     * ---------------------------------------- */
 
+    /**
+     * Exporta o calendário no formato PDF.
+     *
+     * @return void
+     */
     public function exportPdf(): void {
         $this->dispatch('notify', ['message' => 'Exportação em PDF em breve.', 'type' => 'info']);
     }
 
+    /**
+     * Exporta o calendário no formato iCalendar.
+     *
+     * @return void
+     */
     public function exportIcal(): void {
         $this->dispatch('notify', ['message' => 'Exportação iCal em breve.', 'type' => 'info']);
     }
 
-    // ── Data ─────────────────────────────────────────────────────────────────
+    /* ---------------------------------------- *
+     *                  DADOS                   *
+     * ---------------------------------------- */
 
+    /**
+     * Retorna os dados necessários para montar a página.
+     *
+     * @return array
+     */
     public function getPageData(): array {
         $student = auth()->user()?->student;
 
@@ -163,7 +236,7 @@ class AcademicCalendar extends Page {
 
         $schoolYear = $currentClass->schoolYear;
 
-        // Determine the date window to load events for
+        /* Determina o intervalo de datas usado para carregar os eventos. */
         if ($this->viewMode === 'week') {
             $periodStart = Carbon::parse($this->weekStart)->startOfDay();
             $periodEnd   = $periodStart->copy()->addDays(6)->endOfDay();
@@ -174,23 +247,23 @@ class AcademicCalendar extends Page {
 
         $monthStart = Carbon::create($this->currentYear, $this->currentMonth, 1)->startOfDay();
 
-        // Preload teacher assignments for subject→teacher lookup
+        /* Pré-carrega as atribuições usadas para localizar o professor de cada disciplina. */
         $teacherMap = $this->loadTeacherMap($currentClass->id);
 
-        // Collect all events for the period
+        /* Reúne todos os eventos do período. */
         $events = $this->collectEvents($currentClass, $schoolYear, $periodStart, $periodEnd, $teacherMap);
 
-        // Build calendar grid
+        /* Monta a grade do calendário. */
         $grid     = $this->viewMode !== 'week' ? $this->buildMonthGrid($monthStart, $events) : [];
         $weekGrid = $this->viewMode === 'week' ? $this->buildWeekGrid(Carbon::parse($this->weekStart), $events) : [];
 
-        // List view: all events sorted by date
+        /* Visualização em lista com eventos ordenados por data. */
         $listEvents = $events->sortBy('date')->values();
 
-        // Upcoming events for sidebar (next 14 days)
+        /* Próximos eventos exibidos na lateral, limitados aos próximos 14 dias. */
         $upcoming = $this->getUpcomingEvents($currentClass, $schoolYear, $teacherMap);
 
-        // Subjects for filter dropdown
+        /* Disciplinas disponíveis no filtro. */
         $subjects = $this->getClassSubjects($currentClass->id);
 
         return [
@@ -208,8 +281,17 @@ class AcademicCalendar extends Page {
         ];
     }
 
-    // ── Private: teacher map ─────────────────────────────────────────────────
+    /* ---------------------------------------- *
+     *          MAPA DE PROFESSORES             *
+     * ---------------------------------------- */
 
+    /**
+     * Carrega o mapa de professores indexado por disciplina.
+     *
+     * @param int $classId
+     *
+     * @return array
+     */
     private function loadTeacherMap(int $classId): array {
         try {
             return TeacherAssignment::where('class_id', $classId)
@@ -225,12 +307,25 @@ class AcademicCalendar extends Page {
         }
     }
 
-    // ── Private: event collection ────────────────────────────────────────────
+    /* ---------------------------------------- *
+     *           COLEÇÃO DE EVENTOS             *
+     * ---------------------------------------- */
 
+    /**
+     * Reúne os eventos acadêmicos disponíveis no período informado.
+     *
+     * @param mixed $currentClass
+     * @param mixed $schoolYear
+     * @param Carbon $start
+     * @param Carbon $end
+     * @param array $teacherMap
+     *
+     * @return Collection
+     */
     private function collectEvents($currentClass, $schoolYear, Carbon $start, Carbon $end, array $teacherMap = []): Collection {
         $events = collect();
 
-        // 1. Assessments (Avaliações)
+        /* 1. Avaliações. */
         if (in_array('assessment', $this->activeCategories)) {
             $assessments = Assessment::where('class_id', $currentClass->id)
                 ->whereBetween('scheduled_at', [$start, $end])
@@ -265,8 +360,8 @@ class AcademicCalendar extends Page {
             }
         }
 
-        // 2. Holidays & Recesses (from SchoolHoliday)
-        if (! empty(array_intersect(['holiday', 'recess', 'school_event'], $this->activeCategories))) {
+        /* 2. Feriados e recessos obtidos de SchoolHoliday. */
+        if (!empty(array_intersect(['holiday', 'recess', 'school_event'], $this->activeCategories))) {
             $holidays = SchoolHoliday::active()
                 ->when($schoolYear, fn ($q) => $q->forYear($schoolYear->id))
                 ->inPeriod($start, $end)
@@ -275,13 +370,13 @@ class AcademicCalendar extends Page {
 
             foreach ($holidays as $holiday) {
                 $category = match ($holiday->type) {
-                    HolidayType::SCHOOL_RECESS  => 'recess',
-                    HolidayType::SCHOOL_EVENT   => 'school_event',
-                    HolidayType::EXAM_PERIOD    => 'assessment',
-                    default                     => 'holiday',
+                    HolidayType::SCHOOL_RECESS => 'recess',
+                    HolidayType::SCHOOL_EVENT  => 'school_event',
+                    HolidayType::EXAM_PERIOD   => 'assessment',
+                    default                    => 'holiday',
                 };
 
-                if (! in_array($category, $this->activeCategories)) {
+                if (!in_array($category, $this->activeCategories)) {
                     continue;
                 }
 
@@ -296,10 +391,10 @@ class AcademicCalendar extends Page {
                 };
 
                 $icon = match ($holiday->type) {
-                    HolidayType::SCHOOL_RECESS  => 'sun',
-                    HolidayType::SCHOOL_EVENT   => 'star',
-                    HolidayType::EXAM_PERIOD    => 'pencil-square',
-                    default                     => 'flag',
+                    HolidayType::SCHOOL_RECESS => 'sun',
+                    HolidayType::SCHOOL_EVENT  => 'star',
+                    HolidayType::EXAM_PERIOD   => 'pencil-square',
+                    default                    => 'flag',
                 };
 
                 $events->push([
@@ -326,7 +421,7 @@ class AcademicCalendar extends Page {
             }
         }
 
-        // 3. Academic period markers (year start/end, bimester boundaries)
+        /* 3. Marcos do período acadêmico, incluindo ano letivo e bimestres. */
         if (in_array('period', $this->activeCategories) && $schoolYear) {
             foreach ($this->getSchoolYearEvents($schoolYear) as $event) {
                 $eventDate = Carbon::parse($event['date']);
@@ -339,6 +434,13 @@ class AcademicCalendar extends Page {
         return $events;
     }
 
+    /**
+     * Retorna os eventos que marcam os períodos do ano letivo.
+     *
+     * @param mixed $schoolYear
+     *
+     * @return array
+     */
     private function getSchoolYearEvents($schoolYear): array {
         if (!$schoolYear->starts_at || !$schoolYear->ends_at) {
             return [];
@@ -350,9 +452,9 @@ class AcademicCalendar extends Page {
         $quarter   = (int) ($totalDays / 4);
 
         $base = [
-            'time'     => null, 'category'      => 'period', 'category_label' => 'Período Letivo',
-            'subject'  => null, 'teacher'       => null,     'weight'         => null, 'location' => null,
-            'date_end' => null, 'impacts_grade' => false,    'impacts_freq'   => false,
+            'time'     => null, 'category' => 'period', 'category_label' => 'Período Letivo',
+            'subject'  => null, 'teacher' => null,     'weight' => null, 'location' => null,
+            'date_end' => null, 'impacts_grade' => false,    'impacts_freq' => false,
         ];
 
         return [
@@ -404,6 +506,15 @@ class AcademicCalendar extends Page {
         ];
     }
 
+    /**
+     * Retorna os próximos eventos acadêmicos do calendário.
+     *
+     * @param mixed $currentClass
+     * @param mixed $schoolYear
+     * @param array $teacherMap
+     *
+     * @return Collection
+     */
     private function getUpcomingEvents($currentClass, $schoolYear, array $teacherMap = []): Collection {
         $start = now()->startOfDay();
         $end   = now()->addDays(14)->endOfDay();
@@ -450,11 +561,21 @@ class AcademicCalendar extends Page {
         return $events->sortBy('date')->values();
     }
 
-    // ── Private: calendar grids ───────────────────────────────────────────────
+    /* ---------------------------------------- *
+     *         GRADES DO CALENDÁRIO             *
+     * ---------------------------------------- */
 
+    /**
+     * Monta a grade de dias e eventos da visualização mensal.
+     *
+     * @param Carbon $monthStart
+     * @param Collection $events
+     *
+     * @return array
+     */
     private function buildMonthGrid(Carbon $monthStart, Collection $events): array {
         $daysInMonth    = $monthStart->daysInMonth;
-        $firstDayOfWeek = $monthStart->dayOfWeek; // 0 = Sunday
+        $firstDayOfWeek = $monthStart->dayOfWeek; /* 0 corresponde a domingo. */
 
         $eventsByDate = $this->groupEventsByDate($events);
         $cells        = [];
@@ -487,6 +608,14 @@ class AcademicCalendar extends Page {
         return $cells;
     }
 
+    /**
+     * Monta a grade de dias e eventos da visualização semanal.
+     *
+     * @param Carbon $weekStartDate
+     * @param Collection $events
+     *
+     * @return array
+     */
     private function buildWeekGrid(Carbon $weekStartDate, Collection $events): array {
         $eventsByDate = $this->groupEventsByDate($events);
         $today        = now()->format('Y-m-d');
@@ -510,6 +639,13 @@ class AcademicCalendar extends Page {
         return $cells;
     }
 
+    /**
+     * Agrupa os eventos pela data de ocorrência.
+     *
+     * @param Collection $events
+     *
+     * @return array
+     */
     private function groupEventsByDate(Collection $events): array {
         $byDate = [];
         foreach ($events as $event) {
@@ -519,7 +655,7 @@ class AcademicCalendar extends Page {
                 $cursor   = Carbon::parse($event['date'])->addDay();
                 $rangeEnd = Carbon::parse($event['date_end']);
                 while ($cursor->lte($rangeEnd)) {
-                    $key = $cursor->format('Y-m-d');
+                    $key            = $cursor->format('Y-m-d');
                     $byDate[$key][] = array_merge($event, ['is_continuation' => true]);
                     $cursor->addDay();
                 }
@@ -529,8 +665,17 @@ class AcademicCalendar extends Page {
         return $byDate;
     }
 
-    // ── Private: subjects in class ───────────────────────────────────────────
+    /* ---------------------------------------- *
+     *         DISCIPLINAS DA TURMA             *
+     * ---------------------------------------- */
 
+    /**
+     * Retorna as disciplinas vinculadas à turma atual.
+     *
+     * @param int $classId
+     *
+     * @return Collection
+     */
     private function getClassSubjects(int $classId): Collection {
         $subjectIds = TeacherAssignment::where('class_id', $classId)
             ->pluck('subject_id')
@@ -541,8 +686,11 @@ class AcademicCalendar extends Page {
             ->get(['id', 'name']);
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
+    /**
+     * Retorna a estrutura vazia de dados da página.
+     *
+     * @return array
+     */
     private function emptyData(): array {
         $monthStart = Carbon::create($this->currentYear, $this->currentMonth, 1);
 

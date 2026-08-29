@@ -16,39 +16,87 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class UserResource extends BaseAdminResource
-{
-    protected static ?string $model = User::class;
+class UserResource extends BaseAdminResource {
+
+    protected static ?string $model                         = User::class;
     protected static string|null|\UnitEnum $navigationGroup = 'Administração';
     protected static string|null|BackedEnum $navigationIcon = 'fas-users';
-    protected static ?int $navigationSort = 1;
-    protected static ?string $navigationLabel = 'Usuários';
-    protected static ?string $pluralModelLabel = 'Usuário';
-    protected static ?string $modelLabel = 'Usuário';
+    protected static ?int $navigationSort                   = 1;
+    protected static ?string $navigationLabel               = 'Usuários';
+    protected static ?string $pluralModelLabel              = 'Usuário';
+    protected static ?string $modelLabel                    = 'Usuário';
 
-    // Secretaria tem apenas leitura; TI/admin têm acesso total (garantido pelo BaseAdminResource)
-    protected static function viewPermission(): string   { return 'users.view'; }
-    protected static function createPermission(): string { return 'users.create'; }
-    protected static function editPermission(): string   { return 'users.edit'; }
-    protected static function deletePermission(): string { return 'users.delete'; }
+    /* Secretaria tem apenas leitura; TI/admin têm acesso total (garantido pelo BaseAdminResource) */
+    /**
+     * Retorna o nome da permissão necessária para visualizar o recurso.
+     *
+     * @return string
+     */
+    protected static function viewPermission(): string {
+        return 'users.view';
+    }
+    /**
+     * Retorna a permissão necessária para criar registros do recurso.
+     *
+     * @return string
+     */
+    protected static function createPermission(): string {
+        return 'users.create';
+    }
+    /**
+     * Retorna o nome da permissão necessária para editar o recurso.
+     *
+     * @return string
+     */
+    protected static function editPermission(): string {
+        return 'users.edit';
+    }
+    /**
+     * Retorna a permissão necessária para excluir registros do recurso.
+     *
+     * @return string
+     */
+    protected static function deletePermission(): string {
+        return 'users.delete';
+    }
 
-    public static function form(Schema $schema): Schema
-    {
+    /**
+     * Configura o formulário do recurso.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function form(Schema $schema): Schema {
         return UserForm::configure($schema);
     }
 
-    public static function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function table(Table $table): Table {
         return UsersTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
+    /**
+     * Retorna os gerenciadores de relações do recurso.
+     *
+     * @return array
+     */
+    public static function getRelations(): array {
         return [];
     }
 
-    public static function getPages(): array
-    {
+    /**
+     * Retorna as páginas registradas no recurso.
+     *
+     * @return array
+     */
+    public static function getPages(): array {
         return [
             'index'  => ListUsers::route('/'),
             'create' => CreateUser::route('/create'),
@@ -56,19 +104,31 @@ class UserResource extends BaseAdminResource
         ];
     }
 
-    public static function getRecordRouteBindingEloquentQuery(): Builder
-    {
+    /**
+     * Retorna a consulta usada para carregar os registros.
+     *
+     * @return Builder
+     */
+    public static function getRecordRouteBindingEloquentQuery(): Builder {
         return parent::getRecordRouteBindingEloquentQuery()
             ->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
-    public static function getWidgets(): array
-    {
+    /**
+     * Retorna os widgets registrados na página.
+     *
+     * @return array
+     */
+    public static function getWidgets(): array {
         return [UsersOverview::class];
     }
 
-    public static function getNavigationBadge(): ?string
-    {
+    /**
+     * Retorna o indicador numérico exibido na navegação.
+     *
+     * @return string|null
+     */
+    public static function getNavigationBadge(): ?string {
         return (string) static::getModel()::count();
     }
 }

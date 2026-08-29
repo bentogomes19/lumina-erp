@@ -332,7 +332,7 @@
         }
     </style>
 
-    @if(! $teacher)
+    @if(!$teacher)
         <div class="ms-card teacher-dashboard-empty">
             <div class="teacher-dashboard-empty-icon">
                 @svg('fas-triangle-exclamation')

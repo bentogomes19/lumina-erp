@@ -9,14 +9,16 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class StudentSeeder extends Seeder
-{
+class StudentSeeder extends Seeder {
+
     /**
-     * Run the database seeds.
+     * Cria os usuários e cadastros iniciais de alunos.
+     *
+     * @return void
      */
-    public function run(): void
-    {
-        // 1) Garante pelo menos um aluno "fixo"
+    public function run(): void {
+
+        /* 1) Garante pelo menos um aluno "fixo". */
         $mainStudentUser = User::firstOrCreate(
             ['email' => 'aluno@lumina.com'],
             [
@@ -28,7 +30,7 @@ class StudentSeeder extends Seeder
         );
         $mainStudentUser->assignRole('student');
 
-        // 2) Cria mais usuários alunos se quiser massa
+        /* 2) Cria mais usuários alunos se quiser massa. */
         if (User::role('student')->count() < 80) {
             $extraUsers = User::factory()->count(80)->create();
 
@@ -37,7 +39,7 @@ class StudentSeeder extends Seeder
             }
         }
 
-        // 3) Pra cada user com role student, garantir um Student vinculado
+        /* Garante um cadastro de aluno para cada usuário com perfil de estudante. */
         $studentUsers = User::role('student')->get();
 
         foreach ($studentUsers as $user) {

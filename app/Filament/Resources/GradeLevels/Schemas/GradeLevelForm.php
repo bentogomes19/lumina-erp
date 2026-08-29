@@ -8,10 +8,16 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
-class GradeLevelForm
-{
-    public static function configure(Schema $schema): Schema
-    {
+class GradeLevelForm {
+
+    /**
+     * Configura os campos do formulário de níveis de ensino.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function configure(Schema $schema): Schema {
         return $schema
             ->components([
                 TextInput::make('name')

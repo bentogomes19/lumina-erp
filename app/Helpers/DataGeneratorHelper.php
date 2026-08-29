@@ -1,11 +1,10 @@
 <?php
 
-if (! function_exists('generate_cpf')) {
+if (!function_exists('generate_cpf')) {
     /**
-     * Gera um CPF válido aleatório
+     * Gera um CPF válido aleatório.
      */
-    function generate_cpf(): string
-    {
+    function generate_cpf(): string {
         $n1 = rand(0, 9);
         $n2 = rand(0, 9);
         $n3 = rand(0, 9);
@@ -32,12 +31,11 @@ if (! function_exists('generate_cpf')) {
     }
 }
 
-if (! function_exists('generate_rg')) {
+if (!function_exists('generate_rg')) {
     /**
-     * Gera um RG válido aleatório (formato SP)
+     * Gera um RG válido aleatório no formato de São Paulo.
      */
-    function generate_rg(): string
-    {
+    function generate_rg(): string {
         $n1 = rand(10, 99);
         $n2 = rand(100, 999);
         $n3 = rand(100, 999);
@@ -47,19 +45,20 @@ if (! function_exists('generate_rg')) {
     }
 }
 
-if (! function_exists('brazilian_phone')) {
+if (!function_exists('brazilian_phone')) {
     /**
-     * Gera um telefone brasileiro válido
+     * Gera um telefone brasileiro válido.
      */
-    function brazilian_phone(bool $mobile = false): string
-    {
-        $ddd = rand(11, 99); // DDD brasileiro
-        
+    function brazilian_phone(bool $mobile = false): string {
+        $ddd = rand(11, 99); /* DDD brasileiro. */
+
         if ($mobile) {
-            // Celular (9 dígitos)
+
+            /* Gera um número de celular com nove dígitos. */
             $numero = '9' . rand(1000, 9999) . '-' . rand(1000, 9999);
         } else {
-            // Fixo (8 dígitos)
+
+            /* Gera um número de telefone fixo com oito dígitos. */
             $numero = rand(2000, 5999) . '-' . rand(1000, 9999);
         }
 
@@ -67,12 +66,11 @@ if (! function_exists('brazilian_phone')) {
     }
 }
 
-if (! function_exists('brazilian_names')) {
+if (!function_exists('brazilian_names')) {
     /**
-     * Retorna lista de nomes brasileiros comuns
+     * Retorna uma lista de nomes brasileiros comuns.
      */
-    function brazilian_names(): array
-    {
+    function brazilian_names(): array {
         return [
             'male' => [
                 'João Silva', 'Pedro Santos', 'Lucas Oliveira', 'Gabriel Souza', 'Rafael Costa',
@@ -98,12 +96,11 @@ if (! function_exists('brazilian_names')) {
     }
 }
 
-if (! function_exists('brazilian_cities')) {
+if (!function_exists('brazilian_cities')) {
     /**
-     * Retorna lista de cidades brasileiras por estado
+     * Retorna uma lista de cidades brasileiras agrupadas por estado.
      */
-    function brazilian_cities(): array
-    {
+    function brazilian_cities(): array {
         return [
             'SP' => ['São Paulo', 'Campinas', 'Santos', 'São José dos Campos', 'Ribeirão Preto', 'Sorocaba', 'Osasco', 'Guarulhos', 'Santo André', 'Bauru'],
             'RJ' => ['Rio de Janeiro', 'Niterói', 'Duque de Caxias', 'Nova Iguaçu', 'São Gonçalo', 'Campos dos Goytacazes', 'Petrópolis', 'Volta Redonda'],
@@ -119,12 +116,11 @@ if (! function_exists('brazilian_cities')) {
     }
 }
 
-if (! function_exists('brazilian_streets')) {
+if (!function_exists('brazilian_streets')) {
     /**
-     * Retorna lista de nomes de ruas/avenidas brasileiras comuns
+     * Retorna uma lista de nomes comuns de ruas e avenidas brasileiras.
      */
-    function brazilian_streets(): array
-    {
+    function brazilian_streets(): array {
         return [
             'Rua das Flores', 'Avenida Brasil', 'Rua São Paulo', 'Avenida Paulista',
             'Rua das Acácias', 'Avenida Presidente Vargas', 'Rua Santos Dumont',
@@ -138,12 +134,11 @@ if (! function_exists('brazilian_streets')) {
     }
 }
 
-if (! function_exists('brazilian_districts')) {
+if (!function_exists('brazilian_districts')) {
     /**
-     * Retorna lista de bairros brasileiros comuns
+     * Retorna uma lista de bairros brasileiros comuns.
      */
-    function brazilian_districts(): array
-    {
+    function brazilian_districts(): array {
         return [
             'Centro', 'Jardim Paulista', 'Vila Mariana', 'Moema', 'Perdizes',
             'Pinheiros', 'Consolação', 'Copacabana', 'Ipanema', 'Leblon',
@@ -154,12 +149,11 @@ if (! function_exists('brazilian_districts')) {
     }
 }
 
-if (! function_exists('email_domains')) {
+if (!function_exists('email_domains')) {
     /**
-     * Retorna lista de domínios de email populares
+     * Retorna uma lista de domínios populares de e-mail.
      */
-    function email_domains(): array
-    {
+    function email_domains(): array {
         return [
             'gmail.com',
             'hotmail.com',
@@ -175,12 +169,11 @@ if (! function_exists('email_domains')) {
     }
 }
 
-if (! function_exists('teacher_qualifications')) {
+if (!function_exists('teacher_qualifications')) {
     /**
-     * Retorna lista de qualificações para professores
+     * Retorna uma lista de qualificações para professores.
      */
-    function teacher_qualifications(): array
-    {
+    function teacher_qualifications(): array {
         return [
             'Licenciatura em Matemática',
             'Licenciatura em Língua Portuguesa',

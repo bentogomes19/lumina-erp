@@ -4,27 +4,29 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
+
     /**
-     * Run the migrations.
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
      */
-    public function up(): void
-    {
+    public function up(): void {
         Schema::create('grade_level_subject', function (Blueprint $table) {
             $table->id();
             $table->foreignId('grade_level_id')->constrained()->cascadeOnDelete();
             $table->foreignId('subject_id')->constrained()->cascadeOnDelete();
-            $table->unsignedSmallInteger('hours_weekly')->nullable(); // carga horária variável
+            $table->unsignedSmallInteger('hours_weekly')->nullable(); /* carga horária variável. */
             $table->timestamps();
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
      */
-    public function down(): void
-    {
+    public function down(): void {
         Schema::dropIfExists('grade_level_subject');
     }
 };

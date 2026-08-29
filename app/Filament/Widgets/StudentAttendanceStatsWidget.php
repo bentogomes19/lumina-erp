@@ -7,16 +7,24 @@ use App\Models\Student;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class StudentAttendanceStatsWidget extends BaseWidget
-{
-    public static function canView(): bool
-    {
+class StudentAttendanceStatsWidget extends BaseWidget {
+
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
         return \App\Support\PermissionAccess::can('student.attendance.view');
     }
 
-    protected function getStats(): array
-    {
-        $user = auth()->user();
+    /**
+     * Retorna as taxas e os totais de presença, falta e atraso do aluno.
+     *
+     * @return array
+     */
+    protected function getStats(): array {
+        $user    = auth()->user();
         $student = Student::where('user_id', $user->id)->first();
 
         if (!$student) {
@@ -25,13 +33,13 @@ class StudentAttendanceStatsWidget extends BaseWidget
 
         $attendances = Attendance::where('student_id', $student->id)->get();
 
-        $total = $attendances->count();
+        $total   = $attendances->count();
         $present = $attendances->where('status', 'present')->count();
-        $absent = $attendances->where('status', 'absent')->count();
-        $late = $attendances->where('status', 'late')->count();
+        $absent  = $attendances->where('status', 'absent')->count();
+        $late    = $attendances->where('status', 'late')->count();
 
         $attendanceRate = $total > 0 ? round(($present / $total) * 100, 1) : 0;
-        $absenceRate = $total > 0 ? round(($absent / $total) * 100, 1) : 0;
+        $absenceRate    = $total > 0 ? round(($absent / $total) * 100, 1) : 0;
 
         return [
             Stat::make('Taxa de Presença', $attendanceRate . '%')
@@ -57,20 +65,24 @@ class StudentAttendanceStatsWidget extends BaseWidget
         ];
     }
 
-    protected function getAttendanceTrend(): array
-    {
-        $user = auth()->user();
+    /**
+     * Retorna a evolução da frequência no período analisado.
+     *
+     * @return array
+     */
+    protected function getAttendanceTrend(): array {
+        $user    = auth()->user();
         $student = Student::where('user_id', $user->id)->first();
 
         if (!$student) {
             return [];
         }
 
-        // Calcula taxa de presença por semana nas últimas 7 semanas
+        /* Calcula taxa de presença por semana nas últimas 7 semanas. */
         $weeklyRates = [];
         for ($i = 6; $i >= 0; $i--) {
             $startDate = now()->subWeeks($i)->startOfWeek();
-            $endDate = now()->subWeeks($i)->endOfWeek();
+            $endDate   = now()->subWeeks($i)->endOfWeek();
 
             $weekTotal = Attendance::where('student_id', $student->id)
                 ->whereBetween('date', [$startDate, $endDate])

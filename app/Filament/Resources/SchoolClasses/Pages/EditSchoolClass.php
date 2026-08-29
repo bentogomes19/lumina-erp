@@ -8,12 +8,16 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
 
-class EditSchoolClass extends EditRecord
-{
+class EditSchoolClass extends EditRecord {
+
     protected static string $resource = SchoolClassResource::class;
 
-    protected function getHeaderActions(): array
-    {
+    /**
+     * Retorna as ações exibidas no cabeçalho.
+     *
+     * @return array
+     */
+    protected function getHeaderActions(): array {
         return [
             DeleteAction::make(),
             ForceDeleteAction::make(),
@@ -21,8 +25,12 @@ class EditSchoolClass extends EditRecord
         ];
     }
 
-    protected function getRedirectUrl(): string
-    {
+    /**
+     * Retorna a URL usada após concluir a operação.
+     *
+     * @return string
+     */
+    protected function getRedirectUrl(): string {
         return $this->getResource()::getUrl('index');
     }
 }

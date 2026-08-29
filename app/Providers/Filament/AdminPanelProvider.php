@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider {
      * @param Panel $panel
      *
      * @return Panel
+     *
      * @throws \Exception
      */
     public function panel(Panel $panel): Panel {
@@ -39,7 +40,7 @@ class AdminPanelProvider extends PanelProvider {
             ->path('lumina')
             ->brandName('Portal Lumina')
             ->login()
-            ->font('Inter Variable', url: asset('fonts/filament/filament/inter/index.css'), provider: LocalFontProvider::class,)
+            ->font('Inter Variable', url: asset('fonts/filament/filament/inter/index.css'), provider: LocalFontProvider::class, )
             ->viteTheme('resources/css/filament/lumina/theme.css')
             ->assets([
                 Js::make(

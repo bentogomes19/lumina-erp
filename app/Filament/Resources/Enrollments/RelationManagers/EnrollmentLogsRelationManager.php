@@ -11,22 +11,33 @@ use Filament\Tables\Table;
  * Exibe o histórico de auditoria da matrícula.
  * Somente leitura — logs são imutáveis.
  */
-class EnrollmentLogsRelationManager extends RelationManager
-{
+class EnrollmentLogsRelationManager extends RelationManager {
+
     protected static string $relationship = 'logs';
 
-    protected static ?string $title = 'Histórico de Ações';
-    protected static ?string $modelLabel = 'Registro';
+    protected static ?string $title            = 'Histórico de Ações';
+    protected static ?string $modelLabel       = 'Registro';
     protected static ?string $pluralModelLabel = 'Histórico';
 
-    // Aba somente leitura — sem formulário de criação
-    public function form(Schema $schema): Schema
-    {
+    /**
+     * Configura o formulário do recurso.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public function form(Schema $schema): Schema {
         return $schema->components([]);
     }
 
-    public function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('created_at')
@@ -38,26 +49,26 @@ class EnrollmentLogsRelationManager extends RelationManager
                     ->label('Ação')
                     ->badge()
                     ->color(fn (string $state) => match ($state) {
-                        'criacao'                => 'success',
-                        'edicao'                 => 'info',
-                        'trancamento'            => 'warning',
-                        'reativacao'             => 'success',
-                        'cancelamento'           => 'danger',
-                        'reversao_cancelamento'  => 'warning',
-                        'transferencia_interna'  => 'info',
-                        'transferencia_externa'  => 'gray',
-                        default                  => 'gray',
+                        'criacao'               => 'success',
+                        'edicao'                => 'info',
+                        'trancamento'           => 'warning',
+                        'reativacao'            => 'success',
+                        'cancelamento'          => 'danger',
+                        'reversao_cancelamento' => 'warning',
+                        'transferencia_interna' => 'info',
+                        'transferencia_externa' => 'gray',
+                        default                 => 'gray',
                     })
                     ->formatStateUsing(fn (string $state) => match ($state) {
-                        'criacao'                => 'Criação',
-                        'edicao'                 => 'Edição',
-                        'trancamento'            => 'Trancamento',
-                        'reativacao'             => 'Reativação',
-                        'cancelamento'           => 'Cancelamento',
-                        'reversao_cancelamento'  => 'Reversão de Cancelamento',
-                        'transferencia_interna'  => 'Transferência Interna',
-                        'transferencia_externa'  => 'Transferência Externa',
-                        default                  => ucfirst($state),
+                        'criacao'               => 'Criação',
+                        'edicao'                => 'Edição',
+                        'trancamento'           => 'Trancamento',
+                        'reativacao'            => 'Reativação',
+                        'cancelamento'          => 'Cancelamento',
+                        'reversao_cancelamento' => 'Reversão de Cancelamento',
+                        'transferencia_interna' => 'Transferência Interna',
+                        'transferencia_externa' => 'Transferência Externa',
+                        default                 => ucfirst($state),
                     }),
 
                 TextColumn::make('status_anterior')
@@ -89,7 +100,8 @@ class EnrollmentLogsRelationManager extends RelationManager
                     ->tooltip(fn ($record) => $record->observacao),
             ])
             ->defaultSort('created_at', 'desc')
-            // Sem ações — logs são somente leitura
+
+            /* Sem ações — logs são somente leitura. */
             ->recordActions([])
             ->toolbarActions([]);
     }

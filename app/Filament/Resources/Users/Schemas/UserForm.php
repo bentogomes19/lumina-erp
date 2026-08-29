@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use App\Enums\Gender;
-use App\Models\User;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -17,8 +16,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rules\Enum as EnumRule;
 use Spatie\Permission\Models\Role;
 
-class UserForm
-{
+class UserForm {
+
     /** Labels dos perfis para exibição */
     public const ROLE_LABELS = [
         'ti'         => 'TI',
@@ -29,11 +28,17 @@ class UserForm
         'student'    => 'Aluno',
     ];
 
-    public static function configure(Schema $schema): Schema
-    {
+    /**
+     * Configura os campos do formulário de usuários.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function configure(Schema $schema): Schema {
         return $schema->components([
 
-            // ── Identificação ────────────────────────────────────────────────
+            /* Identificação. */
             Section::make('Identificação')
                 ->icon('fas-id-card')
                 ->schema([
@@ -71,7 +76,7 @@ class UserForm
                             $component->state($record?->roles?->first()?->name);
                         })
                         ->dehydrateStateUsing(function ($state, $record) {
-                            if (! $state || ! $record) {
+                            if (!$state || !$record) {
                                 return $state;
                             }
                             $record->syncRoles([$state]);
@@ -98,7 +103,7 @@ class UserForm
                         ->inline(false),
                 ])->columns(2),
 
-            // ── Segurança (somente leitura em edição) ────────────────────────
+            /* Segurança (somente leitura em edição) */
             Section::make('Segurança e Acessos')
                 ->icon('fas-shield-halved')
                 ->schema([
@@ -126,7 +131,7 @@ class UserForm
                 ->visibleOn('edit')
                 ->collapsible(),
 
-            // ── Informações Pessoais ──────────────────────────────────────────
+            /* Informações Pessoais. */
             Section::make('Informações Pessoais')
                 ->icon('fas-circle-user')
                 ->schema([
@@ -161,7 +166,7 @@ class UserForm
                         ->columnSpan(2),
                 ])->columns(2),
 
-            // ── Endereço e Contato ────────────────────────────────────────────
+            /* Endereço e Contato. */
             Section::make('Endereço e Contato')
                 ->icon('fas-location-dot')
                 ->schema([
@@ -172,7 +177,7 @@ class UserForm
                         ->live(onBlur: true)
                         ->suffixIcon('fas-magnifying-glass')
                         ->afterStateUpdated(function ($state, callable $set) {
-                            if (! $state) {
+                            if (!$state) {
                                 return;
                             }
                             $cep = preg_replace('/[^0-9]/', '', $state);

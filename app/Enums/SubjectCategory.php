@@ -2,28 +2,36 @@
 
 namespace App\Enums;
 
-enum SubjectCategory: string
-{
-    case LINGUAGENS = 'linguagens';
-    case MATEMATICA = 'matematica';
+enum SubjectCategory: string {
+
+    case LINGUAGENS        = 'linguagens';
+    case MATEMATICA        = 'matematica';
     case CIENCIAS_NATUREZA = 'ciencias_da_natureza';
-    case CIENCIAS_HUMANAS = 'ciencias_humanas';
+    case CIENCIAS_HUMANAS  = 'ciencias_humanas';
 
     case CIENCIAS_EXATAS = 'ciencias_exatas';
 
-    public function label(): string
-    {
+    /**
+     * Retorna o rótulo legível da categoria de disciplina.
+     *
+     * @return string
+     */
+    public function label(): string {
         return match ($this) {
-            self::LINGUAGENS => 'Linguagens',
-            self::MATEMATICA => 'Matemática',
+            self::LINGUAGENS        => 'Linguagens',
+            self::MATEMATICA        => 'Matemática',
             self::CIENCIAS_NATUREZA => 'Ciências da Natureza',
-            self::CIENCIAS_HUMANAS => 'Ciências Humanas',
-            self::CIENCIAS_EXATAS => 'Ciencias Exatas',
+            self::CIENCIAS_HUMANAS  => 'Ciências Humanas',
+            self::CIENCIAS_EXATAS   => 'Ciencias Exatas',
         };
     }
 
-    public static function toArray(): array
-    {
+    /**
+     * Retorna as categorias de disciplina indexadas pelos respectivos valores.
+     *
+     * @return array
+     */
+    public static function toArray(): array {
         return collect(self::cases())
             ->mapWithKeys(fn ($case) => [$case->value => $case->label()])
             ->toArray();

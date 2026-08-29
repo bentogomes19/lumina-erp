@@ -3,45 +3,43 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
  */
-class UserFactory extends Factory
-{
+class UserFactory extends Factory {
+
     /**
-     * The current password being used by the factory.
+     * Armazena a senha atual reutilizada pela fábrica.
      */
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
+     * Retorna os dados padrão gerados pela fábrica.
      *
      * @return array<string, mixed>
      */
-    public function definition(): array
-    {
-        $names = brazilian_names();
-        $gender = $this->faker->randomElement(['M', 'F']);
+    public function definition(): array {
+        $names    = brazilian_names();
+        $gender   = $this->faker->randomElement(['M', 'F']);
         $allNames = array_merge($names['male'], $names['female']);
-        $name = $this->faker->randomElement($allNames);
-        
-        // Gera email realístico baseado no nome
+        $name     = $this->faker->randomElement($allNames);
+
+        /* Gera email realístico baseado no nome. */
         $emailUser = strtolower(str_replace(' ', '.', $name));
         $emailUser = $this->removeAccents($emailUser);
-        $domain = $this->faker->randomElement(email_domains());
-        $email = $emailUser . rand(1, 999) . '@' . $domain;
-        
-        // Seleciona uma cidade e estado brasileiro
+        $domain    = $this->faker->randomElement(email_domains());
+        $email     = $emailUser . rand(1, 999) . '@' . $domain;
+
+        /* Seleciona uma cidade e estado brasileiro. */
         $cities = brazilian_cities();
-        $state = $this->faker->randomElement(array_keys($cities));
-        $city = $this->faker->randomElement($cities[$state]);
-        
-        $street = $this->faker->randomElement(brazilian_streets());
+        $state  = $this->faker->randomElement(array_keys($cities));
+        $city   = $this->faker->randomElement($cities[$state]);
+
+        $street   = $this->faker->randomElement(brazilian_streets());
         $district = $this->faker->randomElement(brazilian_districts());
-        
+
         return [
             'uuid'              => $this->faker->uuid,
             'name'              => $name,
@@ -65,12 +63,15 @@ class UserFactory extends Factory
             'remember_token'    => Str::random(10),
         ];
     }
-    
+
     /**
-     * Remove acentos de uma string
+     * Remove acentos de uma string.
+     *
+     * @param string $string
+     *
+     * @return string
      */
-    private function removeAccents(string $string): string
-    {
+    private function removeAccents(string $string): string {
         $unwanted = [
             'á' => 'a', 'à' => 'a', 'ã' => 'a', 'â' => 'a', 'ä' => 'a',
             'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
@@ -85,15 +86,16 @@ class UserFactory extends Factory
             'Ú' => 'U', 'Ù' => 'U', 'Û' => 'U', 'Ü' => 'U',
             'Ç' => 'C', 'Ñ' => 'N',
         ];
-        
+
         return strtr($string, $unwanted);
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Configura o modelo com o endereço de e-mail não verificado.
+     *
+     * @return static
      */
-    public function unverified(): static
-    {
+    public function unverified(): static {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);

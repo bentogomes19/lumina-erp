@@ -7,21 +7,23 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class AdminUserSeeder extends Seeder
-{
+class AdminUserSeeder extends Seeder {
+
     /**
-     * Run the database seeds.
+     * Cria o usuário administrador inicial.
+     *
+     * @return void
      */
-    public function run(): void
-    {
-        // Admin
+    public function run(): void {
+
+        /* Admin. */
         $admin = User::firstOrCreate(
             ['email' => 'admin@lumina.com'],
             [
-                'uuid' => (string) Str::uuid(),
-                'name' => 'Administrador',
+                'uuid'     => (string) Str::uuid(),
+                'name'     => 'Administrador',
                 'password' => Hash::make('123456'),
-                'active' => true,
+                'active'   => true,
             ]
         );
         $admin->syncRoles('admin');

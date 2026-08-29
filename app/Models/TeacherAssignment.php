@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-class TeacherAssignment extends BaseModel
-{
+class TeacherAssignment extends BaseModel {
+
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
      *
@@ -17,56 +17,59 @@ class TeacherAssignment extends BaseModel
 
     /**
      * Retorna o professor vinculado à atribuição.
+     *
+     * @return mixed
      */
-    public function teacher()
-    {
+    public function teacher() {
         return $this->belongsTo(Teacher::class);
     }
 
     /**
      * Retorna a disciplina vinculada à atribuição.
+     *
+     * @return mixed
      */
-    public function subject()
-    {
+    public function subject() {
         return $this->belongsTo(Subject::class);
     }
 
     /**
      * Retorna a turma vinculada à atribuição.
+     *
+     * @return mixed
      */
-    public function schoolClass()
-    {
+    public function schoolClass() {
         return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
     /**
      * Sincroniza a disciplina da turma ao criar ou remover atribuições.
+     *
+     * @return void
      */
-    protected static function booted()
-    {
-        // Quando criar um vínculo professor+turma+disciplina,
-        // garante que a disciplina esteja anexada à turma (class_subjects)
+    protected static function booted() {
+
+        /* Quando criar um vínculo professor + turma+ disciplina, garante que a disciplina esteja anexada à turma. */
         static::created(function (TeacherAssignment $assignment) {
             $class = $assignment->schoolClass;
-            if (! $class) {
+            if (!$class) {
                 return;
             }
 
-            // se a disciplina ainda não está na turma, anexa
+            /* se a disciplina ainda não está na turma, anexa. */
             $already = $class->subjects()
                 ->where('subjects.id', $assignment->subject_id)
                 ->exists();
 
-            if (! $already) {
+            if (!$already) {
                 $class->subjects()->attach($assignment->subject_id);
             }
         });
 
-        // Quando apagar um vínculo, remove a disciplina da turma
-        // se não houver mais nenhum professor lecionando essa disciplina na turma
+        /* Quando apagar um vínculo, remove a disciplina da turma se não houver mais nenhum professor lecionando essa disciplina na turma. */
         static::deleted(function (TeacherAssignment $assignment) {
             $class = $assignment->schoolClass;
-            if (! $class) {
+            if (!$class) {
                 return;
             }
 
@@ -74,7 +77,7 @@ class TeacherAssignment extends BaseModel
                 ->where('subject_id', $assignment->subject_id)
                 ->exists();
 
-            if (! $stillUsed) {
+            if (!$stillUsed) {
                 $class->subjects()->detach($assignment->subject_id);
             }
         });

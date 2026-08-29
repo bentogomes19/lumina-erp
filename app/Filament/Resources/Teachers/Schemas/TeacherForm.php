@@ -13,10 +13,16 @@ use Illuminate\Validation\Rules\Enum as EnumRule;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
-class TeacherForm
-{
-    public static function configure(Schema $schema): Schema
-    {
+class TeacherForm {
+
+    /**
+     * Configura os campos do formulário de professores.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function configure(Schema $schema): Schema {
         return $schema
             ->columns(12)
             ->components([

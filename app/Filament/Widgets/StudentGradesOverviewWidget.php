@@ -6,24 +6,32 @@ use App\Models\Grade;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class StudentGradesOverviewWidget extends BaseWidget
-{
+class StudentGradesOverviewWidget extends BaseWidget {
+
     protected static ?int $sort = -1;
 
-    public static function canView(): bool
-    {
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
         return \App\Support\PermissionAccess::can('student.grades.view');
     }
 
-    protected function getStats(): array
-    {
+    /**
+     * Retorna o resumo das notas do aluno na turma ativa.
+     *
+     * @return array
+     */
+    protected function getStats(): array {
         $user = auth()->user();
 
         if (!$user || !$user->student) {
             return [];
         }
 
-        // Get current active class
+        /* Obtém a turma ativa atual. */
         $currentClass = $user->student->classes()
             ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
             ->first();
@@ -37,7 +45,7 @@ class StudentGradesOverviewWidget extends BaseWidget
             ];
         }
 
-        // Busca notas do aluno da turma atual (ano letivo ativo)
+        /* Busca notas do aluno da turma atual (ano letivo ativo) */
         $grades = Grade::query()
             ->where('student_id', $user->student->id)
             ->where('class_id', $currentClass->id)
@@ -52,12 +60,12 @@ class StudentGradesOverviewWidget extends BaseWidget
             ];
         }
 
-        // Calcula estatísticas
-        $totalGrades = $grades->count();
+        /* Calcula estatísticas. */
+        $totalGrades  = $grades->count();
         $averageGrade = $grades->avg('score');
         $highestGrade = $grades->max('score');
-        $lowestGrade = $grades->min('score');
-        $disciplines = $grades->groupBy('subject_id')->count();
+        $lowestGrade  = $grades->min('score');
+        $disciplines  = $grades->groupBy('subject_id')->count();
 
         return [
             Stat::make('Média Geral', number_format($averageGrade, 2, ',', '.'))

@@ -6,18 +6,28 @@ use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use Illuminate\Support\Collection;
 
-class CurrentTeacherService
-{
-    public function current(): ?Teacher
-    {
+class CurrentTeacherService {
+
+    /**
+     * Retorna o professor correspondente ao usuário autenticado.
+     *
+     * @return Teacher|null
+     */
+    public function current(): ?Teacher {
         return auth()->user()?->teacher;
     }
 
-    public function assignments(?Teacher $teacher = null): Collection
-    {
+    /**
+     * Retorna as atribuições do professor autenticado.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return Collection
+     */
+    public function assignments(?Teacher $teacher = null): Collection {
         $teacher ??= $this->current();
 
-        if (! $teacher) {
+        if (!$teacher) {
             return collect();
         }
 
@@ -27,8 +37,14 @@ class CurrentTeacherService
             ->get();
     }
 
-    public function classIds(?Teacher $teacher = null): Collection
-    {
+    /**
+     * Retorna os identificadores das turmas atribuídas ao professor.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return Collection
+     */
+    public function classIds(?Teacher $teacher = null): Collection {
         return $this->assignments($teacher)
             ->pluck('class_id')
             ->filter()
@@ -36,8 +52,14 @@ class CurrentTeacherService
             ->values();
     }
 
-    public function subjectIds(?Teacher $teacher = null): Collection
-    {
+    /**
+     * Retorna os identificadores das disciplinas atribuídas ao professor.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return Collection
+     */
+    public function subjectIds(?Teacher $teacher = null): Collection {
         return $this->assignments($teacher)
             ->pluck('subject_id')
             ->filter()

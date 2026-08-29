@@ -18,12 +18,16 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
-class EditEnrollment extends EditRecord
-{
+class EditEnrollment extends EditRecord {
+
     protected static string $resource = EnrollmentResource::class;
 
-    public function getTitle(): string
-    {
+    /**
+     * Retorna o título exibido na página.
+     *
+     * @return string
+     */
+    public function getTitle(): string {
         $record = $this->record;
         if ($record && $record->student) {
             return "Editar Matrícula — {$record->student->name}";
@@ -31,31 +35,39 @@ class EditEnrollment extends EditRecord
         return 'Editar Matrícula';
     }
 
-    public function getSubheading(): string|\Illuminate\Contracts\Support\Htmlable|null
-    {
+    /**
+     * Retorna o subtítulo exibido na página.
+     *
+     * @return string|Illuminate\Contracts\Support\Htmlable|null
+     */
+    public function getSubheading(): string|\Illuminate\Contracts\Support\Htmlable|null {
         $record = $this->record;
-        if (! $record) {
+        if (!$record) {
             return null;
         }
 
-        $status  = $record->status instanceof EnrollmentStatus ? $record->status->label() : (string) $record->status;
-        $turma   = $record->class?->name ?? '—';
-        $ano     = $record->schoolYear?->year ?? $record->class?->schoolYear?->year ?? '—';
+        $status = $record->status instanceof EnrollmentStatus ? $record->status->label() : (string) $record->status;
+        $turma  = $record->class?->name ?? '—';
+        $ano    = $record->schoolYear?->year ?? $record->class?->schoolYear?->year ?? '—';
 
         return "Nº {$record->registration_number} · {$turma} · {$ano} · {$status}";
     }
 
-    protected function getHeaderActions(): array
-    {
-        $record = $this->record;
+    /**
+     * Retorna as ações exibidas no cabeçalho.
+     *
+     * @return array
+     */
+    protected function getHeaderActions(): array {
+        $record    = $this->record;
         $hasGrades = $record && $record->grades()->exists();
 
         return [
 
-            // ── Operações de status ────────────────────────────────────────────
+            /* Operações de status. */
             ActionGroup::make([
 
-                // Trancar
+                /* Trancar. */
                 Action::make('trancar')
                     ->label('Trancar Matrícula')
                     ->icon('fas-lock')
@@ -107,7 +119,7 @@ class EditEnrollment extends EditRecord
                             ->send();
                     }),
 
-                // Reativar
+                /* Reativar. */
                 Action::make('reativar')
                     ->label('Reativar Matrícula')
                     ->icon('fas-lock-open')
@@ -149,7 +161,7 @@ class EditEnrollment extends EditRecord
                             ->send();
                     }),
 
-                // Transferir Turma
+                /* Transferir Turma. */
                 Action::make('transferirTurma')
                     ->label('Transferir Turma')
                     ->icon('fas-right-left')
@@ -191,8 +203,8 @@ class EditEnrollment extends EditRecord
                     ->action(function (array $data): void {
                         $record = $this->record;
 
-                        if (! Enrollment::classHasSlot((int) $data['class_id'])) {
-                            if (! auth()->user()?->hasAnyRole(['admin', 'ti'])) {
+                        if (!Enrollment::classHasSlot((int) $data['class_id'])) {
+                            if (!auth()->user()?->hasAnyRole(['admin', 'ti'])) {
                                 Notification::make()
                                     ->title('Turma sem vagas')
                                     ->body('A turma de destino atingiu a capacidade máxima. Contate o perfil TI para forçar a transferência.')
@@ -259,11 +271,11 @@ class EditEnrollment extends EditRecord
                             ->success()
                             ->send();
 
-                        // Redireciona para a nova matrícula
+                        /* Redireciona para a nova matrícula. */
                         $this->redirect(EditEnrollment::getUrl(['record' => $novaMatricula->id]));
                     }),
 
-                // Transferência Externa
+                /* Transferência Externa. */
                 Action::make('transferirExterna')
                     ->label('Transferência Externa')
                     ->icon('fas-up-right-from-square')
@@ -321,7 +333,7 @@ class EditEnrollment extends EditRecord
                             ->send();
                     }),
 
-                // Cancelar
+                /* Cancelar. */
                 Action::make('cancelar')
                     ->label('Cancelar Matrícula')
                     ->icon('fas-circle-xmark')
@@ -351,10 +363,10 @@ class EditEnrollment extends EditRecord
                         $statusAnterior = $record->status?->value;
 
                         $record->update([
-                            'status'               => EnrollmentStatus::CANCELED,
-                            'cancel_reason'        => $data['cancel_reason'],
-                            'cancel_observations'  => $data['cancel_observations'] ?? null,
-                            'operated_by_user_id'  => auth()->id(),
+                            'status'              => EnrollmentStatus::CANCELED,
+                            'cancel_reason'       => $data['cancel_reason'],
+                            'cancel_observations' => $data['cancel_observations'] ?? null,
+                            'operated_by_user_id' => auth()->id(),
                         ]);
 
                         EnrollmentLog::registrar(
@@ -374,12 +386,13 @@ class EditEnrollment extends EditRecord
                             ->send();
                     }),
 
-                // Reverter Cancelamento (somente TI)
+                /* Reverter Cancelamento (somente TI) */
                 Action::make('reverterCancelamento')
                     ->label('Reverter Cancelamento')
                     ->icon('fas-rotate-left')
                     ->color('warning')
-                    ->visible(fn () => $this->record->status === EnrollmentStatus::CANCELED
+                    ->visible(
+                        fn () => $this->record->status === EnrollmentStatus::CANCELED
                         && auth()->user()?->hasAnyRole(['admin', 'ti'])
                     )
                     ->modalHeading('Reverter Cancelamento — Perfil TI')
@@ -391,7 +404,7 @@ class EditEnrollment extends EditRecord
                             ->rows(3),
                     ])
                     ->action(function (array $data): void {
-                        if (! auth()->user()?->hasAnyRole(['admin', 'ti'])) {
+                        if (!auth()->user()?->hasAnyRole(['admin', 'ti'])) {
                             Notification::make()->title('Acesso negado')->danger()->send();
                             return;
                         }
@@ -400,10 +413,10 @@ class EditEnrollment extends EditRecord
                         $statusAnterior = $record->status?->value;
 
                         $record->update([
-                            'status'               => EnrollmentStatus::ACTIVE,
-                            'cancel_reason'        => null,
-                            'cancel_observations'  => null,
-                            'operated_by_user_id'  => auth()->id(),
+                            'status'              => EnrollmentStatus::ACTIVE,
+                            'cancel_reason'       => null,
+                            'cancel_observations' => null,
+                            'operated_by_user_id' => auth()->id(),
                         ]);
 
                         EnrollmentLog::registrar(
@@ -428,7 +441,7 @@ class EditEnrollment extends EditRecord
             ->icon('fas-gear')
             ->button(),
 
-            // ── PDFs ───────────────────────────────────────────────────────────
+            /* PDFs. */
             ActionGroup::make([
                 Action::make('pdfComprovante')
                     ->label('Comprovante de Matrícula')
@@ -474,20 +487,24 @@ class EditEnrollment extends EditRecord
             ->button()
             ->color('gray'),
 
-            // ── Excluir ────────────────────────────────────────────────────────
+            /* Excluir. */
             DeleteAction::make()
                 ->visible(fn () => auth()->user()?->can('delete', $record))
                 ->disabled($hasGrades)
-                ->tooltip($hasGrades
+                ->tooltip(
+                    $hasGrades
                     ? 'Não é possível excluir matrícula com notas lançadas. Cancele a matrícula em vez de excluir.'
                     : null
                 ),
         ];
     }
 
-    /** Registra log de edição ao salvar alterações */
-    protected function afterSave(): void
-    {
+    /**
+     * Registra log de edição ao salvar alterações.
+     *
+     * @return void
+     */
+    protected function afterSave(): void {
         EnrollmentLog::registrar(
             enrollment: $this->record,
             acao: 'edicao',

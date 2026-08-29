@@ -10,7 +10,6 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Notifications\Notification;
@@ -22,10 +21,16 @@ use Filament\Forms\Components\Select as FormSelect;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 
-class SubjectsTable
-{
-    public static function configure(Table $table): Table
-    {
+class SubjectsTable {
+
+    /**
+     * Configura as colunas, os filtros e as ações da tabela de disciplinas.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function configure(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('code')
@@ -42,14 +47,16 @@ class SubjectsTable
                 BadgeColumn::make('category')
                     ->label('Componente')
                     ->formatStateUsing(function ($state) {
-                        // $state pode vir como enum (SubjectCategory) ou string (ex.: 'linguagens')
+
+                        /* O estado pode ser uma categoria enumerada ou o respectivo valor textual. */
                         if ($state instanceof SubjectCategory) {
                             return $state->label();
                         }
                         return SubjectCategory::tryFrom((string) $state)?->label() ?? '—';
                     })
                     ->colors([
-                        // mapeia pela string do value (funciona com enum ou string)
+
+                        /* mapeia pela string do value (funciona com enum ou string) */
                         'primary' => fn ($state) => ($state instanceof SubjectCategory ? $state->value : $state) === SubjectCategory::LINGUAGENS->value,
                         'info'    => fn ($state) => ($state instanceof SubjectCategory ? $state->value : $state) === SubjectCategory::CIENCIAS_NATUREZA->value,
                         'warning' => fn ($state) => ($state instanceof SubjectCategory ? $state->value : $state) === SubjectCategory::MATEMATICA->value,
@@ -84,7 +91,7 @@ class SubjectsTable
                     ->options(SubjectCategory::toArray()),
                 SelectFilter::make('status')
                     ->label('Status')
-                    ->options(['active'=>'Ativa','inactive'=>'Inativa']),
+                    ->options(['active' => 'Ativa','inactive' => 'Inativa']),
             ])
             ->recordActions([
                 Action::make('vincularTurmaProfessor')
@@ -95,14 +102,15 @@ class SubjectsTable
                         FormSelect::make('class_id')
                             ->label('Turma')
                             ->options(function ($record) {
-                                // se a disciplina já está ligada a séries, mostra só as turmas dessas séries
+
+                                /* se a disciplina já está ligada a séries, mostra só as turmas dessas séries. */
                                 $gradeLevelIds = $record->gradeLevels()->pluck('grade_levels.id');
-                                $query = SchoolClass::query()->with('gradeLevel','schoolYear');
+                                $query         = SchoolClass::query()->with('gradeLevel', 'schoolYear');
                                 if ($gradeLevelIds->isNotEmpty()) {
                                     $query->whereIn('grade_level_id', $gradeLevelIds);
                                 }
                                 return $query->orderBy('name')->get()
-                                    ->mapWithKeys(fn($c) => [
+                                    ->mapWithKeys(fn ($c) => [
                                         $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
                                     ]);
                             })
@@ -112,7 +120,7 @@ class SubjectsTable
 
                         FormSelect::make('teacher_id')
                             ->label('Professor')
-                            ->options(fn () => Teacher::orderBy('name')->pluck('name','id'))
+                            ->options(fn () => Teacher::orderBy('name')->pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -136,7 +144,8 @@ class SubjectsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    // status em massa
+
+                    /* status em massa. */
                     BulkAction::make('alterarStatus')
                         ->label('Alterar status')
                         ->icon('fas-sliders')
@@ -144,7 +153,7 @@ class SubjectsTable
                         ->form([
                             FormSelect::make('status')
                                 ->label('Novo status')
-                                ->options(['active'=>'Ativa','inactive'=>'Inativa'])
+                                ->options(['active' => 'Ativa','inactive' => 'Inativa'])
                                 ->required(),
                         ])
                         ->action(function (Collection $records, array $data) {
@@ -171,16 +180,16 @@ class SubjectsTable
                     ->form([
                         FormSelect::make('class_id')
                             ->label('Turma')
-                            ->options(fn () => SchoolClass::with('gradeLevel','schoolYear')->get()
-                                ->mapWithKeys(fn($c) => [
+                            ->options(fn () => SchoolClass::with('gradeLevel', 'schoolYear')->get()
+                                ->mapWithKeys(fn ($c) => [
                                     $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
                                 ]))
                             ->searchable()->preload()->required(),
                     ])
                     ->action(function (Collection $records, array $data) {
                         $class = SchoolClass::findOrFail((int) $data['class_id']);
-                        $ids   = $records->pluck('id')->all(); // subjects selecionadas
-                        $class->subjects()->syncWithoutDetaching($ids); // evita duplicar
+                        $ids   = $records->pluck('id')->all(); /* subjects selecionadas. */
+                        $class->subjects()->syncWithoutDetaching($ids); /* evita duplicar. */
                         \Filament\Notifications\Notification::make()
                             ->title(count($ids) . ' disciplina(s) adicionada(s) à turma')
                             ->success()

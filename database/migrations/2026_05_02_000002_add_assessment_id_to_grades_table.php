@@ -4,12 +4,16 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    public function up(): void
-    {
+return new class () extends Migration {
+
+    /**
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
+     */
+    public function up(): void {
         Schema::table('grades', function (Blueprint $table) {
-            if (! Schema::hasColumn('grades', 'assessment_id')) {
+            if (!Schema::hasColumn('grades', 'assessment_id')) {
                 $table->foreignId('assessment_id')
                     ->nullable()
                     ->after('id')
@@ -20,18 +24,24 @@ return new class extends Migration
             try {
                 $table->unique(['assessment_id', 'student_id'], 'grades_unique_assessment_student');
             } catch (\Throwable $e) {
-                // ignore if index already exists
+
+                /* Ignora quando o índice já existe. */
             }
         });
     }
 
-    public function down(): void
-    {
+    /**
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
+     */
+    public function down(): void {
         Schema::table('grades', function (Blueprint $table) {
             try {
                 $table->dropUnique('grades_unique_assessment_student');
             } catch (\Throwable $e) {
-                // ignore
+
+                /* Ignora quando o índice já existe. */
             }
 
             if (Schema::hasColumn('grades', 'assessment_id')) {

@@ -24,6 +24,14 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class UsersTable {
+
+    /**
+     * Configura as colunas, os filtros e as ações da tabela de usuários.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
     public static function configure(Table $table): Table {
         return $table
             ->defaultSort('created_at', 'desc')
@@ -81,7 +89,7 @@ class UsersTable {
                     ->falseColor('success')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                /* Status: mostra bloqueado com prioridade sobre ativo/inativo */
+                /* Status: mostra bloqueado com prioridade sobre ativo/inativo. */
                 TextColumn::make('status_display')
                     ->label('Status')
                     ->badge()
@@ -110,7 +118,8 @@ class UsersTable {
                 SelectFilter::make('role')
                     ->label('Perfil')
                     ->options(UserForm::ROLE_LABELS)
-                    ->query(fn ($query, $data) => $data['value'] ? $query->whereHas('roles', fn ($q) => $q->where('name', $data['value'])) : $query
+                    ->query(
+                        fn ($query, $data) => $data['value'] ? $query->whereHas('roles', fn ($q) => $q->where('name', $data['value'])) : $query
                     ),
 
                 TernaryFilter::make('active')
@@ -135,15 +144,17 @@ class UsersTable {
                         DatePicker::make('from')->label('De'),
                         DatePicker::make('until')->label('Até'),
                     ])
-                    ->query(fn($query, $data) => $query
-                        ->when($data['from'], fn($q)  => $q->whereDate('created_at', '>=', $data['from']))
-                        ->when($data['until'], fn($q) => $q->whereDate('created_at', '<=', $data['until']))
+                    ->query(
+                        fn ($query, $data) => $query
+                        ->when($data['from'], fn ($q) => $q->whereDate('created_at', '>=', $data['from']))
+                        ->when($data['until'], fn ($q) => $q->whereDate('created_at', '<=', $data['until']))
                     ),
 
                 TrashedFilter::make(),
             ])
 
             ->recordActions([
+
                 /* Ação: Resetar Senha (gera senha temporária + force_password_change) */
                 Action::make('reset_password')
                     ->label('Resetar Senha')
@@ -152,7 +163,7 @@ class UsersTable {
                     ->requiresConfirmation()
                     ->modalHeading('Resetar senha do usuário')
                     ->modalDescription('Uma senha temporária será gerada e o usuário será obrigado a trocá-la no próximo acesso.')
-                    ->action(function(User $record) {
+                    ->action(function (User $record) {
                         $tempPassword = $record->resetToTemporaryPassword();
 
                         Notification::make()
@@ -172,17 +183,18 @@ class UsersTable {
                     ->requiresConfirmation()
                     ->modalHeading('Desbloquear usuário')
                     ->modalDescription('O contador de tentativas será zerado e o bloqueio removido.')
-                    ->action(function(User $record) {
+                    ->action(function (User $record) {
                         $record->unlock();
                         Notification::make()
                             ->title('Usuário desbloqueado')
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (User $record) => $record->locked_at && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                    ->visible(
+                        fn (User $record) => $record->locked_at && auth()->user()?->hasAnyRole(['admin', 'ti'])
                     ),
 
-                /* Ação: Inativar com motivo */
+                /* Ação: Inativar com motivo. */
                 Action::make('inactivate')
                     ->label('Inativar')
                     ->icon('fas-circle-xmark')
@@ -202,7 +214,8 @@ class UsersTable {
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (User $record) => $record->active && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                    ->visible(
+                        fn (User $record) => $record->active && auth()->user()?->hasAnyRole(['admin', 'ti'])
                     ),
 
                 /* Ação: Reativar (somente TI/admin) */
@@ -213,7 +226,7 @@ class UsersTable {
                     ->requiresConfirmation()
                     ->modalHeading('Reativar usuário')
                     ->modalDescription('O usuário voltará a ter acesso ao sistema.')
-                    ->action(function(User $record) {
+                    ->action(function (User $record) {
                         $record->activate();
 
                         Notification::make()
@@ -221,7 +234,8 @@ class UsersTable {
                             ->success()
                             ->send();
                     })
-                    ->visible(fn(User $record) => !$record->active && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                    ->visible(
+                        fn (User $record) => !$record->active && auth()->user()?->hasAnyRole(['admin', 'ti'])
                     ),
 
                 EditAction::make()->label('Editar'),
@@ -240,31 +254,31 @@ class UsersTable {
                                 ->required()
                                 ->rows(2),
                         ])
-                        ->action(fn($records, array $data) => $records->each(
-                            fn(User $record) => $record->inactivate($data['inactive_reason'])
+                        ->action(fn ($records, array $data) => $records->each(
+                            fn (User $record) => $record->inactivate($data['inactive_reason'])
                         ))
                         ->deselectRecordsAfterCompletion()
-                        ->visible(fn() => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
 
                     BulkAction::make('bulk_activate')
                         ->label('Reativar selecionados')
                         ->icon('fas-circle-check')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->action(fn($records) => $records->each(
-                            fn(User $record) => $record->activate()
+                        ->action(fn ($records) => $records->each(
+                            fn (User $record) => $record->activate()
                         ))
                         ->deselectRecordsAfterCompletion()
-                        ->visible(fn() => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
 
                     DeleteBulkAction::make()
-                        ->visible(fn() => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
 
                     ForceDeleteBulkAction::make()
-                        ->visible(fn() => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
 
                     RestoreBulkAction::make()
-                        ->visible(fn() => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
                 ]),
             ]);
     }

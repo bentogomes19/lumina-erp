@@ -6,12 +6,16 @@ use App\Filament\Resources\TeacherAssignments\TeacherAssignmentResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
-class ListTeacherAssignments extends ListRecords
-{
+class ListTeacherAssignments extends ListRecords {
+
     protected static string $resource = TeacherAssignmentResource::class;
 
-    protected function getHeaderActions(): array
-    {
+    /**
+     * Retorna as ações exibidas no cabeçalho.
+     *
+     * @return array
+     */
+    protected function getHeaderActions(): array {
         return [
             CreateAction::make(),
         ];

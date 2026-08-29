@@ -6,13 +6,17 @@ use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class UsersOverview extends StatsOverviewWidget
-{
-    protected function getStats(): array
-    {
-        $ativos    = User::where('active', true)->count();
-        $inativos  = User::where('active', false)->count();
-        $bloqueados = User::whereNotNull('locked_at')->count();
+class UsersOverview extends StatsOverviewWidget {
+
+    /**
+     * Retorna os totais de usuários por situação e perfil de acesso.
+     *
+     * @return array
+     */
+    protected function getStats(): array {
+        $ativos          = User::where('active', true)->count();
+        $inativos        = User::where('active', false)->count();
+        $bloqueados      = User::whereNotNull('locked_at')->count();
         $aguardandoTroca = User::where('force_password_change', true)->count();
 
         return [
@@ -32,7 +36,8 @@ class UsersOverview extends StatsOverviewWidget
                 ->color('danger')
                 ->icon('fas-shield-halved'),
 
-            Stat::make('Secretaria / Financeiro',
+            Stat::make(
+                'Secretaria / Financeiro',
                 User::role(['secretaria', 'financeiro'])->count()
             )
                 ->color('warning')

@@ -5,13 +5,18 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    public function up(): void
-    {
-        // Adiciona coluna status ao school_years
+return new class () extends Migration {
+
+    /**
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
+     */
+    public function up(): void {
+
+        /* Adiciona coluna status ao school_years. */
         Schema::table('school_years', function (Blueprint $table) {
-            if (! Schema::hasColumn('school_years', 'status')) {
+            if (!Schema::hasColumn('school_years', 'status')) {
                 $table->string('status', 20)
                     ->default('planejamento')
                     ->after('is_active')
@@ -19,15 +24,15 @@ return new class extends Migration
             }
         });
 
-        // Migra is_active => status
+        /* Migra is_active => status. */
         DB::statement("
             UPDATE school_years
             SET status = CASE WHEN is_active = 1 THEN 'ativo' ELSE 'planejamento' END
             WHERE status = 'planejamento'
         ");
 
-        // Cria tabela de períodos avaliativos
-        if (! Schema::hasTable('school_year_terms')) {
+        /* Cria tabela de períodos avaliativos. */
+        if (!Schema::hasTable('school_year_terms')) {
             Schema::create('school_year_terms', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('school_year_id')
@@ -55,8 +60,12 @@ return new class extends Migration
         }
     }
 
-    public function down(): void
-    {
+    /**
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
+     */
+    public function down(): void {
         Schema::dropIfExists('school_year_terms');
 
         Schema::table('school_years', function (Blueprint $table) {

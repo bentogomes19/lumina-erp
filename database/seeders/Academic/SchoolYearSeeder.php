@@ -6,13 +6,14 @@ use App\Models\SchoolYear;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
-class SchoolYearSeeder extends Seeder
-{
+class SchoolYearSeeder extends Seeder {
+
     /**
-     * Run the database seeds.
+     * Cria os anos e períodos letivos iniciais.
+     *
+     * @return void
      */
-    public function run(): void
-    {
+    public function run(): void {
         $years = [
             [
                 'year'      => 2024,
@@ -24,7 +25,7 @@ class SchoolYearSeeder extends Seeder
                 'year'      => 2025,
                 'starts_at' => Carbon::create(2025, 2, 1),
                 'ends_at'   => Carbon::create(2025, 12, 15),
-                'is_active' => true, // ano letivo atual
+                'is_active' => true, /* ano letivo atual. */
             ],
         ];
 

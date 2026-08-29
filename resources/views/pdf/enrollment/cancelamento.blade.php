@@ -7,7 +7,7 @@
 <body>
 <div class="page">
 
-    {{-- ── Cabeçalho ── --}}
+    {{-- Cabeçalho --}}
     <div class="header">
         <div class="header-top">
             <div>
@@ -21,13 +21,13 @@
         </div>
     </div>
 
-    {{-- ── Número de matrícula ── --}}
+    {{-- Número de matrícula --}}
     <div style="text-align:center; margin-bottom:16px;">
         <div style="font-size:8px; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; margin-bottom:4px;">Matrícula Cancelada</div>
         <div class="reg-number" style="color:#dc2626;">{{ $enrollment->registration_number }}</div>
     </div>
 
-    {{-- ── Dados do aluno ── --}}
+    {{-- Dados do aluno --}}
     <div class="info-box">
         <div class="info-box-title">Dados do Aluno</div>
         <div class="info-grid">
@@ -58,7 +58,7 @@
         </div>
     </div>
 
-    {{-- ── Dados do cancelamento ── --}}
+    {{-- Dados do cancelamento --}}
     <div class="danger-box">
         <div class="danger-box-title">Dados do Cancelamento</div>
         <div class="info-grid">
@@ -83,7 +83,7 @@
         </div>
     </div>
 
-    {{-- ── Declaração ── --}}
+    {{-- Declaração --}}
     <div class="decl-box">
         Por meio deste termo, declaramos que a matrícula do(a) aluno(a) identificado(a)
         acima foi formalmente cancelada nesta instituição de ensino, a partir da data
@@ -92,7 +92,7 @@
         somente pela equipe administrativa.
     </div>
 
-    {{-- ── Aviso de caráter irreversível ── --}}
+    {{-- Aviso de caráter irreversível --}}
     <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:8px 12px; margin-bottom:14px; font-size:8.5px; color:#dc2626;">
         <strong>Importante:</strong> Este cancelamento é de caráter definitivo.
         A reversão somente poderá ser realizada pelo perfil TI mediante justificativa
@@ -100,7 +100,7 @@
         imediatamente após o cancelamento.
     </div>
 
-    {{-- ── Assinaturas ── --}}
+    {{-- Assinaturas --}}
     <div class="signatures">
         <div class="sig-line">
             <div class="line"></div>
@@ -116,7 +116,7 @@
         </div>
     </div>
 
-    {{-- ── Rodapé ── --}}
+    {{-- Rodapé --}}
     <div class="seal">
         Documento gerado eletronicamente pelo Sistema de Gestão Escolar. Guarde uma cópia deste documento.<br>
         Operador: <strong>{{ $operator?->name ?? 'Sistema' }}</strong>

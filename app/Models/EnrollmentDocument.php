@@ -16,8 +16,8 @@ namespace App\Models;
  * @property string|null $arquivo_path
  * @property string|null $arquivo_nome_original
  */
-class EnrollmentDocument extends BaseModel
-{
+class EnrollmentDocument extends BaseModel {
+
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
      *
@@ -85,41 +85,46 @@ class EnrollmentDocument extends BaseModel
 
     /**
      * Retorna a matrícula vinculada ao documento.
+     *
+     * @return mixed
      */
-    public function enrollment()
-    {
+    public function enrollment() {
         return $this->belongsTo(Enrollment::class);
     }
 
     /**
      * Retorna o usuário que recebeu o documento.
+     *
+     * @return mixed
      */
-    public function recebidoPor()
-    {
+    public function recebidoPor() {
         return $this->belongsTo(User::class, 'recebido_por_user_id');
     }
 
     /**
      * Retorna o rótulo legível do tipo de documento.
+     *
+     * @return string
      */
-    public function tipoLabel(): string
-    {
+    public function tipoLabel(): string {
         return self::TIPOS[$this->tipo] ?? $this->tipo;
     }
 
     /**
      * Retorna o rótulo legível do status do documento.
+     *
+     * @return string
      */
-    public function statusLabel(): string
-    {
+    public function statusLabel(): string {
         return self::STATUS_OPTIONS[$this->status] ?? $this->status;
     }
 
     /**
      * Indica se o documento possui arquivo digital anexado.
+     *
+     * @return bool
      */
-    public function temArquivo(): bool
-    {
-        return ! empty($this->arquivo_path);
+    public function temArquivo(): bool {
+        return !empty($this->arquivo_path);
     }
 }

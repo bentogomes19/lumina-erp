@@ -6,55 +6,53 @@ use App\Enums\AcademicTitle;
 use App\Enums\TeacherRegime;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Teacher>
  */
-class TeacherFactory extends Factory
-{
+class TeacherFactory extends Factory {
+
     /**
-     * Define the model's default state.
+     * Retorna os dados padrão gerados pela fábrica.
      *
      * @return array<string, mixed>
      */
-    public function definition(): array
-    {
+    public function definition(): array {
         $academicTitle = $this->faker->randomElement(AcademicTitle::cases());
         $teacherRegime = $this->faker->randomElement(TeacherRegime::cases());
-        
-        $names = brazilian_names();
+
+        $names  = brazilian_names();
         $gender = $this->faker->randomElement(['M', 'F']);
-        
-        // Nome do professor baseado no gênero
-        $teacherName = $gender === 'F' 
+
+        /* Nome do professor baseado no gênero. */
+        $teacherName = $gender === 'F'
             ? $this->faker->randomElement($names['female'])
             : $this->faker->randomElement($names['male']);
-        
-        // Email realístico do professor
-        $emailUser = strtolower(str_replace(' ', '.', $this->removeAccents($teacherName)));
-        $domain = $this->faker->randomElement(email_domains());
+
+        /* Email realístico do professor. */
+        $emailUser    = strtolower(str_replace(' ', '.', $this->removeAccents($teacherName)));
+        $domain       = $this->faker->randomElement(email_domains());
         $teacherEmail = $emailUser . rand(1, 99) . '@' . $domain;
-        
-        // Qualificação realística
+
+        /* Qualificação realística. */
         $qualification = $this->faker->randomElement(teacher_qualifications());
-        
-        // Localização brasileira
-        $cities = brazilian_cities();
-        $state = $this->faker->randomElement(array_keys($cities));
-        $city = $this->faker->randomElement($cities[$state]);
-        $street = $this->faker->randomElement(brazilian_streets());
+
+        /* Localização brasileira. */
+        $cities   = brazilian_cities();
+        $state    = $this->faker->randomElement(array_keys($cities));
+        $city     = $this->faker->randomElement($cities[$state]);
+        $street   = $this->faker->randomElement(brazilian_streets());
         $district = $this->faker->randomElement(brazilian_districts());
-        
-        // Data de nascimento apropriada para professores (25 a 65 anos)
+
+        /* Data de nascimento apropriada para professores (25 a 65 anos) */
         $birthDate = $this->faker->dateTimeBetween('-65 years', '-25 years')->format('Y-m-d');
-        
-        // Data de contratação realística (últimos 20 anos)
+
+        /* Data de contratação realística (últimos 20 anos) */
         $hireDate = $this->faker->dateTimeBetween('-20 years', '-1 month')->format('Y-m-d');
-        
-        // Bio profissional realística
+
+        /* Bio profissional realística. */
         $yearsExperience = $this->faker->numberBetween(2, 30);
-        $bio = "Professor(a) com {$yearsExperience} anos de experiência na área de educação. " .
+        $bio             = "Professor(a) com {$yearsExperience} anos de experiência na área de educação. " .
                "Especializado(a) em metodologias ativas e ensino personalizado.";
 
         return [
@@ -77,7 +75,7 @@ class TeacherFactory extends Factory
             'phone'            => brazilian_phone(false),
             'mobile'           => brazilian_phone(true),
             'bio'              => $bio,
-            'lattes_url'       => $this->faker->boolean(30) 
+            'lattes_url'       => $this->faker->boolean(30)
                 ? 'http://lattes.cnpq.br/' . $this->faker->numerify('################')
                 : null,
             'status'           => 'active',
@@ -89,12 +87,15 @@ class TeacherFactory extends Factory
             'address_zip'      => $this->faker->numerify('#####-###'),
         ];
     }
-    
+
     /**
-     * Remove acentos de uma string
+     * Remove acentos de uma string.
+     *
+     * @param string $string
+     *
+     * @return string
      */
-    private function removeAccents(string $string): string
-    {
+    private function removeAccents(string $string): string {
         $unwanted = [
             'á' => 'a', 'à' => 'a', 'ã' => 'a', 'â' => 'a', 'ä' => 'a',
             'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
@@ -103,7 +104,7 @@ class TeacherFactory extends Factory
             'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
             'ç' => 'c', 'ñ' => 'n',
         ];
-        
+
         return strtr($string, $unwanted);
     }
 }

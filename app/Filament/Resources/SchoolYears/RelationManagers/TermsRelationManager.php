@@ -18,16 +18,22 @@ use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 
-class TermsRelationManager extends RelationManager
-{
+class TermsRelationManager extends RelationManager {
+
     protected static string $relationship = 'terms';
 
-    protected static ?string $title = 'Períodos Avaliativos';
-    protected static ?string $modelLabel = 'Período';
+    protected static ?string $title            = 'Períodos Avaliativos';
+    protected static ?string $modelLabel       = 'Período';
     protected static ?string $pluralModelLabel = 'Períodos';
 
-    public function form(Schema $schema): Schema
-    {
+    /**
+     * Configura o formulário do recurso.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public function form(Schema $schema): Schema {
         return $schema->components([
             TextInput::make('name')
                 ->label('Nome')
@@ -73,8 +79,14 @@ class TermsRelationManager extends RelationManager
         ]);
     }
 
-    public function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('sequence')

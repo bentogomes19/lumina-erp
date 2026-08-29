@@ -2,58 +2,75 @@
 
 namespace App\Enums;
 
-enum AttendanceStatus: string
-{
+enum AttendanceStatus: string {
+
     case PRESENT = 'present';
-    case ABSENT = 'absent';
-    case LATE = 'late';
+    case ABSENT  = 'absent';
+    case LATE    = 'late';
     case EXCUSED = 'excused';
 
-    public function label(): string
-    {
+    /**
+     * Retorna o rótulo legível do status de frequência.
+     *
+     * @return string
+     */
+    public function label(): string {
         return match ($this) {
             self::PRESENT => 'Presente',
-            self::ABSENT => 'Ausente',
-            self::LATE => 'Atrasado',
+            self::ABSENT  => 'Ausente',
+            self::LATE    => 'Atrasado',
             self::EXCUSED => 'Falta Justificada',
         };
     }
 
-    public function color(): string
-    {
+    /**
+     * Retorna a cor usada para representar o status de frequência.
+     *
+     * @return string
+     */
+    public function color(): string {
         return match ($this) {
             self::PRESENT => 'success',
-            self::ABSENT => 'danger',
-            self::LATE => 'warning',
+            self::ABSENT  => 'danger',
+            self::LATE    => 'warning',
             self::EXCUSED => 'info',
         };
     }
 
-    public function icon(): string
-    {
+    /**
+     * Retorna o ícone usado para representar o status de frequência.
+     *
+     * @return string
+     */
+    public function icon(): string {
         return match ($this) {
             self::PRESENT => 'fas-circle-check',
-            self::ABSENT => 'fas-circle-xmark',
-            self::LATE => 'fas-clock',
+            self::ABSENT  => 'fas-circle-xmark',
+            self::LATE    => 'fas-clock',
             self::EXCUSED => 'fas-file-lines',
         };
     }
 
-    public static function options(): array
-    {
+    /**
+     * Retorna os status de frequência disponíveis para seleção.
+     *
+     * @return array
+     */
+    public static function options(): array {
         return [
             self::PRESENT->value => self::PRESENT->label(),
-            self::ABSENT->value => self::ABSENT->label(),
-            self::LATE->value => self::LATE->label(),
+            self::ABSENT->value  => self::ABSENT->label(),
+            self::LATE->value    => self::LATE->label(),
             self::EXCUSED->value => self::EXCUSED->label(),
         ];
     }
 
     /**
-     * Verificar se é uma presença válida (conta como presente)
+     * Determina se o status deve ser contabilizado como presença.
+     *
+     * @return bool
      */
-    public function countsAsPresent(): bool
-    {
+    public function countsAsPresent(): bool {
         return in_array($this, [self::PRESENT, self::LATE]);
     }
 }

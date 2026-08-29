@@ -7,8 +7,8 @@ use App\Enums\StudentStatus;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Student extends BaseModel
-{
+class Student extends BaseModel {
+
     use SoftDeletes;
 
     /**
@@ -70,66 +70,71 @@ class Student extends BaseModel
 
     /**
      * Retorna o usuário vinculado ao aluno.
+     *
+     * @return mixed
      */
-    public function user()
-    {
+    public function user() {
         return $this->belongsTo(User::class);
     }
 
     /**
      * Retorna alunos relacionados pela tabela de matrículas.
+     *
+     * @return mixed
      */
-    public function students()
-    {
+    public function students() {
         return $this->belongsToMany(
             Student::class,
             'enrollments',
-            'class_id',        // FK desta model na pivot
-            'student_id'       // FK do model relacionado na pivot
+            'class_id',        /* FK desta model na pivot. */
+            'student_id'       /* FK do model relacionado na pivot. */
         )
             ->withTimestamps();
     }
 
     /**
      * Retorna as matrículas do aluno.
+     *
+     * @return mixed
      */
-    public function enrollments()
-    {
+    public function enrollments() {
         return $this->hasMany(Enrollment::class);
     }
 
     /**
      * Retorna as turmas nas quais o aluno está matriculado.
+     *
+     * @return mixed
      */
-    public function classes()
-    {
+    public function classes() {
         return $this->belongsToMany(
             SchoolClass::class,
-            'enrollments',     // tabela pivot
-            'student_id',      // FK deste model na pivot
-            'class_id'         // FK do model relacionado na pivot (não "school_class_id")
+            'enrollments',     /* Tabela intermediária. */
+            'student_id',      /* Chave estrangeira deste modelo. */
+            'class_id'         /* Chave estrangeira da turma relacionada. */
         )
             ->withTimestamps();
-        // ->withPivot([...]) // se tiver colunas extras na pivot, liste aqui
     }
 
     /**
      * Retorna as notas do aluno.
+     *
+     * @return mixed
      */
-    public function grades()
-    {
+    public function grades() {
         return $this->hasMany(Grade::class);
     }
 
     /**
      * Define valores automáticos antes da criação do aluno.
+     *
+     * @return void
      */
-    protected static function booted()
-    {
+    protected static function booted() {
         static::creating(function ($s) {
             $s->fillUuidIfMissing();
 
-            // Gera matrícula se não enviada
+            /* Gera matrícula se não enviada. */
             if (empty($s->registration_number)) {
                 $s->registration_number = self::generateRegistrationNumber();
             }
@@ -138,10 +143,12 @@ class Student extends BaseModel
 
     /**
      * Gera um número de matrícula único para o aluno.
+     *
+     * @return string
      */
-    public static function generateRegistrationNumber(): string
-    {
-        // Formato: ALU-2025-000123 (evita colisão com loop)
+    public static function generateRegistrationNumber(): string {
+
+        /* Formato: ALU-2025-000123 */
         do {
             $code = 'ALU-' . now()->format('Y') . '-' . str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT);
         } while (self::where('registration_number', $code)->exists());
@@ -151,26 +158,34 @@ class Student extends BaseModel
 
     /**
      * Filtra alunos ativos.
+     *
+     * @param mixed $q
+     *
+     * @return mixed
      */
-    public function scopeActive($q)
-    {
+    public function scopeActive($q) {
         return $q->where('status', StudentStatus::ACTIVE->value);
     }
 
     /**
      * Filtra alunos pelo ano de matrícula.
+     *
+     * @param mixed $q
+     * @param int $year
+     *
+     * @return mixed
      */
-    public function scopeOfYear($q, int $year)
-    {
+    public function scopeOfYear($q, int $year) {
         return $q->whereYear('enrollment_date', $year);
     }
 
     /**
      * Retorna a idade calculada pela data de nascimento.
+     *
+     * @return int|null
      */
-    public function getAgeAttribute(): ?int
-    {
-        if (! $this->birth_date) {
+    public function getAgeAttribute(): ?int {
+        if (!$this->birth_date) {
             return null;
         }
 

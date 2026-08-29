@@ -276,7 +276,7 @@
                             id="teacher-profile-email"
                             type="email"
                             wire:model.defer="personalEmail"
-                            @if(! $canEdit) disabled @endif
+                            @if(!$canEdit) disabled @endif
                         />
                     </div>
                     <div>
@@ -285,7 +285,7 @@
                             id="teacher-profile-phone"
                             type="text"
                             wire:model.defer="phone"
-                            @if(! $canEdit) disabled @endif
+                            @if(!$canEdit) disabled @endif
                         />
                     </div>
                     <div>
@@ -294,7 +294,7 @@
                             id="teacher-profile-mobile"
                             type="text"
                             wire:model.defer="mobile"
-                            @if(! $canEdit) disabled @endif
+                            @if(!$canEdit) disabled @endif
                         />
                     </div>
                     <div>
@@ -304,7 +304,7 @@
                             type="file"
                             accept="image/*"
                             wire:model="avatarUpload"
-                            @if(! $canEdit) disabled @endif
+                            @if(!$canEdit) disabled @endif
                         />
                         <small>Formatos aceitos: JPG, PNG. Tamanho maximo 2MB.</small>
                     </div>

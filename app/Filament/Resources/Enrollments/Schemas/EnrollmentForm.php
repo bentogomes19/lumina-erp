@@ -16,14 +16,20 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Validation\Rule;
 
-class EnrollmentForm
-{
-    public static function configure(Schema $schema): Schema
-    {
+class EnrollmentForm {
+
+    /**
+     * Configura os campos do formulário de matrículas.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function configure(Schema $schema): Schema {
         return $schema
             ->components([
 
-                // ── Identificação da matrícula (somente edição) ────────────────
+                /* Identificação da matrícula (somente edição) */
                 Section::make('Identificação')
                     ->icon('fas-id-card')
                     ->columns(3)
@@ -43,7 +49,7 @@ class EnrollmentForm
                             ->columnSpan(2),
                     ]),
 
-                // ── Dados do aluno ─────────────────────────────────────────────
+                /* Dados do aluno. */
                 Section::make('Aluno')
                     ->icon('fas-user')
                     ->columns(2)
@@ -58,7 +64,8 @@ class EnrollmentForm
                             ->helperText('Somente 1 matrícula ativa por turma por período letivo.')
                             ->rule(function (Get $get, $record) {
                                 return Rule::unique('enrollments', 'student_id')
-                                    ->where(fn ($q) => $q
+                                    ->where(
+                                        fn ($q) => $q
                                         ->where('class_id', (int) $get('class_id'))
                                         ->whereIn('status', [
                                             EnrollmentStatus::ACTIVE->value,
@@ -83,7 +90,7 @@ class EnrollmentForm
                             ->visibleOn('edit'),
                     ]),
 
-                // ── Dados acadêmicos ───────────────────────────────────────────
+                /* Dados acadêmicos. */
                 Section::make('Dados Acadêmicos')
                     ->icon('fas-graduation-cap')
                     ->columns(2)
@@ -130,7 +137,7 @@ class EnrollmentForm
                             ->prefixIcon('fas-list'),
                     ]),
 
-                // ── Status ─────────────────────────────────────────────────────
+                /* Status. */
                 Section::make('Status')
                     ->icon('fas-signal')
                     ->schema([

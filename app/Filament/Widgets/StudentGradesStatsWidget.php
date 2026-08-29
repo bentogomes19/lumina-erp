@@ -7,16 +7,24 @@ use App\Models\Student;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class StudentGradesStatsWidget extends BaseWidget
-{
-    public static function canView(): bool
-    {
+class StudentGradesStatsWidget extends BaseWidget {
+
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
         return \App\Support\PermissionAccess::can('student.grades.view');
     }
 
-    protected function getStats(): array
-    {
-        $user = auth()->user();
+    /**
+     * Retorna a média, os extremos e o aproveitamento das notas do aluno.
+     *
+     * @return array
+     */
+    protected function getStats(): array {
+        $user    = auth()->user();
         $student = Student::where('user_id', $user->id)->first();
 
         if (!$student) {
@@ -25,18 +33,18 @@ class StudentGradesStatsWidget extends BaseWidget
 
         $grades = Grade::where('student_id', $student->id)->get();
 
-        // Calcula estatísticas
-        $totalGrades = $grades->count();
+        /* Calcula estatísticas. */
+        $totalGrades  = $grades->count();
         $averageScore = $grades->avg('score');
         $highestScore = $grades->max('score');
-        $lowestScore = $grades->min('score');
+        $lowestScore  = $grades->min('score');
 
-        // Conta quantas disciplinas o aluno está cursando
+        /* Conta quantas disciplinas o aluno está cursando. */
         $subjects = $grades->pluck('subject_id')->unique()->count();
 
-        // Verifica desempenho (considerando 7.0 como média mínima)
-        $passingGrades = $grades->filter(fn($grade) => $grade->score >= 7.0)->count();
-        $passingRate = $totalGrades > 0 ? round(($passingGrades / $totalGrades) * 100, 1) : 0;
+        /* Verifica desempenho (considerando 7.0 como média mínima) */
+        $passingGrades = $grades->filter(fn ($grade) => $grade->score >= 7.0)->count();
+        $passingRate   = $totalGrades > 0 ? round(($passingGrades / $totalGrades) * 100, 1) : 0;
 
         return [
             Stat::make('Média Geral', $averageScore ? number_format($averageScore, 2, ',', '.') : '-')
@@ -62,16 +70,20 @@ class StudentGradesStatsWidget extends BaseWidget
         ];
     }
 
-    protected function getScoresTrend(): array
-    {
-        $user = auth()->user();
+    /**
+     * Retorna a evolução das notas no período analisado.
+     *
+     * @return array
+     */
+    protected function getScoresTrend(): array {
+        $user    = auth()->user();
         $student = Student::where('user_id', $user->id)->first();
 
         if (!$student) {
             return [];
         }
 
-        // Pega as últimas 7 notas para mostrar tendência
+        /* Pega as últimas 7 notas para mostrar tendência. */
         $recentGrades = Grade::where('student_id', $student->id)
             ->orderBy('date_recorded', 'desc')
             ->limit(7)

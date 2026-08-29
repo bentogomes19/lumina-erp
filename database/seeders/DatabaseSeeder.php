@@ -19,37 +19,40 @@ use Database\Seeders\Users\TeacherSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class DatabaseSeeder extends Seeder
-{
+class DatabaseSeeder extends Seeder {
+
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Executa a carga inicial de dados da aplicação.
+     *
+     * @return void
      */
-    public function run(): void
-    {
-        // Dados de referência Fixo
+    public function run(): void {
+
+        /* Dados de referência Fixo. */
         $this->call([
             GradeLevelSeeder::class,
             SubjectSeeder::class,
             SchoolYearSeeder::class,
-            SchoolHolidaySeeder::class,  // NOVO: Criar feriados antes de gerar aulas
+            SchoolHolidaySeeder::class,  /* NOVO: Criar feriados antes de gerar aulas. */
             RolesPermissionsSeeder::class,
         ]);
-        // Usuários Básicos
+
+        /* Usuários Básicos. */
         $this->call([
             AdminUserSeeder::class,
             TeacherSeeder::class,
             StudentSeeder::class
         ]);
 
-        // Domínio Acadêmico
+        /* Domínio Acadêmico. */
         $this->call([
             SchoolClassSeeder::class,
             TeacherAssignmentSeeder::class,
             EnrollmentSeeder::class,
-            LessonSeeder::class,        // NOVO: Gerar aulas antes de registrar frequências
-            AttendanceSeeder::class,     // Registrar frequências baseadas nas aulas
+            LessonSeeder::class,        /* NOVO: Gerar aulas antes de registrar frequências. */
+            AttendanceSeeder::class,     /* Registrar frequências baseadas nas aulas. */
             GradeSeeder::class,
         ]);
     }

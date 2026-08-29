@@ -10,10 +10,16 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
-class RoleForm
-{
-    public static function configure(Schema $schema): Schema
-    {
+class RoleForm {
+
+    /**
+     * Configura os campos do formulário de perfis e permissões.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function configure(Schema $schema): Schema {
         return $schema
             ->components([
                 Section::make()

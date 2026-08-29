@@ -14,7 +14,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -23,16 +22,22 @@ use Filament\Tables\Table;
  * Gerencia o checklist de documentos vinculados à matrícula.
  * Permite registrar entrega, atualizar status e fazer upload digital.
  */
-class EnrollmentDocumentsRelationManager extends RelationManager
-{
+class EnrollmentDocumentsRelationManager extends RelationManager {
+
     protected static string $relationship = 'documents';
 
-    protected static ?string $title = 'Documentos';
-    protected static ?string $modelLabel = 'Documento';
+    protected static ?string $title            = 'Documentos';
+    protected static ?string $modelLabel       = 'Documento';
     protected static ?string $pluralModelLabel = 'Documentos';
 
-    public function form(Schema $schema): Schema
-    {
+    /**
+     * Configura o formulário do recurso.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public function form(Schema $schema): Schema {
         return $schema->components([
             Select::make('tipo')
                 ->label('Tipo de Documento')
@@ -66,7 +71,7 @@ class EnrollmentDocumentsRelationManager extends RelationManager
                 ->disk('private')
                 ->directory('enrollment-documents')
                 ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                ->maxSize(10240) // 10MB em KB
+                ->maxSize(10240) /* 10MB em KB. */
                 ->nullable()
                 ->storeFileNamesIn('arquivo_nome_original'),
 
@@ -77,8 +82,14 @@ class EnrollmentDocumentsRelationManager extends RelationManager
         ]);
     }
 
-    public function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('tipo')

@@ -7,7 +7,7 @@
 <body>
 <div class="page">
 
-    {{-- ── Cabeçalho ── --}}
+    {{-- Cabeçalho --}}
     <div class="header">
         <div class="header-top">
             <div>
@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    {{-- ── Dados do aluno ── --}}
+    {{-- Dados do aluno --}}
     <div class="info-box">
         <div class="info-box-title">Dados do Aluno</div>
         <div class="info-grid">
@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    {{-- ── Turma de origem ── --}}
+    {{-- Turma de origem --}}
     <div class="op-box">
         <div class="op-box-title">Dados da Transferência</div>
         <div class="info-grid">
@@ -91,14 +91,14 @@
         </div>
     </div>
 
-    {{-- ── Informação sobre notas/frequência ── --}}
+    {{-- Informação sobre notas/frequência --}}
     <div class="decl-box">
         As notas e frequências já registradas para o(a) aluno(a) no período atual foram mantidas
         e migradas para o novo vínculo de turma. O histórico completo permanece disponível
         para consulta pela secretaria.
     </div>
 
-    {{-- ── Declaração ── --}}
+    {{-- Declaração --}}
     <div class="decl-box">
         Declaramos que o(a) aluno(a) identificado(a) acima foi transferido(a) internamente
         conforme dados registrados no Sistema de Gestão Escolar.
@@ -106,7 +106,7 @@
         uma nova matrícula {{ $novaMatricula ? "({$novaMatricula->registration_number})" : '' }} foi gerada na turma de destino.
     </div>
 
-    {{-- ── Assinaturas ── --}}
+    {{-- Assinaturas --}}
     <div class="signatures">
         <div class="sig-line">
             <div class="line"></div>
@@ -122,7 +122,7 @@
         </div>
     </div>
 
-    {{-- ── Rodapé ── --}}
+    {{-- Rodapé --}}
     <div class="seal">
         Documento gerado eletronicamente pelo Sistema de Gestão Escolar.<br>
         Operador: <strong>{{ $operator?->name ?? 'Sistema' }}</strong>

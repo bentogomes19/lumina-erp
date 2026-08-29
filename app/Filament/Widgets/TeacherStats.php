@@ -5,19 +5,27 @@ namespace App\Filament\Widgets;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class TeacherStats extends BaseWidget
-{
-    protected ?string $heading = 'Visão Geral';
+class TeacherStats extends BaseWidget {
+
+    protected ?string $heading             = 'Visão Geral';
     protected int|string|array $columnSpan = 'full';
 
-    public static function canView(): bool
-    {
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
         return \App\Support\PermissionAccess::can('teacher.dashboard.view');
     }
 
-    protected function getStats(): array
-    {
-        $user = auth()->user();
+    /**
+     * Retorna os totais de turmas, disciplinas e alunos e a próxima avaliação do professor.
+     *
+     * @return array
+     */
+    protected function getStats(): array {
+        $user    = auth()->user();
         $teacher = $user?->teacher;
         if (!$teacher) {
             return [
@@ -28,18 +36,20 @@ class TeacherStats extends BaseWidget
             ];
         }
 
-        // Turmas e disciplinas a partir de teacher_assignments
+        /* Turmas e disciplinas a partir de teacher_assignments. */
         $classIds   = \App\Models\TeacherAssignment::where('teacher_id', $teacher->id)->pluck('class_id')->unique();
         $subjectIds = \App\Models\TeacherAssignment::where('teacher_id', $teacher->id)->pluck('subject_id')->unique();
 
-        // Total de alunos nas turmas do professor
+        /* Total de alunos nas turmas do professor. */
         $studentCount = \App\Models\Enrollment::whereIn('class_id', $classIds)->distinct('student_id')->count('student_id');
 
-        // Próxima avaliação
+        /* Próxima avaliação. */
         $nextAssessment = \App\Models\Assessment::query()
             ->whereIn('class_id', $classIds)
-            ->when(\Illuminate\Support\Facades\Schema::hasColumn('assessments','scheduled_at'),
-                fn($q) => $q->where('scheduled_at', '>=', now())->orderBy('scheduled_at'))
+            ->when(
+                \Illuminate\Support\Facades\Schema::hasColumn('assessments', 'scheduled_at'),
+                fn ($q) => $q->where('scheduled_at', '>=', now())->orderBy('scheduled_at')
+            )
             ->first();
 
         $nextLabel = $nextAssessment

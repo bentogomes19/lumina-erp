@@ -12,13 +12,19 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
  * Painel de contagem de matrículas por status para o ano letivo ativo.
  * Exibido no topo da listagem de matrículas.
  */
-class EnrollmentStatsWidget extends StatsOverviewWidget
-{
-    // Atualiza ao navegar para a página (sem polling automático)
+class EnrollmentStatsWidget extends StatsOverviewWidget {
+
+    /* Atualiza ao navegar para a página (sem polling automático) */
     protected ?string $pollingInterval = null;
 
+    /**
+     * Retorna as quantidades de matrículas agrupadas por status no ano letivo ativo.
+     *
+     * @return array
+     */
     protected function getStats(): array {
-        // Filtra pelo ano letivo ativo por padrão
+
+        /* Filtra pelo ano letivo ativo por padrão. */
         $activeYearId = SchoolYear::where('is_active', true)->value('id');
 
         $query = Enrollment::query();

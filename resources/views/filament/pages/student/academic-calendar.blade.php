@@ -28,7 +28,7 @@
             'period'      => ['label' => 'Período Letivo','color' => '#10b981', 'icon' => 'fas-graduation-cap'],
         ];
 
-        // Group list events by date
+        /* Agrupa os eventos da lista por data. */
         $groupedList = [];
         foreach ($listEvents as $ev) {
             $groupedList[$ev['date']][] = $ev;
@@ -36,7 +36,7 @@
         ksort($groupedList);
     @endphp
 
-    {{-- ── No class state ── --}}
+    {{-- Estado sem turma --}}
     @if(!$student || !$currentClass)
         <div class="ac-card" style="padding:3rem;text-align:center">
             <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
@@ -51,7 +51,7 @@
         </div>
     @else
 
-    {{-- ── Main layout ── --}}
+    {{-- Estrutura principal --}}
     <div
         x-data="{
             selectedEvent: null,
@@ -61,10 +61,10 @@
         style="display:flex;flex-direction:column;gap:1.25rem"
     >
 
-        {{-- ▸ Header bar --}}
+        {{-- Barra de cabeçalho --}}
         <div class="ac-card" style="padding:1rem 1.25rem">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem">
-                {{-- Class info --}}
+                {{-- Informações da turma --}}
                 <div style="display:flex;align-items:center;gap:0.875rem">
                     <div style="width:2.5rem;height:2.5rem;border-radius:0.625rem;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                         @svg('fas-calendar-days', '', ['style' => 'width:1.35rem;height:1.35rem;color:#f59e0b'])
@@ -106,7 +106,7 @@
             </div>
         </div>
 
-        {{-- ▸ Controls row: view tabs + nav + subject filter --}}
+        {{-- Controles de visualização, navegação e filtro de disciplina --}}
         <div class="ac-card" style="padding:0.75rem 1.25rem">
             <div class="ac-controls-row" style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap">
 
@@ -154,7 +154,7 @@
                     </button>
                 </div>
 
-                {{-- Subject filter --}}
+                {{-- Filtro de disciplina --}}
                 @if($subjects->isNotEmpty())
                     <select
                         wire:change="setSubjectFilter($event.target.value === '' ? null : parseInt($event.target.value))"
@@ -192,10 +192,10 @@
             </div>
         </div>
 
-        {{-- ▸ Main area + sidebar --}}
+        {{-- Área principal e barra lateral --}}
         <div class="ac-layout" style="display:flex;gap:1.25rem;align-items:flex-start">
 
-            {{-- ── Calendar panel ── --}}
+            {{-- Painel do calendário --}}
             <div style="flex:1;min-width:0">
 
                 {{-- MONTH VIEW --}}
@@ -208,7 +208,7 @@
                             @endforeach
                         </div>
 
-                        {{-- Calendar cells --}}
+                        {{-- Células do calendário --}}
                         <div class="ac-month-grid">
                             @foreach($grid as $cell)
                                 @if($cell['type'] === 'empty')
@@ -271,7 +271,7 @@
                                     if ($col['is_weekend']) $colClasses .= ' weekend';
                                 @endphp
                                 <div class="{{ $colClasses }}">
-                                    {{-- Day header --}}
+                                    {{-- Cabeçalho do dia --}}
                                     <div class="ac-week-day-header">
                                         <div style="font-size:0.625rem;font-weight:700;color:var(--ac-text-muted);text-transform:uppercase;letter-spacing:0.05em">
                                             {{ $dowNames[$col['dow']] }}
@@ -306,7 +306,7 @@
                         </div>
                     </div>
 
-                {{-- LIST VIEW --}}
+                {{-- Visualização em lista --}}
                 @else
                     <div class="ac-card" style="padding:1.25rem">
                         @if(empty($groupedList))
@@ -375,7 +375,7 @@
                     </div>
                 @endif
 
-                {{-- ▸ Legend --}}
+                {{-- Legend --}}
                 <div class="ac-card" style="padding:0.875rem 1.25rem;margin-top:1rem">
                     <div style="display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap">
                         <span style="font-size:0.6875rem;font-weight:700;color:var(--ac-text-muted);text-transform:uppercase;letter-spacing:0.05em">
@@ -395,7 +395,7 @@
                 </div>
             </div>
 
-            {{-- ── Upcoming events sidebar ── --}}
+            {{-- Barra lateral de próximos eventos --}}
             <div class="ac-sidebar ac-card" style="width:17rem;flex-shrink:0;padding:1.125rem">
                 <h3 style="font-size:0.8125rem;font-weight:700;color:var(--ac-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.875rem;display:flex;align-items:center;gap:0.5rem">
                     @svg('fas-bell', '', ['style' => 'width:0.875rem;height:0.875rem'])
@@ -444,7 +444,7 @@
             </div>
         </div>
 
-        {{-- ── Event detail modal (Alpine.js) ── --}}
+        {{-- Janela de detalhes do evento controlada pelo Alpine.js --}}
         <template x-if="selectedEvent !== null">
             <div
                 class="ac-modal-backdrop"
@@ -452,7 +452,7 @@
                 x-on:keydown.escape.window="closeEvent()"
             >
                 <div class="ac-modal" x-on:click.stop>
-                    {{-- Header --}}
+                    {{-- Cabeçalho --}}
                     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:1.125rem">
                         <div style="display:flex;align-items:flex-start;gap:0.875rem">
                             <div
@@ -496,7 +496,7 @@
                             </div>
                         </template>
 
-                        {{-- Subject --}}
+                        {{-- Disciplina --}}
                         <template x-if="selectedEvent.subject">
                             <div style="display:flex;align-items:center;gap:0.625rem;color:var(--ac-text-secondary)">
                                 @svg('fas-book-open', '', ['style' => 'width:1rem;height:1rem;flex-shrink:0;color:var(--ac-text-muted)'])
@@ -528,7 +528,7 @@
                             </div>
                         </template>
 
-                        {{-- Description --}}
+                        {{-- Descrição --}}
                         <template x-if="selectedEvent.description">
                             <div style="padding:0.75rem;background:var(--ac-cell-bg);border-radius:0.5rem;color:var(--ac-text-secondary);margin-top:0.25rem;border:1px solid var(--ac-cell-border)">
                                 <span x-text="selectedEvent.description"></span>
@@ -552,7 +552,7 @@
                         </div>
                     </div>
 
-                    {{-- Footer --}}
+                    {{-- Rodapé --}}
                     <div style="margin-top:1.25rem;padding-top:0.875rem;border-top:1px solid var(--ac-cell-border);display:flex;justify-content:flex-end">
                         <button
                             x-on:click="closeEvent()"

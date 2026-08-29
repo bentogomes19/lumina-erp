@@ -7,7 +7,7 @@
 <body>
 <div class="page">
 
-    {{-- ── Cabeçalho ── --}}
+    {{-- Cabeçalho --}}
     <div class="header">
         <div class="header-top">
             <div>
@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    {{-- ── Dados do aluno ── --}}
+    {{-- Dados do aluno --}}
     <div class="info-box">
         <div class="info-box-title">Dados do Aluno</div>
         <div class="info-grid">
@@ -60,7 +60,7 @@
         </div>
     </div>
 
-    {{-- ── Dados da transferência ── --}}
+    {{-- Dados da transferência --}}
     <div class="op-box">
         <div class="op-box-title">Dados da Transferência</div>
         <div class="info-grid">
@@ -79,7 +79,7 @@
         </div>
     </div>
 
-    {{-- ── Histórico de notas ── --}}
+    {{-- Histórico de notas --}}
     @if($historicoNotas->isNotEmpty())
     <div>
         <div class="doc-list-title" style="margin-bottom:6px;">Histórico de Desempenho — Ano Letivo {{ $enrollment->schoolYear?->year ?? now()->year }}</div>
@@ -102,7 +102,7 @@
     </div>
     @endif
 
-    {{-- ── Declaração formal ── --}}
+    {{-- Declaração formal --}}
     <div class="decl-box">
         Declaramos, para os devidos fins, que o(a) aluno(a) identificado(a) acima esteve
         regularmente matriculado(a) nesta instituição de ensino e se encontra em dia com
@@ -111,7 +111,7 @@
         solicitação formal da instituição de destino.
     </div>
 
-    {{-- ── Assinaturas ── --}}
+    {{-- Assinaturas --}}
     <div class="signatures">
         <div class="sig-line">
             <div class="line"></div>
@@ -123,7 +123,7 @@
         </div>
     </div>
 
-    {{-- ── Rodapé ── --}}
+    {{-- Rodapé --}}
     <div class="seal">
         Documento gerado eletronicamente pelo Sistema de Gestão Escolar. Válido com assinatura e carimbo da instituição.<br>
         Operador: <strong>{{ $operator?->name ?? 'Sistema' }}</strong>

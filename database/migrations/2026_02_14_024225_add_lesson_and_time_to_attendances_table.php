@@ -4,51 +4,54 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
+
     /**
-     * Run the migrations.
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
      */
-    public function up(): void
-    {
+    public function up(): void {
         Schema::table('attendances', function (Blueprint $table) {
-            // Adicionar referência à aula
+
+            /* Adicionar referência à aula. */
             $table->foreignId('lesson_id')
                 ->nullable()
                 ->after('subject_id')
                 ->constrained('lessons')
                 ->nullOnDelete();
-            
-            // Adicionar horário do registro de presença
+
+            /* Adicionar horário do registro de presença. */
             $table->time('time')
                 ->nullable()
                 ->after('date')
                 ->comment('Hora em que a presença foi registrada');
-            
-            // Observações adicionais
+
+            /* Observações adicionais. */
             $table->text('notes')
                 ->nullable()
                 ->after('status')
                 ->comment('Observações sobre a presença/falta');
-            
-            // Quem registrou a presença
+
+            /* Quem registrou a presença. */
             $table->foreignId('recorded_by')
                 ->nullable()
                 ->after('notes')
                 ->constrained('users')
                 ->nullOnDelete();
-            
-            // Índices
+
+            /* Índices. */
             $table->index('lesson_id');
             $table->index(['lesson_id', 'status']);
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
      */
-    public function down(): void
-    {
+    public function down(): void {
         Schema::table('attendances', function (Blueprint $table) {
             $table->dropForeign(['lesson_id']);
             $table->dropForeign(['recorded_by']);

@@ -3,9 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Attendance;
-use App\Models\SchoolClass;
 use App\Models\Student;
-use App\Models\Subject;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
@@ -19,22 +17,33 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
-class TeacherAttendanceWidget extends TableWidget
-{
-    protected static ?string $heading = 'Lançamento de Faltas';
+class TeacherAttendanceWidget extends TableWidget {
+
+    protected static ?string $heading      = 'Lançamento de Faltas';
     protected int|string|array $columnSpan = 'full';
 
-    public static function canView(): bool
-    {
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
         return \App\Support\PermissionAccess::can('teacher.attendance.create');
     }
 
-    public function table(Table $table): Table
-    {
-        // Professor logado
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
+
+        /* Professor logado. */
         $teacher = auth()->user()->teacher ?? null;
 
-        // Turma padrão: primeira turma do professor
+        /* Turma padrão: primeira turma do professor. */
         $defaultClassId = null;
         if ($teacher) {
             $defaultClassId = $teacher->classes()
@@ -43,7 +52,8 @@ class TeacherAttendanceWidget extends TableWidget
         }
 
         return $table
-            // Alunos com matrícula (enrollments)
+
+            /* Alunos com matrícula (enrollments) */
             ->query(function () use ($defaultClassId): Builder {
                 return Student::query()
                     ->join('enrollments', 'enrollments.student_id', '=', 'students.id')
@@ -53,11 +63,12 @@ class TeacherAttendanceWidget extends TableWidget
             })
 
             ->filters([
-                // TURMA – já vem com uma turma do professor selecionada
+
+                /* TURMA – já vem com uma turma do professor selecionada. */
                 SelectFilter::make('class_id')
                     ->label('Turma')
                     ->options(function () use ($teacher) {
-                        if (! $teacher) {
+                        if (!$teacher) {
                             return [];
                         }
 
@@ -67,25 +78,26 @@ class TeacherAttendanceWidget extends TableWidget
                     })
                     ->default($defaultClassId)
                     ->query(function (Builder $query, $state) use ($defaultClassId) {
-                        // normaliza possível array
+
+                        /* normaliza possível array. */
                         if (is_array($state)) {
                             $state = $state['value'] ?? reset($state);
                         }
 
                         $classId = $state ?: $defaultClassId;
 
-                        if (! $classId) {
+                        if (!$classId) {
                             return $query->whereRaw('1 = 0');
                         }
 
                         return $query->where('enrollments.class_id', $classId);
                     }),
 
-                // DISCIPLINA – opcional, só usada nos cálculos / gravação
+                /* DISCIPLINA – opcional, só usada nos cálculos / gravação. */
                 SelectFilter::make('subject_id')
                     ->label('Disciplina')
                     ->options(function () use ($teacher) {
-                        if (! $teacher) {
+                        if (!$teacher) {
                             return [];
                         }
 
@@ -94,10 +106,11 @@ class TeacherAttendanceWidget extends TableWidget
                             ->orderBy('subjects.name')
                             ->pluck('subjects.name', 'subjects.id');
                     })
-                    // disciplina não altera a query dos alunos, só o contexto de Attendance
+
+                    /* A disciplina altera apenas o contexto da frequência, sem modificar a consulta de alunos. */
                     ->query(fn (Builder $query, $state) => $query),
 
-                // DATA – para a chamada do dia
+                /* DATA – para a chamada do dia. */
                 Filter::make('date')
                     ->label('Data da aula')
                     ->form([
@@ -109,7 +122,8 @@ class TeacherAttendanceWidget extends TableWidget
                     ->default([
                         'value' => now()->toDateString(),
                     ])
-                    // 💡 Mostra o chip "Data: 27/10/2025" nos filtros ativos
+
+                    /* Mostra o chip "Data: 27/10/2025" nos filtros ativos. */
                     ->indicateUsing(function (array $data): ?string {
                         if (empty($data['value'])) {
                             return null;
@@ -119,7 +133,8 @@ class TeacherAttendanceWidget extends TableWidget
 
                         return "Data: {$date}";
                     })
-                    // opcional: mantém a query como está, só usa o filtro como "contexto"
+
+                    /* Mantém a consulta de alunos e usa o filtro apenas como contexto. */
                     ->query(function (Builder $query, array $data): Builder {
                         return $query;
                     }),
@@ -144,7 +159,7 @@ class TeacherAttendanceWidget extends TableWidget
                     ->state(function (Student $record) {
                         return Attendance::where('student_id', $record->id)
                             ->where('class_id', $record->enrollment_class_id)
-                            ->where('status', 'present') // ajuste se usar enum/const
+                            ->where('status', 'present') /* ajuste se usar enum/const. */
                             ->count();
                     }),
 
@@ -180,7 +195,7 @@ class TeacherAttendanceWidget extends TableWidget
                         return $freq . '%';
                     })
                     ->color(function ($state) {
-                        if (! $state) {
+                        if (!$state) {
                             return null;
                         }
 
@@ -200,9 +215,10 @@ class TeacherAttendanceWidget extends TableWidget
                     ->color('primary')
                     ->requiresConfirmation()
                     ->action(function (Collection $records) {
-                        // Aqui data é obrigatória
+
+                        /* Aqui data é obrigatória. */
                         $ctx = $this->resolveContext(true);
-                        if (! $ctx) {
+                        if (!$ctx) {
                             Notification::make()
                                 ->title('Selecione Turma, Data (e disciplina, se quiser) antes de salvar.')
                                 ->danger()
@@ -212,12 +228,12 @@ class TeacherAttendanceWidget extends TableWidget
 
                         $classId   = (int) $ctx['class_id'];
                         $date      = $ctx['date'];
-                        $subjectId = $ctx['subject_id']; // pode ser null
+                        $subjectId = $ctx['subject_id']; /* pode ser null. */
 
-                        // alunos selecionados → presentes
+                        /* alunos selecionados → presentes. */
                         $presentIds = $records->pluck('id')->all();
 
-                        // todos os alunos da turma (naquele momento)
+                        /* todos os alunos da turma (naquele momento) */
                         $allStudentsIds = Student::query()
                             ->join('enrollments', 'enrollments.student_id', '=', 'students.id')
                             ->where('enrollments.class_id', $classId)
@@ -226,7 +242,7 @@ class TeacherAttendanceWidget extends TableWidget
 
                         $absentIds = array_diff($allStudentsIds, $presentIds);
 
-                        // Presentes
+                        /* Presentes. */
                         foreach ($presentIds as $studentId) {
                             Attendance::updateOrCreate(
                                 [
@@ -239,7 +255,7 @@ class TeacherAttendanceWidget extends TableWidget
                             );
                         }
 
-                        // Faltas
+                        /* Faltas. */
                         foreach ($absentIds as $studentId) {
                             Attendance::updateOrCreate(
                                 [
@@ -268,17 +284,20 @@ class TeacherAttendanceWidget extends TableWidget
 
     /**
      * Lê os filtros e devolve:
-     *  - class_id (sempre)
-     *  - subject_id (pode ser null)
-     *  - date (pode ser null se $requireDate = false)
+     * - class_id (sempre)
+     * - subject_id (pode ser null)
+     * - date (pode ser null se $requireDate = false).
+     *
+     * @param bool $requireDate
+     *
+     * @return array|null
      */
-    protected function resolveContext(bool $requireDate = true): ?array
-    {
-        // ⚠️ Este método só é chamado dentro de callbacks da tabela
-        // (colunas / bulkActions), quando a tabela já foi inicializada.
+    protected function resolveContext(bool $requireDate = true): ?array {
+
+        /* Este método é chamado dentro das ações da tabela, após sua inicialização. */
         $filters = $this->getTableFiltersForm()->getState();
 
-        $classId   = $filters['class_id']   ?? null;
+        $classId   = $filters['class_id'] ?? null;
         $subjectId = $filters['subject_id'] ?? null;
         $dateRaw   = $filters['date']['value'] ?? null;
 
@@ -290,12 +309,12 @@ class TeacherAttendanceWidget extends TableWidget
             $subjectId = $subjectId['value'] ?? reset($subjectId);
         }
 
-        if (! $classId) {
+        if (!$classId) {
             return null;
         }
 
-        // quando só estamos calculando totais, a data pode ser opcional
-        if ($requireDate && ! $dateRaw) {
+        /* quando só estamos calculando totais, a data pode ser opcional. */
+        if ($requireDate && !$dateRaw) {
             return null;
         }
 

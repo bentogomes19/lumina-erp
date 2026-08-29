@@ -5,13 +5,18 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    public function up(): void
-    {
+return new class () extends Migration {
+
+    /**
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
+     */
+    public function up(): void {
         Schema::table('enrollments', function (Blueprint $table) {
-            // Adiciona school_year_id (nullable para não quebrar dados existentes)
-            if (! Schema::hasColumn('enrollments', 'school_year_id')) {
+
+            /* Adiciona school_year_id (nullable para não quebrar dados existentes) */
+            if (!Schema::hasColumn('enrollments', 'school_year_id')) {
                 $table->foreignId('school_year_id')
                     ->nullable()
                     ->after('class_id')
@@ -19,8 +24,8 @@ return new class extends Migration
                     ->nullOnDelete();
             }
 
-            // Adiciona registration_number: número único e imutável por matrícula
-            if (! Schema::hasColumn('enrollments', 'registration_number')) {
+            /* Adiciona registration_number: número único e imutável por matrícula. */
+            if (!Schema::hasColumn('enrollments', 'registration_number')) {
                 $table->string('registration_number', 20)
                     ->nullable()
                     ->unique()
@@ -28,13 +33,13 @@ return new class extends Migration
                     ->comment('Número de matrícula único e imutável gerado automaticamente');
             }
 
-            // Adiciona novos status ao enum existente
+            /* Adiciona novos status ao enum existente. */
             DB::statement("ALTER TABLE enrollments MODIFY COLUMN status ENUM(
                 'Ativa','Suspensa','Trancada','Transferida','Cancelada','Completa'
             ) NOT NULL DEFAULT 'Ativa'");
         });
 
-        // Preenche school_year_id a partir da turma para registros existentes
+        /* Preenche school_year_id a partir da turma para registros existentes. */
         DB::statement("
             UPDATE enrollments e
             INNER JOIN classes c ON c.id = e.class_id
@@ -43,7 +48,7 @@ return new class extends Migration
               AND c.school_year_id IS NOT NULL
         ");
 
-        // Gera registration_number para registros existentes sem ele
+        /* Gera registration_number para registros existentes sem ele. */
         $enrollments = DB::table('enrollments')->whereNull('registration_number')->orderBy('id')->get();
         foreach ($enrollments as $enrollment) {
             $year = DB::table('school_years')
@@ -57,8 +62,12 @@ return new class extends Migration
         }
     }
 
-    public function down(): void
-    {
+    /**
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
+     */
+    public function down(): void {
         Schema::table('enrollments', function (Blueprint $table) {
             if (Schema::hasColumn('enrollments', 'registration_number')) {
                 $table->dropUnique(['registration_number']);

@@ -15,38 +15,86 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class SubjectResource extends BaseAdminResource
-{
-    protected static ?string $model = Subject::class;
+class SubjectResource extends BaseAdminResource {
+
+    protected static ?string $model                         = Subject::class;
     protected static string|null|BackedEnum $navigationIcon = 'fas-book-open';
-    protected static ?int $navigationSort = 3;
-    protected static ?string $navigationLabel = 'Disciplinas';
-    protected static ?string $recordTitleAttribute = 'name';
-    protected static ?string $pluralModelLabel = 'Disciplinas';
-    protected static ?string $modelLabel = 'Disciplina';
+    protected static ?int $navigationSort                   = 3;
+    protected static ?string $navigationLabel               = 'Disciplinas';
+    protected static ?string $recordTitleAttribute          = 'name';
+    protected static ?string $pluralModelLabel              = 'Disciplinas';
+    protected static ?string $modelLabel                    = 'Disciplina';
 
-    protected static function viewPermission(): string   { return 'subjects.view'; }
-    protected static function createPermission(): string { return 'subjects.create'; }
-    protected static function editPermission(): string   { return 'subjects.edit'; }
-    protected static function deletePermission(): string { return 'subjects.delete'; }
+    /**
+     * Retorna o nome da permissão necessária para visualizar o recurso.
+     *
+     * @return string
+     */
+    protected static function viewPermission(): string {
+        return 'subjects.view';
+    }
+    /**
+     * Retorna a permissão necessária para criar registros do recurso.
+     *
+     * @return string
+     */
+    protected static function createPermission(): string {
+        return 'subjects.create';
+    }
+    /**
+     * Retorna o nome da permissão necessária para editar o recurso.
+     *
+     * @return string
+     */
+    protected static function editPermission(): string {
+        return 'subjects.edit';
+    }
+    /**
+     * Retorna a permissão necessária para excluir registros do recurso.
+     *
+     * @return string
+     */
+    protected static function deletePermission(): string {
+        return 'subjects.delete';
+    }
 
-    public static function form(Schema $schema): Schema
-    {
+    /**
+     * Configura o formulário do recurso.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function form(Schema $schema): Schema {
         return SubjectForm::configure($schema);
     }
 
-    public static function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function table(Table $table): Table {
         return SubjectsTable::configure($table);
     }
 
-    public static function getRelations(): array
-    {
+    /**
+     * Retorna os gerenciadores de relações do recurso.
+     *
+     * @return array
+     */
+    public static function getRelations(): array {
         return [];
     }
 
-    public static function getPages(): array
-    {
+    /**
+     * Retorna as páginas registradas no recurso.
+     *
+     * @return array
+     */
+    public static function getPages(): array {
         return [
             'index'  => ListSubjects::route('/'),
             'create' => CreateSubject::route('/create'),
@@ -54,24 +102,40 @@ class SubjectResource extends BaseAdminResource
         ];
     }
 
-    public static function getRecordRouteBindingEloquentQuery(): Builder
-    {
+    /**
+     * Retorna a consulta usada para carregar os registros.
+     *
+     * @return Builder
+     */
+    public static function getRecordRouteBindingEloquentQuery(): Builder {
         return parent::getRecordRouteBindingEloquentQuery()
             ->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
-    public static function getGloballySearchableAttributes(): array
-    {
+    /**
+     * Retorna os atributos disponíveis na pesquisa global.
+     *
+     * @return array
+     */
+    public static function getGloballySearchableAttributes(): array {
         return ['name', 'code', 'bncc_code'];
     }
 
-    public static function getNavigationBadge(): ?string
-    {
+    /**
+     * Retorna o indicador numérico exibido na navegação.
+     *
+     * @return string|null
+     */
+    public static function getNavigationBadge(): ?string {
         return (string) Subject::count();
     }
 
-    public static function getNavigationBadgeColor(): ?string
-    {
+    /**
+     * Retorna a cor do indicador numérico exibido na navegação.
+     *
+     * @return string|null
+     */
+    public static function getNavigationBadgeColor(): ?string {
         return 'primary';
     }
 }

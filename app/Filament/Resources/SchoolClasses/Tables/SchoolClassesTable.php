@@ -24,10 +24,16 @@ use Illuminate\Support\HtmlString;
 use Illuminate\Validation\Rules\Enum as EnumRule;
 use Illuminate\Support\Facades\DB;
 
-class SchoolClassesTable
-{
-    public static function configure(Table $table): Table
-    {
+class SchoolClassesTable {
+
+    /**
+     * Configura as colunas, os filtros e as ações da tabela de turmas.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function configure(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('code')
@@ -50,10 +56,10 @@ class SchoolClassesTable
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state?->label() ?? '—')
                     ->color(fn ($state) => match ($state) {
-                        ClassShift::MORNING => 'success',
+                        ClassShift::MORNING   => 'success',
                         ClassShift::AFTERNOON => 'warning',
-                        ClassShift::EVENING => 'info',
-                        default => 'gray',
+                        ClassShift::EVENING   => 'info',
+                        default               => 'gray',
                     }),
 
                 TextColumn::make('type')
@@ -66,10 +72,10 @@ class SchoolClassesTable
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state?->label() ?? '—')
                     ->color(fn ($state) => match ($state) {
-                        ClassStatus::OPEN => 'success',
-                        ClassStatus::CLOSED => 'danger',
+                        ClassStatus::OPEN     => 'success',
+                        ClassStatus::CLOSED   => 'danger',
                         ClassStatus::ARCHIVED => 'gray',
-                        default => 'secondary',
+                        default               => 'secondary',
                     }),
 
                 TextColumn::make('homeroomTeacher.name')->label('Professor Resp.')->toggleable(),
@@ -117,7 +123,8 @@ class SchoolClassesTable
                     ])
                     ->action(function (\App\Models\SchoolClass $record, array $data) {
                         DB::transaction(function () use ($record, $data) {
-                            // evita duplicidade
+
+                            /* evita duplicidade. */
                             $already = Enrollment::where([
                                 'class_id'   => $record->id,
                                 'student_id' => $data['student_id'],
@@ -147,7 +154,7 @@ class SchoolClassesTable
                         $badges = $record->subjects()
                             ->orderBy('name')
                             ->get()
-                            ->map(fn($s) => "<span class='fi-badge fi-color-primary' style='margin:2px;padding:4px 8px;border-radius:8px;display:inline-block'>{$s->code} — {$s->name}</span>")
+                            ->map(fn ($s) => "<span class='fi-badge fi-color-primary' style='margin:2px;padding:4px 8px;border-radius:8px;display:inline-block'>{$s->code} — {$s->name}</span>")
                             ->implode(' ');
                         return new HtmlString($badges ?: '<em>Sem disciplinas cadastradas.</em>');
                     })

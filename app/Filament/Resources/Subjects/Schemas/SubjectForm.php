@@ -11,10 +11,16 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Validation\Rules\Enum as EnumRule;
 
-class SubjectForm
-{
-    public static function configure(Schema $schema): Schema
-    {
+class SubjectForm {
+
+    /**
+     * Configura os campos do formulário de disciplinas.
+     *
+     * @param Schema $schema
+     *
+     * @return Schema
+     */
+    public static function configure(Schema $schema): Schema {
         return $schema
             ->components([
                 Section::make('Identificação')->schema([
@@ -34,7 +40,7 @@ class SubjectForm
                         ->label('Componente Curricular')
                         ->options(SubjectCategory::toArray())
                         ->required()
-                        ->rule(new EnumRule(SubjectCategory::class)), // ✅ valida enum
+                        ->rule(new EnumRule(SubjectCategory::class)), /* Valida a categoria da disciplina. */
 
                     Select::make('status')
                         ->label('Status')

@@ -12,12 +12,12 @@ class EnsureUserIsActive {
     /**
      * Derruba sessões já autenticadas quando o usuário for inativado ou bloqueado.
      *
-     * @param  Request $request
-     * @param  Closure $next
+     * @param Request $request
+     * @param Closure $next
      *
      * @return Response
      */
-    public function handle(Request $request, Closure $next): Response  {
+    public function handle(Request $request, Closure $next): Response {
         $guard = Filament::auth();
         $user  = $guard->user();
 

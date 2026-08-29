@@ -7,8 +7,8 @@ use App\Enums\TeacherRegime;
 use App\Enums\TeacherStatus;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Teacher extends BaseModel
-{
+class Teacher extends BaseModel {
+
     use SoftDeletes;
 
     /**
@@ -63,9 +63,10 @@ class Teacher extends BaseModel
 
     /**
      * Define UUID e status padrão antes da criação do professor.
+     *
+     * @return void
      */
-    protected static function booted(): void
-    {
+    protected static function booted(): void {
         static::creating(function (Teacher $model) {
             $model->fillUuidIfMissing();
             if (empty($model->status)) {
@@ -76,17 +77,19 @@ class Teacher extends BaseModel
 
     /**
      * Retorna o usuário vinculado ao professor.
+     *
+     * @return mixed
      */
-    public function user()
-    {
+    public function user() {
         return $this->belongsTo(User::class);
     }
 
     /**
      * Retorna as turmas atribuídas ao professor.
+     *
+     * @return mixed
      */
-    public function classes()
-    {
+    public function classes() {
         return $this->belongsToMany(SchoolClass::class, 'teacher_assignments', 'teacher_id', 'class_id')
             ->withPivot('subject_id')
             ->withTimestamps();
@@ -94,9 +97,10 @@ class Teacher extends BaseModel
 
     /**
      * Retorna as disciplinas atribuídas ao professor.
+     *
+     * @return mixed
      */
-    public function subjects()
-    {
+    public function subjects() {
         return $this->belongsToMany(Subject::class, 'teacher_assignments', 'teacher_id', 'subject_id')
             ->withPivot('class_id')
             ->withTimestamps();
@@ -104,25 +108,28 @@ class Teacher extends BaseModel
 
     /**
      * Retorna a carga horária semanal restante do professor.
+     *
+     * @return int|null
      */
-    public function remainingWeeklyWorkload(): ?int
-    {
+    public function remainingWeeklyWorkload(): ?int {
         return $this->weekly_workload;
     }
 
     /**
      * Retorna as atribuições do professor.
+     *
+     * @return mixed
      */
-    public function teacherAssignments()
-    {
+    public function teacherAssignments() {
         return $this->hasMany(TeacherAssignment::class);
     }
 
     /**
      * Retorna as atribuições do professor.
+     *
+     * @return mixed
      */
-    public function assignments()
-    {
+    public function assignments() {
         return $this->hasMany(TeacherAssignment::class);
     }
 }

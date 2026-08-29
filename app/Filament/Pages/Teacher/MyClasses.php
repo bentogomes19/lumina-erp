@@ -6,30 +6,38 @@ use App\Filament\Pages\Teacher\Concerns\HasTeacherPortalAccess;
 use App\Services\CurrentTeacherService;
 use Filament\Pages\Page;
 
-class MyClasses extends Page
-{
+class MyClasses extends Page {
+
     use HasTeacherPortalAccess;
 
-    protected static ?string $navigationLabel = 'Minhas Turmas';
-    protected static ?string $title = 'Minhas Turmas';
-    protected static ?string $slug = 'teacher-my-classes';
+    protected static ?string $navigationLabel                = 'Minhas Turmas';
+    protected static ?string $title                          = 'Minhas Turmas';
+    protected static ?string $slug                           = 'teacher-my-classes';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-chalkboard-user';
-    protected static ?int $navigationSort = 2;
-    protected static ?string $teacherPortalPermission = 'teacher.classes.view';
+    protected static ?int $navigationSort                    = 2;
+    protected static ?string $teacherPortalPermission        = 'teacher.classes.view';
 
-    public function getView(): string
-    {
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
+    public function getView(): string {
         return 'filament.pages.teacher.my-classes';
     }
 
-    public function getPageData(): array
-    {
+    /**
+     * Retorna os dados necessários para montar a página.
+     *
+     * @return array
+     */
+    public function getPageData(): array {
         $service = app(CurrentTeacherService::class);
         $teacher = $service->current();
 
-        if (! $teacher) {
+        if (!$teacher) {
             return [
-                'teacher' => null,
+                'teacher'     => null,
                 'assignments' => collect(),
             ];
         }
@@ -52,7 +60,7 @@ class MyClasses extends Page
         });
 
         return [
-            'teacher' => $teacher,
+            'teacher'     => $teacher,
             'assignments' => $assignments,
         ];
     }

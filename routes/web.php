@@ -8,8 +8,7 @@ Route::get('/', fn () => redirect()->route('filament.lumina.auth.login'));
 Route::get('/login', fn () => redirect()->route('filament.lumina.auth.login'))
     ->name('login');
 
-// ── PDFs de Matrículas ────────────────────────────────────────────────────────
-// A autorização de cada documento é aplicada pelo controller após o model binding.
+/* PDFs de matrículas: a autorização é aplicada pelo controller após o model binding. */
 Route::middleware(['auth'])->prefix('pdf/enrollment')->name('pdf.enrollment.')->group(function () {
     Route::get('{enrollment}/comprovante', [EnrollmentPdfController::class, 'comprovante'])->name('comprovante');
     Route::get('{enrollment}/transferencia-interna', [EnrollmentPdfController::class, 'transferenciaInterna'])->name('transferencia-interna');

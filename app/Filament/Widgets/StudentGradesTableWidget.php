@@ -2,13 +2,12 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\Term;
 use App\Models\Grade;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Collection;
 
-class StudentGradesTableWidget extends Widget
-{
+class StudentGradesTableWidget extends Widget {
+
     protected string $view = 'filament.widgets.student-grades-table';
 
     protected static ?string $heading = 'Minhas Notas';
@@ -18,41 +17,49 @@ class StudentGradesTableWidget extends Widget
     /** Bimestre selecionado no combobox (null = todos). */
     public ?string $selectedTerm = null;
 
-    public static function canView(): bool
-    {
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
         return \App\Support\PermissionAccess::can('student.grades.view');
     }
 
-    public function getViewData(): array
-    {
+    /**
+     * Retorna os dados enviados para a visualização da tabela de notas.
+     *
+     * @return array
+     */
+    public function getViewData(): array {
         $user = auth()->user();
 
         if (!$user || !$user->student) {
             return [
-                'gradesByTerm' => collect(),
+                'gradesByTerm'      => collect(),
                 'assessmentColumns' => [],
-                'termLabels' => [],
-                'termAverages' => [],
-                'availableTerms' => [],
+                'termLabels'        => [],
+                'termAverages'      => [],
+                'availableTerms'    => [],
             ];
         }
 
-        // Get current active class
+        /* Obtém a turma ativa atual. */
         $currentClass = $user->student->classes()
             ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
             ->first();
 
         if (!$currentClass) {
             return [
-                'gradesByTerm' => collect(),
+                'gradesByTerm'      => collect(),
                 'assessmentColumns' => [],
-                'termLabels' => [],
-                'termAverages' => [],
-                'availableTerms' => [],
+                'termLabels'        => [],
+                'termAverages'      => [],
+                'availableTerms'    => [],
             ];
         }
 
-        // Busca notas do aluno da turma atual (ano letivo ativo)
+        /* Busca notas do aluno da turma atual (ano letivo ativo) */
         $grades = Grade::query()
             ->where('student_id', $user->student->id)
             ->where('class_id', $currentClass->id)
@@ -62,24 +69,24 @@ class StudentGradesTableWidget extends Widget
             ->orderBy('sequence')
             ->get();
 
-        // Agrupa por bimestre
-        $gradesByTerm = new Collection();
+        /* Agrupa por bimestre. */
+        $gradesByTerm      = new Collection();
         $assessmentColumns = new Collection();
-        $termAverages = [];
+        $termAverages      = [];
 
         foreach ($grades->groupBy('term') as $term => $termGrades) {
             $disciplines = new Collection();
 
             foreach ($termGrades->groupBy('subject_id') as $subjectId => $subjectGrades) {
                 $subjectName = $subjectGrades->first()->subject->name ?? 'Desconhecida';
-                $className = $subjectGrades->first()->schoolClass->name ?? 'Desconhecida';
+                $className   = $subjectGrades->first()->schoolClass->name ?? 'Desconhecida';
 
-                // Organiza notas por sequência (prova)
+                /* Organiza notas por sequência (prova) */
                 $gradesBySequence = $subjectGrades->groupBy('sequence')->map(function ($seqGrades) {
-                    return $seqGrades->map(fn($g) => $g->score)->average();
+                    return $seqGrades->map(fn ($g) => $g->score)->average();
                 });
 
-                // Coleta todas as colunas de avaliação (provas únicas)
+                /* Coleta todas as colunas de avaliação (provas únicas) */
                 $subjectGrades->each(function ($grade) use ($assessmentColumns) {
                     $label = 'PROVA ' . $grade->sequence;
                     if (!$assessmentColumns->contains($label)) {
@@ -87,16 +94,16 @@ class StudentGradesTableWidget extends Widget
                     }
                 });
 
-                // Monta os dados da disciplina
+                /* Monta os dados da disciplina. */
                 $disciplineData = [
-                    'name' => $subjectName,
-                    'class' => $className,
-                    'grades' => [],
-                    'average' => $gradesBySequence->avg(),
+                    'name'     => $subjectName,
+                    'class'    => $className,
+                    'grades'   => [],
+                    'average'  => $gradesBySequence->avg(),
                     'lastDate' => $subjectGrades->max('date_recorded')?->format('d/m/Y'),
                 ];
 
-                // Preenche as notas por sequência
+                /* Preenche as notas por sequência. */
                 foreach ($gradesBySequence as $sequence => $score) {
                     $disciplineData['grades']['PROVA ' . $sequence] = $score;
                 }
@@ -104,13 +111,13 @@ class StudentGradesTableWidget extends Widget
                 $disciplines->put($subjectId, $disciplineData);
             }
 
-            // Calcula média do bimestre
-            $termAverages[$term] = $disciplines->map(fn($d) => $d['average'])->average();
+            /* Calcula média do bimestre. */
+            $termAverages[$term] = $disciplines->map(fn ($d) => $d['average'])->average();
 
             $gradesByTerm->put($term, $disciplines);
         }
 
-        // Termos (bimestres) para labels e combobox
+        /* Termos (bimestres) para labels e combobox. */
         $termLabels = [
             'b1' => '1º Bimestre',
             'b2' => '2º Bimestre',
@@ -118,23 +125,23 @@ class StudentGradesTableWidget extends Widget
             'b4' => '4º Bimestre',
         ];
 
-        // Se nenhum termo selecionado, usa o primeiro disponível para não deixar vazio
+        /* Se nenhum termo selecionado, usa o primeiro disponível para não deixar vazio. */
         if ($this->selectedTerm === null && $gradesByTerm->isNotEmpty()) {
             $this->selectedTerm = $gradesByTerm->keys()->first();
         }
 
-        // Filtra apenas o bimestre selecionado para exibição
+        /* Filtra apenas o bimestre selecionado para exibição. */
         $gradesByTermFiltered = $this->selectedTerm
             ? $gradesByTerm->only([$this->selectedTerm])
             : $gradesByTerm;
 
         return [
-            'gradesByTerm' => $gradesByTermFiltered,
-            'gradesByTermAll' => $gradesByTerm,
+            'gradesByTerm'      => $gradesByTermFiltered,
+            'gradesByTermAll'   => $gradesByTerm,
             'assessmentColumns' => $assessmentColumns->unique()->sort()->values(),
-            'termLabels' => $termLabels,
-            'termAverages' => $termAverages,
-            'availableTerms' => $gradesByTerm->keys()->values()->all(),
+            'termLabels'        => $termLabels,
+            'termAverages'      => $termAverages,
+            'availableTerms'    => $gradesByTerm->keys()->values()->all(),
         ];
     }
 }

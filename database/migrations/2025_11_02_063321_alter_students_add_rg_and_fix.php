@@ -4,37 +4,42 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class () extends Migration {
+
     /**
-     * Run the migrations.
+     * Aplica as alterações definidas pela migração.
+     *
+     * @return void
      */
-    public function up(): void
-    {
+    public function up(): void {
         Schema::table('students', function (Blueprint $t) {
-            if (! Schema::hasColumn('students', 'rg')) {
+            if (!Schema::hasColumn('students', 'rg')) {
                 $t->string('rg', 20)->nullable()->after('cpf');
             }
-            // estes já existem no seu projeto, mas deixo idempotentes por segurança:
-            if (! Schema::hasColumn('students', 'has_special_needs')) {
+
+            /* estes já existem no seu projeto, mas deixo idempotentes por segurança: */
+            if (!Schema::hasColumn('students', 'has_special_needs')) {
                 $t->boolean('has_special_needs')->default(false);
             }
-            if (! Schema::hasColumn('students', 'status_changed_at')) {
+            if (!Schema::hasColumn('students', 'status_changed_at')) {
                 $t->timestamp('status_changed_at')->nullable();
             }
-            if (! Schema::hasColumn('students', 'photo_url')) {
+            if (!Schema::hasColumn('students', 'photo_url')) {
                 $t->string('photo_url')->nullable();
             }
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Reverte as alterações realizadas pela migração.
+     *
+     * @return void
      */
-    public function down(): void
-    {
+    public function down(): void {
         Schema::table('students', function (Blueprint $t) {
-            if (Schema::hasColumn('students', 'rg')) $t->dropColumn('rg');
+            if (Schema::hasColumn('students', 'rg')) {
+                $t->dropColumn('rg');
+            }
         });
     }
 };

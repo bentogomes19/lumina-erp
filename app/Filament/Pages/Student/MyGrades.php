@@ -9,8 +9,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
 
-class MyGrades extends Page
-{
+class MyGrades extends Page {
+
     protected static string|null|\BackedEnum $navigationIcon = 'fas-chart-bar';
     protected static ?string $title                          = 'Minhas Notas';
     protected static ?string $navigationLabel                = 'Minhas Notas';
@@ -18,53 +18,84 @@ class MyGrades extends Page
 
     public string $selectedPeriod = 'all';
 
-    public static function shouldRegisterNavigation(): bool
-    {
+    /**
+     * Determina se a página deve ser registrada na navegação.
+     *
+     * @return bool
+     */
+    public static function shouldRegisterNavigation(): bool {
         return PermissionAccess::can('student.grades.view');
     }
 
-    public static function canAccess(): bool
-    {
+    /**
+     * Determina se o usuário atual pode acessar a página.
+     *
+     * @return bool
+     */
+    public static function canAccess(): bool {
         return PermissionAccess::can('student.grades.view');
     }
 
-    public function getView(): string
-    {
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
+    public function getView(): string {
         return 'filament.pages.student.my-grades';
     }
 
-    public function setPeriod(string $period): void
-    {
+    /**
+     * Define o período usado para filtrar os dados.
+     *
+     * @param string $period
+     *
+     * @return void
+     */
+    public function setPeriod(string $period): void {
         $this->selectedPeriod = $period;
     }
 
-    protected function getHeaderWidgets(): array
-    {
+    /**
+     * Retorna os widgets exibidos no cabeçalho da página.
+     *
+     * @return array
+     */
+    protected function getHeaderWidgets(): array {
         return [];
     }
 
-    protected function getFooterWidgets(): array
-    {
+    /**
+     * Retorna os widgets exibidos no rodapé da página.
+     *
+     * @return array
+     */
+    protected function getFooterWidgets(): array {
         return [];
     }
 
-    protected function getHeaderActions(): array
-    {
+    /**
+     * Retorna as ações exibidas no cabeçalho.
+     *
+     * @return array
+     */
+    protected function getHeaderActions(): array {
         return [
             Action::make('downloadReportCard')
                 ->label('Baixar Boletim (PDF)')
                 ->icon('fas-download')
                 ->color('success')
                 ->visible(fn () => PermissionAccess::can('student.report-card.download'))
-                ->action(fn() => $this->downloadReportCard()),
+                ->action(fn () => $this->downloadReportCard()),
         ];
     }
 
     /**
-     * Returns all data needed by the blade view.
+     * Retorna todos os dados necessários para o modelo Blade da página de notas.
+     *
+     * @return array
      */
-    public function getPageData(): array
-    {
+    public function getPageData(): array {
         $student = auth()->user()?->student;
 
         $empty = [
@@ -82,7 +113,7 @@ class MyGrades extends Page
         }
 
         $currentClass = $student->classes()
-            ->whereHas('schoolYear', fn($q) => $q->where('is_active', true))
+            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
             ->with(['schoolYear', 'gradeLevel'])
             ->first();
 
@@ -111,18 +142,18 @@ class MyGrades extends Page
             $subjects[] = array_merge(['subject' => $subject], $report);
         }
 
-        // Sort: failed → recovery → ongoing → approved
+        /* Ordena por reprovado, recuperação, cursando e aprovado. */
         $statusOrder = ['failed' => 0, 'recovery' => 1, 'ongoing' => 2, 'approved' => 3];
-        usort($subjects, fn($a, $b) => ($statusOrder[$a['status']] ?? 4) <=> ($statusOrder[$b['status']] ?? 4));
+        usort($subjects, fn ($a, $b) => ($statusOrder[$a['status']] ?? 4) <=> ($statusOrder[$b['status']] ?? 4));
 
         $col      = collect($subjects);
-        $averages = $col->pluck('overall_average')->filter(fn($v) => $v !== null);
+        $averages = $col->pluck('overall_average')->filter(fn ($v) => $v !== null);
 
         return [
-            'student'         => $student,
-            'currentClass'    => $currentClass,
-            'subjects'        => $subjects,
-            'stats'           => [
+            'student'      => $student,
+            'currentClass' => $currentClass,
+            'subjects'     => $subjects,
+            'stats'        => [
                 'total'    => $col->count(),
                 'approved' => $col->where('status', 'approved')->count(),
                 'recovery' => $col->where('status', 'recovery')->count(),
@@ -136,10 +167,14 @@ class MyGrades extends Page
         ];
     }
 
-    // ── Private ──────────────────────────────────────────────────────────────
+    /* Métodos privados. */
 
-    private function periodLabel(): string
-    {
+    /**
+     * Retorna o rótulo do período selecionado para as notas.
+     *
+     * @return string
+     */
+    private function periodLabel(): string {
         $year = now()->year;
 
         return match ($this->selectedPeriod) {
@@ -151,8 +186,12 @@ class MyGrades extends Page
         };
     }
 
-    private function downloadReportCard()
-    {
+    /**
+     * Gera o download do boletim escolar do aluno.
+     *
+     * @return mixed
+     */
+    private function downloadReportCard() {
         $data = $this->getPageData();
 
         if (!$data['student'] || !$data['currentClass']) {
@@ -168,7 +207,7 @@ class MyGrades extends Page
         ])->setPaper('a4', 'portrait');
 
         return response()->streamDownload(
-            fn() => print($pdf->stream()),
+            fn () => print($pdf->stream()),
             'boletim-' . $data['student']->registration_number . '.pdf'
         );
     }

@@ -9,10 +9,16 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class RolesTable
-{
-    public static function configure(Table $table): Table
-    {
+class RolesTable {
+
+    /**
+     * Configura as colunas, os filtros e as ações da tabela de perfis.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function configure(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('name')->label('Nome')->searchable()->sortable(),
@@ -25,7 +31,7 @@ class RolesTable
                 TextColumn::make('created_at')->label('Criado')->dateTime()->since(),
             ])
             ->filters([
-                //
+
             ])
             ->actions([
                 EditAction::make(),

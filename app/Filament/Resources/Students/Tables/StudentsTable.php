@@ -23,26 +23,34 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
-class StudentsTable
-{
-    public static function configure(Table $table): Table
-    {
+class StudentsTable {
+
+    /**
+     * Configura as colunas, os filtros e as ações da tabela de alunos.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public static function configure(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('registration_number')->label('Matrícula')->searchable()->copyable(),
                 TextColumn::make('name')->label('Nome')->searchable()->sortable(),
                 TextColumn::make('age')
                     ->label('Idade')
-                    ->getStateUsing(fn($record) => $record?->birth_date
+                    ->getStateUsing(
+                        fn ($record) => $record?->birth_date
                         ? Carbon::parse($record->birth_date)->age
                         : null
                     )
                     ->placeholder('—')
                     ->alignRight()
-                    // ordena por nascimento (mais novo/mais velho), mantendo nulos no fim
+
+                    /* ordena por nascimento (mais novo/mais velho), mantendo nulos no fim. */
                     ->sortable(query: function ($query, string $direction) {
                         return $query
-                            ->orderByRaw('birth_date IS NULL') // nulos por último
+                            ->orderByRaw('birth_date IS NULL') /* nulos por último. */
                             ->orderBy('birth_date', $direction === 'asc' ? 'desc' : 'asc');
                     }),
                 TextColumn::make('classes.name')->label('Turmas')->limit(20)->toggleable(),
@@ -51,14 +59,14 @@ class StudentsTable
                 BadgeColumn::make('status')
                     ->label('Status')
                     ->formatStateUsing(function ($state) {
-                        $value = $state instanceof BackedEnum ? $state->value : $state;   // enum ou string
+                        $value = $state instanceof BackedEnum ? $state->value : $state;   /* enum ou string. */
                         return StudentStatus::options()[$value] ?? '—';
                     })
                     ->colors([
-                        'success' => fn($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::ACTIVE->value,
-                        'warning' => fn($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::SUSPENDED->value,
-                        'info' => fn($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::GRADUATED->value,
-                        'gray' => fn($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::INACTIVE->value,
+                        'success' => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::ACTIVE->value,
+                        'warning' => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::SUSPENDED->value,
+                        'info'    => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::GRADUATED->value,
+                        'gray'    => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::INACTIVE->value,
                     ]),
                 TextColumn::make('enrollment_date')->label('Ingresso')->date()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -74,21 +82,21 @@ class StudentsTable
                 Action::make('criarUsuario')
                     ->label('Criar usuário')
                     ->icon('fas-user-plus')
-                    ->visible(fn($record) => !$record->user_id)
-                    ->modalHeading(fn($record) => "Criar usuário para {$record->name}")
+                    ->visible(fn ($record) => !$record->user_id)
+                    ->modalHeading(fn ($record) => "Criar usuário para {$record->name}")
                     ->form([
                         TextInput::make('name')
                             ->label('Nome')
-                            ->default(fn($record) => $record->name)
+                            ->default(fn ($record) => $record->name)
                             ->disabled()
                             ->dehydrated(false),
 
                         TextInput::make('email')
                             ->label('E-mail institucional (opcional)')
                             ->email()
-                            ->default(fn($record) => $record->email) // vem do aluno
+                            ->default(fn ($record) => $record->email) /* Usa o e-mail informado no cadastro do aluno. */
                             ->nullable()
-                            ->rule(Rule::unique('users', 'email')), // evita 'students.id <> ...'
+                            ->rule(Rule::unique('users', 'email')), /* Valida a unicidade na tabela de usuários. */
 
                         TextInput::make('password')
                             ->label('Senha')
@@ -108,7 +116,7 @@ class StudentsTable
 
                             $user = User::create([
                                 'name'     => $record->name,
-                                'email'    => $email, // usa o do aluno por padrão
+                                'email'    => $email, /* usa o do aluno por padrão. */
                                 'password' => Hash::make($data['password']),
                                 'active'   => true,
                             ]);
@@ -132,7 +140,7 @@ class StudentsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->action(function ($records) {
-                            $user = auth()->user();
+                            $user    = auth()->user();
                             $deleted = 0;
                             $blocked = 0;
                             foreach ($records as $student) {
@@ -171,7 +179,7 @@ class StudentsTable
                         ->action(function ($records, array $data) {
                             $status = $data['status'];
                             $records->each->update([
-                                'status' => $status,
+                                'status'            => $status,
                                 'status_changed_at' => now(),
                             ]);
 

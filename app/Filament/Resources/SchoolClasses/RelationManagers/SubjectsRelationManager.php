@@ -13,13 +13,19 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class SubjectsRelationManager extends RelationManager
-{
-    protected static string $relationship = 'subjects';
-    protected static ?string $title = 'Disciplinas da Turma';
+class SubjectsRelationManager extends RelationManager {
 
-    public function table(Table $table): Table
-    {
+    protected static string $relationship = 'subjects';
+    protected static ?string $title       = 'Disciplinas da Turma';
+
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
         return $table
             ->columns([
                 TextColumn::make('code')
@@ -42,14 +48,14 @@ class SubjectsRelationManager extends RelationManager
                     ->state(function ($record) {
                         $class = $this->getOwnerRecord();
 
-                        // teacherAssignments da turma filtrados pela disciplina atual
+                        /* teacherAssignments da turma filtrados pela disciplina atual. */
                         $assignments = $class->teacherAssignments()
                             ->where('subject_id', $record->id)
                             ->with('teacher')
                             ->get();
 
                         return $assignments
-                            ->map(fn($a) => $a->teacher?->name)
+                            ->map(fn ($a) => $a->teacher?->name)
                             ->filter()
                             ->join(', ');
                     })
@@ -72,7 +78,7 @@ class SubjectsRelationManager extends RelationManager
                         /** @var \App\Models\SchoolClass $class */
                         $class = $this->getOwnerRecord();
 
-                        // 🔍 Já existe professor para (turma, disciplina)?
+                        /* Já existe professor para (turma, disciplina)? */
                         $exists = TeacherAssignment::where('class_id', $class->id)
                             ->where('subject_id', $record->id)
                             ->exists();
@@ -87,7 +93,7 @@ class SubjectsRelationManager extends RelationManager
                             return;
                         }
 
-                        // Se não existe, cria o vínculo
+                        /* Se não existe, cria o vínculo. */
                         TeacherAssignment::create([
                             'class_id'   => $class->id,
                             'subject_id' => $record->id,
@@ -120,8 +126,7 @@ class SubjectsRelationManager extends RelationManager
                     ->using(function ($record, array $data) {
                         $class = $this->getOwnerRecord();
 
-                        // aqui pode trocar o professor livremente,
-                        // porque continua 1 disciplina / 1 turma / 1 professor
+                        /* aqui pode trocar o professor livremente, porque continua 1 disciplina / 1 turma / 1 professor. */
                         TeacherAssignment::updateOrCreate(
                             [
                                 'class_id'   => $class->id,

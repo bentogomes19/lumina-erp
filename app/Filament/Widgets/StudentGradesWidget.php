@@ -4,9 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\Term;
 use App\Models\Grade;
-use App\Models\Student;
 use App\Models\Subject;
-use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Columns\Summarizers\Average;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -15,20 +13,29 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
 
-class StudentGradesWidget extends TableWidget
-{
+class StudentGradesWidget extends TableWidget {
 
     protected static ?string $heading = 'Minhas Notas';
 
     protected int|string|array $columnSpan = 'full';
 
-    public static function canView(): bool
-    {
+    /**
+     * Determina se o widget pode ser exibido ao usuário autenticado.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
         return \App\Support\PermissionAccess::can('student.grades.view');
     }
 
-    public function table(Table $table): Table
-    {
+    /**
+     * Configura a tabela e suas ações.
+     *
+     * @param Table $table
+     *
+     * @return Table
+     */
+    public function table(Table $table): Table {
         return $table
             ->query(function (): Builder {
                 $user = auth()->user();
@@ -40,12 +47,12 @@ class StudentGradesWidget extends TableWidget
                 return Grade::query()
                     ->where('student_id', $user->student->id)
                     ->with(['subject', 'schoolClass'])
-                    ->orderBy('term')          // organiza por bimestre
-                    ->orderBy('subject_id')    // depois por disciplina
-                    ->orderBy('sequence');     // ordem da prova no bimestre
+                    ->orderBy('term')          /* organiza por bimestre. */
+                    ->orderBy('subject_id')    /* depois por disciplina. */
+                    ->orderBy('sequence');     /* ordem da prova no bimestre. */
             })
 
-            // AGRUPAMENTOS: 1º por bimestre, 2º por disciplina
+            /* AGRUPAMENTOS: 1º por bimestre, 2º por disciplina. */
             ->groups([
                 Group::make('term')
                     ->label('Bimestre')
@@ -55,10 +62,10 @@ class StudentGradesWidget extends TableWidget
                             : $record->term;
 
                         return match ($term) {
-                            'b1' => '1º Bimestre',
-                            'b2' => '2º Bimestre',
-                            'b3' => '3º Bimestre',
-                            'b4' => '4º Bimestre',
+                            'b1'    => '1º Bimestre',
+                            'b2'    => '2º Bimestre',
+                            'b3'    => '3º Bimestre',
+                            'b4'    => '4º Bimestre',
                             default => (string)$term,
                         };
                     }),
@@ -67,7 +74,8 @@ class StudentGradesWidget extends TableWidget
                     ->label('Disciplina'),
             ])
             ->columns([
-                // dentro da disciplina, cada linha é uma avaliação/prova
+
+                /* dentro da disciplina, cada linha é uma avaliação/prova. */
                 TextColumn::make('subject.name')
                     ->label('Disciplina')
                     ->toggleable()
@@ -80,25 +88,26 @@ class StudentGradesWidget extends TableWidget
 
                 TextColumn::make('sequence')
                     ->label('Prova')
-                    ->formatStateUsing(fn($state) => 'Prova ' . $state)
+                    ->formatStateUsing(fn ($state) => 'Prova ' . $state)
                     ->sortable(),
 
                 TextColumn::make('assessment_type')
                     ->label('Tipo')
                     ->formatStateUsing(function ($state) {
-                        // se for enum AssessmentType, pega value/label; se for string, usa direto
+
+                        /* se for enum AssessmentType, pega value/label; se for string, usa direto. */
                         $value = is_object($state) && method_exists($state, 'value')
                             ? $state->value
                             : $state;
 
                         return match ($value) {
-                            'test' => 'Prova',
-                            'quiz' => 'Quiz',
-                            'work' => 'Trabalho',
-                            'project' => 'Projeto',
+                            'test'          => 'Prova',
+                            'quiz'          => 'Quiz',
+                            'work'          => 'Trabalho',
+                            'project'       => 'Projeto',
                             'participation' => 'Participação',
-                            'recovery' => 'Recuperação',
-                            default => $value,
+                            'recovery'      => 'Recuperação',
+                            default         => $value,
                         };
                     })
                     ->badge(),
@@ -137,7 +146,8 @@ class StudentGradesWidget extends TableWidget
             ->filters([
                 SelectFilter::make('subject_id')
                     ->label('Disciplina')
-                    ->options(fn () => Subject::query()
+                    ->options(
+                        fn () => Subject::query()
                         ->orderBy('name')
                         ->pluck('name', 'id')
                         ->toArray()

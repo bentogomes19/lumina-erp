@@ -8,21 +8,23 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
-class AppServiceProvider extends ServiceProvider
-{
+class AppServiceProvider extends ServiceProvider {
+
     /**
-     * Register any application services.
+     * Registra os serviços gerais da aplicação.
+     *
+     * @return void
      */
-    public function register(): void
-    {
-        //
+    public function register(): void {
+
     }
 
     /**
-     * Bootstrap any application services.
+     * Inicializa os serviços gerais da aplicação.
+     *
+     * @return void
      */
-    public function boot(): void
-    {
+    public function boot(): void {
         app(\Spatie\Permission\PermissionRegistrar::class)
             ->setPermissionClass(Permission::class)
             ->setRoleClass(Role::class);

@@ -21,15 +21,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class TeacherAttendance extends Page {
+
     use HasTeacherPortalAccess;
 
-    protected static ?string $navigationLabel = 'Lançar Frequência';
-    protected static ?string $title = 'Lançar Frequência';
-    protected static ?string $slug = 'teacher-attendance';
+    protected static ?string $navigationLabel                = 'Lançar Frequência';
+    protected static ?string $title                          = 'Lançar Frequência';
+    protected static ?string $slug                           = 'teacher-attendance';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-user-check';
-    protected static string|null|\UnitEnum $navigationGroup = 'Portal do Professor';
-    protected static ?int $navigationSort = 6;
-    protected static ?string $teacherPortalPermission = 'teacher.attendance.view';
+    protected static string|null|\UnitEnum $navigationGroup  = 'Portal do Professor';
+    protected static ?int $navigationSort                    = 6;
+    protected static ?string $teacherPortalPermission        = 'teacher.attendance.view';
 
     public ?int $selectedClassId = null;
 
@@ -46,6 +47,11 @@ class TeacherAttendance extends Page {
 
     public ?array $saveSummary = null;
 
+    /**
+     * Inicializa o estado necessário para exibir a página.
+     *
+     * @return void
+     */
     public function mount(): void {
         $this->selectedDate = now()->toDateString();
 
@@ -59,26 +65,51 @@ class TeacherAttendance extends Page {
         $this->syncAttendanceRows();
     }
 
+    /**
+     * Atualiza as disciplinas e a chamada após a seleção de uma turma.
+     *
+     * @return void
+     */
     public function updatedSelectedClassId(): void {
         $this->selectedSubjectId = $this->firstAvailableSubjectId($this->selectedClassId);
-        $this->saveSummary = null;
+        $this->saveSummary       = null;
         $this->syncAttendanceRows();
     }
 
+    /**
+     * Atualiza a chamada após a seleção de uma disciplina.
+     *
+     * @return void
+     */
     public function updatedSelectedSubjectId(): void {
         $this->saveSummary = null;
         $this->syncAttendanceRows();
     }
 
+    /**
+     * Atualiza a frequência quando a data selecionada é alterada.
+     *
+     * @return void
+     */
     public function updatedSelectedDate(): void {
         $this->saveSummary = null;
         $this->syncAttendanceRows();
     }
 
+    /**
+     * Retorna o nome da visualização usada pela página.
+     *
+     * @return string
+     */
     public function getView(): string {
         return 'filament.pages.teacher.teacher-attendance';
     }
 
+    /**
+     * Retorna os dados necessários para montar a página.
+     *
+     * @return array
+     */
     public function getPageData(): array {
         $teacher     = $this->currentTeacher();
         $assignments = $this->teacherAssignments($teacher);
@@ -112,7 +143,7 @@ class TeacherAttendance extends Page {
         if ($context) {
             $students           = $this->buildStudents($context['class']->id, $context['subject']->id, $context['date']);
             $summary            = $this->buildSummary($students);
-            $hasExistingRecords = $students->contains(fn (array $row) => ! empty($row['attendance_id']));
+            $hasExistingRecords = $students->contains(fn (array $row) => !empty($row['attendance_id']));
             $schoolYearClosed   = $context['schoolYear']?->status === SchoolYearStatus::CLOSED;
         } elseif ($this->selectedClassId || $this->selectedSubjectId) {
             $contextError = 'A turma e a disciplina selecionadas precisam estar vinculadas ao seu cadastro.';
@@ -141,6 +172,11 @@ class TeacherAttendance extends Page {
         ];
     }
 
+    /**
+     * Salva os registros de frequência dos alunos.
+     *
+     * @return void
+     */
     public function saveAttendance(): void {
         $teacher     = $this->currentTeacher();
         $assignments = $this->teacherAssignments($teacher);
@@ -158,7 +194,7 @@ class TeacherAttendance extends Page {
         }
 
         $context = $this->resolveContext($teacher, $assignments, true);
-        if (! $context) {
+        if (!$context) {
             throw ValidationException::withMessages([
                 'class_id' => 'Selecione uma turma e uma disciplina vinculadas ao seu cadastro.',
             ]);
@@ -217,7 +253,7 @@ class TeacherAttendance extends Page {
                     continue;
                 }
 
-                if (! $canCreate) {
+                if (!$canCreate) {
                     throw ValidationException::withMessages(['teacher' => 'Você não tem permissão para criar frequência nova.',]);
                 }
 
@@ -235,7 +271,7 @@ class TeacherAttendance extends Page {
             'updated' => $updated,
             'total'   => $created + $updated,
             'present' => $students->filter(fn (array $row) => ($this->attendanceRows[$row['student_id']]['present'] ?? ($row['status'] === AttendanceStatus::PRESENT->value)))->count(),
-            'absent'  => $students->filter(fn (array $row) => ! ($this->attendanceRows[$row['student_id']]['present'] ?? ($row['status'] === AttendanceStatus::PRESENT->value)))->count(),
+            'absent'  => $students->filter(fn (array $row) => !($this->attendanceRows[$row['student_id']]['present'] ?? ($row['status'] === AttendanceStatus::PRESENT->value)))->count(),
         ];
 
         $this->syncAttendanceRows();
@@ -246,14 +282,33 @@ class TeacherAttendance extends Page {
             ->send();
     }
 
+    /**
+     * Retorna o professor autenticado no portal.
+     *
+     * @return Teacher|null
+     */
     private function currentTeacher(): ?Teacher {
         return app(CurrentTeacherService::class)->current();
     }
 
+    /**
+     * Retorna as atribuições do professor autenticado.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return Collection
+     */
     private function teacherAssignments(?Teacher $teacher = null): Collection {
         return app(CurrentTeacherService::class)->assignments($teacher);
     }
 
+    /**
+     * Determina se o professor está impedido de realizar lançamentos.
+     *
+     * @param Teacher|null $teacher
+     *
+     * @return bool
+     */
     private function teacherIsBlocked(?Teacher $teacher): bool {
         if (!$teacher) {
             return true;
@@ -266,8 +321,17 @@ class TeacherAttendance extends Page {
         ], true);
     }
 
+    /**
+     * Resolve a turma, a disciplina e o período usados na operação.
+     *
+     * @param Teacher|null $teacher
+     * @param Collection $assignments
+     * @param bool $strict
+     *
+     * @return array|null
+     */
     private function resolveContext(?Teacher $teacher, Collection $assignments, bool $strict = false): ?array {
-        if (!$teacher || $assignments->isEmpty() || ! $this->selectedClassId || !$this->selectedSubjectId || !$this->selectedDate) {
+        if (!$teacher || $assignments->isEmpty() || !$this->selectedClassId || !$this->selectedSubjectId || !$this->selectedDate) {
             return null;
         }
 
@@ -295,6 +359,15 @@ class TeacherAttendance extends Page {
         ];
     }
 
+    /**
+     * Monta os dados dos alunos usados nos lançamentos.
+     *
+     * @param int $classId
+     * @param int $subjectId
+     * @param string $date
+     *
+     * @return Collection
+     */
     private function buildStudents(int $classId, int $subjectId, string $date): Collection {
         $enrollments = Enrollment::query()
             ->where('class_id', $classId)
@@ -338,6 +411,11 @@ class TeacherAttendance extends Page {
         });
     }
 
+    /**
+     * Sincroniza as linhas de frequência com os alunos carregados.
+     *
+     * @return void
+     */
     private function syncAttendanceRows(): void {
         $teacher     = $this->currentTeacher();
         $assignments = $this->teacherAssignments($teacher);
@@ -359,6 +437,13 @@ class TeacherAttendance extends Page {
         })->all();
     }
 
+    /**
+     * Retorna as turmas disponíveis para o lançamento de frequência.
+     *
+     * @param Collection $assignments
+     *
+     * @return array
+     */
     private function classOptions(Collection $assignments): array {
         return $assignments
             ->pluck('schoolClass')
@@ -371,6 +456,14 @@ class TeacherAttendance extends Page {
             ->all();
     }
 
+    /**
+     * Retorna as disciplinas disponíveis na turma selecionada.
+     *
+     * @param Collection $assignments
+     * @param int|null $classId
+     *
+     * @return array
+     */
     private function subjectOptions(Collection $assignments, ?int $classId = null): array {
         $filtered = $assignments;
 
@@ -387,6 +480,13 @@ class TeacherAttendance extends Page {
             ->all();
     }
 
+    /**
+     * Retorna o identificador da primeira disciplina disponível.
+     *
+     * @param int|null $classId
+     *
+     * @return int|null
+     */
     private function firstAvailableSubjectId(?int $classId): ?int {
         if (!$classId) {
             return null;
@@ -400,6 +500,11 @@ class TeacherAttendance extends Page {
             ?->subject_id;
     }
 
+    /**
+     * Retorna os estados de frequência disponíveis para a chamada.
+     *
+     * @return array
+     */
     private function attendanceStatusOptions(): array {
         return [
             AttendanceStatus::PRESENT->value => AttendanceStatus::PRESENT->label(),
@@ -407,14 +512,28 @@ class TeacherAttendance extends Page {
         ];
     }
 
+    /**
+     * Retorna a cor usada para representar o status de frequência.
+     *
+     * @param string $status
+     *
+     * @return string
+     */
     private function attendanceStatusColor(string $status): string {
         return match ($status) {
             AttendanceStatus::PRESENT->value => 'success',
             AttendanceStatus::ABSENT->value  => 'danger',
-            default => 'gray',
+            default                          => 'gray',
         };
     }
 
+    /**
+     * Retorna o resumo calculado para exibição.
+     *
+     * @param array|Collection $students
+     *
+     * @return array
+     */
     private function buildSummary(array|Collection $students): array {
         $collection = collect($students);
 
@@ -425,6 +544,11 @@ class TeacherAttendance extends Page {
         ];
     }
 
+    /**
+     * Retorna a estrutura vazia do resumo.
+     *
+     * @return array
+     */
     private function emptySummary(): array {
         return [
             'total'   => 0,

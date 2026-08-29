@@ -8,12 +8,16 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
 
-class EditStudent extends EditRecord
-{
+class EditStudent extends EditRecord {
+
     protected static string $resource = StudentResource::class;
 
-    protected function getHeaderActions(): array
-    {
+    /**
+     * Retorna as ações exibidas no cabeçalho.
+     *
+     * @return array
+     */
+    protected function getHeaderActions(): array {
         return [
             DeleteAction::make()
                 ->visible(fn () => $this->record && auth()->user()?->can('delete', $this->record)),
