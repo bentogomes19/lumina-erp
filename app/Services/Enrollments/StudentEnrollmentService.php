@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\User;
+use App\Services\Auth\FirstAccessInvitationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -32,7 +33,7 @@ class StudentEnrollmentService {
         }
 
         try {
-            return DB::transaction(function () use ($data, $submissionToken): StudentEnrollmentResult {
+            $result = DB::transaction(function () use ($data, $submissionToken): StudentEnrollmentResult {
                 if ($result = $this->findResultBySubmissionToken($submissionToken)) {
                     return $result;
                 }
@@ -56,6 +57,19 @@ class StudentEnrollmentService {
 
                 return new StudentEnrollmentResult($enrollment, $userCreated);
             }, attempts: 3);
+
+            if ($result->userCreated) {
+                $user          = $result->enrollment->student()->firstOrFail()->user()->firstOrFail();
+                $invitationUrl = app(FirstAccessInvitationService::class)->issue($user);
+                $result        = new StudentEnrollmentResult(
+                    $result->enrollment,
+                    $result->userCreated,
+                    $result->replayed,
+                    $invitationUrl,
+                );
+            }
+
+            return $result;
         } catch (QueryException $exception) {
             if ($this->isSubmissionTokenCollision($exception)
                 && ($result = $this->findResultBySubmissionToken($submissionToken))) {
@@ -192,18 +206,19 @@ class StudentEnrollmentService {
         }
 
         $user = User::create([
-            'name'        => $student->name,
-            'email'       => $this->uniqueEmailFor($student),
-            'password'    => Hash::make(Str::random(12)),
-            'active'      => true,
-            'cpf'         => $student->cpf,
-            'birth_date'  => $student->birth_date,
-            'gender'      => $student->gender?->value ?? $student->gender,
-            'address'     => $student->address,
-            'city'        => $student->city,
-            'state'       => $student->state,
-            'postal_code' => $student->postal_code,
-            'cellphone'   => $student->phone_number,
+            'name'                  => $student->name,
+            'email'                 => $this->emailForAccess($student),
+            'password'              => Hash::make(Str::random(64)),
+            'active'                => true,
+            'force_password_change' => true,
+            'cpf'                   => $student->cpf,
+            'birth_date'            => $student->birth_date,
+            'gender'                => $student->gender?->value ?? $student->gender,
+            'address'               => $student->address,
+            'city'                  => $student->city,
+            'state'                 => $student->state,
+            'postal_code'           => $student->postal_code,
+            'cellphone'             => $student->phone_number,
         ]);
 
         $user->syncRoles([$role]);
@@ -214,25 +229,25 @@ class StudentEnrollmentService {
     }
 
     /**
-     * Gera um e-mail disponível para o novo usuário do aluno.
+     * Retorna o e-mail válido e exclusivo usado como login do aluno.
      *
      * @param Student $student
      *
      * @return string
      */
-    private function uniqueEmailFor(Student $student): string {
-        if ($student->email && !$this->emailExists($student->email)) {
-            return $student->email;
+    private function emailForAccess(Student $student): string {
+        $email = Str::lower(trim((string) $student->email));
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw ValidationException::withMessages([
+                'student_email' => 'Informe um e-mail válido para criar o acesso do aluno.',
+            ]);
         }
 
-        $base    = Str::slug($student->name) ?: 'aluno';
-        $domain  = config('app.domain') ?: 'escola.local';
-        $email   = "{$base}@{$domain}";
-        $counter = 1;
-
-        while ($this->emailExists($email)) {
-            $email = "{$base}+{$counter}@{$domain}";
-            $counter++;
+        if ($this->emailExists($email)) {
+            throw ValidationException::withMessages([
+                'student_email' => 'Este e-mail já está vinculado a outro usuário.',
+            ]);
         }
 
         return $email;
@@ -298,6 +313,12 @@ class StudentEnrollmentService {
         if (str_contains($message, 'students_cpf_unique') || str_contains($message, 'students.cpf')) {
             return ValidationException::withMessages([
                 'student_cpf' => 'Já existe um aluno cadastrado com este CPF.',
+            ]);
+        }
+
+        if (str_contains($message, 'users_email_unique') || str_contains($message, 'users.email')) {
+            return ValidationException::withMessages([
+                'student_email' => 'Este e-mail já está vinculado a outro usuário.',
             ]);
         }
 

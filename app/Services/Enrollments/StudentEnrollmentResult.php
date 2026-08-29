@@ -12,11 +12,13 @@ final readonly class StudentEnrollmentResult {
      * @param Enrollment $enrollment
      * @param bool $userCreated
      * @param bool $replayed
+     * @param string|null $invitationUrl
      */
     public function __construct(
         public Enrollment $enrollment,
         public bool $userCreated,
         public bool $replayed = false,
+        public ?string $invitationUrl = null,
     ) {
     }
 }

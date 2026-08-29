@@ -6,6 +6,7 @@ use App\Filament\Resources\Enrollments\EnrollmentResource;
 use App\Filament\Resources\Enrollments\Schemas\EnrollmentWizardSchema;
 use App\Services\Enrollments\StudentEnrollmentResult;
 use App\Services\Enrollments\StudentEnrollmentService;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord\Concerns\HasWizard;
 use Filament\Resources\Pages\CreateRecord;
@@ -68,9 +69,16 @@ class CreateEnrollment extends CreateRecord {
         }
 
         Notification::make()
-            ->title('Usuário criado para o aluno')
-            ->body('O aluno não possuía usuário de acesso. Foi criado um usuário. O aluno pode usar "Esqueci minha senha" para definir a senha.')
+            ->title('Usuário criado e convite enviado ao aluno')
+            ->body('O aluno deve usar o link descartável para definir a própria senha.')
+            ->actions([
+                Action::make('openInvitation')
+                    ->label('Abrir link do convite')
+                    ->url($this->enrollmentResult->invitationUrl)
+                    ->openUrlInNewTab(),
+            ])
             ->success()
+            ->duration(15000)
             ->send();
     }
 }

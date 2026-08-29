@@ -5,7 +5,11 @@ namespace App\Filament\Resources\Users\Pages;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Services\Auth\FirstAccessInvitationService;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class CreateUser extends CreateRecord {
@@ -23,6 +27,7 @@ class CreateUser extends CreateRecord {
         $data['force_password_change'] = $data['force_password_change'] ?? true;
         $data['login_attempts']        = 0;
         $data['locked_at']             = null;
+        $data['password']              = Hash::make(Str::random(64));
 
         return $data;
     }
@@ -58,6 +63,21 @@ class CreateUser extends CreateRecord {
                 'email'   => $this->record->email,
             ]);
         }
+
+        $url = app(FirstAccessInvitationService::class)->issue($this->record);
+
+        Notification::make()
+            ->title('Usuário criado e convite enviado')
+            ->body('O link é descartável e também pode ser entregue ao usuário por um canal seguro.')
+            ->actions([
+                Action::make('openInvitation')
+                    ->label('Abrir link do convite')
+                    ->url($url)
+                    ->openUrlInNewTab(),
+            ])
+            ->success()
+            ->duration(15000)
+            ->send();
     }
 
     /**

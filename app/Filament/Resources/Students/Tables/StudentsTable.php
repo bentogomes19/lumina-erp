@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Students\Tables;
 
 use App\Enums\StudentStatus;
 use App\Models\User;
+use App\Services\Auth\FirstAccessInvitationService;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -19,6 +20,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
@@ -92,33 +94,28 @@ class StudentsTable {
                             ->dehydrated(false),
 
                         TextInput::make('email')
-                            ->label('E-mail institucional (opcional)')
+                            ->label('E-mail de acesso')
                             ->email()
                             ->default(fn ($record) => $record->email) /* Usa o e-mail informado no cadastro do aluno. */
-                            ->nullable()
-                            ->rule(Rule::unique('users', 'email')), /* Valida a unicidade na tabela de usuários. */
-
-                        TextInput::make('password')
-                            ->label('Senha')
-                            ->password()
                             ->required()
-                            ->minLength(8),
+                            ->rule(Rule::unique('users', 'email')), /* Valida a unicidade na tabela de usuários. */
                     ])
                     ->action(function (\App\Models\Student $record, array $data) {
-                        DB::transaction(function () use ($record, $data) {
-                            $email = filled($data['email']) ? $data['email'] : $record->email;
+                        $user = DB::transaction(function () use ($record, $data): User {
+                            $email = $data['email'];
 
-                            if ($email && User::where('email', $email)->exists()) {
+                            if (User::withTrashed()->where('email', $email)->exists()) {
                                 throw ValidationException::withMessages([
                                     'email' => 'Este e-mail já está em uso por outro usuário.',
                                 ]);
                             }
 
                             $user = User::create([
-                                'name'     => $record->name,
-                                'email'    => $email, /* usa o do aluno por padrão. */
-                                'password' => Hash::make($data['password']),
-                                'active'   => true,
+                                'name'                  => $record->name,
+                                'email'                 => $email, /* Usa o e-mail do aluno por padrão. */
+                                'password'              => Hash::make(Str::random(64)),
+                                'active'                => true,
+                                'force_password_change' => true,
                             ]);
 
                             $user->syncRoles(['student']);
@@ -127,12 +124,23 @@ class StudentsTable {
                             }
 
                             $record->user()->associate($user)->save();
+
+                            return $user;
                         });
 
+                        $url = app(FirstAccessInvitationService::class)->issue($user);
+
                         Notification::make()
-                            ->title('Usuário criado com sucesso')
-                            ->body('O aluno agora tem acesso como “student”.')
+                            ->title('Usuário criado e convite enviado')
+                            ->body('O aluno deve usar o link descartável para definir a própria senha.')
+                            ->actions([
+                                Action::make('openInvitation')
+                                    ->label('Abrir link do convite')
+                                    ->url($url)
+                                    ->openUrlInNewTab(),
+                            ])
                             ->success()
+                            ->duration(15000)
                             ->send();
                     }),
             ])

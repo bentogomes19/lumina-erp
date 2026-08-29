@@ -235,24 +235,6 @@ class User extends Authenticatable implements FilamentUser {
     }
 
     /**
-     * Gera senha temporária, força troca no próximo acesso. Retorna a senha em texto para exibição ao administrador.
-     *
-     * @return string
-     */
-    public function resetToTemporaryPassword(): string {
-        $tempPassword = Str::upper(Str::random(3)).rand(10, 99).Str::random(3);
-
-        $this->updateQuietly([
-            'password'              => bcrypt($tempPassword),
-            'force_password_change' => true,
-            'login_attempts'        => 0,
-            'locked_at'             => null,
-        ]);
-
-        return $tempPassword;
-    }
-
-    /**
      * Retorna o aluno vinculado ao usuário.
      *
      * @return HasOne

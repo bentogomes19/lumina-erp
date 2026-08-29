@@ -56,17 +56,6 @@ class UserForm {
                         ->unique(table: 'users', column: 'email', ignoreRecord: true)
                         ->required(),
 
-                    TextInput::make('password')
-                        ->label('Senha')
-                        ->password()
-                        ->revealable()
-                        ->placeholder('Mínimo 8 caracteres')
-                        ->minLength(8)
-                        ->dehydrated(fn ($state) => filled($state))
-                        ->required(fn (string $context) => $context === 'create')
-                        ->helperText('Deixe em branco para manter a senha atual.')
-                        ->autocomplete('new-password'),
-
                     Select::make('role')
                         ->label('Perfil / Papel')
                         ->options(self::ROLE_LABELS)

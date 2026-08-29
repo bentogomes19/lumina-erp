@@ -14,6 +14,7 @@ use App\Services\Enrollments\StudentEnrollmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -38,6 +39,7 @@ class CreateEnrollmentTest extends TestCase {
 
         $this->assertTrue($result->userCreated);
         $this->assertFalse($result->replayed);
+        $this->assertNotNull($result->invitationUrl);
         $this->assertTrue($user->hasRole('student'));
         $this->assertSame(1, $enrollment->roll_number);
         $this->assertNotNull($enrollment->registration_number);
@@ -132,6 +134,57 @@ class CreateEnrollmentTest extends TestCase {
         $this->assertDatabaseCount('enrollments', 1);
         $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseCount('enrollment_logs', 1);
+    }
+
+    /**
+     * Verifica que a criação do acesso exige um e-mail válido para o aluno.
+     *
+     * @return void
+     */
+    public function test_student_access_requires_a_valid_email(): void {
+        $schoolClass = $this->schoolClass();
+        $this->createStudentRole();
+        $data                  = $this->newStudentData($schoolClass);
+        $data['student_email'] = null;
+
+        try {
+            $this->service()->create($data);
+            $this->fail('A matrícula sem e-mail de acesso deveria ser rejeitada.');
+        } catch (ValidationException $exception) {
+            $this->assertSame(
+                'Informe um e-mail válido para criar o acesso do aluno.',
+                $exception->errors()['student_email'][0],
+            );
+        }
+
+        $this->assertDatabaseCount('students', 0);
+        $this->assertDatabaseCount('enrollments', 0);
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    /**
+     * Verifica que um e-mail já vinculado gera uma mensagem objetiva e não deixa registros parciais.
+     *
+     * @return void
+     */
+    public function test_student_access_rejects_an_email_already_in_use(): void {
+        $schoolClass = $this->schoolClass();
+        $this->createStudentRole();
+        User::factory()->create(['email' => 'aluno.silva@example.test']);
+
+        try {
+            $this->service()->create($this->newStudentData($schoolClass));
+            $this->fail('A matrícula com e-mail duplicado deveria ser rejeitada.');
+        } catch (ValidationException $exception) {
+            $this->assertSame(
+                'Este e-mail já está vinculado a outro usuário.',
+                $exception->errors()['student_email'][0],
+            );
+        }
+
+        $this->assertDatabaseCount('students', 0);
+        $this->assertDatabaseCount('enrollments', 0);
+        $this->assertDatabaseCount('users', 1);
     }
 
     /**

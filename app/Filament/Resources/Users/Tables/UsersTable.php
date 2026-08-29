@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Tables;
 
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Models\User;
+use App\Services\Auth\FirstAccessInvitationService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -155,25 +156,53 @@ class UsersTable {
 
             ->recordActions([
 
-                /* Ação: Resetar Senha (gera senha temporária + force_password_change) */
-                Action::make('reset_password')
-                    ->label('Resetar Senha')
+                /* Envia um novo convite e revoga automaticamente qualquer link anterior. */
+                Action::make('send_first_access_invitation')
+                    ->label('Enviar/Reenviar convite')
                     ->icon('fas-key')
                     ->color('warning')
                     ->requiresConfirmation()
-                    ->modalHeading('Resetar senha do usuário')
-                    ->modalDescription('Uma senha temporária será gerada e o usuário será obrigado a trocá-la no próximo acesso.')
+                    ->modalHeading('Enviar convite de acesso')
+                    ->modalDescription('O link anterior será revogado. O novo convite expirará e poderá ser usado somente uma vez.')
                     ->action(function (User $record) {
-                        $tempPassword = $record->resetToTemporaryPassword();
+                        $url = app(FirstAccessInvitationService::class)->issue($record);
 
                         Notification::make()
-                            ->title('Senha redefinida')
-                            ->body("Senha temporária: **{$tempPassword}**\nEntregue ao usuário com segurança.")
+                            ->title('Convite enviado')
+                            ->body('O link foi enviado por e-mail e pode ser entregue ao usuário por um canal seguro.')
+                            ->actions([
+                                Action::make('openInvitation')
+                                    ->label('Abrir link do convite')
+                                    ->url($url)
+                                    ->openUrlInNewTab(),
+                            ])
                             ->success()
-                            ->persistent()
+                            ->duration(15000)
                             ->send();
                     })
-                    ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                    ->visible(fn (User $record) => !$record->trashed()
+                        && $record->active
+                        && !$record->is_locked
+                        && auth()->user()?->hasAnyRole(['admin', 'ti'])),
+
+                /* Revoga o link emitido sem liberar o acesso pendente do usuário. */
+                Action::make('revoke_first_access_invitation')
+                    ->label('Revogar convite')
+                    ->icon('fas-link-slash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Revogar convite de acesso')
+                    ->modalDescription('O link emitido deixará de funcionar. O usuário continuará sem acesso até receber um novo convite.')
+                    ->action(function (User $record) {
+                        app(FirstAccessInvitationService::class)->revoke($record);
+
+                        Notification::make()
+                            ->title('Convite revogado')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn (User $record) => $record->force_password_change
+                        && auth()->user()?->hasAnyRole(['admin', 'ti'])),
 
                 /* Ação: Desbloquear (somente TI/admin) */
                 Action::make('unlock')
