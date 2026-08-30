@@ -10,6 +10,7 @@ use App\Models\EnrollmentLog;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
 use App\Services\Enrollments\StudentEnrollmentService;
+use App\Support\PermissionAccess;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -593,7 +594,7 @@ class EnrollmentsTable {
                     ->color('warning')
                     ->visible(
                         fn (Enrollment $record) => $record->status === EnrollmentStatus::CANCELED
-                        && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                        && PermissionAccess::can('academic.enrollments.update')
                     )
                     ->modalHeading('Reverter Cancelamento — Perfil TI')
                     ->modalDescription('Ação restrita ao perfil TI. A matrícula voltará ao status Ativa.')
@@ -606,7 +607,7 @@ class EnrollmentsTable {
                     ->action(function (array $data, Enrollment $record): void {
 
                         /* Dupla verificação de autorização no backend. */
-                        if (!auth()->user()?->hasAnyRole(['admin', 'ti'])) {
+                        if (!PermissionAccess::can('academic.enrollments.update')) {
                             Notification::make()->title('Acesso negado')->danger()->send();
                             return;
                         }

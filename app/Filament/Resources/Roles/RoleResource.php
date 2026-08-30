@@ -30,7 +30,7 @@ class RoleResource extends BaseAdminResource {
      * @return string
      */
     protected static function viewPermission(): string {
-        return 'roles.view';
+        return 'system.roles.view_any';
     }
     /**
      * Retorna a permissão necessária para criar registros do recurso.
@@ -38,7 +38,7 @@ class RoleResource extends BaseAdminResource {
      * @return string
      */
     protected static function createPermission(): string {
-        return 'roles.create';
+        return 'system.roles.create';
     }
     /**
      * Retorna o nome da permissão necessária para editar o recurso.
@@ -46,7 +46,7 @@ class RoleResource extends BaseAdminResource {
      * @return string
      */
     protected static function editPermission(): string {
-        return 'roles.edit';
+        return 'system.roles.update';
     }
     /**
      * Retorna a permissão necessária para excluir registros do recurso.
@@ -54,7 +54,7 @@ class RoleResource extends BaseAdminResource {
      * @return string
      */
     protected static function deletePermission(): string {
-        return 'roles.delete';
+        return 'system.roles.delete';
     }
 
     /**

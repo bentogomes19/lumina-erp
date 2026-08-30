@@ -33,7 +33,7 @@ class UserResource extends BaseAdminResource {
      * @return string
      */
     protected static function viewPermission(): string {
-        return 'users.view';
+        return 'system.users.view_any';
     }
     /**
      * Retorna a permissão necessária para criar registros do recurso.
@@ -41,7 +41,7 @@ class UserResource extends BaseAdminResource {
      * @return string
      */
     protected static function createPermission(): string {
-        return 'users.create';
+        return 'system.users.create';
     }
     /**
      * Retorna o nome da permissão necessária para editar o recurso.
@@ -49,7 +49,7 @@ class UserResource extends BaseAdminResource {
      * @return string
      */
     protected static function editPermission(): string {
-        return 'users.edit';
+        return 'system.users.update';
     }
     /**
      * Retorna a permissão necessária para excluir registros do recurso.
@@ -57,7 +57,7 @@ class UserResource extends BaseAdminResource {
      * @return string
      */
     protected static function deletePermission(): string {
-        return 'users.delete';
+        return 'system.users.delete';
     }
 
     /**

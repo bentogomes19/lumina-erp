@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Enrollment;
 use App\Models\Grade;
+use App\Models\GradeLevel;
 use App\Models\Role;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
@@ -12,10 +13,16 @@ use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use App\Models\User;
-use App\Policies\AdminOnlyPolicy;
 use App\Policies\EnrollmentPolicy;
 use App\Policies\GradePolicy;
+use App\Policies\GradeLevelPolicy;
+use App\Policies\RolePolicy;
+use App\Policies\SchoolClassPolicy;
+use App\Policies\SchoolYearPolicy;
 use App\Policies\StudentPolicy;
+use App\Policies\SubjectPolicy;
+use App\Policies\TeacherAssignmentPolicy;
+use App\Policies\TeacherPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -23,16 +30,17 @@ class AuthServiceProvider extends ServiceProvider {
 
     protected $policies = [
         User::class              => UserPolicy::class,
-        Role::class              => AdminOnlyPolicy::class,
+        Role::class              => RolePolicy::class,
         Student::class           => StudentPolicy::class,
-        Teacher::class           => AdminOnlyPolicy::class,
-        Subject::class           => AdminOnlyPolicy::class,
-        SchoolYear::class        => AdminOnlyPolicy::class,
-        SchoolClass::class       => AdminOnlyPolicy::class,
+        Teacher::class           => TeacherPolicy::class,
+        Subject::class           => SubjectPolicy::class,
+        SchoolYear::class        => SchoolYearPolicy::class,
+        SchoolClass::class       => SchoolClassPolicy::class,
+        GradeLevel::class        => GradeLevelPolicy::class,
         Enrollment::class        => EnrollmentPolicy::class,
-        TeacherAssignment::class => AdminOnlyPolicy::class,
+        TeacherAssignment::class => TeacherAssignmentPolicy::class,
 
-        /* Exemplo com regras “own/self”. */
+        /* Política com escopo contextual de professor e aluno. */
         Grade::class => GradePolicy::class,
     ];
     /**
@@ -41,8 +49,6 @@ class AuthServiceProvider extends ServiceProvider {
      * @return void
      */
     public function register(): void {
-
-        /* usuário ele já automáticamente ele cadastre com o nome, senha. */
     }
 
     /**

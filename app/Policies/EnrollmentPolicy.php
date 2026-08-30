@@ -15,7 +15,7 @@ class EnrollmentPolicy {
      * @return bool
      */
     public function viewAny(User $user): bool {
-        return $user->hasRole('admin');
+        return $user->can('academic.enrollments.view_any');
     }
 
     /**
@@ -27,7 +27,7 @@ class EnrollmentPolicy {
      * @return bool
      */
     public function view(User $user, Enrollment $enrollment): bool {
-        return $user->hasRole('admin');
+        return $user->can('academic.enrollments.view');
     }
 
     /**
@@ -43,11 +43,12 @@ class EnrollmentPolicy {
             return false;
         }
 
-        if ($user->hasAnyRole(['admin', 'ti', 'secretaria', 'financeiro'])) {
+        if ($user->can('academic.enrollments.documents.view')) {
             return true;
         }
 
         return $user->hasRole('student')
+            && $user->can('student.documents.view')
             && $user->student()->whereKey($enrollment->student_id)->exists();
     }
 
@@ -59,7 +60,7 @@ class EnrollmentPolicy {
      * @return bool
      */
     public function create(User $user): bool {
-        return $user->hasRole('admin');
+        return $user->can('academic.enrollments.create');
     }
 
     /**
@@ -71,7 +72,7 @@ class EnrollmentPolicy {
      * @return bool
      */
     public function update(User $user, Enrollment $enrollment): bool {
-        return $user->hasRole('admin');
+        return $user->can('academic.enrollments.update');
     }
 
     /**
@@ -84,7 +85,7 @@ class EnrollmentPolicy {
      * @return bool
      */
     public function delete(User $user, Enrollment $enrollment): bool {
-        if (!$user->hasRole('admin')) {
+        if (!$user->can('academic.enrollments.cancel')) {
             return false;
         }
 

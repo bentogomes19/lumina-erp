@@ -4,6 +4,8 @@ namespace App\Filament\Pages\Admin;
 
 use App\Models\Permission;
 use App\Models\Role;
+use App\Support\PermissionAccess;
+use App\Support\PermissionCatalog;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -53,7 +55,7 @@ class PermissionMatrix extends Page {
      * @return bool
      */
     public static function canManagePermissions(): bool {
-        return auth()->user()?->hasAnyRole(['ti', 'admin', 'super_admin']) ?? false;
+        return PermissionAccess::can('system.permissions.manage');
     }
 
     /**
@@ -284,7 +286,7 @@ class PermissionMatrix extends Page {
      * @return void
      */
     private function ensureConfiguredPermissionsExist(): void {
-        foreach (config('lumina-permissions', []) as $permission) {
+        foreach (PermissionCatalog::all() as $permission) {
             Permission::firstOrCreate([
                 'name'       => $permission['name'],
                 'guard_name' => 'web',
@@ -328,34 +330,13 @@ class PermissionMatrix extends Page {
      * @return Collection
      */
     private function permissionCatalog(): Collection {
-        $configured = collect(config('lumina-permissions', []))
+        return PermissionCatalog::all()
             ->map(fn (array $permission) => array_merge([
                 'label'       => $this->humanizePermissionName($permission['name'] ?? ''),
                 'module'      => 'Sistema',
                 'type'        => $this->inferType($permission['name'] ?? ''),
                 'description' => null,
             ], $permission))
-            ->keyBy('name');
-
-        Permission::query()
-            ->orderBy('name')
-            ->pluck('name')
-            ->each(function (string $name) use ($configured): void {
-                if ($configured->has($name)) {
-                    return;
-                }
-
-                $configured->put($name, [
-                    'name'        => $name,
-                    'label'       => $this->humanizePermissionName($name),
-                    'module'      => $this->inferModule($name),
-                    'type'        => $this->inferType($name),
-                    'description' => 'Permissão existente mantida por compatibilidade.',
-                ]);
-            });
-
-        return $configured
-            ->values()
             ->sortBy([['module', 'asc'], ['label', 'asc']])
             ->values();
     }
@@ -487,7 +468,7 @@ class PermissionMatrix extends Page {
             'student'    => ['Portal do Aluno'],
             'teacher'    => ['Portal do Professor'],
             'secretaria' => ['Secretaria Acadêmica', 'Professores - Administrativo', 'Relatórios'],
-            'financeiro' => ['Financeiro'],
+            'financeiro' => ['Financeiro', 'Secretaria Acadêmica'],
             'responsavel', 'guardian' => ['Responsável'],
             'ti', 'admin', 'super_admin' => null,
             default => null,
@@ -562,9 +543,10 @@ class PermissionMatrix extends Page {
             'teacher' => (
                 in_array($module, ['Portal do Professor', 'Relatórios'], true)
                 && !Str::startsWith($permissionName, ['reports.academic.export', 'reports.students', 'reports.teachers'])
-            ) || Str::startsWith($permissionName, ['grades.view', 'grades.create', 'grades.edit']),
+            ),
             'financeiro' => in_array($module, ['Financeiro'], true)
                 || Str::startsWith($permissionName, ['reports.financial', 'financial.reports'])
+                || Str::startsWith($permissionName, ['academic.enrollments.'])
                 || ($module === 'Secretaria Acadêmica' && in_array($permission['type'] ?? null, ['view', 'view_any'], true)),
             'secretaria' => !in_array($module, ['Sistema', 'Financeiro', 'Portal do Professor', 'Portal do Aluno', 'Responsável'], true),
             'responsavel', 'guardian' => $module === 'Responsável',
@@ -600,21 +582,6 @@ class PermissionMatrix extends Page {
      * @return string
      */
     private function humanizePermissionName(string $name): string {
-        $legacyLabels = [
-            'grades.view.self'    => 'Ver minhas notas',
-            'subjects.view.self'  => 'Ver minhas disciplinas',
-            'grades.view.own'     => 'Ver notas lançadas',
-            'grades.create.own'   => 'Lançar notas',
-            'grades.update.own'   => 'Corrigir notas',
-            'attendance.mark.own' => 'Lançar frequência',
-            'classes.view.own'    => 'Ver minhas turmas',
-            'subjects.view.own'   => 'Ver minhas disciplinas',
-        ];
-
-        if (isset($legacyLabels[$name])) {
-            return $legacyLabels[$name];
-        }
-
         $translations = [
             'view_any' => 'Listar',
             'view'     => 'Visualizar',
@@ -641,40 +608,15 @@ class PermissionMatrix extends Page {
      * @return string
      */
     private function inferModule(string $name): string {
-        $legacyStudentPermissions = [
-            'grades.view.self',
-            'subjects.view.self',
-        ];
-
-        $legacyTeacherPermissions = [
-            'grades.view.own',
-            'grades.create.own',
-            'grades.update.own',
-            'attendance.mark.own',
-            'classes.view.own',
-            'subjects.view.own',
-        ];
-
-        if (in_array($name, $legacyStudentPermissions, true)) {
-            return 'Portal do Aluno';
-        }
-
-        if (in_array($name, $legacyTeacherPermissions, true)) {
-            return 'Portal do Professor';
-        }
-
         return match (true) {
-            Str::startsWith($name, 'student.')                                                                                          => 'Portal do Aluno',
-            Str::startsWith($name, 'teacher.')                                                                                          => 'Portal do Professor',
-            Str::startsWith($name, 'academic.')                                                                                         => 'Secretaria Acadêmica',
-            Str::startsWith($name, ['students.', 'enrollments.', 'classes.', 'subjects.', 'school_years.', 'grade_levels.', 'grades.']) => 'Secretaria Acadêmica',
-            Str::startsWith($name, ['teachers.', 'teacher_assignments.'])                                                               => 'Professores - Administrativo',
-            Str::startsWith($name, 'financial.')                                                                                        => 'Financeiro',
-            Str::startsWith($name, 'reports.')                                                                                          => 'Relatórios',
-            Str::startsWith($name, 'guardian.')                                                                                         => 'Responsável',
-            Str::startsWith($name, ['users.', 'roles.'])                                                                                => 'Sistema',
-            Str::startsWith($name, 'system.')                                                                                           => 'Sistema',
-            default                                                                                                                     => 'Sistema',
+            Str::startsWith($name, 'student.')  => 'Portal do Aluno',
+            Str::startsWith($name, 'teacher.')  => 'Portal do Professor',
+            Str::startsWith($name, 'academic.') => 'Secretaria Acadêmica',
+            Str::startsWith($name, 'admin.')    => 'Professores - Administrativo',
+            Str::startsWith($name, 'financial.') => 'Financeiro',
+            Str::startsWith($name, 'reports.')   => 'Relatórios',
+            Str::startsWith($name, 'guardian.')  => 'Responsável',
+            default                              => 'Sistema',
         };
     }
 

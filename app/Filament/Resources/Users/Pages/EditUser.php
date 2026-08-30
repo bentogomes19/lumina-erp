@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
 use App\Services\Auth\FirstAccessInvitationService;
+use App\Support\PermissionAccess;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -68,7 +69,7 @@ class EditUser extends EditRecord {
             ->visible(fn () => !$this->record->trashed()
                 && $this->record->active
                 && !$this->record->is_locked
-                && $this->isAdminOrTi());
+                && PermissionAccess::can('system.users.update'));
     }
 
     /**
@@ -92,7 +93,8 @@ class EditUser extends EditRecord {
                     ->success()
                     ->send();
             })
-            ->visible(fn () => $this->record->force_password_change && $this->isAdminOrTi());
+            ->visible(fn () => $this->record->force_password_change
+                && PermissionAccess::can('system.users.update'));
     }
 
     /**
@@ -111,7 +113,7 @@ class EditUser extends EditRecord {
                 Notification::make()->title('Usuário desbloqueado')->success()->send();
                 $this->refreshFormData(['locked_at', 'login_attempts']);
             })
-            ->visible(fn () => $this->record->locked_at && $this->isAdminOrTi());
+            ->visible(fn () => $this->record->locked_at && $this->canManageAccess());
     }
 
     /**
@@ -135,7 +137,7 @@ class EditUser extends EditRecord {
                 Notification::make()->title('Usuário inativado')->success()->send();
                 $this->refreshFormData(['active', 'inactive_reason']);
             })
-            ->visible(fn () => $this->record->active && $this->isAdminOrTi());
+            ->visible(fn () => $this->record->active && $this->canManageAccess());
     }
 
     /**
@@ -155,7 +157,7 @@ class EditUser extends EditRecord {
                 Notification::make()->title('Usuário reativado')->success()->send();
                 $this->refreshFormData(['active', 'locked_at', 'login_attempts', 'inactive_reason']);
             })
-            ->visible(fn () => !$this->record->active && $this->isAdminOrTi());
+            ->visible(fn () => !$this->record->active && $this->canManageAccess());
     }
 
     /**
@@ -163,8 +165,8 @@ class EditUser extends EditRecord {
      *
      * @return bool
      */
-    private function isAdminOrTi(): bool {
-        return (bool) auth()->user()?->hasAnyRole(['admin', 'ti']);
+    private function canManageAccess(): bool {
+        return PermissionAccess::can('system.users.block');
     }
 
     /**
@@ -177,7 +179,7 @@ class EditUser extends EditRecord {
     public function mount(int|string $record): void {
         parent::mount($record);
 
-        if (auth()->user()?->hasRole('secretaria') && !$this->isAdminOrTi()) {
+        if (!PermissionAccess::can('system.users.update')) {
             $this->redirect($this->getResource()::getUrl('index'));
         }
     }

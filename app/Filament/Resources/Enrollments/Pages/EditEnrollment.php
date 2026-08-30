@@ -9,6 +9,7 @@ use App\Models\Enrollment;
 use App\Models\EnrollmentLog;
 use App\Models\SchoolClass;
 use App\Services\Enrollments\StudentEnrollmentService;
+use App\Support\PermissionAccess;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
@@ -339,7 +340,7 @@ class EditEnrollment extends EditRecord {
                     ->color('warning')
                     ->visible(
                         fn () => $this->record->status === EnrollmentStatus::CANCELED
-                        && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                        && PermissionAccess::can('academic.enrollments.update')
                     )
                     ->modalHeading('Reverter Cancelamento — Perfil TI')
                     ->modalDescription('Ação restrita ao perfil TI. A matrícula voltará ao status Ativa.')
@@ -350,7 +351,7 @@ class EditEnrollment extends EditRecord {
                             ->rows(3),
                     ])
                     ->action(function (array $data): void {
-                        if (!auth()->user()?->hasAnyRole(['admin', 'ti'])) {
+                        if (!PermissionAccess::can('academic.enrollments.update')) {
                             Notification::make()->title('Acesso negado')->danger()->send();
                             return;
                         }

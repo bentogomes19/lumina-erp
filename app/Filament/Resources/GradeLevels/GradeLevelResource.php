@@ -31,7 +31,7 @@ class GradeLevelResource extends BaseAdminResource {
      * @return string
      */
     protected static function viewPermission(): string {
-        return 'grade_levels.view';
+        return 'academic.grade_levels.view_any';
     }
     /**
      * Retorna a permissão necessária para criar registros do recurso.
@@ -39,7 +39,7 @@ class GradeLevelResource extends BaseAdminResource {
      * @return string
      */
     protected static function createPermission(): string {
-        return 'grade_levels.create';
+        return 'academic.grade_levels.create';
     }
     /**
      * Retorna o nome da permissão necessária para editar o recurso.
@@ -47,7 +47,7 @@ class GradeLevelResource extends BaseAdminResource {
      * @return string
      */
     protected static function editPermission(): string {
-        return 'grade_levels.edit';
+        return 'academic.grade_levels.update';
     }
     /**
      * Retorna a permissão necessária para excluir registros do recurso.
@@ -55,7 +55,7 @@ class GradeLevelResource extends BaseAdminResource {
      * @return string
      */
     protected static function deletePermission(): string {
-        return 'grade_levels.delete';
+        return 'academic.grade_levels.delete';
     }
 
     /**

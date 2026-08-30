@@ -2,24 +2,13 @@
 
 namespace App\Filament\Resources;
 
+use App\Support\PermissionCatalog;
 use Filament\Resources\Resource;
 
 abstract class BaseAdminResource extends Resource {
 
-    /** Perfis com acesso ao painel administrativo */
-    public const ADMIN_ROLES = ['admin', 'ti', 'secretaria', 'financeiro'];
-
     /**
-     * Determina se o usuário autenticado possui algum perfil administrativo.
-     *
-     * @return bool
-     */
-    public static function isAdminUser(): bool {
-        return auth()->user()?->hasAnyRole(static::ADMIN_ROLES) ?? false;
-    }
-
-    /**
-     * Determina se o usuário possui a permissão informada ou acesso administrativo irrestrito.
+     * Determina se o usuário possui a permissão canônica informada.
      *
      * @param string $permission
      *
@@ -31,11 +20,7 @@ abstract class BaseAdminResource extends Resource {
             return false;
         }
 
-        /* TI e admin têm acesso irrestrito. */
-        if ($user->hasAnyRole(['admin', 'ti'])) {
-            return true;
-        }
-        return $user->can($permission);
+        return PermissionCatalog::contains($permission) && $user->can($permission);
     }
 
     /**
@@ -87,7 +72,7 @@ abstract class BaseAdminResource extends Resource {
         return static::canViewAny();
     }
 
-    /* Hooks para as subclasses sobrescreverem com a permissão do módulo. */
+    /* Permissões canônicas definidas pelas subclasses. */
     /**
      * Retorna o nome da permissão necessária para visualizar o recurso.
      *

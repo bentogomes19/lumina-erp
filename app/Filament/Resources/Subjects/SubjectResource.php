@@ -31,7 +31,7 @@ class SubjectResource extends BaseAdminResource {
      * @return string
      */
     protected static function viewPermission(): string {
-        return 'subjects.view';
+        return 'academic.subjects.view_any';
     }
     /**
      * Retorna a permissão necessária para criar registros do recurso.
@@ -39,7 +39,7 @@ class SubjectResource extends BaseAdminResource {
      * @return string
      */
     protected static function createPermission(): string {
-        return 'subjects.create';
+        return 'academic.subjects.create';
     }
     /**
      * Retorna o nome da permissão necessária para editar o recurso.
@@ -47,7 +47,7 @@ class SubjectResource extends BaseAdminResource {
      * @return string
      */
     protected static function editPermission(): string {
-        return 'subjects.edit';
+        return 'academic.subjects.update';
     }
     /**
      * Retorna a permissão necessária para excluir registros do recurso.
@@ -55,7 +55,7 @@ class SubjectResource extends BaseAdminResource {
      * @return string
      */
     protected static function deletePermission(): string {
-        return 'subjects.delete';
+        return 'academic.subjects.delete';
     }
 
     /**
