@@ -67,16 +67,26 @@ class SubjectsRelationManager extends RelationManager {
                     ->preloadRecordSelect()
                     ->recordSelectSearchColumns(['code', 'name'])
                     ->recordTitleAttribute('name')
-                    ->form([
+                    ->recordSelect(fn (Select $select): Select => $select
+                        ->label('Disciplina')
+                        ->placeholder('Selecione uma disciplina'))
+                    ->schema(fn (AttachAction $action): array => [
+                        $action->getRecordSelect(),
                         Select::make('teacher_id')
                             ->label('Professor')
                             ->options(fn () => Teacher::orderBy('name')->pluck('name', 'id'))
                             ->searchable()
-                            ->required(),
+                            ->nullable()
+                            ->placeholder('Atribuir depois, se necessário'),
                     ])
                     ->after(function ($record, array $data) {
                         /** @var \App\Models\SchoolClass $class */
                         $class = $this->getOwnerRecord();
+
+                        if (blank($data['teacher_id'] ?? null)) {
+                            return;
+                        }
+
                         $teacher = Teacher::findOrFail($data['teacher_id']);
 
                         app(TeacherOnboardingService::class)->createAssignment($teacher, [
