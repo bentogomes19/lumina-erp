@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\DashboardStats;
+use App\Support\PermissionAccess;
 use Filament\Pages\Page;
 
 class DashboardAdmin extends Page {
@@ -19,7 +20,7 @@ class DashboardAdmin extends Page {
      * @return bool
      */
     public static function shouldRegisterNavigation(): bool {
-        return auth()->check() && auth()->user()->hasRole('admin');
+        return PermissionAccess::can('system.dashboard.view');
     }
 
     /**
@@ -28,7 +29,7 @@ class DashboardAdmin extends Page {
      * @return bool
      */
     public static function canAccess(): bool {
-        return auth()->user()?->hasRole('admin') ?? false;
+        return PermissionAccess::can('system.dashboard.view');
     }
 
     /**

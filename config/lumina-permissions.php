@@ -208,6 +208,12 @@ return [
         'type' => 'view_any',
     ],
     [
+        'name' => 'academic.enrollments.view',
+        'label' => 'Visualizar matrícula',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'view',
+    ],
+    [
         'name' => 'academic.enrollments.create',
         'label' => 'Realizar matrícula',
         'module' => 'Secretaria Acadêmica',
@@ -226,10 +232,22 @@ return [
         'type' => 'cancel',
     ],
     [
+        'name' => 'academic.enrollments.documents.view',
+        'label' => 'Visualizar documentos da matrícula',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'view',
+    ],
+    [
         'name' => 'academic.classes.view_any',
         'label' => 'Listar turmas',
         'module' => 'Secretaria Acadêmica',
         'type' => 'view_any',
+    ],
+    [
+        'name' => 'academic.classes.view',
+        'label' => 'Visualizar turma',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'view',
     ],
     [
         'name' => 'academic.classes.create',
@@ -244,10 +262,22 @@ return [
         'type' => 'update',
     ],
     [
+        'name' => 'academic.classes.delete',
+        'label' => 'Excluir turma',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'delete',
+    ],
+    [
         'name' => 'academic.subjects.view_any',
         'label' => 'Listar disciplinas',
         'module' => 'Secretaria Acadêmica',
         'type' => 'view_any',
+    ],
+    [
+        'name' => 'academic.subjects.view',
+        'label' => 'Visualizar disciplina',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'view',
     ],
     [
         'name' => 'academic.subjects.create',
@@ -260,6 +290,102 @@ return [
         'label' => 'Editar disciplinas',
         'module' => 'Secretaria Acadêmica',
         'type' => 'update',
+    ],
+    [
+        'name' => 'academic.subjects.delete',
+        'label' => 'Excluir disciplina',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'delete',
+    ],
+    [
+        'name' => 'academic.grade_levels.view_any',
+        'label' => 'Listar séries e etapas',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'view_any',
+    ],
+    [
+        'name' => 'academic.grade_levels.view',
+        'label' => 'Visualizar série ou etapa',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'view',
+    ],
+    [
+        'name' => 'academic.grade_levels.create',
+        'label' => 'Criar série ou etapa',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'create',
+    ],
+    [
+        'name' => 'academic.grade_levels.update',
+        'label' => 'Editar série ou etapa',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'update',
+    ],
+    [
+        'name' => 'academic.grade_levels.delete',
+        'label' => 'Excluir série ou etapa',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'delete',
+    ],
+    [
+        'name' => 'academic.school_years.view_any',
+        'label' => 'Listar anos letivos',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'view_any',
+    ],
+    [
+        'name' => 'academic.school_years.view',
+        'label' => 'Visualizar ano letivo',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'view',
+    ],
+    [
+        'name' => 'academic.school_years.create',
+        'label' => 'Criar ano letivo',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'create',
+    ],
+    [
+        'name' => 'academic.school_years.update',
+        'label' => 'Editar ano letivo',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'update',
+    ],
+    [
+        'name' => 'academic.school_years.delete',
+        'label' => 'Excluir ano letivo',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'delete',
+    ],
+    [
+        'name' => 'academic.grades.view_any',
+        'label' => 'Listar notas',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'view_any',
+    ],
+    [
+        'name' => 'academic.grades.view',
+        'label' => 'Visualizar nota',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'view',
+    ],
+    [
+        'name' => 'academic.grades.create',
+        'label' => 'Criar nota administrativamente',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'create',
+    ],
+    [
+        'name' => 'academic.grades.update',
+        'label' => 'Editar nota administrativamente',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'update',
+    ],
+    [
+        'name' => 'academic.grades.delete',
+        'label' => 'Excluir nota administrativamente',
+        'module' => 'Secretaria Acadêmica',
+        'type' => 'delete',
     ],
     [
         'name' => 'academic.calendar.manage',
@@ -311,10 +437,34 @@ return [
         'type' => 'manage',
     ],
     [
-        'name' => 'admin.teachers.assignments.manage',
-        'label' => 'Gerenciar alocações do professor',
+        'name' => 'admin.teachers.assignments.view_any',
+        'label' => 'Listar alocações de professores',
         'module' => 'Professores - Administrativo',
-        'type' => 'manage',
+        'type' => 'view_any',
+    ],
+    [
+        'name' => 'admin.teachers.assignments.view',
+        'label' => 'Visualizar alocação de professor',
+        'module' => 'Professores - Administrativo',
+        'type' => 'view',
+    ],
+    [
+        'name' => 'admin.teachers.assignments.create',
+        'label' => 'Criar alocação de professor',
+        'module' => 'Professores - Administrativo',
+        'type' => 'create',
+    ],
+    [
+        'name' => 'admin.teachers.assignments.update',
+        'label' => 'Editar alocação de professor',
+        'module' => 'Professores - Administrativo',
+        'type' => 'update',
+    ],
+    [
+        'name' => 'admin.teachers.assignments.delete',
+        'label' => 'Excluir alocação de professor',
+        'module' => 'Professores - Administrativo',
+        'type' => 'delete',
     ],
     [
         'name' => 'admin.teachers.leaves.manage',
@@ -422,10 +572,22 @@ return [
     ],
 
     [
+        'name' => 'system.dashboard.view',
+        'label' => 'Acessar painel administrativo',
+        'module' => 'Sistema',
+        'type' => 'view',
+    ],
+    [
         'name' => 'system.users.view_any',
         'label' => 'Listar usuários',
         'module' => 'Sistema',
         'type' => 'view_any',
+    ],
+    [
+        'name' => 'system.users.view',
+        'label' => 'Visualizar usuário',
+        'module' => 'Sistema',
+        'type' => 'view',
     ],
     [
         'name' => 'system.users.create',
@@ -446,10 +608,22 @@ return [
         'type' => 'block',
     ],
     [
+        'name' => 'system.users.delete',
+        'label' => 'Excluir usuário',
+        'module' => 'Sistema',
+        'type' => 'delete',
+    ],
+    [
         'name' => 'system.roles.view_any',
         'label' => 'Listar perfis',
         'module' => 'Sistema',
         'type' => 'view_any',
+    ],
+    [
+        'name' => 'system.roles.view',
+        'label' => 'Visualizar perfil',
+        'module' => 'Sistema',
+        'type' => 'view',
     ],
     [
         'name' => 'system.roles.create',
@@ -462,6 +636,12 @@ return [
         'label' => 'Editar perfis',
         'module' => 'Sistema',
         'type' => 'update',
+    ],
+    [
+        'name' => 'system.roles.delete',
+        'label' => 'Excluir perfil',
+        'module' => 'Sistema',
+        'type' => 'delete',
     ],
     [
         'name' => 'system.permissions.manage',

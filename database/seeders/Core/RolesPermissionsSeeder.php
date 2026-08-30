@@ -2,128 +2,71 @@
 
 namespace Database\Seeders\Core;
 
+use App\Models\Permission;
+use App\Models\Role;
+use App\Support\PermissionCatalog;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Collection;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolesPermissionsSeeder extends Seeder {
 
-    private const MODULES = [
-        'grade_levels',
-        'school_years',
-        'teacher_assignments',
-        'roles',
-        'users',
-        'classes',
-        'students',
-        'teachers',
-        'subjects',
-        'grades',
-        'enrollments',
-    ];
-
-    private const ACTIONS = ['view', 'create', 'edit', 'delete', 'export'];
-
     /**
-     * Cria os perfis e as permissões iniciais do sistema.
+     * Cria os perfis e atribui exclusivamente permissões do catálogo canônico.
      *
      * @return void
      */
     public function run(): void {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        /* Gera permissões module.action. */
-        $allAdminPerms = [];
-        foreach (self::MODULES as $module) {
-            foreach (self::ACTIONS as $action) {
-                $perm = "{$module}.{$action}";
-                Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
-                $allAdminPerms[] = $perm;
-            }
+        $catalog = PermissionCatalog::all();
+        foreach ($catalog as $permission) {
+            Permission::firstOrCreate([
+                'name'       => $permission['name'],
+                'guard_name' => 'web',
+            ]);
         }
 
-        /* Permissões específicas de professor e aluno (mantidas por retrocompatibilidade) */
-        $legacyPerms = [
-            'grades.view.own', 'grades.create.own', 'grades.update.own',
-            'attendance.mark.own', 'classes.view.own', 'subjects.view.own',
-            'grades.view.self', 'subjects.view.self',
-        ];
-        foreach ($legacyPerms as $p) {
-            Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
-        }
+        $administrative = $catalog
+            ->reject(fn (array $permission): bool => in_array($permission['module'], [
+                'Portal do Aluno',
+                'Portal do Professor',
+                'Responsável',
+            ], true));
 
-        $matrixPermissions     = collect(config('lumina-permissions', []));
-        $matrixPermissionNames = $matrixPermissions->pluck('name')->all();
+        $this->syncRole('ti', $administrative);
+        $this->syncRole('admin', $administrative);
+        $this->syncRole('secretaria', $catalog->whereIn('module', [
+            'Secretaria Acadêmica',
+            'Professores - Administrativo',
+            'Relatórios',
+        ]));
+        $this->syncRole('financeiro', $catalog->filter(
+            fn (array $permission): bool => $permission['module'] === 'Financeiro'
+                || str_starts_with($permission['name'], 'academic.enrollments.')
+                || ($permission['module'] === 'Secretaria Acadêmica'
+                    && in_array($permission['type'], ['view', 'view_any'], true)),
+        ));
+        $this->syncRole('teacher', $catalog->where('module', 'Portal do Professor'));
+        $this->syncRole('student', $catalog->where('module', 'Portal do Aluno'));
 
-        foreach ($matrixPermissionNames as $p) {
-            Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
-        }
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
 
-        /* TI: acesso total a todos os módulos. */
-        $ti = Role::firstOrCreate(['name' => 'ti', 'guard_name' => 'web']);
-        $ti->syncPermissions(Permission::whereIn('name', array_merge($allAdminPerms, $matrixPermissionNames))->get());
+    /**
+     * Sincroniza um perfil com os nomes canônicos informados.
+     *
+     * @param string $roleName
+     * @param Collection<int, array<string, mixed>> $permissions
+     *
+     * @return void
+     */
+    private function syncRole(string $roleName, Collection $permissions): void {
+        $role = Role::firstOrCreate([
+            'name'       => $roleName,
+            'guard_name' => 'web',
+        ]);
 
-        /* Secretaria: total na maioria, sem Perfis de Acesso, leitura em Usuários. */
-        $secretariaPerms = [];
-        foreach (self::MODULES as $module) {
-            if ($module === 'roles') {
-                continue;
-            }
-            foreach (self::ACTIONS as $action) {
-                if ($module === 'users' && $action !== 'view') {
-                    continue;
-                }
-                $secretariaPerms[] = "{$module}.{$action}";
-            }
-        }
-        $secretaria            = Role::firstOrCreate(['name' => 'secretaria', 'guard_name' => 'web']);
-        $secretariaMatrixPerms = $matrixPermissions
-            ->whereIn('module', ['Secretaria Acadêmica', 'Professores - Administrativo', 'Relatórios'])
-            ->pluck('name')
-            ->all();
-        $secretaria->syncPermissions(Permission::whereIn('name', array_merge($secretariaPerms, $secretariaMatrixPerms))->get());
-
-        /* Financeiro: total em Matrículas, leitura em Ano Letivo/Turmas/Alunos. */
-        $financeiroPerms = [];
-        foreach (self::MODULES as $module) {
-            if ($module === 'enrollments') {
-                foreach (self::ACTIONS as $action) {
-                    $financeiroPerms[] = "{$module}.{$action}";
-                }
-            } elseif (in_array($module, ['school_years', 'classes', 'students'])) {
-                $financeiroPerms[] = "{$module}.view";
-            }
-        }
-        $financeiro            = Role::firstOrCreate(['name' => 'financeiro', 'guard_name' => 'web']);
-        $financeiroMatrixPerms = $matrixPermissions
-            ->where('module', 'Financeiro')
-            ->pluck('name')
-            ->all();
-        $financeiro->syncPermissions(Permission::whereIn('name', array_merge($financeiroPerms, $financeiroMatrixPerms))->get());
-
-        /* admin: alias de TI (mantido para compatibilidade com seeders existentes) */
-        $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $admin->syncPermissions(Permission::whereIn('name', array_merge($allAdminPerms, $matrixPermissionNames))->get());
-
-        /* teacher. */
-        $teacherPerms = [
-            'grades.view', 'grades.create', 'grades.edit',
-            'grades.view.own', 'grades.create.own', 'grades.update.own',
-            'attendance.mark.own', 'classes.view.own', 'subjects.view.own',
-        ];
-        $teacher            = Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
-        $teacherMatrixPerms = $matrixPermissions
-            ->where('module', 'Portal do Professor')
-            ->pluck('name')
-            ->all();
-        $teacher->syncPermissions(Permission::whereIn('name', array_merge($teacherPerms, $teacherMatrixPerms))->get());
-
-        /* Permissões do perfil de estudante. */
-        $student            = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
-        $studentMatrixPerms = $matrixPermissions
-            ->where('module', 'Portal do Aluno')
-            ->pluck('name')
-            ->all();
-        $student->syncPermissions(Permission::whereIn('name', array_merge(['grades.view.self', 'subjects.view.self'], $studentMatrixPerms))->get());
+        $role->syncPermissions($permissions->pluck('name')->all());
     }
 }

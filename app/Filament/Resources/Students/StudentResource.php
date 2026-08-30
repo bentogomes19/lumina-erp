@@ -32,7 +32,7 @@ class StudentResource extends BaseAdminResource {
      * @return string
      */
     protected static function viewPermission(): string {
-        return 'students.view';
+        return 'academic.students.view_any';
     }
     /**
      * Retorna a permissão necessária para criar registros do recurso.
@@ -40,7 +40,7 @@ class StudentResource extends BaseAdminResource {
      * @return string
      */
     protected static function createPermission(): string {
-        return 'students.create';
+        return 'academic.students.create';
     }
     /**
      * Retorna o nome da permissão necessária para editar o recurso.
@@ -48,7 +48,7 @@ class StudentResource extends BaseAdminResource {
      * @return string
      */
     protected static function editPermission(): string {
-        return 'students.edit';
+        return 'academic.students.update';
     }
     /**
      * Retorna a permissão necessária para excluir registros do recurso.
@@ -56,7 +56,7 @@ class StudentResource extends BaseAdminResource {
      * @return string
      */
     protected static function deletePermission(): string {
-        return 'students.delete';
+        return 'academic.students.delete';
     }
 
     /**

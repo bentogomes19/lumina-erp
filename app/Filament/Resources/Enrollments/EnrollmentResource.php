@@ -30,7 +30,7 @@ class EnrollmentResource extends BaseAdminResource {
      * @return string
      */
     protected static function viewPermission(): string {
-        return 'enrollments.view';
+        return 'academic.enrollments.view_any';
     }
     /**
      * Retorna a permissão necessária para criar registros do recurso.
@@ -38,7 +38,7 @@ class EnrollmentResource extends BaseAdminResource {
      * @return string
      */
     protected static function createPermission(): string {
-        return 'enrollments.create';
+        return 'academic.enrollments.create';
     }
     /**
      * Retorna o nome da permissão necessária para editar o recurso.
@@ -46,7 +46,7 @@ class EnrollmentResource extends BaseAdminResource {
      * @return string
      */
     protected static function editPermission(): string {
-        return 'enrollments.edit';
+        return 'academic.enrollments.update';
     }
     /**
      * Retorna a permissão necessária para excluir registros do recurso.
@@ -54,7 +54,7 @@ class EnrollmentResource extends BaseAdminResource {
      * @return string
      */
     protected static function deletePermission(): string {
-        return 'enrollments.delete';
+        return 'academic.enrollments.cancel';
     }
 
     /**

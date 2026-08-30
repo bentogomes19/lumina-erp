@@ -14,7 +14,7 @@ class UserPolicy {
      * @return bool
      */
     public function viewAny(User $user): bool {
-        return $user->hasRole('admin');
+        return $user->can('system.users.view_any');
     }
 
     /**
@@ -26,7 +26,7 @@ class UserPolicy {
      * @return bool
      */
     public function view(User $user, User $model): bool {
-        return $user->hasRole('admin');
+        return $user->can('system.users.view');
     }
 
     /**
@@ -37,7 +37,7 @@ class UserPolicy {
      * @return bool
      */
     public function create(User $user): bool {
-        return $user->hasRole('admin');
+        return $user->can('system.users.create');
     }
 
     /**
@@ -49,7 +49,7 @@ class UserPolicy {
      * @return bool
      */
     public function update(User $user, User $model): bool {
-        return $user->hasRole('admin');
+        return $user->can('system.users.update');
     }
 
     /**
@@ -62,7 +62,7 @@ class UserPolicy {
      * @return bool
      */
     public function delete(User $user, User $model): bool {
-        if (!$user->hasRole('admin')) {
+        if (!$user->can('system.users.delete')) {
             return false;
         }
 

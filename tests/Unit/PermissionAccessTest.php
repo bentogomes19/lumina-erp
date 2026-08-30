@@ -47,4 +47,32 @@ class PermissionAccessTest extends TestCase {
 
         $this->assertFalse(PermissionAccess::can('teacher.classes.view'));
     }
+
+    /**
+     * Verifica se o papel docente não substitui uma permissão removida na matriz.
+     *
+     * @return void
+     */
+    public function test_teacher_role_does_not_bypass_missing_catalog_permission(): void {
+        $user = Mockery::mock(User::class)->makePartial();
+        $user->shouldReceive('hasRole')->once()->with('teacher')->andReturnTrue();
+        $user->shouldReceive('can')->once()->with('teacher.classes.view')->andReturnFalse();
+        auth()->setUser($user);
+
+        $this->assertFalse(PermissionAccess::can('teacher.classes.view'));
+    }
+
+    /**
+     * Verifica se o portal libera uma permissão canônica concedida ao perfil correto.
+     *
+     * @return void
+     */
+    public function test_student_portal_accepts_explicit_catalog_permission(): void {
+        $user = Mockery::mock(User::class)->makePartial();
+        $user->shouldReceive('hasRole')->once()->with('student')->andReturnTrue();
+        $user->shouldReceive('can')->once()->with('student.grades.view')->andReturnTrue();
+        auth()->setUser($user);
+
+        $this->assertTrue(PermissionAccess::can('student.grades.view'));
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Users\Tables;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Models\User;
 use App\Services\Auth\FirstAccessInvitationService;
+use App\Support\PermissionAccess;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -183,7 +184,7 @@ class UsersTable {
                     ->visible(fn (User $record) => !$record->trashed()
                         && $record->active
                         && !$record->is_locked
-                        && auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        && PermissionAccess::can('system.users.update')),
 
                 /* Revoga o link emitido sem liberar o acesso pendente do usuário. */
                 Action::make('revoke_first_access_invitation')
@@ -202,7 +203,7 @@ class UsersTable {
                             ->send();
                     })
                     ->visible(fn (User $record) => $record->force_password_change
-                        && auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        && PermissionAccess::can('system.users.update')),
 
                 /* Ação: Desbloquear (somente TI/admin) */
                 Action::make('unlock')
@@ -220,7 +221,8 @@ class UsersTable {
                             ->send();
                     })
                     ->visible(
-                        fn (User $record) => $record->locked_at && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                        fn (User $record) => $record->locked_at
+                            && PermissionAccess::can('system.users.block')
                     ),
 
                 /* Ação: Inativar com motivo. */
@@ -244,7 +246,8 @@ class UsersTable {
                             ->send();
                     })
                     ->visible(
-                        fn (User $record) => $record->active && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                        fn (User $record) => $record->active
+                            && PermissionAccess::can('system.users.block')
                     ),
 
                 /* Ação: Reativar (somente TI/admin) */
@@ -264,7 +267,8 @@ class UsersTable {
                             ->send();
                     })
                     ->visible(
-                        fn (User $record) => !$record->active && auth()->user()?->hasAnyRole(['admin', 'ti'])
+                        fn (User $record) => !$record->active
+                            && PermissionAccess::can('system.users.block')
                     ),
 
                 EditAction::make()->label('Editar'),
@@ -287,7 +291,7 @@ class UsersTable {
                             fn (User $record) => $record->inactivate($data['inactive_reason'])
                         ))
                         ->deselectRecordsAfterCompletion()
-                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn () => PermissionAccess::can('system.users.block')),
 
                     BulkAction::make('bulk_activate')
                         ->label('Reativar selecionados')
@@ -298,16 +302,16 @@ class UsersTable {
                             fn (User $record) => $record->activate()
                         ))
                         ->deselectRecordsAfterCompletion()
-                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn () => PermissionAccess::can('system.users.block')),
 
                     DeleteBulkAction::make()
-                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn () => PermissionAccess::can('system.users.delete')),
 
                     ForceDeleteBulkAction::make()
-                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn () => PermissionAccess::can('system.users.delete')),
 
                     RestoreBulkAction::make()
-                        ->visible(fn () => auth()->user()?->hasAnyRole(['admin', 'ti'])),
+                        ->visible(fn () => PermissionAccess::can('system.users.update')),
                 ]),
             ]);
     }

@@ -15,7 +15,7 @@ class StudentPolicy {
      * @return bool
      */
     public function viewAny(User $user): bool {
-        return $user->hasRole('admin');
+        return $user->can('academic.students.view_any');
     }
 
     /**
@@ -27,7 +27,7 @@ class StudentPolicy {
      * @return bool
      */
     public function view(User $user, Student $student): bool {
-        return $user->hasRole('admin');
+        return $user->can('academic.students.view');
     }
 
     /**
@@ -38,7 +38,7 @@ class StudentPolicy {
      * @return bool
      */
     public function create(User $user): bool {
-        return $user->hasRole('admin');
+        return $user->can('academic.students.create');
     }
 
     /**
@@ -50,7 +50,7 @@ class StudentPolicy {
      * @return bool
      */
     public function update(User $user, Student $student): bool {
-        return $user->hasRole('admin');
+        return $user->can('academic.students.update');
     }
 
     /**
@@ -62,7 +62,7 @@ class StudentPolicy {
      * @return bool
      */
     public function delete(User $user, Student $student): bool {
-        if (!$user->hasRole('admin')) {
+        if (!$user->can('academic.students.delete')) {
             return false;
         }
 
@@ -94,6 +94,6 @@ class StudentPolicy {
      * @return bool
      */
     public function restore(User $user, Student $student): bool {
-        return $user->hasRole('admin');
+        return $user->can('academic.students.update');
     }
 }

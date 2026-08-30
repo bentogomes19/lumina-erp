@@ -10,36 +10,49 @@ class GradePolicy {
     /**
      * Determina se o usuário pode visualizar a nota informada.
      *
-     * @param User $u
-     * @param Grade $g
+     * @param User $user
+     * @param Grade $grade
      *
      * @return bool
      */
-    public function view(User $u, Grade $g): bool {
-        if ($u->hasRole('admin')) {
+    public function view(User $user, Grade $grade): bool {
+        if ($user->can('academic.grades.view')) {
             return true;
         }
-        if ($u->hasRole('teacher') && $u->teacher && $g->teacher_id === $u->teacher->id) {
+
+        if ($user->hasRole('teacher')
+            && $user->can('teacher.grades.view')
+            && $user->teacher
+            && $grade->teacher_id === $user->teacher->id) {
             return true;
         }
-        if ($u->hasRole('student') && $u->student && $g->student_id === $u->student->id) {
+
+        if ($user->hasRole('student')
+            && $user->can('student.grades.view')
+            && $user->student
+            && $grade->student_id === $user->student->id) {
             return true;
         }
+
         return false;
     }
 
     /**
      * Determina se o usuário pode atualizar a nota.
      *
-     * @param User $u
-     * @param Grade $g
+     * @param User $user
+     * @param Grade $grade
      *
      * @return bool
      */
-    public function update(User $u, Grade $g): bool {
-        if ($u->hasRole('admin')) {
+    public function update(User $user, Grade $grade): bool {
+        if ($user->can('academic.grades.update')) {
             return true;
         }
-        return $u->hasRole('teacher') && $u->teacher && $g->teacher_id === $u->teacher->id;
+
+        return $user->hasRole('teacher')
+            && $user->can('teacher.grades.update')
+            && $user->teacher
+            && $grade->teacher_id === $user->teacher->id;
     }
 }
