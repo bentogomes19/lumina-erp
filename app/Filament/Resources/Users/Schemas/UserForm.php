@@ -59,10 +59,17 @@ class UserForm {
 
                     Select::make('role')
                         ->label('Perfil / Papel')
-                        ->options(fn ($record): array => ($record
-                            && ($record->hasRole('student') || $record->student()->exists()))
-                            ? Arr::only(self::ROLE_LABELS, ['student'])
-                            : Arr::except(self::ROLE_LABELS, ['student']))
+                        ->options(function ($record): array {
+                            if ($record && ($record->hasRole('student') || $record->student()->exists())) {
+                                return Arr::only(self::ROLE_LABELS, ['student']);
+                            }
+
+                            if ($record && ($record->hasRole('teacher') || $record->teacher()->exists())) {
+                                return Arr::only(self::ROLE_LABELS, ['teacher']);
+                            }
+
+                            return Arr::except(self::ROLE_LABELS, ['student', 'teacher']);
+                        })
                         ->required()
                         ->native(false)
                         ->afterStateHydrated(function ($component, $record) {
@@ -81,9 +88,9 @@ class UserForm {
                         })
                         ->helperText('Define as permissões de acesso ao sistema.'),
 
-                    Placeholder::make('student_onboarding_notice')
-                        ->label('Acesso de aluno')
-                        ->content('Usuários de alunos são criados pelo recurso Alunos ou pelo fluxo Matricular aluno, que verificam duplicidades e vínculos acadêmicos.')
+                    Placeholder::make('academic_onboarding_notice')
+                        ->label('Acessos acadêmicos')
+                        ->content('Usuários de alunos e professores são criados nos respectivos fluxos de onboarding, que verificam dados pessoais, vínculos e permissões.')
                         ->visibleOn('create')
                         ->columnSpanFull(),
 

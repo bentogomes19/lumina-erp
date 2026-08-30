@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Teachers\Tables;
 
+use App\Enums\TeacherOnboardingState;
 use App\Enums\TeacherStatus;
 use App\Models\SchoolClass;
 use App\Models\Subject;
-use App\Models\TeacherAssignment;
-use App\Models\User;
-use App\Services\Auth\FirstAccessInvitationService;
+use App\Models\Teacher;
+use App\Services\Teachers\TeacherOnboardingService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -25,11 +25,6 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
-use Spatie\Permission\Models\Role;
 
 class TeachersTable {
 
@@ -65,6 +60,13 @@ class TeachersTable {
                         'terminated' => 'danger',
                         default      => 'secondary',
                     }),
+                TextColumn::make('onboarding_state')
+                    ->label('Onboarding')
+                    ->badge()
+                    ->getStateUsing(fn (Teacher $record) => app(TeacherOnboardingService::class)
+                        ->onboardingState($record))
+                    ->formatStateUsing(fn (TeacherOnboardingState $state): string => $state->label())
+                    ->color(fn (TeacherOnboardingState $state): string => $state->color()),
                 TextColumn::make('created_at')->dateTime()->since()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
@@ -75,58 +77,42 @@ class TeachersTable {
             ])
             ->recordActions([
                 EditAction::make(),
-                Action::make('criarUsuario')
+                Action::make('criarAcesso')
                     ->label('Criar usuário')
                     ->icon('fas-user-plus')
-                    ->visible(fn ($record) => !$record->user_id) /* só mostra se ainda não tiver usuário. */
+                    ->visible(fn (Teacher $record): bool => !$record->user_id)
                     ->modalHeading(fn ($record) => "Criar usuário para {$record->name}")
+                    ->modalDescription('Será criado e vinculado 1 usuário docente. Nenhum convite será enviado nesta operação.')
+                    ->modalSubmitActionLabel('Criar usuário sem convite')
                     ->form([
-                        TextInput::make('name')
-                            ->label('Nome')
-                            ->default(fn ($record) => $record->name)
-                            ->disabled()
-                            ->dehydrated(false),
-
                         TextInput::make('email')
                             ->label('E-mail de acesso')
                             ->email()
-                            ->default(fn ($record) => $record->email)   /* <-- vem do professor. */
-                            ->required()
-                            ->rule(Rule::unique('users', 'email')),
+                            ->default(fn ($record) => $record->email)
+                            ->required(),
                     ])
-                    ->action(function (\App\Models\Teacher $record, array $data) {
-                        $user = DB::transaction(function () use ($record, $data): User {
-                            $email = $data['email'];
-
-                            if (User::withTrashed()->where('email', $email)->exists()) {
-                                throw ValidationException::withMessages([
-                                    'email' => 'Este e-mail já está em uso por outro usuário.',
-                                ]);
-                            }
-
-                            $user = User::create([
-                                'name'                  => $record->name,
-                                'email'                 => $email,
-                                'password'              => Hash::make(Str::random(64)),
-                                'active'                => true,
-                                'force_password_change' => true,
-                            ]);
-
-                            $user->syncRoles(['teacher']);
-                            if ($role = Role::where('name', 'teacher')->with('permissions')->first()) {
-                                $user->syncPermissions($role->permissions);
-                            }
-
-                            $record->user()->associate($user)->save();
-
-                            return $user;
-                        });
-
-                        $url = app(FirstAccessInvitationService::class)->issue($user);
+                    ->action(function (Teacher $record, array $data): void {
+                        app(TeacherOnboardingService::class)->createAccess($record, $data['email']);
+                        Notification::make()
+                            ->title('Usuário criado sem envio de convite')
+                            ->body('Use a ação “Enviar convite” quando o professor estiver apto ao acesso.')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('enviarConvite')
+                    ->label('Enviar convite')
+                    ->icon('fas-paper-plane')
+                    ->color('warning')
+                    ->visible(fn (Teacher $record): bool => (bool) $record->user_id
+                        && $record->canAccessOperationally())
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Teacher $record): string => "Enviar convite para {$record->name}")
+                    ->modalDescription('O link anterior será revogado e um novo convite descartável será enviado.')
+                    ->action(function (Teacher $record): void {
+                        $url = app(TeacherOnboardingService::class)->inviteAccess($record);
 
                         Notification::make()
-                            ->title('Usuário criado e convite enviado')
-                            ->body('O professor deve usar o link descartável para definir a própria senha.')
+                            ->title('Convite enviado ao professor')
                             ->actions([
                                 Action::make('openInvitation')
                                     ->label('Abrir link do convite')
@@ -138,10 +124,10 @@ class TeachersTable {
                             ->send();
                     }),
                 Action::make('vincular')
-                    ->label('Vincular a turma/discip.')
+                    ->label('Adicionar alocação')
                     ->icon('fas-link')
-                    ->visible(fn ($record) => !$record->user_id)
                     ->modalHeading(fn ($record) => "Vincular {$record->name}")
+                    ->modalDescription('Será criada uma alocação para a turma e disciplina selecionadas.')
                     ->form([
                         Select::make('class_id')
                             ->label('Turma')
@@ -177,45 +163,11 @@ class TeachersTable {
                             ->preload()
                             ->required(),
 
-                        Action::make('ativar')
-                            ->label('Ativar')
-                            ->visible(fn ($record) => $record->status !== TeacherStatus::ACTIVE->value)
-                            ->action(fn ($record) => $record->update(['status' => TeacherStatus::ACTIVE->value])),
-
-                        Action::make('inativar')
-                            ->label('Inativar')
-                            ->color('warning')
-                            ->visible(fn ($record) => $record->status !== TeacherStatus::INACTIVE->value)
-                            ->action(fn ($record) => $record->update(['status' => TeacherStatus::INACTIVE->value])),
                     ])
-                    ->action(function (\App\Models\Teacher $record, array $data) {
-                        $teacherId = $record->id;
-                        $classId   = (int)$data['class_id'];
-                        $subjectId = (int)$data['subject_id'];
-
-                        /* evita duplicata manualmente (além do índice único no banco) */
-                        $exists = TeacherAssignment::where([
-                            'teacher_id' => $teacherId,
-                            'class_id'   => $classId,
-                            'subject_id' => $subjectId,
-                        ])->exists();
-
-                        if ($exists) {
-                            Notification::make()
-                                ->title('Este vínculo já existe')
-                                ->warning()
-                                ->send();
-                            return;
-                        }
-
-                        TeacherAssignment::create([
-                            'teacher_id' => $teacherId,
-                            'class_id'   => $classId,
-                            'subject_id' => $subjectId,
-                        ]);
-
+                    ->action(function (Teacher $record, array $data): void {
+                        app(TeacherOnboardingService::class)->createAssignment($record, $data);
                         Notification::make()
-                            ->title('Vínculo criado com sucesso')
+                            ->title('Alocação confirmada')
                             ->success()
                             ->send();
                     }),

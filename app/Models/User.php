@@ -82,7 +82,7 @@ class User extends Authenticatable implements FilamentUser {
     }
 
     /**
-     * Configura eventos de criação e sincronização com o perfil docente.
+     * Configura os valores automáticos usados na criação do usuário.
      *
      * @return void
      */
@@ -93,21 +93,6 @@ class User extends Authenticatable implements FilamentUser {
             }
         });
 
-        static::saved(function ($user) {
-            $roleName = $user->roles()->pluck('name')->first();
-            if ($roleName === 'teacher') {
-                Teacher::updateOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'uuid'  => $user->uuid,
-                        'name'  => $user->name,
-                        'email' => $user->email,
-                        'cpf'   => $user->cpf,
-                        'phone' => $user->cellphone ?? $user->phone,
-                    ]
-                );
-            }
-        });
     }
 
     /**
@@ -193,7 +178,15 @@ class User extends Authenticatable implements FilamentUser {
      * @return bool
      */
     public function canAccessPanel(Panel $panel): bool {
-        return $this->active && !$this->is_locked;
+        if (!$this->active || $this->is_locked) {
+            return false;
+        }
+
+        if (!$this->exists || !$this->hasRole('teacher')) {
+            return true;
+        }
+
+        return (bool) $this->teacher?->canAccessOperationally();
     }
 
     /**

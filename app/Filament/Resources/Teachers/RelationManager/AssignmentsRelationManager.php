@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Teachers\RelationManager;
 use App\Filament\Resources\SchoolClasses\SchoolClassResource;
 use App\Models\Subject;
 use App\Models\TeacherAssignment;
+use App\Services\Teachers\TeacherOnboardingService;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -14,7 +15,6 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Validation\ValidationException;
 
 class AssignmentsRelationManager extends RelationManager {
 
@@ -94,26 +94,7 @@ class AssignmentsRelationManager extends RelationManager {
                         /** @var \App\Models\Teacher $teacher */
                         $teacher = $this->getOwnerRecord();
 
-                        $exists = TeacherAssignment::where('class_id', $data['class_id'])
-                            ->where('subject_id', $data['subject_id'])
-                            ->where('teacher_id', '!=', $teacher->id)
-                            ->exists();
-
-                        if ($exists) {
-                            throw ValidationException::withMessages([
-                                'subject_id' => 'Esta disciplina já possui um professor vinculado nesta turma.',
-                            ]);
-                        }
-
-                        return TeacherAssignment::updateOrCreate(
-                            [
-                                'class_id'   => $data['class_id'],
-                                'subject_id' => $data['subject_id'],
-                            ],
-                            [
-                                'teacher_id' => $teacher->id,
-                            ],
-                        );
+                        return app(TeacherOnboardingService::class)->createAssignment($teacher, $data);
                     }),
             ])
             ->actions([
@@ -123,24 +104,8 @@ class AssignmentsRelationManager extends RelationManager {
                         /** @var \App\Models\Teacher $teacher */
                         $teacher = $this->getOwnerRecord();
 
-                        $exists = TeacherAssignment::where('class_id', $data['class_id'])
-                            ->where('subject_id', $data['subject_id'])
-                            ->where('teacher_id', '!=', $teacher->id)
-                            ->exists();
-
-                        if ($exists) {
-                            throw ValidationException::withMessages([
-                                'subject_id' => 'Esta disciplina já possui um professor vinculado nesta turma.',
-                            ]);
-                        }
-
-                        $record->update([
-                            'class_id'   => $data['class_id'],
-                            'subject_id' => $data['subject_id'],
-                            'teacher_id' => $teacher->id,
-                        ]);
-
-                        return $record;
+                        return app(TeacherOnboardingService::class)
+                            ->updateAssignment($record, $data, $teacher);
                     }),
 
                 DeleteAction::make()->label('Remover'),

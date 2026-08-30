@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Subjects\Tables;
 use App\Enums\SubjectCategory;
 use App\Models\SchoolClass;
 use App\Models\Teacher;
-use App\Models\TeacherAssignment;
+use App\Services\Teachers\TeacherOnboardingService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -126,20 +126,12 @@ class SubjectsTable {
                             ->required(),
                     ])
                     ->action(function ($record, array $data) {
-                        $payload = [
-                            'teacher_id' => (int) $data['teacher_id'],
+                        $teacher = Teacher::findOrFail($data['teacher_id']);
+                        app(TeacherOnboardingService::class)->createAssignment($teacher, [
                             'class_id'   => (int) $data['class_id'],
                             'subject_id' => (int) $record->id,
-                        ];
-
-                        $exists = TeacherAssignment::where($payload)->exists();
-                        if ($exists) {
-                            Notification::make()->title('Este vínculo já existe')->warning()->send();
-                            return;
-                        }
-
-                        TeacherAssignment::create($payload);
-                        Notification::make()->title('Vínculo criado com sucesso')->success()->send();
+                        ]);
+                        Notification::make()->title('Alocação confirmada')->success()->send();
                     }),
             ])
             ->toolbarActions([
