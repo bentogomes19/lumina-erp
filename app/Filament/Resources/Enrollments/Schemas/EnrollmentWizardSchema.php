@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Enrollments\Schemas;
 
 use App\Enums\EnrollmentStatus;
 use App\Enums\Gender;
+use App\Enums\StudentAccessAction;
 use App\Models\Enrollment;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
@@ -23,6 +24,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard\Step;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class EnrollmentWizardSchema {
@@ -49,6 +51,11 @@ class EnrollmentWizardSchema {
                         ])
                         ->default('existing')
                         ->live()
+                        ->afterStateUpdated(function (callable $set): void {
+                            $set('student_id', null);
+                            $set('access_action', StudentAccessAction::NONE->value);
+                            $set('access_email', null);
+                        })
                         ->required(),
 
                     Select::make('student_id')
@@ -60,6 +67,12 @@ class EnrollmentWizardSchema {
                         ]))
                         ->required(fn (Get $get) => $get('student_source') === 'existing')
                         ->visible(fn (Get $get) => $get('student_source') === 'existing')
+                        ->live()
+                        ->afterStateUpdated(function ($state, callable $set): void {
+                            $student = $state ? Student::find($state) : null;
+                            $set('access_action', StudentAccessAction::NONE->value);
+                            $set('access_email', $student?->email);
+                        })
                         ->helperText('Digite o nome, matrícula ou CPF para localizar o aluno.'),
 
                     Section::make('Dados do novo aluno')
@@ -75,6 +88,7 @@ class EnrollmentWizardSchema {
                                 ->label('CPF')
                                 ->mask('999.999.999-99')
                                 ->unique(Student::class, 'cpf')
+                                ->live(onBlur: true)
                                 ->nullable()
                                 ->columnSpan(2),
 
@@ -82,6 +96,7 @@ class EnrollmentWizardSchema {
                                 ->label('RG')
                                 ->maxLength(20)
                                 ->nullable()
+                                ->live(onBlur: true)
                                 ->columnSpan(2),
 
                             DatePicker::make('student_birth_date')
@@ -99,7 +114,8 @@ class EnrollmentWizardSchema {
                                 ->label('E-mail')
                                 ->email()
                                 ->maxLength(120)
-                                ->required(fn (Get $get) => $get('student_source') === 'new')
+                                ->nullable()
+                                ->live(onBlur: true)
                                 ->columnSpan(3),
 
                             TextInput::make('student_phone_number')
@@ -108,6 +124,35 @@ class EnrollmentWizardSchema {
                                 ->maxLength(20)
                                 ->required(fn (Get $get) => $get('student_source') === 'new')
                                 ->columnSpan(3),
+
+                            Placeholder::make('identity_matches')
+                                ->label('Verificação de duplicidade')
+                                ->content(function (Get $get): HtmlString {
+                                    if (!collect([
+                                        $get('student_cpf'),
+                                        $get('student_rg'),
+                                        $get('student_email'),
+                                    ])->contains(fn ($value): bool => filled($value))) {
+                                        return new HtmlString('<span class="text-gray-500">Informe CPF, RG ou e-mail para procurar cadastros existentes.</span>');
+                                    }
+
+                                    $matches = app(StudentEnrollmentService::class)->findStudentsByIdentity([
+                                        'student_cpf'   => $get('student_cpf'),
+                                        'student_rg'    => $get('student_rg'),
+                                        'student_email' => $get('student_email'),
+                                    ]);
+
+                                    if ($matches->isEmpty()) {
+                                        return new HtmlString('<span class="text-success-600">Nenhum aluno existente localizado pelos identificadores informados.</span>');
+                                    }
+
+                                    $students = $matches
+                                        ->map(fn (Student $student): string => e("{$student->name} ({$student->registration_number})"))
+                                        ->implode(', ');
+
+                                    return new HtmlString("<span class=\"text-danger-600\">Cadastro existente localizado: {$students}. Volte e selecione o aluno existente.</span>");
+                                })
+                                ->columnSpanFull(),
                         ])
                         ->columns(6),
                 ])
@@ -392,6 +437,56 @@ class EnrollmentWizardSchema {
                 ->columns(4)
                 ->visible(fn (Get $get) => $get('student_source') === 'new'),
 
+            Step::make('Acesso ao portal')
+                ->description('Decida explicitamente se o aluno receberá acesso agora')
+                ->icon('fas-key')
+                ->schema([
+                    Placeholder::make('current_access')
+                        ->label('Situação atual')
+                        ->content(function (Get $get): string {
+                            if ($get('student_source') === 'new') {
+                                return 'Novo aluno: ainda não possui usuário de acesso.';
+                            }
+
+                            $student = Student::find($get('student_id'));
+
+                            return $student?->user_id
+                                ? 'O aluno já possui usuário de acesso vinculado.'
+                                : 'O aluno ainda não possui usuário de acesso.';
+                        }),
+
+                    Radio::make('access_action')
+                        ->label('Ação de acesso')
+                        ->options(function (Get $get): array {
+                            $student = $get('student_source') === 'existing'
+                                ? Student::find($get('student_id'))
+                                : null;
+
+                            return $student?->user_id
+                                ? StudentAccessAction::withUserOptions()
+                                : StudentAccessAction::withoutUserOptions();
+                        })
+                        ->default(StudentAccessAction::NONE->value)
+                        ->helperText('A matrícula e o acesso são decisões independentes. Nenhum usuário será criado sem esta seleção.')
+                        ->live()
+                        ->required(),
+
+                    TextInput::make('access_email')
+                        ->label('E-mail de acesso')
+                        ->email()
+                        ->maxLength(255)
+                        ->placeholder(fn (Get $get): ?string => $get('student_email'))
+                        ->helperText('Se ficar vazio, será usado o e-mail informado no cadastro do aluno.')
+                        ->required(fn (Get $get): bool => in_array($get('access_action'), [
+                            StudentAccessAction::CREATE->value,
+                            StudentAccessAction::CREATE_AND_INVITE->value,
+                        ], true) && !$get('student_email'))
+                        ->visible(fn (Get $get): bool => in_array($get('access_action'), [
+                            StudentAccessAction::CREATE->value,
+                            StudentAccessAction::CREATE_AND_INVITE->value,
+                        ], true)),
+                ]),
+
             Step::make('Revisão')
                 ->description('Confira os dados antes de concluir a matrícula')
                 ->icon('fas-clipboard-check')
@@ -426,6 +521,39 @@ class EnrollmentWizardSchema {
                     Placeholder::make('review_status')
                         ->label('Status')
                         ->content(fn (Get $get) => $get('status') ?? 'Ativa'),
+
+                    Placeholder::make('review_records')
+                        ->label('Registros e ações que serão confirmados')
+                        ->content(function (Get $get): string {
+                            $items = [
+                                $get('student_source') === 'new'
+                                    ? 'Criar 1 cadastro de aluno'
+                                    : 'Usar o cadastro de aluno existente',
+                                'Criar 1 matrícula na turma selecionada',
+                            ];
+                            $accessAction = StudentAccessAction::tryFrom(
+                                (string) ($get('access_action') ?? StudentAccessAction::NONE->value)
+                            );
+
+                            $student = $get('student_source') === 'existing'
+                                ? Student::find($get('student_id'))
+                                : null;
+
+                            if ($accessAction?->createsUser()) {
+                                $items[] = 'Criar e vincular 1 usuário com o papel Aluno';
+                            } elseif ($student?->user_id) {
+                                $items[] = 'Manter o usuário já vinculado';
+                            } else {
+                                $items[] = 'Não criar usuário';
+                            }
+
+                            $items[] = $accessAction?->sendsInvitation()
+                                ? 'Enviar convite de primeiro acesso'
+                                : 'Não enviar convite';
+
+                            return implode(' · ', $items);
+                        })
+                        ->columnSpanFull(),
                 ])
                 ->columns(2),
         ];

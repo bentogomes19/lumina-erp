@@ -106,9 +106,11 @@ class SchoolClassesTable {
             ->recordActions([
                 EditAction::make(),
                 Action::make('matricularAluno')
-                    ->label('Vincular Aluno')
+                    ->label('Matricular aluno')
                     ->icon('fas-user-plus')
-                    ->modalHeading('Vincular Aluno')
+                    ->modalHeading('Matricular aluno existente')
+                    ->modalDescription('Será criada somente 1 matrícula para o aluno selecionado nesta turma. Nenhum usuário ou convite será criado.')
+                    ->modalSubmitActionLabel('Confirmar matrícula')
                     ->form([
                         Placeholder::make('capacity_summary')
                             ->label('Disponibilidade da turma')

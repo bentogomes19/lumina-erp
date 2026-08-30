@@ -295,6 +295,7 @@ class CreateEnrollmentTest extends TestCase {
             'class_id'             => $schoolClass->id,
             'enrollment_date'      => '2026-02-02',
             'status'               => 'Ativa',
+            'access_action'        => 'create_and_invite',
         ];
     }
 

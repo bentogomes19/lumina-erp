@@ -17,6 +17,7 @@ class CreateEnrollment extends CreateRecord {
     use HasWizard;
 
     protected static string $resource = EnrollmentResource::class;
+    protected static ?string $title   = 'Matricular aluno';
 
     protected ?StudentEnrollmentResult $enrollmentResult = null;
 
@@ -64,12 +65,24 @@ class CreateEnrollment extends CreateRecord {
      * @return void
      */
     protected function afterCreate(): void {
-        if (!$this->enrollmentResult?->userCreated) {
+        if (!$this->enrollmentResult?->userCreated && !$this->enrollmentResult?->invitationSent) {
+            return;
+        }
+
+        if (!$this->enrollmentResult->invitationSent) {
+            Notification::make()
+                ->title('Usuário de acesso criado')
+                ->body('O usuário foi vinculado sem envio de convite, conforme confirmado no formulário.')
+                ->success()
+                ->send();
+
             return;
         }
 
         Notification::make()
-            ->title('Usuário criado e convite enviado ao aluno')
+            ->title($this->enrollmentResult->userCreated
+                ? 'Usuário criado e convite enviado ao aluno'
+                : 'Convite enviado ao aluno')
             ->body('O aluno deve usar o link descartável para definir a própria senha.')
             ->actions([
                 Action::make('openInvitation')
@@ -80,5 +93,15 @@ class CreateEnrollment extends CreateRecord {
             ->success()
             ->duration(15000)
             ->send();
+    }
+
+    /**
+     * Retorna a ação final do assistente com uma confirmação explícita da matrícula.
+     *
+     * @return Action
+     */
+    protected function getSubmitFormAction(): Action {
+        return parent::getSubmitFormAction()
+            ->label('Confirmar matrícula');
     }
 }

@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Students\Tables;
 
+use App\Enums\StudentOnboardingState;
 use App\Enums\StudentStatus;
-use App\Models\User;
-use App\Services\Auth\FirstAccessInvitationService;
+use App\Filament\Resources\Enrollments\EnrollmentResource;
+use App\Models\Student;
+use App\Services\Enrollments\StudentEnrollmentService;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -18,12 +20,6 @@ use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
-use Spatie\Permission\Models\Role;
 
 class StudentsTable {
 
@@ -70,6 +66,11 @@ class StudentsTable {
                         'info'    => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::GRADUATED->value,
                         'gray'    => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::INACTIVE->value,
                     ]),
+                BadgeColumn::make('onboarding_state')
+                    ->label('Onboarding')
+                    ->getStateUsing(fn (Student $record) => app(StudentEnrollmentService::class)->onboardingState($record))
+                    ->formatStateUsing(fn ($state): string => $state->label())
+                    ->color(fn ($state): string => $state->color()),
                 TextColumn::make('enrollment_date')->label('Ingresso')->date()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
@@ -81,58 +82,43 @@ class StudentsTable {
             ])
             ->recordActions([
                 EditAction::make(),
-                Action::make('criarUsuario')
+                Action::make('criarAcesso')
                     ->label('Criar usuário')
                     ->icon('fas-user-plus')
-                    ->visible(fn ($record) => !$record->user_id)
+                    ->visible(fn (Student $record): bool => !$record->user_id
+                        && app(StudentEnrollmentService::class)->onboardingState($record) !== StudentOnboardingState::INCONSISTENT)
                     ->modalHeading(fn ($record) => "Criar usuário para {$record->name}")
+                    ->modalDescription('Será criado e vinculado 1 usuário com o papel Aluno. Nenhum convite será enviado nesta operação.')
+                    ->modalSubmitActionLabel('Criar usuário sem convite')
                     ->form([
-                        TextInput::make('name')
-                            ->label('Nome')
-                            ->default(fn ($record) => $record->name)
-                            ->disabled()
-                            ->dehydrated(false),
-
                         TextInput::make('email')
                             ->label('E-mail de acesso')
                             ->email()
-                            ->default(fn ($record) => $record->email) /* Usa o e-mail informado no cadastro do aluno. */
-                            ->required()
-                            ->rule(Rule::unique('users', 'email')), /* Valida a unicidade na tabela de usuários. */
+                            ->default(fn ($record) => $record->email)
+                            ->required(),
                     ])
-                    ->action(function (\App\Models\Student $record, array $data) {
-                        $user = DB::transaction(function () use ($record, $data): User {
-                            $email = $data['email'];
-
-                            if (User::withTrashed()->where('email', $email)->exists()) {
-                                throw ValidationException::withMessages([
-                                    'email' => 'Este e-mail já está em uso por outro usuário.',
-                                ]);
-                            }
-
-                            $user = User::create([
-                                'name'                  => $record->name,
-                                'email'                 => $email, /* Usa o e-mail do aluno por padrão. */
-                                'password'              => Hash::make(Str::random(64)),
-                                'active'                => true,
-                                'force_password_change' => true,
-                            ]);
-
-                            $user->syncRoles(['student']);
-                            if ($role = Role::where('name', 'student')->with('permissions')->first()) {
-                                $user->syncPermissions($role->permissions);
-                            }
-
-                            $record->user()->associate($user)->save();
-
-                            return $user;
-                        });
-
-                        $url = app(FirstAccessInvitationService::class)->issue($user);
+                    ->action(function (Student $record, array $data): void {
+                        app(StudentEnrollmentService::class)->createAccess($record, $data['email']);
+                        Notification::make()
+                            ->title('Usuário criado sem envio de convite')
+                            ->body('Use a ação “Enviar convite” quando for o momento de conceder o primeiro acesso.')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('enviarConvite')
+                    ->label('Enviar convite')
+                    ->icon('fas-paper-plane')
+                    ->color('warning')
+                    ->visible(fn (Student $record): bool => (bool) $record->user_id
+                        && app(StudentEnrollmentService::class)->onboardingState($record) !== StudentOnboardingState::INCONSISTENT)
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Student $record): string => "Enviar convite para {$record->name}")
+                    ->modalDescription('O convite anterior será revogado. Um novo link descartável será enviado ao e-mail do usuário vinculado.')
+                    ->action(function (Student $record): void {
+                        $url = app(StudentEnrollmentService::class)->inviteAccess($record);
 
                         Notification::make()
-                            ->title('Usuário criado e convite enviado')
-                            ->body('O aluno deve usar o link descartável para definir a própria senha.')
+                            ->title('Convite enviado ao aluno')
                             ->actions([
                                 Action::make('openInvitation')
                                     ->label('Abrir link do convite')
@@ -143,6 +129,12 @@ class StudentsTable {
                             ->duration(15000)
                             ->send();
                     }),
+                Action::make('matricularAluno')
+                    ->label('Matricular aluno')
+                    ->icon('fas-graduation-cap')
+                    ->url(fn (Student $record): string => EnrollmentResource::getUrl('create', [
+                        'student_id' => $record->id,
+                    ])),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

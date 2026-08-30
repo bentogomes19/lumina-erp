@@ -18,7 +18,9 @@ class ListEnrollments extends ListRecords {
      */
     protected function getHeaderActions(): array {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Matricular aluno')
+                ->icon('fas-graduation-cap'),
         ];
     }
 

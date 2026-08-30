@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
-use App\Models\Student;
 use App\Models\Teacher;
 use App\Services\Auth\FirstAccessInvitationService;
 use Filament\Actions\Action;
@@ -11,6 +10,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CreateUser extends CreateRecord {
 
@@ -24,6 +24,12 @@ class CreateUser extends CreateRecord {
      * @return array
      */
     protected function mutateFormDataBeforeCreate(array $data): array {
+        if (($data['role'] ?? null) === 'student') {
+            throw ValidationException::withMessages([
+                'role' => 'Crie o acesso do aluno pelo recurso Alunos ou pelo fluxo Matricular aluno.',
+            ]);
+        }
+
         $data['force_password_change'] = $data['force_password_change'] ?? true;
         $data['login_attempts']        = 0;
         $data['locked_at']             = null;
@@ -33,7 +39,7 @@ class CreateUser extends CreateRecord {
     }
 
     /**
-     * Sincroniza o perfil e cria o vínculo com aluno ou professor após cadastrar o usuário.
+     * Sincroniza o perfil, cria o vínculo docente e envia o convite após cadastrar o usuário.
      *
      * @return void
      */
@@ -45,15 +51,6 @@ class CreateUser extends CreateRecord {
         }
 
         $this->record->syncRoles([$role]);
-
-        if ($role === 'student' && !$this->record->student()->exists()) {
-            Student::create([
-                'uuid'    => (string) Str::uuid(),
-                'user_id' => $this->record->id,
-                'name'    => $this->record->name,
-                'email'   => $this->record->email,
-            ]);
-        }
 
         if ($role === 'teacher' && !$this->record->teacher()->exists()) {
             Teacher::create([
