@@ -21,7 +21,10 @@ trait HasTeacherPortalAccess {
      * @return bool
      */
     public static function canAccess(): bool {
-        return PermissionAccess::can(static::teacherPortalPermission());
+        $user = auth()->user();
+
+        return PermissionAccess::can(static::teacherPortalPermission())
+            && (bool) $user?->teacher?->canAccessOperationally();
     }
 
     /**

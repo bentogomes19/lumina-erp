@@ -4,11 +4,11 @@ namespace App\Filament\Resources\SchoolClasses\RelationManagers;
 
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
+use App\Services\Teachers\TeacherOnboardingService;
 use Filament\Actions\AttachAction;
 use Filament\Actions\DetachAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
-use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -77,27 +77,11 @@ class SubjectsRelationManager extends RelationManager {
                     ->after(function ($record, array $data) {
                         /** @var \App\Models\SchoolClass $class */
                         $class = $this->getOwnerRecord();
+                        $teacher = Teacher::findOrFail($data['teacher_id']);
 
-                        /* Já existe professor para (turma, disciplina)? */
-                        $exists = TeacherAssignment::where('class_id', $class->id)
-                            ->where('subject_id', $record->id)
-                            ->exists();
-
-                        if ($exists) {
-                            Notification::make()
-                                ->title('Já existe um professor vinculado a esta disciplina nesta turma.')
-                                ->body('Remova ou edite o vínculo atual antes de cadastrar outro professor.')
-                                ->warning()
-                                ->send();
-
-                            return;
-                        }
-
-                        /* Se não existe, cria o vínculo. */
-                        TeacherAssignment::create([
+                        app(TeacherOnboardingService::class)->createAssignment($teacher, [
                             'class_id'   => $class->id,
                             'subject_id' => $record->id,
-                            'teacher_id' => $data['teacher_id'],
                         ]);
                     }),
             ])
@@ -126,16 +110,22 @@ class SubjectsRelationManager extends RelationManager {
                     ->using(function ($record, array $data) {
                         $class = $this->getOwnerRecord();
 
-                        /* aqui pode trocar o professor livremente, porque continua 1 disciplina / 1 turma / 1 professor. */
-                        TeacherAssignment::updateOrCreate(
-                            [
-                                'class_id'   => $class->id,
-                                'subject_id' => $record->id,
-                            ],
-                            [
-                                'teacher_id' => $data['teacher_id'],
-                            ],
-                        );
+                        $assignment = TeacherAssignment::query()
+                            ->where('class_id', $class->id)
+                            ->where('subject_id', $record->id)
+                            ->first();
+                        $teacher = Teacher::findOrFail($data['teacher_id']);
+
+                        if ($assignment) {
+                            app(TeacherOnboardingService::class)
+                                ->updateAssignment($assignment, [], $teacher);
+                            return;
+                        }
+
+                        app(TeacherOnboardingService::class)->createAssignment($teacher, [
+                            'class_id'   => $class->id,
+                            'subject_id' => $record->id,
+                        ]);
                     }),
 
                 DetachAction::make()

@@ -17,7 +17,7 @@ class TeacherAssignmentForm {
     public static function configure(Schema $schema): Schema {
         return $schema
             ->components([
-                Select::make('school_class_id')
+                Select::make('class_id')
                     ->label('Turma')
                     ->relationship('schoolClass', 'name')
                     ->required(),

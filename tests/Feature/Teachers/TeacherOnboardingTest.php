@@ -1,0 +1,310 @@
+<?php
+
+namespace Tests\Feature\Teachers;
+
+use App\Enums\TeacherAccessAction;
+use App\Enums\TeacherOnboardingState;
+use App\Enums\TeacherStatus;
+use App\Models\GradeLevel;
+use App\Models\Role;
+use App\Models\SchoolClass;
+use App\Models\SchoolYear;
+use App\Models\Subject;
+use App\Services\Teachers\TeacherOnboardingService;
+use Filament\Panel;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Tests\TestCase;
+
+class TeacherOnboardingTest extends TestCase {
+
+    use RefreshDatabase;
+
+    /**
+     * Garante que a opção sem acesso crie somente o cadastro docente.
+     *
+     * @return void
+     */
+    public function test_onboarding_without_access_does_not_create_user(): void {
+        $result = $this->service()->create($this->teacherData());
+
+        $this->assertFalse($result->userCreated);
+        $this->assertNull($result->teacher->user_id);
+        $this->assertDatabaseCount('users', 0);
+        $this->assertSame(
+            TeacherOnboardingState::WITHOUT_USER,
+            $this->service()->onboardingState($result->teacher),
+        );
+    }
+
+    /**
+     * Garante que um acesso sem alocações seja identificado para continuidade administrativa.
+     *
+     * @return void
+     */
+    public function test_onboarding_with_access_and_without_assignment_has_clear_state(): void {
+        $this->createTeacherRole();
+        $data                  = $this->teacherData();
+        $data['access_action'] = TeacherAccessAction::CREATE->value;
+        $result                = $this->service()->create($data);
+
+        $this->assertTrue($result->userCreated);
+        $this->assertNotNull($result->teacher->user_id);
+        $this->assertTrue($result->teacher->user->hasRole('teacher'));
+        $this->assertSame(
+            TeacherOnboardingState::WITHOUT_ASSIGNMENT,
+            $this->service()->onboardingState($result->teacher),
+        );
+    }
+
+    /**
+     * Garante que o fluxo completo crie acesso e alocação prontos para uso.
+     *
+     * @return void
+     */
+    public function test_complete_onboarding_creates_user_and_assignment(): void {
+        $this->createTeacherRole();
+        [$schoolClass, $subject] = $this->academicStructure();
+        $data                    = $this->teacherData();
+        $data['access_action']   = TeacherAccessAction::CREATE->value;
+        $data['assignments']     = [[
+            'class_id'   => $schoolClass->id,
+            'subject_id' => $subject->id,
+        ]];
+
+        $result = $this->service()->create($data);
+
+        $this->assertTrue($result->userCreated);
+        $this->assertSame(1, $result->assignmentsCreated);
+        $this->assertDatabaseHas('teacher_assignments', [
+            'teacher_id' => $result->teacher->id,
+            'class_id'   => $schoolClass->id,
+            'subject_id' => $subject->id,
+        ]);
+        $this->assertSame(
+            TeacherOnboardingState::READY_FOR_ACCESS,
+            $this->service()->onboardingState($result->teacher),
+        );
+        $this->assertTrue(
+            $result->teacher->user->canAccessPanel($this->createMock(Panel::class)),
+        );
+    }
+
+    /**
+     * Garante que uma submissão repetida não duplique professor, usuário ou alocação.
+     *
+     * @return void
+     */
+    public function test_reprocessing_same_onboarding_is_idempotent(): void {
+        $this->createTeacherRole();
+        [$schoolClass, $subject] = $this->academicStructure();
+        $data                    = $this->teacherData();
+        $data['access_action']   = TeacherAccessAction::CREATE->value;
+        $data['assignments']     = [[
+            'class_id'   => $schoolClass->id,
+            'subject_id' => $subject->id,
+        ]];
+
+        $first  = $this->service()->create($data);
+        $replay = $this->service()->create($data);
+
+        $this->assertSame($first->teacher->id, $replay->teacher->id);
+        $this->assertTrue($replay->replayed);
+        $this->assertDatabaseCount('teachers', 1);
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('teacher_assignments', 1);
+    }
+
+    /**
+     * Garante a detecção normalizada de CPF, matrícula funcional e e-mail duplicados.
+     *
+     * @return void
+     */
+    public function test_onboarding_rejects_duplicate_teacher_identity(): void {
+        $this->service()->create($this->teacherData());
+        $attempts = [
+            array_merge($this->teacherData('DOC-002'), [
+                'cpf'   => '52998224725',
+                'email' => 'outro-cpf@example.test',
+            ]),
+            array_merge($this->teacherData('doc-001'), [
+                'cpf'   => '111.444.777-35',
+                'email' => 'outra-matricula@example.test',
+            ]),
+            array_merge($this->teacherData('DOC-003'), [
+                'cpf'   => '123.456.789-09',
+                'email' => ' PROFESSOR@EXAMPLE.TEST ',
+            ]),
+        ];
+
+        foreach ($attempts as $attempt) {
+            try {
+                $this->service()->create($attempt);
+                $this->fail('O onboarding deveria rejeitar a identidade docente duplicada.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('name', $exception->errors());
+            }
+        }
+
+        $this->assertDatabaseCount('teachers', 1);
+    }
+
+    /**
+     * Garante que repetir a mesma alocação não duplique o vínculo e que conflitos sejam rejeitados.
+     *
+     * @return void
+     */
+    public function test_assignment_shortcuts_are_idempotent_and_reject_conflicts(): void {
+        [$schoolClass, $subject] = $this->academicStructure();
+        $teacher                = $this->service()->create($this->teacherData())->teacher;
+        $assignmentData         = [
+            'class_id'   => $schoolClass->id,
+            'subject_id' => $subject->id,
+        ];
+
+        $first  = $this->service()->createAssignment($teacher, $assignmentData);
+        $replay = $this->service()->createAssignment($teacher, $assignmentData);
+
+        $this->assertSame($first->id, $replay->id);
+        $this->assertDatabaseCount('teacher_assignments', 1);
+
+        $otherTeacher = $this->service()->create($this->teacherData('DOC-002'))->teacher;
+
+        try {
+            $this->service()->createAssignment($otherTeacher, $assignmentData);
+            $this->fail('A alocação conflitante deveria ser rejeitada.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('subject_id', $exception->errors());
+        }
+
+        $this->assertDatabaseCount('teacher_assignments', 1);
+    }
+
+    /**
+     * Garante que professores inativos, afastados ou desligados não acessem nem recebam convite.
+     *
+     * @return void
+     */
+    public function test_non_operational_teacher_cannot_access_or_receive_invitation(): void {
+        $this->createTeacherRole();
+        [$schoolClass] = $this->academicStructure();
+        $statuses      = [
+            TeacherStatus::INACTIVE,
+            TeacherStatus::SABBATICAL,
+            TeacherStatus::TERMINATED,
+        ];
+
+        foreach ($statuses as $index => $status) {
+            $subject = Subject::create([
+                'code'     => 'STATUS-'.($index + 1),
+                'name'     => 'Disciplina '.($index + 1),
+                'category' => 'matematica',
+                'status'   => 'active',
+            ]);
+            $data                  = $this->teacherData('DOC-'.($index + 10));
+            $data['status']        = $status->value;
+            $data['access_action'] = TeacherAccessAction::CREATE->value;
+            $data['assignments']   = [[
+                'class_id'   => $schoolClass->id,
+                'subject_id' => $subject->id,
+            ]];
+            $result                = $this->service()->create($data);
+
+            $this->assertFalse(
+                $result->teacher->user->canAccessPanel($this->createMock(Panel::class)),
+            );
+            $this->assertSame(
+                TeacherOnboardingState::ACCESS_BLOCKED,
+                $this->service()->onboardingState($result->teacher),
+            );
+
+            try {
+                $this->service()->inviteAccess($result->teacher);
+                $this->fail('Professor sem situação operacional não deveria receber convite.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('email', $exception->errors());
+            }
+        }
+    }
+
+    /**
+     * Retorna uma nova instância do serviço de onboarding docente.
+     *
+     * @return TeacherOnboardingService
+     */
+    private function service(): TeacherOnboardingService {
+        return app(TeacherOnboardingService::class);
+    }
+
+    /**
+     * Retorna dados válidos e únicos para cadastrar um professor.
+     *
+     * @param string $employeeNumber
+     *
+     * @return array<string, mixed>
+     */
+    private function teacherData(string $employeeNumber = 'DOC-001'): array {
+        $suffix = strtolower(str_replace('DOC-', '', $employeeNumber));
+
+        return [
+            'onboarding_token' => (string) Str::uuid(),
+            'name'             => "Professor {$suffix}",
+            'employee_number'  => $employeeNumber,
+            'cpf'              => $employeeNumber === 'DOC-001' ? '529.982.247-25' : null,
+            'email'            => "professor-{$suffix}@example.test",
+            'status'           => TeacherStatus::ACTIVE->value,
+            'access_action'    => TeacherAccessAction::NONE->value,
+        ];
+    }
+
+    /**
+     * Cria turma e disciplina para os cenários de alocação.
+     *
+     * @return array{0: SchoolClass, 1: Subject}
+     */
+    private function academicStructure(): array {
+        $schoolYear = SchoolYear::create([
+            'year'      => 2026,
+            'starts_at' => '2026-02-02',
+            'ends_at'   => '2026-12-18',
+            'is_active' => true,
+            'status'    => 'ativo',
+        ]);
+        $gradeLevel = GradeLevel::create([
+            'name'          => '1º Ano Fundamental',
+            'stage'         => 'fundamental_i',
+            'display_order' => 1,
+        ]);
+        $schoolClass = SchoolClass::create([
+            'uuid'           => (string) Str::uuid(),
+            'name'           => 'Turma A',
+            'grade_level_id' => $gradeLevel->id,
+            'school_year_id' => $schoolYear->id,
+            'shift'          => 'morning',
+            'type'           => 'regular',
+            'capacity'       => 30,
+            'status'         => 'open',
+        ]);
+        $subject = Subject::create([
+            'code'     => 'MAT-001',
+            'name'     => 'Matemática',
+            'category' => 'matematica',
+            'status'   => 'active',
+        ]);
+
+        return [$schoolClass, $subject];
+    }
+
+    /**
+     * Cria o papel necessário para o acesso docente.
+     *
+     * @return Role
+     */
+    private function createTeacherRole(): Role {
+        return Role::create([
+            'name'       => 'teacher',
+            'guard_name' => 'web',
+        ]);
+    }
+}

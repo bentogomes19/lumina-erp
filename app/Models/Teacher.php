@@ -18,6 +18,7 @@ class Teacher extends BaseModel {
      */
     protected $fillable = [
         'uuid',
+        'onboarding_token',
         'user_id',
         'employee_number',
         'name',
@@ -59,6 +60,15 @@ class Teacher extends BaseModel {
         'admission_date'   => 'date',
         'termination_date' => 'date',
         'birth_date'       => 'date',
+    ];
+
+    /**
+     * Campos omitidos nas serializações do professor.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'onboarding_token',
     ];
 
     /**
@@ -113,6 +123,16 @@ class Teacher extends BaseModel {
      */
     public function remainingWeeklyWorkload(): ?int {
         return $this->weekly_workload;
+    }
+
+    /**
+     * Indica se o professor está em situação funcional apta ao acesso operacional.
+     *
+     * @return bool
+     */
+    public function canAccessOperationally(): bool {
+        return $this->status === TeacherStatus::ACTIVE
+            && !$this->termination_date;
     }
 
     /**

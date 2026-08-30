@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
-use App\Models\Teacher;
 use App\Services\Auth\FirstAccessInvitationService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -24,9 +23,9 @@ class CreateUser extends CreateRecord {
      * @return array
      */
     protected function mutateFormDataBeforeCreate(array $data): array {
-        if (($data['role'] ?? null) === 'student') {
+        if (in_array($data['role'] ?? null, ['student', 'teacher'], true)) {
             throw ValidationException::withMessages([
-                'role' => 'Crie o acesso do aluno pelo recurso Alunos ou pelo fluxo Matricular aluno.',
+                'role' => 'Crie acessos acadêmicos pelo onboarding de Alunos ou Professores.',
             ]);
         }
 
@@ -39,7 +38,7 @@ class CreateUser extends CreateRecord {
     }
 
     /**
-     * Sincroniza o perfil, cria o vínculo docente e envia o convite após cadastrar o usuário.
+     * Sincroniza o perfil e envia o convite após cadastrar um usuário administrativo.
      *
      * @return void
      */
@@ -51,15 +50,6 @@ class CreateUser extends CreateRecord {
         }
 
         $this->record->syncRoles([$role]);
-
-        if ($role === 'teacher' && !$this->record->teacher()->exists()) {
-            Teacher::create([
-                'uuid'    => (string) Str::uuid(),
-                'user_id' => $this->record->id,
-                'name'    => $this->record->name,
-                'email'   => $this->record->email,
-            ]);
-        }
 
         $url = app(FirstAccessInvitationService::class)->issue($this->record);
 
