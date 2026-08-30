@@ -6,6 +6,7 @@ use App\Enums\Gender;
 use App\Enums\StudentStatus;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -27,6 +28,17 @@ class StudentForm {
         return $schema
             ->columns(12)
             ->components([
+                Section::make('Pré-cadastro do aluno')
+                    ->description('Esta operação cria somente o cadastro do aluno. Matrícula, usuário e convite poderão ser realizados separadamente depois.')
+                    ->icon('fas-circle-info')
+                    ->schema([
+                        Placeholder::make('records_to_create')
+                            ->label('Resultado ao salvar')
+                            ->content('Criar 1 cadastro de aluno · Não criar matrícula · Não criar usuário · Não enviar convite'),
+                    ])
+                    ->visibleOn('create')
+                    ->columnSpanFull(),
+
                 Section::make('Identificação')
                     ->schema([
                         TextInput::make('registration_number')
@@ -190,10 +202,10 @@ class StudentForm {
                     ->columns(12)
                     ->columnSpan(8),
 
-                Section::make('Vínculo')
+                Section::make('Situação do aluno')
                     ->schema([
                         DatePicker::make('enrollment_date')
-                            ->label('Data de Matrícula')
+                            ->label('Data de ingresso')
                             ->native(false)
                             ->columnSpan(6),
 

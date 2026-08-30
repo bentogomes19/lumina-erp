@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\Gender;
-use App\Enums\StudentStatus;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -84,7 +82,7 @@ class User extends Authenticatable implements FilamentUser {
     }
 
     /**
-     * Configura eventos de criação e sincronização com perfis acadêmicos.
+     * Configura eventos de criação e sincronização com o perfil docente.
      *
      * @return void
      */
@@ -97,31 +95,6 @@ class User extends Authenticatable implements FilamentUser {
 
         static::saved(function ($user) {
             $roleName = $user->roles()->pluck('name')->first();
-            if ($roleName === 'student') {
-                Student::updateOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'uuid'       => $user->uuid,
-                        'name'       => $user->name,
-                        'email'      => $user->email,
-                        'cpf'        => $user->cpf,
-                        'birth_date' => $user->birth_date,
-                        'gender'     => match ((string)$user->gender) {
-                            'Masculino', 'M' => Gender::M->value,
-                            'Feminino',  'F' => Gender::F->value,
-                            'Outro',     'O' => Gender::O->value,
-                            default => null,
-                        },
-                        'address'      => $user->address,
-                        'city'         => $user->city,
-                        'state'        => $user->state,
-                        'postal_code'  => $user->postal_code,
-                        'phone_number' => $user->cellphone ?? $user->phone,
-                        'status'       => $user->active ? StudentStatus::ACTIVE->value : StudentStatus::INACTIVE->value,
-                    ]
-                );
-            }
-
             if ($roleName === 'teacher') {
                 Teacher::updateOrCreate(
                     ['user_id' => $user->id],

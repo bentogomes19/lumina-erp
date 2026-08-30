@@ -12,6 +12,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rules\Enum as EnumRule;
 use Spatie\Permission\Models\Role;
@@ -58,7 +59,10 @@ class UserForm {
 
                     Select::make('role')
                         ->label('Perfil / Papel')
-                        ->options(self::ROLE_LABELS)
+                        ->options(fn ($record): array => ($record
+                            && ($record->hasRole('student') || $record->student()->exists()))
+                            ? Arr::only(self::ROLE_LABELS, ['student'])
+                            : Arr::except(self::ROLE_LABELS, ['student']))
                         ->required()
                         ->native(false)
                         ->afterStateHydrated(function ($component, $record) {
@@ -76,6 +80,12 @@ class UserForm {
                             return $state;
                         })
                         ->helperText('Define as permissões de acesso ao sistema.'),
+
+                    Placeholder::make('student_onboarding_notice')
+                        ->label('Acesso de aluno')
+                        ->content('Usuários de alunos são criados pelo recurso Alunos ou pelo fluxo Matricular aluno, que verificam duplicidades e vínculos acadêmicos.')
+                        ->visibleOn('create')
+                        ->columnSpanFull(),
 
                     Toggle::make('active')
                         ->label('Ativo')
