@@ -3,13 +3,14 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\DashboardStats;
-use App\Support\PermissionAccess;
+use App\Filament\Widgets\EnrollmentStatsWidget;
+use App\Support\AdministrativeDashboardAccess;
 use Filament\Pages\Page;
 
 class DashboardAdmin extends Page {
 
-    protected static ?string $navigationLabel                = 'Painel do Administrador';
-    protected static ?string $title                          = 'Painel do Administrador';
+    protected static ?string $navigationLabel                = 'Painel Administrativo';
+    protected static ?string $title                          = 'Painel Administrativo';
     protected static ?string $slug                           = 'dashboard-admin';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-house';
     protected static ?int $navigationSort                    = 0;
@@ -20,7 +21,7 @@ class DashboardAdmin extends Page {
      * @return bool
      */
     public static function shouldRegisterNavigation(): bool {
-        return PermissionAccess::can('system.dashboard.view');
+        return AdministrativeDashboardAccess::hasAdministrativeRole(auth()->user());
     }
 
     /**
@@ -29,7 +30,7 @@ class DashboardAdmin extends Page {
      * @return bool
      */
     public static function canAccess(): bool {
-        return PermissionAccess::can('system.dashboard.view');
+        return AdministrativeDashboardAccess::hasAdministrativeRole(auth()->user());
     }
 
     /**
@@ -49,10 +50,9 @@ class DashboardAdmin extends Page {
     protected function getHeaderWidgets(): array {
         return [
             DashboardStats::class,
+            EnrollmentStatsWidget::class,
         ];
     }
-
-
 
     /**
      * Retorna a quantidade de colunas dos widgets do cabeçalho.

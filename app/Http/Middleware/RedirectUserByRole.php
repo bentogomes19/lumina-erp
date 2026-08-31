@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\AdministrativeDashboardAccess;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,21 +25,9 @@ class RedirectUserByRole {
         $user = auth()->user();
         $path = trim($request->path(), '/');
 
-        /* Se está tentando acessar apenas /lumina (raiz do painel) ou está em uma página que não é um dashboard específico. */
+        /* Define uma entrada única para a raiz do painel administrativo. */
         if ($path === 'lumina' || $path === 'lumina/') {
-
-            /* Redireciona para o dashboard apropriado. */
-            if ($user->hasRole('admin')) {
-                return redirect('/lumina/dashboard-admin');
-            }
-
-            if ($user->hasRole('teacher')) {
-                return redirect('/lumina/dashboard-teacher');
-            }
-
-            if ($user->hasRole('student')) {
-                return redirect('/lumina/dashboard-student');
-            }
+            return redirect(AdministrativeDashboardAccess::destinationFor($user));
         }
 
         /* Se já está em uma rota específica do painel, deixa passar. */
