@@ -94,22 +94,12 @@ class EditEnrollment extends EditRecord {
                             ->nullable(),
                     ])
                     ->action(function (array $data): void {
-                        $record         = $this->record;
-                        $statusAnterior = $record->status?->value;
-
-                        $record->update([
-                            'status'              => EnrollmentStatus::LOCKED,
-                            'locked_reason'       => $data['locked_reason'],
-                            'lock_expires_at'     => $data['lock_expires_at'] ?? null,
-                            'operated_by_user_id' => auth()->id(),
-                        ]);
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'trancamento',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::LOCKED->value,
-                            observacao: $data['observacao'] ?? null,
+                        $record = app(StudentEnrollmentService::class)->lock(
+                            $this->record,
+                            $data['locked_reason'],
+                            $data['lock_expires_at'] ?? null,
+                            $data['observacao'] ?? null,
+                            auth()->id(),
                         );
 
                         $this->refreshFormData(['status', 'locked_reason', 'lock_expires_at']);
@@ -136,25 +126,10 @@ class EditEnrollment extends EditRecord {
                             ->rows(3),
                     ])
                     ->action(function (array $data): void {
-                        $record         = $this->record;
-                        $statusAnterior = $record->status?->value;
-
-                        $record = app(StudentEnrollmentService::class)->updateStatus(
-                            $record,
-                            EnrollmentStatus::ACTIVE,
-                            [
-                                'locked_reason'       => null,
-                                'lock_expires_at'     => null,
-                                'operated_by_user_id' => auth()->id(),
-                            ],
-                        );
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'reativacao',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::ACTIVE->value,
-                            observacao: $data['observacao'],
+                        $record = app(StudentEnrollmentService::class)->reactivate(
+                            $this->record,
+                            $data['observacao'],
+                            auth()->id(),
                         );
 
                         $this->refreshFormData(['status', 'locked_reason', 'lock_expires_at']);
@@ -252,23 +227,11 @@ class EditEnrollment extends EditRecord {
                     ->requiresConfirmation()
                     ->modalSubmitActionLabel('Confirmar Transferência')
                     ->action(function (array $data): void {
-                        $record         = $this->record;
-                        $statusAnterior = $record->status?->value;
-
-                        $record->update([
-                            'status'               => EnrollmentStatus::TRANSFERRED_EXTERNAL,
-                            'transfer_type'        => 'external',
-                            'transfer_destination' => $data['transfer_destination'] ?? null,
-                            'transfer_reason'      => $data['transfer_reason'],
-                            'operated_by_user_id'  => auth()->id(),
-                        ]);
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'transferencia_externa',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::TRANSFERRED_EXTERNAL->value,
-                            observacao: 'Destino: ' . ($data['transfer_destination'] ?? 'não informado') . ". Motivo: {$data['transfer_reason']}",
+                        $record = app(StudentEnrollmentService::class)->transferExternal(
+                            $this->record,
+                            $data['transfer_destination'] ?? null,
+                            $data['transfer_reason'],
+                            auth()->id(),
                         );
 
                         $this->refreshFormData(['status', 'transfer_type', 'transfer_destination', 'transfer_reason']);
@@ -306,22 +269,11 @@ class EditEnrollment extends EditRecord {
                     ->requiresConfirmation()
                     ->modalSubmitActionLabel('Confirmar Cancelamento')
                     ->action(function (array $data): void {
-                        $record         = $this->record;
-                        $statusAnterior = $record->status?->value;
-
-                        $record->update([
-                            'status'              => EnrollmentStatus::CANCELED,
-                            'cancel_reason'       => $data['cancel_reason'],
-                            'cancel_observations' => $data['cancel_observations'] ?? null,
-                            'operated_by_user_id' => auth()->id(),
-                        ]);
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'cancelamento',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::CANCELED->value,
-                            observacao: "Motivo: {$data['cancel_reason']}. " . ($data['cancel_observations'] ? "Obs: {$data['cancel_observations']}" : ''),
+                        $record = app(StudentEnrollmentService::class)->cancel(
+                            $this->record,
+                            $data['cancel_reason'],
+                            $data['cancel_observations'] ?? null,
+                            auth()->id(),
                         );
 
                         $this->refreshFormData(['status', 'cancel_reason', 'cancel_observations']);
@@ -356,25 +308,10 @@ class EditEnrollment extends EditRecord {
                             return;
                         }
 
-                        $record         = $this->record;
-                        $statusAnterior = $record->status?->value;
-
-                        $record = app(StudentEnrollmentService::class)->updateStatus(
-                            $record,
-                            EnrollmentStatus::ACTIVE,
-                            [
-                                'cancel_reason'       => null,
-                                'cancel_observations' => null,
-                                'operated_by_user_id' => auth()->id(),
-                            ],
-                        );
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'reversao_cancelamento',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::ACTIVE->value,
-                            observacao: $data['observacao'],
+                        $record = app(StudentEnrollmentService::class)->restoreCanceled(
+                            $this->record,
+                            $data['observacao'],
+                            auth()->id(),
                         );
 
                         $this->refreshFormData(['status', 'cancel_reason', 'cancel_observations']);

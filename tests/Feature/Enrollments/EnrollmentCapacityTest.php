@@ -172,8 +172,8 @@ class EnrollmentCapacityTest extends TestCase {
             'A turma Turma 2026 atingiu a capacidade de 3 vagas. Ocupação atual: 3.',
         );
 
-        $this->service()->updateStatus($active, EnrollmentStatus::CANCELED);
-        $this->service()->updateStatus($canceled, EnrollmentStatus::ACTIVE);
+        $this->service()->cancel($active, 'Teste de liberação de vaga.');
+        $this->service()->restoreCanceled($canceled, 'Teste de retomada de vaga.');
 
         $this->assertSame(3, $this->service()->occupiedSlots($schoolClass));
         $this->assertSame(EnrollmentStatus::CANCELED, $active->fresh()->status);

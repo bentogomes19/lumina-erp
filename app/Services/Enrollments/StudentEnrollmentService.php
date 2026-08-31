@@ -24,6 +24,19 @@ use RuntimeException;
 class StudentEnrollmentService {
 
     /**
+     * Transições comuns permitidas para o ciclo de vida da matrícula.
+     *
+     * @var array<string, array<int, string>>
+     */
+    private const ALLOWED_STATUS_TRANSITIONS = [
+        'Ativa'     => ['Suspensa', 'Trancada', 'Transferida Interna', 'Transferida Externa', 'Cancelada', 'Completa'],
+        'Suspensa'  => ['Ativa', 'Cancelada', 'Transferida Externa'],
+        'Trancada'  => ['Ativa', 'Cancelada', 'Transferida Externa'],
+        'Completa'  => ['Ativa'],
+        'Cancelada' => ['Ativa'],
+    ];
+
+    /**
      * Cria aluno, matrícula, usuário, papel e auditoria em uma única transação.
      *
      * @param array<string, mixed> $data
@@ -269,6 +282,9 @@ class StudentEnrollmentService {
             }
 
             $this->ensureStudentIsNotEnrolled($student, $schoolClass);
+            $status = $data['status'] ?? EnrollmentStatus::ACTIVE;
+            $status = $status instanceof EnrollmentStatus ? $status : EnrollmentStatus::from($status);
+            $this->ensureStudentHasNoActiveEnrollmentInYear($student->id, (int) $schoolClass->school_year_id, null, $status);
 
             return $this->createEnrollmentInClass($schoolClass, $data);
         }, attempts: 3);
@@ -338,6 +354,7 @@ class StudentEnrollmentService {
                 statusAnterior: $statusAnterior,
                 statusNovo: EnrollmentStatus::TRANSFERRED_INTERNAL->value,
                 observacao: "Transferido de {$sourceClassName} para {$targetClass->name}. Nova matrícula: {$newEnrollment->registration_number}. Motivo: {$reason}",
+                operatorId: $operatorId,
             );
 
             return $newEnrollment;
@@ -351,6 +368,7 @@ class StudentEnrollmentService {
      * @param int $targetClassId
      * @param int $schoolYearId
      * @param int|null $operatorId
+     * @param string|null $reason
      *
      * @return Enrollment
      */
@@ -359,8 +377,9 @@ class StudentEnrollmentService {
         int $targetClassId,
         int $schoolYearId,
         ?int $operatorId = null,
+        ?string $reason = null,
     ): Enrollment {
-        return DB::transaction(function () use ($enrollment, $targetClassId, $schoolYearId, $operatorId): Enrollment {
+        return DB::transaction(function () use ($enrollment, $targetClassId, $schoolYearId, $operatorId, $reason): Enrollment {
             $targetClass = $this->findAndLockSchoolClass($targetClassId);
             $source      = Enrollment::query()->lockForUpdate()->findOrFail($enrollment->id);
 
@@ -379,25 +398,183 @@ class StudentEnrollmentService {
             $alreadyEnrolled = Enrollment::query()
                 ->where('student_id', $source->student_id)
                 ->where('school_year_id', $schoolYearId)
-                ->whereIn('status', EnrollmentStatus::occupyingValues())
+                ->where('status', EnrollmentStatus::ACTIVE->value)
                 ->exists();
 
             if ($alreadyEnrolled) {
                 throw ValidationException::withMessages([
-                    'class_id' => 'O aluno já possui matrícula que ocupa vaga no ano letivo de destino.',
+                    'class_id' => 'O aluno já possui matrícula ativa no ano letivo de destino.',
                 ]);
             }
 
             $this->ensureStudentIsNotEnrolled($source->student()->firstOrFail(), $targetClass);
 
-            return $this->createEnrollmentInClass($targetClass, [
+            $newEnrollment = $this->createEnrollmentInClass($targetClass, [
                 'student_id'             => $source->student_id,
                 'enrollment_date'        => now(),
                 'status'                 => EnrollmentStatus::ACTIVE,
                 'previous_enrollment_id' => $source->id,
                 'operated_by_user_id'    => $operatorId,
             ]);
+
+            EnrollmentLog::registrar(
+                enrollment: $newEnrollment,
+                acao: 'rematricula',
+                statusNovo: EnrollmentStatus::ACTIVE->value,
+                observacao: $reason ?? "Rematrícula a partir da matrícula {$source->registration_number}.",
+                operatorId: $operatorId,
+            );
+
+            return $newEnrollment;
         }, attempts: 3);
+    }
+
+    /**
+     * Tranca uma matrícula ativa preservando o histórico e registrando auditoria.
+     *
+     * @param Enrollment $enrollment
+     * @param string $reason
+     * @param mixed $expiresAt
+     * @param string|null $observation
+     * @param int|null $operatorId
+     *
+     * @return Enrollment
+     */
+    public function lock(
+        Enrollment $enrollment,
+        string $reason,
+        mixed $expiresAt = null,
+        ?string $observation = null,
+        ?int $operatorId = null,
+    ): Enrollment {
+        return DB::transaction(fn (): Enrollment => $this->transitionStatus(
+            enrollment: $enrollment,
+            targetStatus: EnrollmentStatus::LOCKED,
+            action: 'trancamento',
+            attributes: [
+                'locked_reason'       => $reason,
+                'lock_expires_at'     => $expiresAt,
+                'operated_by_user_id' => $operatorId,
+            ],
+            observation: $observation,
+            operatorId: $operatorId,
+            allowedSources: [EnrollmentStatus::ACTIVE],
+        ), attempts: 3);
+    }
+
+    /**
+     * Reativa uma matrícula suspensa ou trancada.
+     *
+     * @param Enrollment $enrollment
+     * @param string $reason
+     * @param int|null $operatorId
+     *
+     * @return Enrollment
+     */
+    public function reactivate(Enrollment $enrollment, string $reason, ?int $operatorId = null): Enrollment {
+        return DB::transaction(fn (): Enrollment => $this->transitionStatus(
+            enrollment: $enrollment,
+            targetStatus: EnrollmentStatus::ACTIVE,
+            action: 'reativacao',
+            attributes: [
+                'locked_reason'       => null,
+                'lock_expires_at'     => null,
+                'operated_by_user_id' => $operatorId,
+            ],
+            observation: $reason,
+            operatorId: $operatorId,
+            allowedSources: [EnrollmentStatus::LOCKED, EnrollmentStatus::SUSPENDED],
+        ), attempts: 3);
+    }
+
+    /**
+     * Cancela uma matrícula elegível preservando o histórico acadêmico.
+     *
+     * @param Enrollment $enrollment
+     * @param string $reason
+     * @param string|null $observations
+     * @param int|null $operatorId
+     *
+     * @return Enrollment
+     */
+    public function cancel(
+        Enrollment $enrollment,
+        string $reason,
+        ?string $observations = null,
+        ?int $operatorId = null,
+    ): Enrollment {
+        $observation = "Motivo: {$reason}. ".($observations ? "Obs: {$observations}" : '');
+
+        return DB::transaction(fn (): Enrollment => $this->transitionStatus(
+            enrollment: $enrollment,
+            targetStatus: EnrollmentStatus::CANCELED,
+            action: 'cancelamento',
+            attributes: [
+                'cancel_reason'       => $reason,
+                'cancel_observations' => $observations,
+                'operated_by_user_id' => $operatorId,
+            ],
+            observation: trim($observation),
+            operatorId: $operatorId,
+            allowedSources: [EnrollmentStatus::ACTIVE, EnrollmentStatus::LOCKED, EnrollmentStatus::SUSPENDED],
+        ), attempts: 3);
+    }
+
+    /**
+     * Reverte um cancelamento por ação administrativa justificada.
+     *
+     * @param Enrollment $enrollment
+     * @param string $reason
+     * @param int|null $operatorId
+     *
+     * @return Enrollment
+     */
+    public function restoreCanceled(Enrollment $enrollment, string $reason, ?int $operatorId = null): Enrollment {
+        return DB::transaction(fn (): Enrollment => $this->transitionStatus(
+            enrollment: $enrollment,
+            targetStatus: EnrollmentStatus::ACTIVE,
+            action: 'reversao_cancelamento',
+            attributes: [
+                'cancel_reason'       => null,
+                'cancel_observations' => null,
+                'operated_by_user_id' => $operatorId,
+            ],
+            observation: $reason,
+            operatorId: $operatorId,
+            allowedSources: [EnrollmentStatus::CANCELED],
+        ), attempts: 3);
+    }
+
+    /**
+     * Registra transferência externa encerrando a matrícula na instituição.
+     *
+     * @param Enrollment $enrollment
+     * @param string|null $destination
+     * @param string $reason
+     * @param int|null $operatorId
+     *
+     * @return Enrollment
+     */
+    public function transferExternal(
+        Enrollment $enrollment,
+        ?string $destination,
+        string $reason,
+        ?int $operatorId = null,
+    ): Enrollment {
+        return DB::transaction(fn (): Enrollment => $this->transitionStatus(
+            enrollment: $enrollment,
+            targetStatus: EnrollmentStatus::TRANSFERRED_EXTERNAL,
+            action: 'transferencia_externa',
+            attributes: [
+                'transfer_type'        => 'external',
+                'transfer_destination' => $destination,
+                'transfer_reason'      => $reason,
+                'operated_by_user_id'  => $operatorId,
+            ],
+            observation: 'Destino: '.($destination ?: 'não informado').". Motivo: {$reason}",
+            operatorId: $operatorId,
+            allowedSources: [EnrollmentStatus::ACTIVE, EnrollmentStatus::LOCKED],
+        ), attempts: 3);
     }
 
     /**
@@ -417,17 +594,14 @@ class StudentEnrollmentService {
         $targetStatus = $status instanceof EnrollmentStatus ? $status : EnrollmentStatus::from($status);
 
         return DB::transaction(function () use ($enrollment, $targetStatus, $attributes): Enrollment {
-            $schoolClass = $this->findAndLockSchoolClass((int) $enrollment->class_id);
-            $locked      = Enrollment::query()->lockForUpdate()->findOrFail($enrollment->id);
-            $oldStatus   = $locked->status;
-
-            if (!$oldStatus->occupiesSlot() && $targetStatus->occupiesSlot()) {
-                $this->ensureClassHasSlot($schoolClass, $targetStatus);
-            }
-
-            $locked->update(array_merge($attributes, ['status' => $targetStatus]));
-
-            return $locked->refresh();
+            return $this->transitionStatus(
+                enrollment: $enrollment,
+                targetStatus: $targetStatus,
+                action: 'alteracao_status',
+                attributes: $attributes,
+                observation: $attributes['observacao'] ?? null,
+                operatorId: $attributes['operated_by_user_id'] ?? null,
+            );
         }, attempts: 3);
     }
 
@@ -532,12 +706,157 @@ class StudentEnrollmentService {
         $status = $status instanceof EnrollmentStatus ? $status : EnrollmentStatus::from($status);
 
         $this->ensureClassHasSlot($schoolClass, $status);
+        $this->ensureStudentHasNoActiveEnrollmentInYear(
+            (int) $data['student_id'],
+            (int) $schoolClass->school_year_id,
+            $data['ignore_enrollment_id'] ?? null,
+            $status,
+        );
 
         return Enrollment::create(array_merge($data, [
             'class_id'       => $schoolClass->id,
             'school_year_id' => $schoolClass->school_year_id,
             'status'         => $status,
         ]));
+    }
+
+    /**
+     * Aplica uma mudança de status com validação de transição, vaga, unicidade anual e auditoria.
+     *
+     * @param Enrollment $enrollment
+     * @param EnrollmentStatus $targetStatus
+     * @param string $action
+     * @param array<string, mixed> $attributes
+     * @param string|null $observation
+     * @param int|null $operatorId
+     * @param array<int, EnrollmentStatus>|null $allowedSources
+     *
+     * @return Enrollment
+     */
+    private function transitionStatus(
+        Enrollment $enrollment,
+        EnrollmentStatus $targetStatus,
+        string $action,
+        array $attributes = [],
+        ?string $observation = null,
+        ?int $operatorId = null,
+        ?array $allowedSources = null,
+    ): Enrollment {
+        $schoolClass = $this->findAndLockSchoolClass((int) $enrollment->class_id);
+        $locked      = Enrollment::query()->lockForUpdate()->findOrFail($enrollment->id);
+        $oldStatus   = $locked->status;
+
+        $this->ensureTransitionIsAllowed($oldStatus, $targetStatus, $allowedSources);
+
+        if (!$oldStatus->occupiesSlot() && $targetStatus->occupiesSlot()) {
+            $this->ensureClassHasSlot($schoolClass, $targetStatus);
+        }
+
+        $this->ensureStudentHasNoActiveEnrollmentInYear(
+            (int) $locked->student_id,
+            (int) $locked->school_year_id,
+            (int) $locked->id,
+            $targetStatus,
+        );
+
+        $locked->update(array_merge($attributes, ['status' => $targetStatus]));
+
+        EnrollmentLog::registrar(
+            enrollment: $locked,
+            acao: $action,
+            statusAnterior: $oldStatus?->value,
+            statusNovo: $targetStatus->value,
+            observacao: $observation,
+            operatorId: $operatorId,
+        );
+
+        return $locked->refresh();
+    }
+
+    /**
+     * Valida se uma transição de status é permitida pela regra acadêmica.
+     *
+     * @param EnrollmentStatus|null $oldStatus
+     * @param EnrollmentStatus $targetStatus
+     * @param array<int, EnrollmentStatus>|null $allowedSources
+     *
+     * @return void
+     */
+    private function ensureTransitionIsAllowed(
+        ?EnrollmentStatus $oldStatus,
+        EnrollmentStatus $targetStatus,
+        ?array $allowedSources = null,
+    ): void {
+        if (!$oldStatus || $oldStatus === $targetStatus) {
+            return;
+        }
+
+        if ($allowedSources !== null && !in_array($oldStatus, $allowedSources, true)) {
+            throw ValidationException::withMessages([
+                'status' => "A transição de {$oldStatus->label()} para {$targetStatus->label()} não é permitida neste fluxo.",
+            ]);
+        }
+
+        if ($allowedSources !== null) {
+            return;
+        }
+
+        if (in_array($targetStatus, [
+            EnrollmentStatus::LOCKED,
+            EnrollmentStatus::CANCELED,
+            EnrollmentStatus::TRANSFERRED_INTERNAL,
+            EnrollmentStatus::TRANSFERRED_EXTERNAL,
+        ], true) || in_array($oldStatus, [
+            EnrollmentStatus::CANCELED,
+            EnrollmentStatus::TRANSFERRED_INTERNAL,
+            EnrollmentStatus::TRANSFERRED_EXTERNAL,
+        ], true)) {
+            throw ValidationException::withMessages([
+                'status' => 'Use a operação específica da matrícula para esta transição.',
+            ]);
+        }
+
+        $allowedTargets = self::ALLOWED_STATUS_TRANSITIONS[$oldStatus->value] ?? [];
+
+        if (!in_array($targetStatus->value, $allowedTargets, true)) {
+            throw ValidationException::withMessages([
+                'status' => "A transição de {$oldStatus->label()} para {$targetStatus->label()} não é permitida.",
+            ]);
+        }
+    }
+
+    /**
+     * Impede duas matrículas ativas do mesmo aluno no mesmo ano letivo.
+     *
+     * @param int $studentId
+     * @param int $schoolYearId
+     * @param int|null $ignoreEnrollmentId
+     * @param EnrollmentStatus $status
+     *
+     * @return void
+     */
+    private function ensureStudentHasNoActiveEnrollmentInYear(
+        int $studentId,
+        int $schoolYearId,
+        ?int $ignoreEnrollmentId,
+        EnrollmentStatus $status,
+    ): void {
+        if ($status !== EnrollmentStatus::ACTIVE) {
+            return;
+        }
+
+        $exists = Enrollment::query()
+            ->where('student_id', $studentId)
+            ->where('school_year_id', $schoolYearId)
+            ->where('status', EnrollmentStatus::ACTIVE->value)
+            ->when($ignoreEnrollmentId, fn ($query) => $query->whereKeyNot($ignoreEnrollmentId))
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'class_id' => 'O aluno já possui matrícula ativa neste ano letivo.',
+            ]);
+        }
     }
 
     /**
@@ -596,7 +915,7 @@ class StudentEnrollmentService {
     }
 
     /**
-     * Impede que o mesmo aluno seja matriculado mais de uma vez na turma.
+     * Impede que o mesmo aluno tenha duas matrículas ocupando vaga na mesma turma.
      *
      * @param Student $student
      * @param SchoolClass $schoolClass
@@ -607,11 +926,12 @@ class StudentEnrollmentService {
         $exists = Enrollment::withTrashed()
             ->where('student_id', $student->id)
             ->where('class_id', $schoolClass->id)
+            ->whereIn('status', EnrollmentStatus::occupyingValues())
             ->exists();
 
         if ($exists) {
             throw ValidationException::withMessages([
-                'class_id' => 'Este aluno já possui matrícula nesta turma.',
+                'class_id' => 'Este aluno já possui matrícula que ocupa vaga nesta turma.',
             ]);
         }
     }
@@ -925,7 +1245,7 @@ class StudentEnrollmentService {
         if (str_contains($message, 'enr_student_class_unique')
             || (str_contains($message, 'enrollments.student_id') && str_contains($message, 'enrollments.class_id'))) {
             return ValidationException::withMessages([
-                'class_id' => 'Este aluno já possui matrícula nesta turma.',
+                'class_id' => 'Este aluno já possui matrícula que ocupa vaga nesta turma.',
             ]);
         }
 

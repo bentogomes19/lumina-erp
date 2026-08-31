@@ -74,6 +74,7 @@ class EnrollmentLog extends BaseModel {
      * @param string|null $statusAnterior Status antes da ação.
      * @param string|null $statusNovo Status após a ação.
      * @param string|null $observacao Justificativa do operador.
+     * @param int|null $operatorId Operador responsável quando informado explicitamente.
      *
      * @return void
      */
@@ -83,10 +84,11 @@ class EnrollmentLog extends BaseModel {
         ?string $statusAnterior = null,
         ?string $statusNovo = null,
         ?string $observacao = null,
+        ?int $operatorId = null,
     ): void {
         static::create([
             'enrollment_id'   => $enrollment->id,
-            'operador_id'     => auth()->id(),
+            'operador_id'     => $operatorId ?? auth()->id(),
             'acao'            => $acao,
             'status_anterior' => $statusAnterior,
             'status_novo'     => $statusNovo,
