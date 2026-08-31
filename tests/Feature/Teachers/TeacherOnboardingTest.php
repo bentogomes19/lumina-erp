@@ -6,15 +6,18 @@ use App\Enums\TeacherAccessAction;
 use App\Enums\TeacherOnboardingState;
 use App\Enums\TeacherStatus;
 use App\Models\GradeLevel;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
 use App\Models\Subject;
+use App\Models\User;
 use App\Services\Teachers\TeacherOnboardingService;
 use Filament\Panel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class TeacherOnboardingTest extends TestCase {
@@ -56,6 +59,38 @@ class TeacherOnboardingTest extends TestCase {
             TeacherOnboardingState::WITHOUT_ASSIGNMENT,
             $this->service()->onboardingState($result->teacher),
         );
+    }
+
+    /**
+     * Verifica que o acesso docente é herdado pelo papel sem cópia direta.
+     *
+     * @return void
+     */
+    public function test_teacher_access_uses_role_permissions_without_direct_copy(): void {
+        $permission = Permission::create([
+            'name'       => 'teacher.dashboard.view',
+            'guard_name' => 'web',
+        ]);
+        $role = $this->createTeacherRole();
+        $role->givePermissionTo($permission);
+        $data                  = $this->teacherData();
+        $data['access_action'] = TeacherAccessAction::CREATE->value;
+
+        $result = $this->service()->create($data);
+        $user   = $result->teacher->user()->firstOrFail();
+
+        $this->assertTrue($user->hasRole('teacher'));
+        $this->assertTrue($user->can('teacher.dashboard.view'));
+        $this->assertDatabaseMissing('model_has_permissions', [
+            'permission_id' => $permission->id,
+            'model_type'    => User::class,
+            'model_id'      => $user->id,
+        ]);
+
+        $role->revokePermissionTo($permission);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->assertFalse($user->fresh()->can('teacher.dashboard.view'));
     }
 
     /**

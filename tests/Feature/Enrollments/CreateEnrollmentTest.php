@@ -5,6 +5,7 @@ namespace Tests\Feature\Enrollments;
 use App\Models\Enrollment;
 use App\Models\EnrollmentLog;
 use App\Models\GradeLevel;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class CreateEnrollmentTest extends TestCase {
@@ -48,6 +50,37 @@ class CreateEnrollmentTest extends TestCase {
             'acao'          => 'criacao',
             'status_novo'   => 'Ativa',
         ]);
+    }
+
+    /**
+     * Verifica que o acesso do aluno é herdado pelo papel e revogado pelo papel.
+     *
+     * @return void
+     */
+    public function test_student_access_uses_role_permissions_without_direct_copy(): void {
+        $schoolClass = $this->schoolClass();
+        $permission  = Permission::create([
+            'name'       => 'student.dashboard.view',
+            'guard_name' => 'web',
+        ]);
+        $role = $this->createStudentRole();
+        $role->givePermissionTo($permission);
+
+        $result = $this->service()->create($this->newStudentData($schoolClass));
+        $user   = $result->enrollment->student()->firstOrFail()->user()->firstOrFail();
+
+        $this->assertTrue($user->hasRole('student'));
+        $this->assertTrue($user->can('student.dashboard.view'));
+        $this->assertDatabaseMissing('model_has_permissions', [
+            'permission_id' => $permission->id,
+            'model_type'    => User::class,
+            'model_id'      => $user->id,
+        ]);
+
+        $role->revokePermissionTo($permission);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->assertFalse($user->fresh()->can('student.dashboard.view'));
     }
 
     /**

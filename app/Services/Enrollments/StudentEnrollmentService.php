@@ -636,7 +636,7 @@ class StudentEnrollmentService {
             ]);
         }
 
-        $role = Role::query()->with('permissions')->where('name', 'student')->first();
+        $role = Role::query()->where('name', 'student')->first();
         if (!$role) {
             throw new RuntimeException('O papel de aluno não está configurado.');
         }
@@ -667,7 +667,6 @@ class StudentEnrollmentService {
         ]);
 
         $user->syncRoles([$role]);
-        $user->syncPermissions($role->permissions);
         $student->update(['user_id' => $user->id]);
 
         return true;

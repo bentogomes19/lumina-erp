@@ -386,7 +386,7 @@ class TeacherOnboardingService {
             ]);
         }
 
-        $role = Role::query()->with('permissions')->where('name', 'teacher')->first();
+        $role = Role::query()->where('name', 'teacher')->first();
         if (!$role) {
             throw new RuntimeException('O papel de professor não está configurado.');
         }
@@ -410,7 +410,6 @@ class TeacherOnboardingService {
         ]);
 
         $user->syncRoles([$role]);
-        $user->syncPermissions($role->permissions);
         $teacher->update(['user_id' => $user->id]);
 
         return true;

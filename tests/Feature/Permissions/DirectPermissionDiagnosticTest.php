@@ -5,20 +5,19 @@ namespace Tests\Feature\Permissions;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
-use App\Support\PermissionCatalog;
-use Database\Seeders\Core\RolesPermissionsSeeder;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
-class PermissionCatalogMigrationTest extends TestCase {
+class DirectPermissionDiagnosticTest extends TestCase {
 
     private string $originalConnection;
 
     /**
-     * Cria um banco SQLite mínimo e isolado para validar a conversão.
+     * Cria um banco SQLite mínimo para exercitar o comando sem depender das migrations completas.
      *
      * @return void
      */
@@ -27,16 +26,16 @@ class PermissionCatalogMigrationTest extends TestCase {
 
         $this->originalConnection = (string) config('database.default');
         config([
-            'database.default' => 'permission_test',
-            'database.connections.permission_test' => [
+            'database.default' => 'permission_command_test',
+            'database.connections.permission_command_test' => [
                 'driver'                  => 'sqlite',
                 'database'                => ':memory:',
                 'prefix'                  => '',
                 'foreign_key_constraints' => true,
             ],
         ]);
-        DB::purge('permission_test');
-        DB::setDefaultConnection('permission_test');
+        DB::purge('permission_command_test');
+        DB::setDefaultConnection('permission_command_test');
 
         $this->createPermissionSchema();
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -49,7 +48,7 @@ class PermissionCatalogMigrationTest extends TestCase {
      */
     protected function tearDown(): void {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-        DB::purge('permission_test');
+        DB::purge('permission_command_test');
         config(['database.default' => $this->originalConnection]);
         DB::setDefaultConnection($this->originalConnection);
 
@@ -57,71 +56,42 @@ class PermissionCatalogMigrationTest extends TestCase {
     }
 
     /**
-     * Garante que a conversão preserve atribuições de papel e de usuário sem manter o alias.
+     * Garante que o diagnóstico em simulação não altere permissões diretas.
      *
      * @return void
      */
-    public function test_migration_preserves_legacy_role_and_user_assignments(): void {
-        $legacy = Permission::create([
-            'name'       => 'students.view',
-            'guard_name' => 'web',
-        ]);
-        $role = Role::create([
-            'name'       => 'catalog-test',
-            'guard_name' => 'web',
-        ]);
-        $user = User::create([
-            'name'     => 'Usuário de teste',
-            'email'    => 'catalog@example.test',
-            'password' => 'password',
-            'active'   => true,
-        ]);
+    public function test_diagnostic_dry_run_reports_direct_permissions_without_changes(): void {
+        [$user, $redundant, $exception] = $this->userWithDirectPermissions();
 
-        $role->givePermissionTo($legacy);
-        $user->givePermissionTo($legacy);
+        $exitCode = Artisan::call('permissions:direct', ['--dry-run' => true]);
+        $output   = Artisan::output();
 
-        $migration = require database_path('migrations/2026_08_30_000002_consolidate_permission_catalog.php');
-        $migration->up();
-
-        $this->assertDatabaseMissing('permissions', ['name' => 'students.view']);
-        $this->assertTrue($role->fresh()->hasPermissionTo('academic.students.view_any'));
-        $this->assertTrue($role->fresh()->hasPermissionTo('academic.students.view'));
-        $this->assertTrue($user->fresh()->hasPermissionTo('academic.students.view_any'));
-        $this->assertTrue($user->fresh()->hasPermissionTo('academic.students.view'));
+        $this->assertSame(0, $exitCode);
+        $this->assertStringContainsString('Redundante', $output);
+        $this->assertStringContainsString('Exceção direta', $output);
+        $this->assertDatabaseHas('model_has_permissions', [
+            'permission_id' => $redundant->id,
+            'model_type'    => User::class,
+            'model_id'      => $user->id,
+        ]);
+        $this->assertDatabaseHas('model_has_permissions', [
+            'permission_id' => $exception->id,
+            'model_type'    => User::class,
+            'model_id'      => $user->id,
+        ]);
     }
 
     /**
-     * Garante que a migração remova somente permissões diretas redundantes.
+     * Garante que a limpeza remova redundâncias e preserve exceções diretas.
      *
      * @return void
      */
-    public function test_redundant_direct_permission_migration_preserves_exceptions(): void {
-        $redundant = Permission::create([
-            'name'       => 'system.users.view',
-            'guard_name' => 'web',
-        ]);
-        $exception = Permission::create([
-            'name'       => 'system.users.block',
-            'guard_name' => 'web',
-        ]);
-        $role = Role::create([
-            'name'       => 'secretaria',
-            'guard_name' => 'web',
-        ]);
-        $user = User::create([
-            'name'     => 'Usuário de teste',
-            'email'    => 'direct@example.test',
-            'password' => 'password',
-            'active'   => true,
-        ]);
+    public function test_diagnostic_prune_removes_redundant_permissions_and_preserves_exceptions(): void {
+        [$user, $redundant, $exception] = $this->userWithDirectPermissions();
 
-        $role->givePermissionTo($redundant);
-        $user->assignRole($role);
-        $user->givePermissionTo([$redundant, $exception]);
+        $exitCode = Artisan::call('permissions:direct', ['--prune' => true]);
 
-        $migration = require database_path('migrations/2026_08_31_000001_remove_redundant_direct_permissions.php');
-        $migration->up();
-
+        $this->assertSame(0, $exitCode);
         $this->assertDatabaseMissing('model_has_permissions', [
             'permission_id' => $redundant->id,
             'model_type'    => User::class,
@@ -135,30 +105,39 @@ class PermissionCatalogMigrationTest extends TestCase {
     }
 
     /**
-     * Garante que o seeder atribua somente permissões canônicas e preserve os portais.
+     * Cria um usuário com uma permissão redundante e uma exceção direta.
      *
-     * @return void
+     * @return array{0: User, 1: Permission, 2: Permission}
      */
-    public function test_seeder_uses_only_catalog_permissions_and_separates_portals(): void {
-        app(RolesPermissionsSeeder::class)->run();
+    private function userWithDirectPermissions(): array {
+        $redundant = Permission::create([
+            'name'       => 'system.users.view',
+            'guard_name' => 'web',
+        ]);
+        $exception = Permission::create([
+            'name'       => 'system.users.block',
+            'guard_name' => 'web',
+        ]);
+        $role = Role::create([
+            'name'       => 'secretaria',
+            'guard_name' => 'web',
+        ]);
+        $user = User::create([
+            'name'     => 'Usuário direto',
+            'email'    => 'direto@example.test',
+            'password' => 'password',
+            'active'   => true,
+        ]);
 
-        $this->assertSame(PermissionCatalog::names()->count(), Permission::query()->count());
-        $this->assertDatabaseMissing('permissions', ['name' => 'grades.view.own']);
+        $role->givePermissionTo($redundant);
+        $user->assignRole($role);
+        $user->givePermissionTo([$redundant, $exception]);
 
-        $admin   = Role::query()->where('name', 'admin')->firstOrFail();
-        $teacher = Role::query()->where('name', 'teacher')->firstOrFail();
-        $student = Role::query()->where('name', 'student')->firstOrFail();
-
-        $this->assertTrue($admin->hasPermissionTo('system.permissions.manage'));
-        $this->assertFalse($admin->hasPermissionTo('teacher.dashboard.view'));
-        $this->assertTrue($teacher->hasPermissionTo('teacher.dashboard.view'));
-        $this->assertFalse($teacher->hasPermissionTo('student.dashboard.view'));
-        $this->assertTrue($student->hasPermissionTo('student.dashboard.view'));
-        $this->assertFalse($student->hasPermissionTo('teacher.dashboard.view'));
+        return [$user, $redundant, $exception];
     }
 
     /**
-     * Cria as tabelas mínimas usadas pelo Spatie durante a conversão.
+     * Cria as tabelas mínimas usadas pelo Spatie durante o diagnóstico.
      *
      * @return void
      */
