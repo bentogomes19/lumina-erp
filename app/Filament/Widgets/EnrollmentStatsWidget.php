@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Enums\EnrollmentStatus;
 use App\Models\Enrollment;
 use App\Models\SchoolYear;
+use App\Support\PermissionAccess;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -16,6 +17,15 @@ class EnrollmentStatsWidget extends StatsOverviewWidget {
 
     /* Atualiza ao navegar para a página (sem polling automático) */
     protected ?string $pollingInterval = null;
+
+    /**
+     * Determina se o widget pode ser exibido para o usuário atual.
+     *
+     * @return bool
+     */
+    public static function canView(): bool {
+        return PermissionAccess::can('academic.enrollments.view_any');
+    }
 
     /**
      * Retorna as quantidades de matrículas agrupadas por status no ano letivo ativo.
