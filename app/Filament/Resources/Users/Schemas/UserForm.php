@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use App\Enums\Gender;
+use App\Services\Users\UserAccountDomainService;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -78,7 +79,7 @@ class UserForm {
                             if (!$state || !$record) {
                                 return $state;
                             }
-                            $record->syncRoles([$state]);
+                            app(UserAccountDomainService::class)->changeRole($record, $state);
 
                             return $state;
                         })

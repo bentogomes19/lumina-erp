@@ -190,7 +190,7 @@ class User extends Authenticatable implements FilamentUser {
     }
 
     /**
-     * Inativa o usuário e mantém os perfis acadêmicos sincronizados.
+     * Inativa somente a conta de acesso do usuário.
      *
      * @param string $reason
      *
@@ -204,7 +204,7 @@ class User extends Authenticatable implements FilamentUser {
     }
 
     /**
-     * Reativa o usuário e remove bloqueios de acesso.
+     * Reativa somente a conta de acesso e remove bloqueios de login.
      *
      * @return void
      */

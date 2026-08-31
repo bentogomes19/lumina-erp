@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
 use App\Services\Auth\FirstAccessInvitationService;
+use App\Services\Users\UserAccountDomainService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -49,7 +50,7 @@ class CreateUser extends CreateRecord {
             return;
         }
 
-        $this->record->syncRoles([$role]);
+        app(UserAccountDomainService::class)->changeRole($this->record, $role);
 
         $url = app(FirstAccessInvitationService::class)->issue($this->record);
 
