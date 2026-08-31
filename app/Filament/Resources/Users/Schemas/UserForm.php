@@ -15,7 +15,6 @@ use Filament\Schemas\Schema;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rules\Enum as EnumRule;
-use Spatie\Permission\Models\Role;
 
 class UserForm {
 
@@ -80,13 +79,10 @@ class UserForm {
                                 return $state;
                             }
                             $record->syncRoles([$state]);
-                            $role = Role::where('name', $state)->with('permissions')->first();
-                            if ($role) {
-                                $record->syncPermissions($role->permissions);
-                            }
+
                             return $state;
                         })
-                        ->helperText('Define as permissões de acesso ao sistema.'),
+                        ->helperText('Define o papel que herda as permissões de acesso ao sistema.'),
 
                     Placeholder::make('academic_onboarding_notice')
                         ->label('Acessos acadêmicos')
