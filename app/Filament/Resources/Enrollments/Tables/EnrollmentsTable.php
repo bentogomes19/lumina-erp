@@ -6,7 +6,6 @@ use App\Enums\ClassShift;
 use App\Enums\EnrollmentLockReason;
 use App\Enums\EnrollmentStatus;
 use App\Models\Enrollment;
-use App\Models\EnrollmentLog;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
 use App\Services\Enrollments\StudentEnrollmentService;
@@ -365,21 +364,12 @@ class EnrollmentsTable {
                             ->nullable(),
                     ])
                     ->action(function (array $data, Enrollment $record): void {
-                        $statusAnterior = $record->status?->value;
-
-                        $record->update([
-                            'status'              => EnrollmentStatus::LOCKED,
-                            'locked_reason'       => $data['locked_reason'],
-                            'lock_expires_at'     => $data['lock_expires_at'] ?? null,
-                            'operated_by_user_id' => auth()->id(),
-                        ]);
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'trancamento',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::LOCKED->value,
-                            observacao: $data['observacao'] ?? null,
+                        app(StudentEnrollmentService::class)->lock(
+                            $record,
+                            $data['locked_reason'],
+                            $data['lock_expires_at'] ?? null,
+                            $data['observacao'] ?? null,
+                            auth()->id(),
                         );
 
                         Notification::make()
@@ -404,24 +394,10 @@ class EnrollmentsTable {
                             ->rows(3),
                     ])
                     ->action(function (array $data, Enrollment $record): void {
-                        $statusAnterior = $record->status?->value;
-
-                        $record = app(StudentEnrollmentService::class)->updateStatus(
+                        $record = app(StudentEnrollmentService::class)->reactivate(
                             $record,
-                            EnrollmentStatus::ACTIVE,
-                            [
-                                'locked_reason'       => null,
-                                'lock_expires_at'     => null,
-                                'operated_by_user_id' => auth()->id(),
-                            ],
-                        );
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'reativacao',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::ACTIVE->value,
-                            observacao: $data['observacao'],
+                            $data['observacao'],
+                            auth()->id(),
                         );
 
                         Notification::make()
@@ -512,22 +488,11 @@ class EnrollmentsTable {
                     ->requiresConfirmation()
                     ->modalSubmitActionLabel('Confirmar Transferência')
                     ->action(function (array $data, Enrollment $record): void {
-                        $statusAnterior = $record->status?->value;
-
-                        $record->update([
-                            'status'               => EnrollmentStatus::TRANSFERRED_EXTERNAL,
-                            'transfer_type'        => 'external',
-                            'transfer_destination' => $data['transfer_destination'] ?? null,
-                            'transfer_reason'      => $data['transfer_reason'],
-                            'operated_by_user_id'  => auth()->id(),
-                        ]);
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'transferencia_externa',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::TRANSFERRED_EXTERNAL->value,
-                            observacao: "Destino: " . ($data['transfer_destination'] ?? 'não informado') . ". Motivo: {$data['transfer_reason']}",
+                        app(StudentEnrollmentService::class)->transferExternal(
+                            $record,
+                            $data['transfer_destination'] ?? null,
+                            $data['transfer_reason'],
+                            auth()->id(),
                         );
 
                         Notification::make()
@@ -563,21 +528,11 @@ class EnrollmentsTable {
                     ->requiresConfirmation()
                     ->modalSubmitActionLabel('Confirmar Cancelamento')
                     ->action(function (array $data, Enrollment $record): void {
-                        $statusAnterior = $record->status?->value;
-
-                        $record->update([
-                            'status'              => EnrollmentStatus::CANCELED,
-                            'cancel_reason'       => $data['cancel_reason'],
-                            'cancel_observations' => $data['cancel_observations'] ?? null,
-                            'operated_by_user_id' => auth()->id(),
-                        ]);
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'cancelamento',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::CANCELED->value,
-                            observacao: "Motivo: {$data['cancel_reason']}. " . ($data['cancel_observations'] ? "Obs: {$data['cancel_observations']}" : ''),
+                        app(StudentEnrollmentService::class)->cancel(
+                            $record,
+                            $data['cancel_reason'],
+                            $data['cancel_observations'] ?? null,
+                            auth()->id(),
                         );
 
                         Notification::make()
@@ -612,24 +567,10 @@ class EnrollmentsTable {
                             return;
                         }
 
-                        $statusAnterior = $record->status?->value;
-
-                        $record = app(StudentEnrollmentService::class)->updateStatus(
+                        $record = app(StudentEnrollmentService::class)->restoreCanceled(
                             $record,
-                            EnrollmentStatus::ACTIVE,
-                            [
-                                'cancel_reason'       => null,
-                                'cancel_observations' => null,
-                                'operated_by_user_id' => auth()->id(),
-                            ],
-                        );
-
-                        EnrollmentLog::registrar(
-                            enrollment: $record,
-                            acao: 'reversao_cancelamento',
-                            statusAnterior: $statusAnterior,
-                            statusNovo: EnrollmentStatus::ACTIVE->value,
-                            observacao: $data['observacao'],
+                            $data['observacao'],
+                            auth()->id(),
                         );
 
                         Notification::make()
@@ -670,6 +611,11 @@ class EnrollmentsTable {
                                 )
                                 ->nullable()
                                 ->searchable(),
+
+                            Textarea::make('reason')
+                                ->label('Motivo da rematrícula')
+                                ->required()
+                                ->rows(3),
                         ])
                         ->action(function ($records, array $data) {
                             $criadas   = 0;
@@ -703,6 +649,7 @@ class EnrollmentsTable {
                                         (int) $classId,
                                         (int) $data['school_year_id'],
                                         auth()->id(),
+                                        $data['reason'],
                                     );
                                     $criadas++;
                                 } catch (ValidationException) {
