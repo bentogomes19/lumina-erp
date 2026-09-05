@@ -467,6 +467,12 @@ return [
         'type' => 'delete',
     ],
     [
+        'name' => 'admin.teachers.assignments.curriculum_exception',
+        'label' => 'Autorizar exceção curricular em alocação',
+        'module' => 'Professores - Administrativo',
+        'type' => 'manage',
+    ],
+    [
         'name' => 'admin.teachers.leaves.manage',
         'label' => 'Gerenciar afastamentos do professor',
         'module' => 'Professores - Administrativo',

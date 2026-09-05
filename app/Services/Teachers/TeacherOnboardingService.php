@@ -12,6 +12,8 @@ use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use App\Models\User;
 use App\Services\Auth\FirstAccessInvitationService;
+use App\Support\PermissionAccess;
+use App\Support\TeacherAssignmentCurriculum;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -183,6 +185,7 @@ class TeacherOnboardingService {
             $subjectId = (int) ($data['subject_id'] ?? $locked->subject_id);
 
             $this->validateAssignmentReferences($teacherId, $classId, $subjectId);
+            $curriculum = $this->validateAssignmentCurriculum($classId, $subjectId, $data);
             $conflict = TeacherAssignment::query()
                 ->where('class_id', $classId)
                 ->where('subject_id', $subjectId)
@@ -196,9 +199,11 @@ class TeacherOnboardingService {
             }
 
             $locked->update([
-                'teacher_id' => $teacherId,
-                'class_id'   => $classId,
-                'subject_id' => $subjectId,
+                'teacher_id'                         => $teacherId,
+                'class_id'                           => $classId,
+                'subject_id'                         => $subjectId,
+                'curriculum_exception'               => $curriculum['exception'],
+                'curriculum_exception_justification' => $curriculum['justification'],
             ]);
 
             return $locked->refresh();
@@ -299,6 +304,7 @@ class TeacherOnboardingService {
         $subjectId = (int) ($data['subject_id'] ?? 0);
 
         $this->validateAssignmentReferences((int) $teacher->id, $classId, $subjectId);
+        $curriculum = $this->validateAssignmentCurriculum($classId, $subjectId, $data);
         $existing = TeacherAssignment::query()
             ->where('class_id', $classId)
             ->where('subject_id', $subjectId)
@@ -311,11 +317,61 @@ class TeacherOnboardingService {
             ]);
         }
 
-        return $existing ?? TeacherAssignment::create([
-            'teacher_id' => $teacher->id,
-            'class_id'   => $classId,
-            'subject_id' => $subjectId,
+        if ($existing) {
+            return $existing;
+        }
+
+        return TeacherAssignment::create([
+            'teacher_id'                         => $teacher->id,
+            'class_id'                           => $classId,
+            'subject_id'                         => $subjectId,
+            'curriculum_exception'               => $curriculum['exception'],
+            'curriculum_exception_justification' => $curriculum['justification'],
         ]);
+    }
+
+    /**
+     * Valida se a disciplina pertence à matriz ou se a exceção foi autorizada.
+     *
+     * @param int $classId
+     * @param int $subjectId
+     * @param array<string, mixed> $data
+     *
+     * @return array{exception: bool, justification: string|null}
+     */
+    private function validateAssignmentCurriculum(int $classId, int $subjectId, array $data): array {
+        if (TeacherAssignmentCurriculum::isCurricular($classId, $subjectId)) {
+            return [
+                'exception'     => false,
+                'justification' => null,
+            ];
+        }
+
+        $wantsException = filter_var($data['curriculum_exception'] ?? false, FILTER_VALIDATE_BOOL);
+        $justification  = trim((string) ($data['curriculum_exception_justification'] ?? ''));
+
+        if (!$wantsException) {
+            throw ValidationException::withMessages([
+                'subject_id' => 'A disciplina selecionada não pertence à matriz curricular da série da turma.',
+            ]);
+        }
+
+        if (!PermissionAccess::can('admin.teachers.assignments.curriculum_exception')) {
+            throw ValidationException::withMessages([
+                'curriculum_exception' => 'Você não possui permissão para autorizar exceção curricular.',
+            ]);
+        }
+
+        if ($justification === '') {
+            throw ValidationException::withMessages([
+                'curriculum_exception_justification' => 'Informe a justificativa da exceção curricular.',
+            ]);
+        }
+
+        return [
+            'exception'     => true,
+            'justification' => $justification,
+        ];
     }
 
     /**

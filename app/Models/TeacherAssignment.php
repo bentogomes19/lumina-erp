@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\TeacherAssignmentCurriculum;
+
 class TeacherAssignment extends BaseModel {
 
     /**
@@ -13,6 +15,17 @@ class TeacherAssignment extends BaseModel {
         'teacher_id',
         'class_id',
         'subject_id',
+        'curriculum_exception',
+        'curriculum_exception_justification',
+    ];
+
+    /**
+     * Conversões automáticas de tipos dos atributos.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'curriculum_exception' => 'boolean',
     ];
 
     /**
@@ -66,10 +79,14 @@ class TeacherAssignment extends BaseModel {
             }
         });
 
-        /* Quando apagar um vínculo, remove a disciplina da turma se não houver mais nenhum professor lecionando essa disciplina na turma. */
+        /* Quando apagar um vínculo, remove apenas disciplinas adicionadas por exceção operacional. */
         static::deleted(function (TeacherAssignment $assignment) {
             $class = $assignment->schoolClass;
             if (!$class) {
+                return;
+            }
+
+            if (TeacherAssignmentCurriculum::isCurricular((int) $class->id, (int) $assignment->subject_id)) {
                 return;
             }
 

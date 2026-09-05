@@ -3,15 +3,20 @@
 namespace App\Filament\Resources\Teachers\RelationManager;
 
 use App\Filament\Resources\SchoolClasses\SchoolClassResource;
-use App\Models\Subject;
 use App\Models\TeacherAssignment;
 use App\Services\Teachers\TeacherOnboardingService;
+use App\Support\PermissionAccess;
+use App\Support\TeacherAssignmentCurriculum;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -36,16 +41,35 @@ class AssignmentsRelationManager extends RelationManager {
                 ->searchable()
                 ->preload()
                 ->required()
-                ->reactive(),
+                ->live()
+                ->afterStateUpdated(fn (Set $set): mixed => $set('subject_id', null)),
 
             Select::make('subject_id')
                 ->label('Disciplina')
-                ->options(
-                    fn () => Subject::orderBy('name')->pluck('name', 'id')
-                )
+                ->options(fn (Get $get) => TeacherAssignmentCurriculum::subjectOptions(
+                    (int) $get('class_id'),
+                    PermissionAccess::can('admin.teachers.assignments.curriculum_exception')
+                        && (bool) $get('curriculum_exception'),
+                ))
                 ->searchable()
                 ->preload()
                 ->required(),
+
+            Toggle::make('curriculum_exception')
+                ->label('Autorizar exceção curricular')
+                ->helperText('Permite escolher uma disciplina fora da matriz da série.')
+                ->live()
+                ->afterStateUpdated(fn (Set $set): mixed => $set('subject_id', null))
+                ->visible(fn (): bool => PermissionAccess::can('admin.teachers.assignments.curriculum_exception')),
+
+            Textarea::make('curriculum_exception_justification')
+                ->label('Justificativa da exceção')
+                ->rows(3)
+                ->maxLength(2000)
+                ->required(fn (Get $get): bool => (bool) $get('curriculum_exception'))
+                ->visible(fn (Get $get): bool => PermissionAccess::can('admin.teachers.assignments.curriculum_exception')
+                    && (bool) $get('curriculum_exception'))
+                ->columnSpanFull(),
         ]);
     }
 
