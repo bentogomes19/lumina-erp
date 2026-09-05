@@ -5,9 +5,10 @@ namespace App\Filament\Resources\Teachers\Tables;
 use App\Enums\TeacherOnboardingState;
 use App\Enums\TeacherStatus;
 use App\Models\SchoolClass;
-use App\Models\Subject;
 use App\Models\Teacher;
 use App\Services\Teachers\TeacherOnboardingService;
+use App\Support\PermissionAccess;
+use App\Support\TeacherAssignmentCurriculum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -16,9 +17,12 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -142,26 +146,35 @@ class TeachersTable {
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set): mixed => $set('subject_id', null)),
 
                         Select::make('subject_id')
                             ->label('Disciplina')
-                            ->options(function (Get $get) {
-                                $classId = $get('class_id');
-                                if ($classId) {
-                                    $class = SchoolClass::with('gradeLevel')->find($classId);
-                                    if ($class?->gradeLevel && method_exists($class->gradeLevel, 'subjects')) {
-                                        $ids = $class->gradeLevel->subjects()->pluck('subjects.id');
-                                        return Subject::whereIn('id', $ids)->orderBy('name')->pluck('name', 'id');
-                                    }
-                                }
-
-                                /* valor alternativo. */
-                                return Subject::orderBy('name')->pluck('name', 'id');
-                            })
+                            ->options(fn (Get $get) => TeacherAssignmentCurriculum::subjectOptions(
+                                (int) $get('class_id'),
+                                PermissionAccess::can('admin.teachers.assignments.curriculum_exception')
+                                    && (bool) $get('curriculum_exception'),
+                            ))
                             ->searchable()
                             ->preload()
                             ->required(),
+
+                        Toggle::make('curriculum_exception')
+                            ->label('Autorizar exceção curricular')
+                            ->helperText('Permite escolher uma disciplina fora da matriz da série.')
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set): mixed => $set('subject_id', null))
+                            ->visible(fn (): bool => PermissionAccess::can('admin.teachers.assignments.curriculum_exception')),
+
+                        Textarea::make('curriculum_exception_justification')
+                            ->label('Justificativa da exceção')
+                            ->rows(3)
+                            ->maxLength(2000)
+                            ->required(fn (Get $get): bool => (bool) $get('curriculum_exception'))
+                            ->visible(fn (Get $get): bool => PermissionAccess::can('admin.teachers.assignments.curriculum_exception')
+                                && (bool) $get('curriculum_exception'))
+                            ->columnSpanFull(),
 
                     ])
                     ->action(function (Teacher $record, array $data): void {

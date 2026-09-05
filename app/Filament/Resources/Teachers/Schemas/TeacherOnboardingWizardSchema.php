@@ -7,9 +7,10 @@ use App\Enums\TeacherAccessAction;
 use App\Enums\TeacherRegime;
 use App\Enums\TeacherStatus;
 use App\Models\SchoolClass;
-use App\Models\Subject;
 use App\Models\Teacher;
 use App\Services\Teachers\TeacherOnboardingService;
+use App\Support\PermissionAccess;
+use App\Support\TeacherAssignmentCurriculum;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -18,8 +19,10 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Wizard\Step;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
@@ -233,14 +236,35 @@ class TeacherOnboardingWizardSchema {
                                 ->searchable()
                                 ->preload()
                                 ->live()
+                                ->afterStateUpdated(fn (Set $set): mixed => $set('subject_id', null))
                                 ->required(),
 
                             Select::make('subject_id')
                                 ->label('Disciplina')
-                                ->options(fn () => Subject::query()->orderBy('name')->pluck('name', 'id'))
+                                ->options(fn (Get $get) => TeacherAssignmentCurriculum::subjectOptions(
+                                    (int) $get('class_id'),
+                                    PermissionAccess::can('admin.teachers.assignments.curriculum_exception')
+                                        && (bool) $get('curriculum_exception'),
+                                ))
                                 ->searchable()
                                 ->preload()
                                 ->required(),
+
+                            Toggle::make('curriculum_exception')
+                                ->label('Autorizar exceção curricular')
+                                ->helperText('Permite escolher uma disciplina fora da matriz da série.')
+                                ->live()
+                                ->afterStateUpdated(fn (Set $set): mixed => $set('subject_id', null))
+                                ->visible(fn (): bool => PermissionAccess::can('admin.teachers.assignments.curriculum_exception')),
+
+                            Textarea::make('curriculum_exception_justification')
+                                ->label('Justificativa da exceção')
+                                ->rows(3)
+                                ->maxLength(2000)
+                                ->required(fn (Get $get): bool => (bool) $get('curriculum_exception'))
+                                ->visible(fn (Get $get): bool => PermissionAccess::can('admin.teachers.assignments.curriculum_exception')
+                                    && (bool) $get('curriculum_exception'))
+                                ->columnSpanFull(),
                         ])
                         ->columns(2)
                         ->defaultItems(0)

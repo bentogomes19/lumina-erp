@@ -217,6 +217,150 @@ class TeacherOnboardingTest extends TestCase {
     }
 
     /**
+     * Garante que disciplina fora da matriz curricular seja rejeitada sem exceção.
+     *
+     * @return void
+     */
+    public function test_assignment_rejects_subject_outside_grade_level_curriculum(): void {
+        [$schoolClass] = $this->academicStructure();
+        $teacher       = $this->service()->create($this->teacherData())->teacher;
+        $subject       = $this->subject('ART-001', 'Arte');
+
+        try {
+            $this->service()->createAssignment($teacher, [
+                'class_id'   => $schoolClass->id,
+                'subject_id' => $subject->id,
+            ]);
+            $this->fail('A disciplina fora da matriz curricular deveria ser rejeitada.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('subject_id', $exception->errors());
+        }
+
+        $this->assertDatabaseCount('teacher_assignments', 0);
+    }
+
+    /**
+     * Garante que exceção curricular exija permissão administrativa.
+     *
+     * @return void
+     */
+    public function test_curriculum_exception_requires_permission(): void {
+        [$schoolClass] = $this->academicStructure();
+        $teacher       = $this->service()->create($this->teacherData())->teacher;
+        $subject       = $this->subject('ART-001', 'Arte');
+        $this->actingAs(User::factory()->create());
+
+        try {
+            $this->service()->createAssignment($teacher, [
+                'class_id'                           => $schoolClass->id,
+                'subject_id'                         => $subject->id,
+                'curriculum_exception'               => true,
+                'curriculum_exception_justification' => 'Projeto interdisciplinar autorizado.',
+            ]);
+            $this->fail('A exceção curricular sem permissão deveria ser rejeitada.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('curriculum_exception', $exception->errors());
+        }
+
+        $this->assertDatabaseCount('teacher_assignments', 0);
+    }
+
+    /**
+     * Garante que exceção autorizada seja registrada com justificativa.
+     *
+     * @return void
+     */
+    public function test_authorized_curriculum_exception_is_registered_with_justification(): void {
+        [$schoolClass] = $this->academicStructure();
+        $teacher       = $this->service()->create($this->teacherData())->teacher;
+        $subject       = $this->subject('ART-001', 'Arte');
+        $this->actingAsUserWithCurriculumExceptionPermission();
+
+        $assignment = $this->service()->createAssignment($teacher, [
+            'class_id'                           => $schoolClass->id,
+            'subject_id'                         => $subject->id,
+            'curriculum_exception'               => true,
+            'curriculum_exception_justification' => 'Projeto interdisciplinar autorizado.',
+        ]);
+
+        $this->assertTrue($assignment->curriculum_exception);
+        $this->assertSame('Projeto interdisciplinar autorizado.', $assignment->curriculum_exception_justification);
+        $this->assertDatabaseHas('class_subjects', [
+            'class_id'   => $schoolClass->id,
+            'subject_id' => $subject->id,
+        ]);
+    }
+
+    /**
+     * Garante que exceção curricular autorizada continue exigindo justificativa.
+     *
+     * @return void
+     */
+    public function test_authorized_curriculum_exception_requires_justification(): void {
+        [$schoolClass] = $this->academicStructure();
+        $teacher       = $this->service()->create($this->teacherData())->teacher;
+        $subject       = $this->subject('ART-001', 'Arte');
+        $this->actingAsUserWithCurriculumExceptionPermission();
+
+        try {
+            $this->service()->createAssignment($teacher, [
+                'class_id'             => $schoolClass->id,
+                'subject_id'           => $subject->id,
+                'curriculum_exception' => true,
+            ]);
+            $this->fail('A exceção curricular sem justificativa deveria ser rejeitada.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('curriculum_exception_justification', $exception->errors());
+        }
+    }
+
+    /**
+     * Garante que remover a última alocação não remova disciplina da matriz da turma.
+     *
+     * @return void
+     */
+    public function test_deleting_last_assignment_keeps_curricular_class_subject(): void {
+        [$schoolClass, $subject] = $this->academicStructure();
+        $teacher                = $this->service()->create($this->teacherData())->teacher;
+        $assignment             = $this->service()->createAssignment($teacher, [
+            'class_id'   => $schoolClass->id,
+            'subject_id' => $subject->id,
+        ]);
+
+        $assignment->delete();
+
+        $this->assertDatabaseHas('class_subjects', [
+            'class_id'   => $schoolClass->id,
+            'subject_id' => $subject->id,
+        ]);
+    }
+
+    /**
+     * Garante que remover a última exceção operacional remova o vínculo direto da turma.
+     *
+     * @return void
+     */
+    public function test_deleting_last_exception_assignment_removes_non_curricular_class_subject(): void {
+        [$schoolClass] = $this->academicStructure();
+        $teacher       = $this->service()->create($this->teacherData())->teacher;
+        $subject       = $this->subject('ART-001', 'Arte');
+        $this->actingAsUserWithCurriculumExceptionPermission();
+        $assignment = $this->service()->createAssignment($teacher, [
+            'class_id'                           => $schoolClass->id,
+            'subject_id'                         => $subject->id,
+            'curriculum_exception'               => true,
+            'curriculum_exception_justification' => 'Projeto interdisciplinar autorizado.',
+        ]);
+
+        $assignment->delete();
+
+        $this->assertDatabaseMissing('class_subjects', [
+            'class_id'   => $schoolClass->id,
+            'subject_id' => $subject->id,
+        ]);
+    }
+
+    /**
      * Garante que professores inativos, afastados ou desligados não acessem nem recebam convite.
      *
      * @return void
@@ -237,6 +381,7 @@ class TeacherOnboardingTest extends TestCase {
                 'category' => 'matematica',
                 'status'   => 'active',
             ]);
+            $schoolClass->gradeLevel->subjects()->attach($subject->id);
             $data                  = $this->teacherData('DOC-'.($index + 10));
             $data['status']        = $status->value;
             $data['access_action'] = TeacherAccessAction::CREATE->value;
@@ -327,8 +472,43 @@ class TeacherOnboardingTest extends TestCase {
             'category' => 'matematica',
             'status'   => 'active',
         ]);
+        $gradeLevel->subjects()->attach($subject->id);
 
         return [$schoolClass, $subject];
+    }
+
+    /**
+     * Cria uma disciplina ativa para uso nos cenários acadêmicos.
+     *
+     * @param string $code
+     * @param string $name
+     *
+     * @return Subject
+     */
+    private function subject(string $code, string $name): Subject {
+        return Subject::create([
+            'code'     => $code,
+            'name'     => $name,
+            'category' => 'matematica',
+            'status'   => 'active',
+        ]);
+    }
+
+    /**
+     * Autentica um usuário com permissão para exceção curricular.
+     *
+     * @return User
+     */
+    private function actingAsUserWithCurriculumExceptionPermission(): User {
+        $permission = Permission::create([
+            'name'       => 'admin.teachers.assignments.curriculum_exception',
+            'guard_name' => 'web',
+        ]);
+        $user = User::factory()->create();
+        $user->givePermissionTo($permission);
+        $this->actingAs($user);
+
+        return $user;
     }
 
     /**
