@@ -41,8 +41,8 @@
         }
         .ms-period-btn:hover   { background: var(--ms-hover-bg); }
         .ms-period-btn.active  {
-            background: #f59e0b;
-            border-color: #f59e0b;
+            background: var(--lumina-primary);
+            border-color: var(--lumina-primary);
             color: #fff;
         }
 
@@ -63,7 +63,7 @@
             color: var(--ms-text-secondary);
             background: var(--ms-cell-bg);
         }
-        .ms-cal-day.today      { outline: 2px solid #f59e0b; outline-offset: 1px; }
+        .ms-cal-day.today      { outline: 2px solid var(--lumina-primary); outline-offset: 1px; }
         .ms-cal-day.present    { background: rgba(34,197,94,0.20);  color: #16a34a; font-weight: 700; }
         .ms-cal-day.absent     { background: rgba(239,68,68,0.20);  color: #dc2626; font-weight: 700; }
         .ms-cal-day.late       { background: rgba(234,179,8,0.20);  color: #ca8a04; font-weight: 700; }

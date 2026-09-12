@@ -39,8 +39,8 @@
     {{-- Estado sem turma --}}
     @if(!$student || !$currentClass)
         <div class="ac-card" style="padding:3rem;text-align:center">
-            <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @svg('fas-calendar-days', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
+            <div style="width:4rem;height:4rem;border-radius:50%;background:var(--lumina-primary-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+                @svg('fas-calendar-days', '', ['style' => 'width:2rem;height:2rem;color:var(--lumina-primary)'])
             </div>
             <h3 style="font-size:1.125rem;font-weight:600;color:var(--ac-text-primary);margin:0 0 0.5rem">
                 Nenhuma turma ativa encontrada
@@ -66,8 +66,8 @@
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem">
                 {{-- Informações da turma --}}
                 <div style="display:flex;align-items:center;gap:0.875rem">
-                    <div style="width:2.5rem;height:2.5rem;border-radius:0.625rem;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                        @svg('fas-calendar-days', '', ['style' => 'width:1.35rem;height:1.35rem;color:#f59e0b'])
+                    <div style="width:2.5rem;height:2.5rem;border-radius:0.625rem;background:var(--lumina-primary-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        @svg('fas-calendar-days', '', ['style' => 'width:1.35rem;height:1.35rem;color:var(--lumina-primary)'])
                     </div>
                     <div>
                         <h2 style="font-size:1rem;font-weight:700;color:var(--ac-text-primary);margin:0">
@@ -276,7 +276,7 @@
                                         <div style="font-size:0.625rem;font-weight:700;color:var(--ac-text-muted);text-transform:uppercase;letter-spacing:0.05em">
                                             {{ $dowNames[$col['dow']] }}
                                         </div>
-                                        <div style="font-size:1.25rem;font-weight:{{ $col['is_today'] ? '800' : '600' }};color:{{ $col['is_today'] ? '#f59e0b' : 'var(--ac-text-primary)' }};line-height:1.2">
+                                        <div style="font-size:1.25rem;font-weight:{{ $col['is_today'] ? '800' : '600' }};color:{{ $col['is_today'] ? 'var(--lumina-primary)' : 'var(--ac-text-primary)' }};line-height:1.2">
                                             {{ $col['day'] }}
                                         </div>
                                         <div style="font-size:0.6rem;color:var(--ac-text-muted)">
@@ -323,10 +323,10 @@
                                 @endphp
                                 <div class="ac-list-date-group">
                                     <div class="ac-list-date-label">
-                                        <span style="display:inline-block;width:3px;height:0.875rem;border-radius:2px;background:{{ $isToday ? '#f59e0b' : 'var(--ac-text-muted)' }}"></span>
+                                        <span style="display:inline-block;width:3px;height:0.875rem;border-radius:2px;background:{{ $isToday ? 'var(--lumina-primary)' : 'var(--ac-text-muted)' }}"></span>
                                         {{ $dateLabel }}
                                         @if($isToday)
-                                            <span style="font-size:0.625rem;font-weight:700;color:#fff;background:#f59e0b;padding:1px 6px;border-radius:999px">HOJE</span>
+                                            <span style="font-size:0.625rem;font-weight:700;color:#fff;background:var(--lumina-primary);padding:1px 6px;border-radius:999px">HOJE</span>
                                         @endif
                                     </div>
                                     @foreach($evList as $ev)
@@ -388,7 +388,7 @@
                             </div>
                         @endforeach
                         <div style="display:flex;align-items:center;gap:0.375rem;font-size:0.75rem;color:var(--ac-text-secondary)">
-                            <span style="width:0.875rem;height:0.875rem;border-radius:3px;outline:2px solid #f59e0b;display:inline-block;flex-shrink:0"></span>
+                            <span style="width:0.875rem;height:0.875rem;border-radius:3px;outline:2px solid var(--lumina-primary);display:inline-block;flex-shrink:0"></span>
                             Hoje
                         </div>
                     </div>

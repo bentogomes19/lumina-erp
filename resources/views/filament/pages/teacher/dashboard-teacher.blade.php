@@ -45,7 +45,7 @@
             position: absolute;
             inset: 0 0 auto;
             height: 4px;
-            background: linear-gradient(90deg, #f59e0b, #0f766e);
+            background: linear-gradient(90deg, var(--lumina-primary), #0f766e);
         }
 
         .teacher-dashboard-identity {
@@ -62,7 +62,7 @@
             width: 4rem;
             height: 4rem;
             color: #fff;
-            background: linear-gradient(135deg, #f59e0b, #b45309);
+            background: linear-gradient(135deg, var(--lumina-primary), var(--lumina-primary-strong));
             border-radius: 999px;
             font-size: 1.25rem;
             font-weight: 800;

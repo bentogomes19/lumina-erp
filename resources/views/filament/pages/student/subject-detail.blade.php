@@ -20,7 +20,7 @@
             'linguagens'          => ['accent' => '#0284c7', 'bg' => 'rgba(2,132,199,0.12)', 'text' => '#0369a1'],
             'matematica'          => ['accent' => '#f43f5e', 'bg' => 'rgba(244,63,94,0.12)',  'text' => '#e11d48'],
             'ciencias_da_natureza'=> ['accent' => '#10b981', 'bg' => 'rgba(16,185,129,0.12)', 'text' => '#059669'],
-            'ciencias_humanas'    => ['accent' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.12)', 'text' => '#d97706'],
+            'ciencias_humanas'    => ['accent' => 'var(--lumina-primary)', 'bg' => 'var(--lumina-primary-soft)', 'text' => 'var(--lumina-primary-strong)'],
             'ciencias_exatas'     => ['accent' => '#06b6d4', 'bg' => 'rgba(6,182,212,0.12)',  'text' => '#0891b2'],
         ];
         $defaultStyle = ['accent' => '#6b7280', 'bg' => 'rgba(107,114,128,0.12)', 'text' => '#6b7280'];
@@ -124,7 +124,7 @@
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
                 @php
                     $statCards = [
-                        ['icon'=>'fas-calendar-days','value'=>$totalClasses,'label'=>'Aulas Dadas', 'color'=>'#f59e0b'],
+                        ['icon'=>'fas-calendar-days','value'=>$totalClasses,'label'=>'Aulas Dadas', 'color'=>'var(--lumina-primary)'],
                         ['icon'=>'fas-circle-check', 'value'=>$presences,   'label'=>'Presenças',  'color'=>'#22c55e'],
                         ['icon'=>'fas-clock',        'value'=>$lates,        'label'=>'Atrasos',   'color'=>'#eab308'],
                         ['icon'=>'fas-circle-xmark',     'value'=>$absences,     'label'=>'Faltas',    'color'=>'#ef4444'],
@@ -149,7 +149,7 @@
             @if(collect($termAverages)->filter(fn($t) => $t['average'] !== null)->isNotEmpty())
                 <div class="ms-card" style="padding:1.25rem">
                     <h3 style="font-size:1rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem">
-                        @svg('fas-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#f59e0b'])
+                        @svg('fas-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:var(--lumina-primary)'])
                         Notas por Bimestre
                     </h3>
                     <div class="ms-term-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">

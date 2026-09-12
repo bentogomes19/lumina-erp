@@ -29,7 +29,7 @@
             background: var(--ms-card-bg); color: var(--ms-text-secondary); transition: all 0.15s;
         }
         .ms-period-btn:hover  { background: var(--ms-hover-bg); }
-        .ms-period-btn.active { background: #f59e0b; border-color: #f59e0b; color: #fff; }
+        .ms-period-btn.active { background: var(--lumina-primary); border-color: var(--lumina-primary); color: #fff; }
 
         .ms-freq-bar-track { width: 100%; height: 5px; border-radius: 999px; background: var(--ms-bar-bg); overflow: hidden; }
 

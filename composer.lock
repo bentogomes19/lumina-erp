@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5cad1faf62049af50f48f1c1a0f51a5c",
+    "content-hash": "529fb1c963db08e9cc56884c08cda5c7",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -2330,6 +2330,57 @@
                 }
             ],
             "time": "2026-08-24T09:15:32+00:00"
+        },
+        {
+            "name": "khwr/filament-qt5-theme",
+            "version": "v1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/KhawarMehfooz/filament-qt5-theme.git",
+                "reference": "9569c746e0b0be7e9cb30bf987c9f3440802eff5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/KhawarMehfooz/filament-qt5-theme/zipball/9569c746e0b0be7e9cb30bf987c9f3440802eff5",
+                "reference": "9569c746e0b0be7e9cb30bf987c9f3440802eff5",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^4.0|^5.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "orchestra/testbench": "^9.0|^10.0|^11.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Khwr\\FilamentQt5Theme\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Khawar Mehfooz"
+                }
+            ],
+            "description": "A Qt5-inspired desktop theme for Filament panels.",
+            "homepage": "https://github.com/KhawarMehfooz/filament-qt5-theme",
+            "keywords": [
+                "filament",
+                "filament-plugin",
+                "laravel",
+                "theme"
+            ],
+            "support": {
+                "issues": "https://github.com/KhawarMehfooz/filament-qt5-theme/issues",
+                "source": "https://github.com/KhawarMehfooz/filament-qt5-theme"
+            },
+            "time": "2026-09-10T16:37:28+00:00"
         },
         {
             "name": "kirschbaum-development/eloquent-power-joins",

@@ -25,8 +25,8 @@
     @if(!$student || !$currentClass)
         {{-- Estado sem dados --}}
         <div class="ms-card" style="padding:3rem;text-align:center">
-            <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @svg('fas-calendar-days', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
+            <div style="width:4rem;height:4rem;border-radius:50%;background:var(--lumina-primary-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+                @svg('fas-calendar-days', '', ['style' => 'width:2rem;height:2rem;color:var(--lumina-primary)'])
             </div>
             <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">
                 Nenhuma turma ativa encontrada
@@ -42,8 +42,8 @@
             <div class="ms-card" style="padding:1.25rem 1.5rem">
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
                     <div style="display:flex;align-items:center;gap:1rem">
-                        <div style="width:2.75rem;height:2.75rem;border-radius:0.5rem;background:rgba(217,119,6,0.15);display:flex;align-items:center;justify-content:center">
-                            @svg('fas-graduation-cap', '', ['style' => 'width:1.4rem;height:1.4rem;color:#fbbf24'])
+                        <div style="width:2.75rem;height:2.75rem;border-radius:0.5rem;background:var(--lumina-primary-soft);display:flex;align-items:center;justify-content:center">
+                            @svg('fas-graduation-cap', '', ['style' => 'width:1.4rem;height:1.4rem;color:var(--lumina-primary)'])
                         </div>
                         <div>
                             <h2 style="font-size:1.125rem;font-weight:700;color:var(--ms-text-primary);margin:0">
@@ -110,7 +110,7 @@
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem">
                 @php
                     $overallCards = [
-                        ['icon'=>'fas-calendar-days', 'value'=>$stats['total'],   'label'=>'Total de Aulas',  'color'=>'#f59e0b'],
+                        ['icon'=>'fas-calendar-days', 'value'=>$stats['total'],   'label'=>'Total de Aulas',  'color'=>'var(--lumina-primary)'],
                         ['icon'=>'fas-circle-check',  'value'=>$stats['present'], 'label'=>'Presenças',       'color'=>'#22c55e'],
                         ['icon'=>'fas-circle-xmark',      'value'=>$stats['absent'],  'label'=>'Faltas',          'color'=>'#ef4444'],
                         ['icon'=>'fas-clock',         'value'=>$stats['late'],    'label'=>'Atrasos',         'color'=>'#eab308'],

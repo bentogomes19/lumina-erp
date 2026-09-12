@@ -135,7 +135,7 @@
     font-size: 0.875rem;
     font-weight: 700;
     background: #fef3c7;
-    border: 1px solid #f59e0b;
+    border: 1px solid var(--lumina-primary);
     color: #92400e;
 }
 
@@ -212,7 +212,7 @@
 }
 
 .ts-lesson-card.is-status-rescheduled {
-    border-left-color: #d97706;
+    border-left-color: var(--lumina-primary-strong);
 }
 
 .ts-lesson-card.is-status-cancelled {

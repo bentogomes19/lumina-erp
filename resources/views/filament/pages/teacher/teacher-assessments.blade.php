@@ -46,8 +46,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(15, 118, 110, 0.16));
-            color: #d97706;
+            background: linear-gradient(135deg, var(--lumina-primary-soft), rgba(15, 118, 110, 0.16));
+            color: var(--lumina-primary-strong);
             flex-shrink: 0;
         }
 
@@ -119,8 +119,8 @@
 
         .teacher-assessments-alert {
             padding: 1rem 1.2rem;
-            border-left: 4px solid #d97706;
-            background: rgba(245, 158, 11, 0.08);
+            border-left: 4px solid var(--lumina-primary-strong);
+            background: var(--lumina-primary-soft);
             color: var(--ms-text-primary);
             border-radius: 0.75rem;
         }

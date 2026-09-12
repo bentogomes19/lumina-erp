@@ -51,8 +51,8 @@
         </div>
     @elseif(!$currentClass)
         <div class="ms-card" style="padding:3rem;text-align:center">
-            <div style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                @svg('fas-graduation-cap', '', ['style' => 'width:2rem;height:2rem;color:#f59e0b'])
+            <div style="width:4rem;height:4rem;border-radius:50%;background:var(--lumina-primary-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+                @svg('fas-graduation-cap', '', ['style' => 'width:2rem;height:2rem;color:var(--lumina-primary)'])
             </div>
             <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">Nenhuma turma ativa</h3>
             <p style="font-size:0.875rem;color:var(--ms-text-secondary);margin:0">
@@ -65,14 +65,14 @@
             {{-- Banner de perfil --}}
             <div class="ms-card" style="padding:1.5rem;overflow:hidden;position:relative">
                 {{-- Faixa decorativa --}}
-                <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#f59e0b,#d97706)"></div>
+                <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--lumina-primary),var(--lumina-primary-strong))"></div>
 
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;margin-top:0.5rem">
                     {{-- Identidade --}}
                     <div style="display:flex;align-items:center;gap:1.125rem">
                         @if($student->photo_url)
                             <img src="{{ $student->photo_url }}" alt="{{ $student->name }}"
-                                 style="width:4rem;height:4rem;border-radius:50%;object-fit:cover;border:2px solid #f59e0b;flex-shrink:0">
+                                 style="width:4rem;height:4rem;border-radius:50%;object-fit:cover;border:2px solid var(--lumina-primary);flex-shrink:0">
                         @else
                             <div class="ms-avatar">{{ $initials }}</div>
                         @endif
@@ -193,7 +193,7 @@
                             'icon'  => 'fas-calendar-days',
                             'value' => $todayLessons->count(),
                             'label' => 'Aulas Hoje',
-                            'color' => '#f59e0b',
+                            'color' => 'var(--lumina-primary)',
                             'sub'   => now()->translatedFormat('l, d/m'),
                         ],
                         [
@@ -227,7 +227,7 @@
                 {{-- Agenda do dia --}}
                 <div class="ms-card" style="padding:1.25rem">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
-                        @svg('fas-clock', '', ['style' => 'width:1.125rem;height:1.125rem;color:#f59e0b'])
+                        @svg('fas-clock', '', ['style' => 'width:1.125rem;height:1.125rem;color:var(--lumina-primary)'])
                         <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Agenda de Hoje</h3>
                         <span style="font-size:0.75rem;color:var(--ms-text-muted);margin-left:auto">{{ now()->translatedFormat('l, d \d\e F') }}</span>
                     </div>
@@ -246,7 +246,7 @@
                                 $end    = \Carbon\Carbon::parse($lesson->end_time);
                                 $isPast    = $end->lt($now);
                                 $isCurrent = $start->lte($now) && $end->gte($now);
-                                $dotColor  = $isCurrent ? '#22c55e' : ($isPast ? 'var(--ms-text-muted)' : '#f59e0b');
+                                $dotColor  = $isCurrent ? '#22c55e' : ($isPast ? 'var(--ms-text-muted)' : 'var(--lumina-primary)');
                             @endphp
                             <div class="ms-lesson-row" style="{{ $isPast ? 'opacity:0.55' : '' }}">
                                 {{-- Indicador de status --}}
@@ -345,7 +345,7 @@
                         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
                             @svg('fas-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#22c55e'])
                             <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Últimas Notas Lançadas</h3>
-                            <a href="{{ url('/lumina/my-grades') }}" style="font-size:0.75rem;color:#f59e0b;margin-left:auto;text-decoration:none">Ver todas →</a>
+                            <a href="{{ url('/lumina/my-grades') }}" style="font-size:0.75rem;color:var(--lumina-primary);margin-left:auto;text-decoration:none">Ver todas →</a>
                         </div>
 
                         @if($recentGrades->isEmpty())
@@ -410,7 +410,7 @@
 
                             if ($canViewAttendance) {
                                 $shortcuts[] =
-                                ['href' => '/lumina/student-attendance','icon' => 'fas-calendar-days',   'label' => 'Frequência',         'color' => '#f59e0b',
+                                ['href' => '/lumina/student-attendance','icon' => 'fas-calendar-days',   'label' => 'Frequência',         'color' => 'var(--lumina-primary)',
                                  'badge' => ($attendance['alert'] ?? false) ? '!' : null,
                                  'badgeColor' => '#ef4444'];
                             }

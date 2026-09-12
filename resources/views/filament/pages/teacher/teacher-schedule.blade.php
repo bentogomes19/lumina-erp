@@ -78,7 +78,7 @@
 
         .ts-alert--warning {
             background: #fef3c7;
-            border: 1px solid #f59e0b;
+            border: 1px solid var(--lumina-primary);
             color: #92400e;
         }
 

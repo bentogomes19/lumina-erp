@@ -58,7 +58,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(14, 116, 144, 0.18), rgba(245, 158, 11, 0.16));
+            background: linear-gradient(135deg, rgba(14, 116, 144, 0.18), var(--lumina-primary-soft));
             color: #0e7490;
             flex-shrink: 0;
         }

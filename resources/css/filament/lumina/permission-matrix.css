@@ -248,7 +248,7 @@
 
 .permission-module-actions button:hover {
     color: var(--lumina-primary-strong);
-    border-color: rgba(245, 158, 11, 0.34);
+    border-color: var(--lumina-primary-soft);
     background: var(--lumina-primary-soft);
 }
 
@@ -318,7 +318,7 @@
     padding: 0 0.625rem;
     color: var(--lumina-primary-strong);
     background: var(--lumina-primary-soft);
-    border: 1px solid rgba(245, 158, 11, 0.26);
+    border: 1px solid var(--lumina-primary-soft);
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 700;

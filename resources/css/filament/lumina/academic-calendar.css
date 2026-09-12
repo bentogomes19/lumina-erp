@@ -9,7 +9,7 @@
             --ac-text-secondary: #64748b;
             --ac-text-muted:     #94a3b8;
             --ac-hover-bg:       #f1f5f9;
-            --ac-today-ring:     #f59e0b;
+            --ac-today-ring:     var(--lumina-primary);
             --ac-weekend-bg:     #f8fafc;
         }
         .dark {
@@ -22,7 +22,7 @@
             --ac-text-secondary: #94a3b8;
             --ac-text-muted:     #64748b;
             --ac-hover-bg:       #0a0d11;
-            --ac-today-ring:     #f59e0b;
+            --ac-today-ring:     var(--lumina-primary);
             --ac-weekend-bg:     #0a0d11;
         }
 
@@ -48,7 +48,7 @@
             transition: all 0.15s;
         }
         .ac-tab:hover   { background: var(--ac-hover-bg); color: var(--ac-text-primary); }
-        .ac-tab.active  { background: #f59e0b; color: #fff; }
+        .ac-tab.active  { background: var(--lumina-primary); color: #fff; }
 
         /* ── Navigation button ── */
         .ac-nav-btn {
@@ -127,7 +127,7 @@
             border-radius: 50%;
         }
         .ac-cell.today .ac-day-num {
-            background: #f59e0b;
+            background: var(--lumina-primary);
             color: #fff;
         }
         .ac-event-chip {
@@ -258,7 +258,7 @@
             cursor: pointer;
             outline: none;
         }
-        .ac-select:focus { border-color: #f59e0b; }
+        .ac-select:focus { border-color: var(--lumina-primary); }
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
