@@ -1,0 +1,63 @@
+:root {
+    --lumina-font: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
+    --font-sans: var(--lumina-font);
+    --lumina-page-bg: #e6e5e1;
+    --lumina-surface: #f8f7f4;
+    --lumina-surface-muted: #ebe9e3;
+    --lumina-border: #c7c5bd;
+    --lumina-border-strong: #a49b83;
+    --lumina-text: #2b2d2f;
+    --lumina-text-soft: #53565a;
+    --lumina-text-muted: #747775;
+    --lumina-primary: #987a3c;
+    --lumina-primary-strong: #755b2b;
+    --lumina-primary-soft: rgb(152 122 60 / 15%);
+    --lumina-success: #466b4c;
+    --lumina-warning: #876a32;
+    --lumina-danger: #914d45;
+    --lumina-info: #536f81;
+    --lumina-shadow: 0 2px 5px rgb(31 33 34 / 9%), 0 10px 26px rgb(31 33 34 / 7%);
+
+    --ms-card-bg: var(--lumina-surface);
+    --ms-card-border: var(--lumina-border);
+    --ms-cell-bg: var(--lumina-surface-muted);
+    --ms-bar-bg: var(--lumina-border);
+    --ms-text-primary: var(--lumina-text);
+    --ms-text-secondary: var(--lumina-text-soft);
+    --ms-text-muted: var(--lumina-text-muted);
+    --ms-hover-bg: #e4e2da;
+
+    --ac-card-bg: var(--lumina-surface);
+    --ac-card-border: var(--lumina-border);
+    --ac-cell-bg: var(--lumina-surface-muted);
+    --ac-cell-border: var(--lumina-border);
+    --ac-bar-bg: var(--lumina-border);
+    --ac-text-primary: var(--lumina-text);
+    --ac-text-secondary: var(--lumina-text-soft);
+    --ac-text-muted: var(--lumina-text-muted);
+    --ac-hover-bg: #e4e2da;
+    --ac-today-ring: var(--lumina-primary);
+    --ac-weekend-bg: #efeee9;
+}
+
+:root.dark {
+    --lumina-page-bg: #232425;
+    --lumina-surface: #303133;
+    --lumina-surface-muted: #292a2c;
+    --lumina-border: #53504a;
+    --lumina-border-strong: #796b4d;
+    --lumina-text: #eeece7;
+    --lumina-text-soft: #c3c0b8;
+    --lumina-text-muted: #a29f97;
+    --lumina-primary: #d4b56e;
+    --lumina-primary-strong: #e3c783;
+    --lumina-primary-soft: rgb(212 181 110 / 18%);
+    --lumina-success: #8bb28f;
+    --lumina-warning: #dfc176;
+    --lumina-danger: #df9387;
+    --lumina-info: #9bbacb;
+    --lumina-shadow: 0 2px 5px rgb(0 0 0 / 20%), 0 12px 30px rgb(0 0 0 / 20%);
+    --ms-hover-bg: #393a3c;
+    --ac-hover-bg: #393a3c;
+    --ac-weekend-bg: #292a2c;
+}

@@ -8,8 +8,8 @@ class AdministrativeDashboardAccess {
 
     private const ACCESS_PENDING_URL = '/lumina/acesso-pendente';
     private const ADMIN_DASHBOARD_URL = '/lumina/dashboard-admin';
-    private const STUDENT_DASHBOARD_URL = '/lumina/dashboard-student';
-    private const TEACHER_DASHBOARD_URL = '/lumina/dashboard-teacher';
+    private const STUDENT_DASHBOARD_URL = '/aluno/dashboard-student';
+    private const TEACHER_DASHBOARD_URL = '/professor/dashboard-teacher';
 
     private const ADMINISTRATIVE_ROLES = [
         'ti',

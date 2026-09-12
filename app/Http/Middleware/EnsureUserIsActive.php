@@ -24,8 +24,8 @@ class EnsureUserIsActive {
         if ($user && (!$user->active || $user->is_locked)) {
             $guard->logout();
 
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            // Mantém as autenticações dos outros portais no mesmo navegador.
+            $request->session()->regenerate();
 
             return redirect(Filament::getLoginUrl())
                 ->withErrors(['email' => 'Seu usuário está inativo ou bloqueado. Entre em contato com a administração.']);

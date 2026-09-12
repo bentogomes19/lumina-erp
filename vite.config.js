@@ -8,6 +8,8 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/filament/lumina/theme.css',
+                'resources/css/filament/aluno/theme.css',
+                'resources/css/filament/professor/theme.css',
                 'resources/js/app.js',
             ],
             refresh: true,

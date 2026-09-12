@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Filament\Pages\Auth\Login;
+use App\Models\Role;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -202,7 +203,7 @@ class LoginSecurityTest extends TestCase {
      * @return User
      */
     private function user(array $attributes = []): User {
-        return User::factory()->create(array_merge([
+        $user = User::factory()->create(array_merge([
             'email'                 => 'usuario@example.test',
             'active'                => true,
             'force_password_change' => false,
@@ -210,6 +211,11 @@ class LoginSecurityTest extends TestCase {
             'locked_at'             => null,
             'password'              => Hash::make('Senha-correta-2026'),
         ], $attributes));
+
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $user->assignRole($adminRole);
+
+        return $user;
     }
 
     /**

@@ -54,6 +54,10 @@ class FirstAccessTest extends TestCase {
             $user->syncRoles([$roleName]);
 
             $url    = app(FirstAccessInvitationService::class)->issue($user);
+            $this->assertSame(
+                $roleName === 'student' ? '/aluno/password-reset/reset' : '/professor/password-reset/reset',
+                parse_url($url, PHP_URL_PATH),
+            );
             $status = $this->resetPasswordFromUrl($user, $url, "Senha-{$roleName}-2026");
 
             $this->assertSame(Password::PASSWORD_RESET, $status);

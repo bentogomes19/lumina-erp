@@ -4,6 +4,6 @@ namespace App\Filament\Pages\Auth;
 
 use App\Filament\Pages\Auth\Concerns\RateLimitsLoginAttempts;
 
-class Login extends \Filament\Auth\Pages\Login {
+class StudentLogin extends \Caresome\FilamentAuthDesigner\Pages\Auth\Login {
     use RateLimitsLoginAttempts;
 }

@@ -28,8 +28,8 @@ class EnsurePasswordWasChanged {
         $email = $user->email;
 
         $guard->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Regenera o ID preservando os outros guards independentes do navegador.
+        $request->session()->regenerate();
 
         return redirect(Filament::getRequestPasswordResetUrl(['email' => $email]))
             ->withErrors(['email' => 'Defina uma nova senha para continuar acessando o ERP.']);

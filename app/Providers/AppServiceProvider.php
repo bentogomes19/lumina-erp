@@ -7,6 +7,8 @@ use App\Models\Role;
 use App\Models\User;
 use App\Notifications\PasswordReset as PasswordResetNotification;
 use Filament\Auth\Notifications\ResetPassword as FilamentPasswordResetNotification;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Event;
@@ -29,6 +31,21 @@ class AppServiceProvider extends ServiceProvider {
      * @return void
      */
     public function boot(): void {
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::HEAD_START,
+            function (): string {
+                $panelId = filament()->getCurrentPanel()?->getId();
+
+                if (!in_array($panelId, ['lumina', 'aluno', 'professor'], true)) {
+                    return '';
+                }
+
+                return view('filament.partials.panel-theme-storage', [
+                    'panelId' => $panelId,
+                ])->render();
+            },
+        );
+
         app(\Spatie\Permission\PermissionRegistrar::class)
             ->setPermissionClass(Permission::class)
             ->setRoleClass(Role::class);

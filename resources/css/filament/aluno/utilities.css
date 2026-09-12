@@ -1,0 +1,16 @@
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import './dashboard.css';
+@import './attendance.css';
+@import './academic-calendar.css';
+@import './grades.css';
+@import './subjects.css';
+@import './subject-detail.css';
+@import './grades-table.css';
+
+@source '../../../../app/Filament/Pages/DashboardStudent.php';
+@source '../../../../app/Filament/Pages/Student/**/*.php';
+@source '../../../../app/Filament/Widgets/Student*.php';
+@source '../../../../resources/views/filament/pages/dashboard-student.blade.php';
+@source '../../../../resources/views/filament/pages/student/**/*.blade.php';
+@source '../../../../resources/views/filament/widgets/student-*.blade.php';

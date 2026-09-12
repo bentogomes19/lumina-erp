@@ -79,14 +79,14 @@ class AdministrativeDashboardAccessTest extends TestCase {
      */
     public static function roleDestinations(): array {
         return [
-            'aluno'                         => [['student'], '/lumina/dashboard-student'],
-            'professor'                     => [['teacher'], '/lumina/dashboard-teacher'],
+            'aluno'                         => [['student'], '/aluno/dashboard-student'],
+            'professor'                     => [['teacher'], '/professor/dashboard-teacher'],
             'ti'                            => [['ti'], '/lumina/dashboard-admin'],
             'administrador'                 => [['admin'], '/lumina/dashboard-admin'],
             'secretaria'                    => [['secretaria'], '/lumina/dashboard-admin'],
             'financeiro'                    => [['financeiro'], '/lumina/dashboard-admin'],
-            'aluno com perfil administrativo' => [['admin', 'student'], '/lumina/dashboard-student'],
-            'professor com perfil administrativo' => [['financeiro', 'teacher'], '/lumina/dashboard-teacher'],
+            'aluno com perfil administrativo' => [['admin', 'student'], '/aluno/dashboard-student'],
+            'professor com perfil administrativo' => [['financeiro', 'teacher'], '/professor/dashboard-teacher'],
             'sem papel'                     => [[], '/lumina/acesso-pendente'],
             'papel desconhecido'            => [['externo'], '/lumina/acesso-pendente'],
         ];

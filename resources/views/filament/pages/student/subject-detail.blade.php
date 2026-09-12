@@ -45,7 +45,7 @@
 
             {{-- Botão para voltar --}}
             <div>
-                <a href="{{ url('/lumina/my-subjects') }}" class="ms-back-btn">
+                <a href="{{ url('/aluno/my-subjects') }}" class="ms-back-btn">
                     @svg('fas-arrow-left', '', ['style' => 'width:1rem;height:1rem'])
                     <span>Voltar para Disciplinas</span>
                 </a>
