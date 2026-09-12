@@ -18,6 +18,7 @@ use Filament\Support\Assets\Js;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use Khwr\FilamentQt5Theme\FilamentQt5ThemePlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -53,7 +54,7 @@ class AdminPanelProvider extends PanelProvider {
                 ),
             ])
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::hex('#3D5A80'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -73,7 +74,9 @@ class AdminPanelProvider extends PanelProvider {
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->plugins([])
+            ->plugins([
+                FilamentQt5ThemePlugin::make(),
+            ])
             ->authMiddleware([
                 EnsureUserIsActive::class,
                 Authenticate::class,

@@ -383,7 +383,7 @@ class AcademicCalendar extends Page {
                 [$dotColor, $bgColor, $textColor] = match ($holiday->type) {
                     HolidayType::NATIONAL_HOLIDAY  => ['#ef4444', '#fef2f2', '#b91c1c'],
                     HolidayType::STATE_HOLIDAY     => ['#f97316', '#fff7ed', '#c2410c'],
-                    HolidayType::MUNICIPAL_HOLIDAY => ['#f59e0b', '#fffbeb', '#b45309'],
+                    HolidayType::MUNICIPAL_HOLIDAY => ['var(--lumina-primary)', 'var(--lumina-primary-soft)', 'var(--lumina-primary-strong)'],
                     HolidayType::SCHOOL_RECESS     => ['#0284c7', '#e0f2fe', '#0369a1'],
                     HolidayType::SCHOOL_EVENT      => ['#10b981', '#ecfdf5', '#047857'],
                     HolidayType::EXAM_PERIOD       => ['#6366f1', '#eef2ff', '#4338ca'],

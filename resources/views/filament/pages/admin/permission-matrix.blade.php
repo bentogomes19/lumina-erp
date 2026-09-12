@@ -54,7 +54,7 @@
         .permission-name-cell { display:flex; flex-direction:column; gap:0.1875rem; min-width:0; }
         .permission-name-cell strong { color:var(--ms-text-primary); font-size:0.875rem; }
         .permission-name-cell span, .permission-name-cell small { color:var(--ms-text-muted); font-size:0.75rem; }
-        .permission-module-badge { min-height:1.625rem; display:inline-flex; align-items:center; width:fit-content; padding:0 0.625rem; color:var(--lumina-primary-strong); background:var(--lumina-primary-soft); border:1px solid rgba(245,158,11,0.26); border-radius:999px; font-size:0.75rem; font-weight:700; white-space:nowrap; }
+        .permission-module-badge { min-height:1.625rem; display:inline-flex; align-items:center; width:fit-content; padding:0 0.625rem; color:var(--lumina-primary-strong); background:var(--lumina-primary-soft); border:1px solid var(--lumina-primary-soft); border-radius:999px; font-size:0.75rem; font-weight:700; white-space:nowrap; }
         .permission-mobile-module { display:none; }
         .permission-checkbox { width:2rem; height:2rem; display:inline-flex; align-items:center; justify-content:center; color:#fff; background:var(--ms-cell-bg); border:1px solid var(--lumina-border-strong); border-radius:0.5rem; }
         .permission-checkbox svg { width:1rem; height:1rem; }

@@ -10,7 +10,7 @@
             'linguagens'          => ['accent' => '#0284c7', 'bg' => 'rgba(2,132,199,0.12)', 'text' => '#0369a1'],
             'matematica'          => ['accent' => '#f43f5e', 'bg' => 'rgba(244,63,94,0.12)',   'text' => '#e11d48'],
             'ciencias_da_natureza'=> ['accent' => '#10b981', 'bg' => 'rgba(16,185,129,0.12)',  'text' => '#059669'],
-            'ciencias_humanas'    => ['accent' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.12)',  'text' => '#d97706'],
+            'ciencias_humanas'    => ['accent' => 'var(--lumina-primary)', 'bg' => 'var(--lumina-primary-soft)',  'text' => 'var(--lumina-primary-strong)'],
             'ciencias_exatas'     => ['accent' => '#06b6d4', 'bg' => 'rgba(6,182,212,0.12)',   'text' => '#0891b2'],
         ];
         $defaultStyle = ['accent' => '#6b7280', 'bg' => 'rgba(107,114,128,0.12)', 'text' => '#6b7280'];
@@ -24,8 +24,8 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
                     <div style="display:flex;align-items:center;gap:1rem">
                         <div
-                            style="width:2.75rem;height:2.75rem;border-radius:0.5rem;background:rgba(217,119,6,0.15);display:flex;align-items:center;justify-content:center">
-                            @svg('fas-graduation-cap', 'ms-icon-lg', ['style' => 'color:#fbbf24'])
+                            style="width:2.75rem;height:2.75rem;border-radius:0.5rem;background:var(--lumina-primary-soft);display:flex;align-items:center;justify-content:center">
+                            @svg('fas-graduation-cap', 'ms-icon-lg', ['style' => 'color:var(--lumina-primary)'])
                         </div>
                         <div>
                             <h2 style="font-size:1.125rem;font-weight:700;color:var(--ms-text-primary);margin:0">
@@ -58,7 +58,7 @@
                     $avgColor  = ($stats['overall_average'] !== null && $stats['overall_average'] >= 6) ? '#22c55e' : '#ef4444';
                     $freqColor = ($stats['attendance_percent'] !== null && $stats['attendance_percent'] >= 75) ? '#22c55e' : '#f97316';
                     $statCards = [
-                        ['icon' => 'fas-book-open',   'value' => $stats['total_subjects'],                                                                                              'label' => 'Disciplinas',  'color' => '#f59e0b'],
+                        ['icon' => 'fas-book-open',   'value' => $stats['total_subjects'],                                                                                              'label' => 'Disciplinas',  'color' => 'var(--lumina-primary)'],
                         ['icon' => 'fas-chart-bar',   'value' => $stats['overall_average'] !== null    ? number_format($stats['overall_average'], 1, ',', '.')    . '' : '—',           'label' => 'Média Geral',  'color' => $avgColor],
                         ['icon' => 'fas-circle-check','value' => $stats['attendance_percent'] !== null ? number_format($stats['attendance_percent'], 1, ',', '.') . '%' : '—',          'label' => 'Frequência',   'color' => $freqColor],
                         ['icon' => 'fas-clock',       'value' => $stats['total_hours_weekly'] ?: '—',                                                                                   'label' => 'Horas/Semana', 'color' => '#0f766e'],
@@ -232,8 +232,8 @@
             {{-- Estado sem dados --}}
             <div class="ms-card" style="padding:3rem;text-align:center">
                 <div
-                    style="width:4rem;height:4rem;border-radius:50%;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                    @svg('fas-book-open', 'ms-icon-xl', ['style' => 'color:#f59e0b'])
+                    style="width:4rem;height:4rem;border-radius:50%;background:var(--lumina-primary-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+                    @svg('fas-book-open', 'ms-icon-xl', ['style' => 'color:var(--lumina-primary)'])
                 </div>
                 <h3 style="font-size:1.125rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 0.5rem">
                     Nenhuma Disciplina Encontrada

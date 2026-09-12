@@ -2,18 +2,26 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Widgets\DashboardStats;
-use App\Filament\Widgets\EnrollmentStatsWidget;
+use App\Filament\Resources\Enrollments\EnrollmentResource;
+use App\Filament\Resources\SchoolYears\SchoolYearResource;
+use App\Filament\Resources\Students\StudentResource;
+use App\Filament\Widgets\AdminEnrollmentTrendChart;
+use App\Filament\Widgets\AdminOverviewStats;
+use App\Filament\Widgets\AdminRecentEnrollmentsTable;
+use App\Filament\Widgets\AdminSchoolClassesTable;
+use App\Models\SchoolYear;
 use App\Support\AdministrativeDashboardAccess;
-use Filament\Pages\Page;
+use App\Support\PermissionAccess;
+use Filament\Actions\Action;
+use Filament\Pages\Dashboard;
 
-class DashboardAdmin extends Page {
+class DashboardAdmin extends Dashboard {
 
     protected static ?string $navigationLabel                = 'Painel Administrativo';
     protected static ?string $title                          = 'Painel Administrativo';
-    protected static ?string $slug                           = 'dashboard-admin';
+    protected static string $routePath                       = '/dashboard-admin';
     protected static string|null|\BackedEnum $navigationIcon = 'fas-house';
-    protected static ?int $navigationSort                    = 0;
+    protected static ?int $navigationSort                    = -1;
 
     /**
      * Determina se a página deve ser registrada na navegação.
@@ -33,33 +41,39 @@ class DashboardAdmin extends Page {
         return AdministrativeDashboardAccess::hasAdministrativeRole(auth()->user());
     }
 
-    /**
-     * Retorna o nome da visualização usada pela página.
-     *
-     * @return string
-     */
-    public function getView(): string {
-        return 'filament.pages.dashboard-admin';
-    }
-
-    /**
-     * Retorna os widgets exibidos no cabeçalho da página.
-     *
-     * @return array
-     */
-    protected function getHeaderWidgets(): array {
+    public function getWidgets(): array {
         return [
-            DashboardStats::class,
-            EnrollmentStatsWidget::class,
+            AdminOverviewStats::class,
+            AdminEnrollmentTrendChart::class,
+            AdminSchoolClassesTable::class,
+            AdminRecentEnrollmentsTable::class,
         ];
     }
 
-    /**
-     * Retorna a quantidade de colunas dos widgets do cabeçalho.
-     *
-     * @return int|array
-     */
-    public function getHeaderWidgetsColumns(): int | array {
-        return 2;
+    public function getColumns(): int | array {
+        return [
+            '@xl' => 2,
+            '!@xl' => 1,
+        ];
+    }
+
+    protected function getHeaderActions(): array {
+        return [
+            Action::make('configureSchoolYear')
+                ->label('Configurar ano letivo')
+                ->icon('fas-calendar-plus')
+                ->url(SchoolYearResource::getUrl('create'))
+                ->visible(!SchoolYear::current() && PermissionAccess::can('academic.school_years.create')),
+            Action::make('newEnrollment')
+                ->label('Nova matrícula')
+                ->icon('fas-user-plus')
+                ->url(EnrollmentResource::getUrl('create'))
+                ->visible(PermissionAccess::can('academic.enrollments.create')),
+            Action::make('newStudent')
+                ->label('Novo aluno')
+                ->icon('fas-user-plus')
+                ->url(StudentResource::getUrl('create'))
+                ->visible(PermissionAccess::can('academic.students.create')),
+        ];
     }
 }

@@ -124,7 +124,7 @@ class DashboardTeacher extends Page {
                     'label'       => 'Minhas Turmas',
                     'value'       => $classIds->count(),
                     'icon'        => 'fas-users',
-                    'color'       => '#f59e0b',
+                    'color'       => 'var(--lumina-primary)',
                     'description' => 'turmas vinculadas',
                 ],
                 [

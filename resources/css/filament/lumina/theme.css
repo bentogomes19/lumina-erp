@@ -16,22 +16,23 @@
 
 :root {
     --lumina-font: 'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --lumina-page-bg: #f8fafc;
-    --lumina-surface: #ffffff;
-    --lumina-surface-muted: #f1f5f9;
-    --lumina-border: #e2e8f0;
-    --lumina-border-strong: #cbd5e1;
-    --lumina-text: #0f172a;
-    --lumina-text-soft: #475569;
-    --lumina-text-muted: #94a3b8;
-    --lumina-primary: #d97706;
-    --lumina-primary-strong: #b45309;
-    --lumina-primary-soft: rgba(245, 158, 11, 0.14);
-    --lumina-success: #16a34a;
-    --lumina-warning: #ca8a04;
-    --lumina-danger: #dc2626;
-    --lumina-info: #0284c7;
-    --lumina-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 12px 30px rgba(15, 23, 42, 0.05);
+    --font-sans: var(--lumina-font);
+    --lumina-page-bg: #e8eaec;
+    --lumina-surface: #fafbfc;
+    --lumina-surface-muted: #f0f2f4;
+    --lumina-border: #d4d7db;
+    --lumina-border-strong: #abadb0;
+    --lumina-text: #1c1f23;
+    --lumina-text-soft: #52585f;
+    --lumina-text-muted: #6b7280;
+    --lumina-primary: #3d5a80;
+    --lumina-primary-strong: #2e4468;
+    --lumina-primary-soft: rgba(61, 90, 128, 0.14);
+    --lumina-success: #255c38;
+    --lumina-warning: #5c4a1e;
+    --lumina-danger: #7a2e2e;
+    --lumina-info: #2e4468;
+    --lumina-shadow: 0 1px 2px rgba(28, 31, 35, 0.08), 0 6px 18px rgba(28, 31, 35, 0.06);
 
     --ms-card-bg: var(--lumina-surface);
     --ms-card-border: var(--lumina-border);
@@ -40,7 +41,7 @@
     --ms-text-primary: var(--lumina-text);
     --ms-text-secondary: var(--lumina-text-soft);
     --ms-text-muted: var(--lumina-text-muted);
-    --ms-hover-bg: #eef2f7;
+    --ms-hover-bg: #e8eaec;
 
     --ac-card-bg: var(--lumina-surface);
     --ac-card-border: var(--lumina-border);
@@ -50,23 +51,23 @@
     --ac-text-primary: var(--lumina-text);
     --ac-text-secondary: var(--lumina-text-soft);
     --ac-text-muted: var(--lumina-text-muted);
-    --ac-hover-bg: #eef2f7;
+    --ac-hover-bg: #e8eaec;
     --ac-today-ring: var(--lumina-primary);
-    --ac-weekend-bg: #f8fafc;
+    --ac-weekend-bg: #f4f5f6;
 }
 
-.dark {
-    --lumina-page-bg: #030712;
-    --lumina-surface: #080a0c;
-    --lumina-surface-muted: #0f172a;
-    --lumina-border: #1e293b;
-    --lumina-border-strong: #334155;
-    --lumina-text: #f8fafc;
-    --lumina-text-soft: #cbd5e1;
-    --lumina-text-muted: #64748b;
-    --lumina-primary: #f59e0b;
-    --lumina-primary-strong: #fbbf24;
-    --lumina-primary-soft: rgba(245, 158, 11, 0.16);
+:root.dark {
+    --lumina-page-bg: #1a212b;
+    --lumina-surface: #232b38;
+    --lumina-surface-muted: #1a212b;
+    --lumina-border: #3c4756;
+    --lumina-border-strong: #4e5967;
+    --lumina-text: #c7cdd5;
+    --lumina-text-soft: #8b93a0;
+    --lumina-text-muted: #626a77;
+    --lumina-primary: #5e7ea3;
+    --lumina-primary-strong: #4c6c91;
+    --lumina-primary-soft: rgba(94, 126, 163, 0.2);
     --lumina-shadow: 0 1px 2px rgba(0, 0, 0, 0.22), 0 14px 34px rgba(0, 0, 0, 0.2);
 }
 
@@ -82,7 +83,7 @@ body,
 
 .fi-body {
     background:
-        linear-gradient(180deg, rgba(245, 158, 11, 0.05), transparent 18rem),
+        linear-gradient(180deg, rgba(61, 90, 128, 0.05), transparent 18rem),
         var(--lumina-page-bg);
 }
 
@@ -148,7 +149,7 @@ body,
 }
 
 .ms-avatar {
-    background: linear-gradient(135deg, #f59e0b, #b45309) !important;
+    background: linear-gradient(135deg, var(--lumina-primary), var(--lumina-primary-strong)) !important;
     box-shadow: 0 0 0 4px var(--lumina-primary-soft);
 }
 
@@ -171,7 +172,7 @@ a.ms-shortcut {
 
 a.ms-shortcut:hover {
     background: var(--lumina-primary-soft) !important;
-    border-color: rgba(245, 158, 11, 0.28) !important;
+    border-color: color-mix(in srgb, var(--lumina-primary) 28%, transparent) !important;
 }
 
 a.ms-shortcut.is-js-hovered,
@@ -225,7 +226,7 @@ a.ms-shortcut.is-js-hovered {
 }
 
 .grades-header {
-    background: linear-gradient(135deg, #d97706, #0f766e) !important;
+    background: linear-gradient(135deg, var(--lumina-primary), var(--lumina-primary-strong)) !important;
 }
 
 .grades-table th,
@@ -325,4 +326,72 @@ a.ms-subject-card,
     .grades-card {
         border-radius: 0.5rem !important;
     }
+}
+
+/* Mantém as páginas Blade próprias alinhadas aos controles e superfícies do Qt5. */
+.ms-card,
+.ac-card,
+.grades-card,
+.grades-empty-global,
+.permission-card,
+.teacher-dashboard-card,
+.teacher-assessments-card,
+.ts-toolbar,
+.ts-filters,
+.ts-details {
+    border-radius: var(--khwr-qt-radius, 3px) !important;
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(28, 31, 35, 0.08));
+}
+
+.ms-period-btn,
+.ac-tab,
+.ac-nav-btn,
+.ac-filter-pill,
+.permission-save-button,
+.permission-module-actions button,
+.permission-select,
+.permission-search,
+.ts-icon-button,
+.ts-filter-reset,
+.ts-filter-group select,
+.ac-select,
+.grades-select {
+    border-radius: var(--khwr-qt-radius, 3px) !important;
+    font-family: var(--lumina-font);
+}
+
+.ac-nav-btn,
+.permission-select,
+.permission-search,
+.ts-icon-button,
+.ts-filter-reset,
+.ts-filter-group select,
+.ac-select,
+.grades-select {
+    border-color: var(--lumina-border-strong) !important;
+}
+
+.permission-select,
+.permission-search,
+.ts-filter-group select,
+.ac-select,
+.grades-select {
+    background-color: var(--lumina-surface) !important;
+    color: var(--lumina-text) !important;
+}
+
+.permission-table th,
+.grades-table th {
+    background: var(--khwr-qt-header-bg, var(--lumina-surface-muted));
+    color: var(--lumina-text);
+}
+
+.permission-table td,
+.grades-table td {
+    border-color: var(--lumina-border) !important;
+}
+
+.fi-main .fi-page-content :is(a, button, input, select):focus-visible {
+    outline: 2px solid var(--lumina-primary);
+    outline-offset: 2px;
 }
