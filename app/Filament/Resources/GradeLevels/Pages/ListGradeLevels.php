@@ -3,10 +3,13 @@
 namespace App\Filament\Resources\GradeLevels\Pages;
 
 use App\Filament\Resources\GradeLevels\GradeLevelResource;
+use Asmit\ResizedColumn\HasResizableColumn;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListGradeLevels extends ListRecords {
+
+    use HasResizableColumn;
 
     protected static string $resource = GradeLevelResource::class;
 

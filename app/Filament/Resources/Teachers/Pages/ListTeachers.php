@@ -3,10 +3,13 @@
 namespace App\Filament\Resources\Teachers\Pages;
 
 use App\Filament\Resources\Teachers\TeacherResource;
+use Asmit\ResizedColumn\HasResizableColumn;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListTeachers extends ListRecords {
+
+    use HasResizableColumn;
 
     protected static string $resource = TeacherResource::class;
 

@@ -14,6 +14,7 @@ use App\Filament\Widgets\EnrollmentStatsWidget;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RedirectUserByRole;
+use Asmit\ResizedColumn\ResizedColumnPlugin;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -95,6 +96,7 @@ class AdminPanelProvider extends PanelProvider {
             ])
             ->plugins([
                 FilamentQt5ThemePlugin::make(),
+                ResizedColumnPlugin::make(),
             ])
             ->authMiddleware([
                 EnsureUserIsActive::class,
