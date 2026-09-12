@@ -1,54 +1,237 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1e293b; background: #fff; }
+@page {
+    size: A4 portrait;
+    margin: 16mm 14mm 19mm;
+}
 
-        .page { padding: 24px 28px; }
+* {
+    box-sizing: border-box;
+}
 
-        /* ── Header ── */
-        .header { border-bottom: 2px solid #f59e0b; padding-bottom: 12px; margin-bottom: 16px; }
-        .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
-        .school-name { font-size: 15px; font-weight: bold; color: #1e293b; }
-        .school-sub  { font-size: 9px; color: #64748b; margin-top: 2px; }
-        .doc-title   { font-size: 13px; font-weight: bold; color: #f59e0b; text-align: right; }
-        .doc-year    { font-size: 9px; color: #64748b; text-align: right; margin-top: 2px; }
+body {
+    margin: 0;
+    color: #20252b;
+    font-family: DejaVu Sans, sans-serif;
+    font-size: 9pt;
+    line-height: 1.25;
+}
 
-        /* ── Student info ── */
-        .student-info { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; margin-bottom: 16px; }
-        .info-grid { display: flex; gap: 24px; flex-wrap: wrap; }
-        .info-item label { font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; display: block; }
-        .info-item span  { font-size: 10px; font-weight: 600; color: #1e293b; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
 
-        /* ── Summary ── */
-        .summary { display: flex; gap: 10px; margin-bottom: 16px; }
-        .summary-item { flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; text-align: center; }
-        .summary-item .val { font-size: 18px; font-weight: 800; }
-        .summary-item .lbl { font-size: 7.5px; text-transform: uppercase; color: #64748b; margin-top: 2px; }
+td, th {
+    overflow-wrap: break-word;
+}
 
-        /* ── Table ── */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        thead th {
-            background: #1e293b; color: #fff; font-size: 8px; text-transform: uppercase;
-            letter-spacing: 0.05em; padding: 6px 8px; text-align: center;
-        }
-        thead th:first-child { text-align: left; }
-        tbody tr:nth-child(even) { background: #f8fafc; }
-        tbody td { padding: 6px 8px; font-size: 9.5px; border-bottom: 1px solid #e2e8f0; text-align: center; }
-        tbody td:first-child { text-align: left; font-weight: 600; }
+.text-right {
+    text-align: right;
+}
 
-        /* ── Grade colors ── */
-        .g-ok  { color: #16a34a; font-weight: 700; }
-        .g-rec { color: #b45309; font-weight: 700; }
-        .g-nok { color: #dc2626; font-weight: 700; }
-        .g-nil { color: #94a3b8; }
+.institution {
+    text-align: center;
+    padding: 0 0 3mm;
+    border-bottom: 2pt solid #29333c;
+}
 
-        /* ── Status badge ── */
-        .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: 600; }
-        .b-approved { background: #dcfce7; color: #166534; }
-        .b-recovery { background: #fef9c3; color: #854d0e; }
-        .b-failed   { background: #fee2e2; color: #991b1b; }
-        .b-ongoing  { background: #f1f5f9; color: #475569; }
+.school-name {
+    font-family: DejaVu Serif, serif;
+    font-size: 16pt;
+    font-weight: bold;
+    text-transform: uppercase;
+}
 
-        /* ── Signatures & footer ── */
-        .signatures { display: flex; gap: 60px; justify-content: center; margin-top: 36px; margin-bottom: 20px; }
-        .sig-line .line  { border-top: 1px solid #334155; width: 150px; margin: 0 auto 4px; }
-        .sig-line .label { font-size: 8px; color: #64748b; text-align: center; }
-        .footer { border-top: 1px solid #e2e8f0; padding-top: 8px; display: flex; justify-content: space-between; font-size: 8px; color: #94a3b8; }
+.school-department {
+    margin-top: 2mm;
+    font-size: 8pt;
+    color: #535c65;
+}
+
+.document-heading {
+    margin: 3mm 0;
+}
+
+.document-heading td {
+    vertical-align: middle;
+}
+
+h1 {
+    margin: 0;
+    font-family: DejaVu Serif, serif;
+    font-size: 17pt;
+    text-transform: uppercase;
+}
+
+.document-subtitle {
+    font-size: 8pt;
+    color: #535c65;
+    margin-top: 1mm;
+}
+
+.year-block {
+    width: 24%;
+    text-align: right;
+}
+
+.year-block strong {
+    font-size: 17pt;
+}
+
+.field-label {
+    display: block;
+    font-size: 6.5pt;
+    letter-spacing: 0.4pt;
+    text-transform: uppercase;
+    color: #535c65;
+    margin-bottom: 0.8mm;
+    font-weight: normal;
+}
+
+.student-record {
+    border: 0.8pt solid #69727a;
+    margin-bottom: 4mm;
+}
+
+.student-record td {
+    border: 0.5pt solid #9ba1a7;
+    padding: 2mm 3mm;
+    vertical-align: top;
+}
+
+.student-name {
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+.section-heading {
+    font-size: 8pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    margin: 0 0 2mm;
+}
+
+.grades {
+    border: 0.8pt solid #4d565f;
+    font-size: 8pt;
+}
+
+.grades thead {
+    display: table-header-group;
+}
+
+.grades tr {
+    page-break-inside: avoid;
+}
+
+.grades th, .grades td {
+    border: 0.5pt solid #818991;
+    padding: 1.2mm 1mm;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.grades thead th {
+    background: #e8ebed;
+    font-size: 7pt;
+    font-weight: bold;
+    padding: 1.8mm 1mm;
+}
+
+.grades thead tr + tr th {
+    background: #f3f4f5;
+    font-size: 6.5pt;
+}
+
+.grades .subject-heading, .grades .subject-name {
+    text-align: left;
+    padding-left: 2.5mm;
+}
+
+.grades .subject-name {
+    font-size: 8pt;
+    font-weight: normal;
+}
+
+.grades tbody tr:nth-child(even) {
+    background: #f7f8f8;
+}
+
+.grades .average {
+    font-weight: bold;
+    background: #eef0f2;
+}
+
+.grades .status {
+    font-size: 7pt;
+}
+
+.grades .recovery-grade {
+    color: #505861;
+}
+
+.grades .empty-state {
+    padding: 10mm 3mm;
+    color: #535c65;
+}
+
+.table-notes {
+    margin: 3mm 0 4mm;
+    font-size: 7pt;
+    color: #454e57;
+    page-break-inside: avoid;
+}
+
+.table-notes p {
+    margin: 0 0 1.5mm;
+}
+
+.closing-block {
+    page-break-inside: avoid;
+}
+
+.observations {
+    border: 0.5pt solid #9ba1a7;
+    padding: 1mm 3mm 3mm;
+}
+
+.writing-line {
+    height: 6mm;
+    border-bottom: 0.5pt solid #c7ccd0;
+}
+
+.signatures {
+    margin-top: 10mm;
+    font-size: 7pt;
+    color: #454e57;
+    text-align: center;
+}
+
+.signatures td {
+    vertical-align: top;
+}
+
+.signature-gap {
+    width: 10%;
+}
+
+.signature-line {
+    border-top: 0.7pt solid #535c65;
+    margin-bottom: 2mm;
+}
+
+.page-footer {
+    position: fixed;
+    bottom: -11mm;
+    left: 0;
+    right: 0;
+    border-top: 0.5pt solid #9ba1a7;
+    padding-top: 2mm;
+    font-size: 6.5pt;
+    color: #535c65;
+}
+
+.page-footer td:first-child {
+    width: 60%;
+}

@@ -199,11 +199,12 @@ class MyGrades extends Page {
         }
 
         $pdf = Pdf::loadView('pdf.report-card', [
-            'student'      => $data['student'],
-            'currentClass' => $data['currentClass'],
-            'subjects'     => $data['subjects'],
-            'stats'        => $data['stats'],
-            'generatedAt'  => now(),
+            'student'        => $data['student'],
+            'currentClass'   => $data['currentClass'],
+            'subjects'       => $data['subjects'],
+            'stats'          => $data['stats'],
+            'selectedPeriod' => $data['selected_period'],
+            'generatedAt'    => now(),
         ])->setPaper('a4', 'portrait');
 
         return response()->streamDownload(
