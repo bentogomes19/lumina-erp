@@ -23,7 +23,7 @@ class FirstAccessInvitationService {
 
         $broker = Password::broker();
         $token  = $broker->createToken($user);
-        $url    = Filament::getPanel('lumina')->getResetPasswordUrl($token, $user);
+        $url    = Filament::getPanel($this->panelFor($user))->getResetPasswordUrl($token, $user);
 
         $user->updateQuietly(['force_password_change' => true]);
         $user->notify(new FirstAccessInvitation($url, $this->expiresInMinutes()));
@@ -65,6 +65,21 @@ class FirstAccessInvitationService {
      */
     public function expiresInMinutes(): int {
         return (int) config('auth.passwords.users.expire', 60);
+    }
+
+    /**
+     * Seleciona o portal correto para que o convite abra o fluxo de autenticação do perfil.
+     *
+     * @param User $user
+     *
+     * @return string
+     */
+    private function panelFor(User $user): string {
+        return match (true) {
+            $user->hasRole('student') => 'aluno',
+            $user->hasRole('teacher') => 'professor',
+            default                   => 'lumina',
+        };
     }
 
     /**

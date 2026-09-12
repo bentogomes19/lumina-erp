@@ -153,7 +153,7 @@
                         <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-left:4px solid #ef4444;border-radius:0.75rem;padding:0.875rem 1.125rem;display:flex;align-items:center;gap:0.75rem">
                             @svg('fas-circle-xmark', '', ['style' => 'width:1.125rem;height:1.125rem;color:#ef4444;flex-shrink:0'])
                             <p style="font-size:0.875rem;color:var(--ms-text-primary);margin:0">
-                                Você está <strong style="color:#ef4444">reprovado(a) em {{ $grades['failed'] }} {{ $grades['failed'] === 1 ? 'disciplina' : 'disciplinas' }}</strong>. Acesse <a href="{{ url('/lumina/my-grades') }}" style="color:#ef4444;text-decoration:underline">Minhas Notas</a> para mais detalhes.
+                                Você está <strong style="color:#ef4444">reprovado(a) em {{ $grades['failed'] }} {{ $grades['failed'] === 1 ? 'disciplina' : 'disciplinas' }}</strong>. Acesse <a href="{{ url('/aluno/my-grades') }}" style="color:#ef4444;text-decoration:underline">Minhas Notas</a> para mais detalhes.
                             </p>
                         </div>
                     @endif
@@ -345,7 +345,7 @@
                         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
                             @svg('fas-chart-bar', '', ['style' => 'width:1.125rem;height:1.125rem;color:#22c55e'])
                             <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Últimas Notas Lançadas</h3>
-                            <a href="{{ url('/lumina/my-grades') }}" style="font-size:0.75rem;color:var(--lumina-primary);margin-left:auto;text-decoration:none">Ver todas →</a>
+                            <a href="{{ url('/aluno/my-grades') }}" style="font-size:0.75rem;color:var(--lumina-primary);margin-left:auto;text-decoration:none">Ver todas →</a>
                         </div>
 
                         @if($recentGrades->isEmpty())
@@ -398,26 +398,26 @@
 
                             if ($canViewGrades) {
                                 $shortcuts[] =
-                                ['href' => '/lumina/my-grades',         'icon' => 'fas-chart-bar',        'label' => 'Minhas Notas',       'color' => '#22c55e',
+                                ['href' => '/aluno/my-grades',         'icon' => 'fas-chart-bar',        'label' => 'Minhas Notas',       'color' => '#22c55e',
                                  'badge' => $grades['failed'] > 0 ? $grades['failed'] : ($grades['recovery'] > 0 ? $grades['recovery'] : null),
                                  'badgeColor' => $grades['failed'] > 0 ? '#ef4444' : '#eab308'];
                             }
 
                             if ($canViewSubjects) {
                                 $shortcuts[] =
-                                ['href' => '/lumina/my-subjects',       'icon' => 'fas-book-open',        'label' => 'Minhas Disciplinas', 'color' => '#06b6d4', 'badge' => null];
+                                ['href' => '/aluno/my-subjects',       'icon' => 'fas-book-open',        'label' => 'Minhas Disciplinas', 'color' => '#06b6d4', 'badge' => null];
                             }
 
                             if ($canViewAttendance) {
                                 $shortcuts[] =
-                                ['href' => '/lumina/student-attendance','icon' => 'fas-calendar-days',   'label' => 'Frequência',         'color' => 'var(--lumina-primary)',
+                                ['href' => '/aluno/student-attendance','icon' => 'fas-calendar-days',   'label' => 'Frequência',         'color' => 'var(--lumina-primary)',
                                  'badge' => ($attendance['alert'] ?? false) ? '!' : null,
                                  'badgeColor' => '#ef4444'];
                             }
 
                             if ($canViewCalendar) {
                                 $shortcuts[] =
-                                ['href' => '/lumina/academic-calendar', 'icon' => 'fas-calendar',         'label' => 'Calendário Escolar', 'color' => '#0f766e', 'badge' => null];
+                                ['href' => '/aluno/academic-calendar', 'icon' => 'fas-calendar',         'label' => 'Calendário Escolar', 'color' => '#0f766e', 'badge' => null];
                             }
                         @endphp
                         @foreach($shortcuts as $sh)

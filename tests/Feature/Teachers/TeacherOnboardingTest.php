@@ -13,7 +13,7 @@ use App\Models\SchoolYear;
 use App\Models\Subject;
 use App\Models\User;
 use App\Services\Teachers\TeacherOnboardingService;
-use Filament\Panel;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -122,7 +122,7 @@ class TeacherOnboardingTest extends TestCase {
             $this->service()->onboardingState($result->teacher),
         );
         $this->assertTrue(
-            $result->teacher->user->canAccessPanel($this->createMock(Panel::class)),
+            $result->teacher->user->canAccessPanel(Filament::getPanel('professor')),
         );
     }
 
@@ -392,7 +392,7 @@ class TeacherOnboardingTest extends TestCase {
             $result                = $this->service()->create($data);
 
             $this->assertFalse(
-                $result->teacher->user->canAccessPanel($this->createMock(Panel::class)),
+                $result->teacher->user->canAccessPanel(Filament::getPanel('professor')),
             );
             $this->assertSame(
                 TeacherOnboardingState::ACCESS_BLOCKED,
@@ -522,4 +522,5 @@ class TeacherOnboardingTest extends TestCase {
             'guard_name' => 'web',
         ]);
     }
+
 }

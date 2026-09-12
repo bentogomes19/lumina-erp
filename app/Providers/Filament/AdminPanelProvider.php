@@ -2,8 +2,15 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\AccessPending;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\RequestPasswordReset;
+use App\Filament\Pages\DashboardAdmin;
+use App\Filament\Widgets\AdminEnrollmentTrendChart;
+use App\Filament\Widgets\AdminOverviewStats;
+use App\Filament\Widgets\AdminRecentEnrollmentsTable;
+use App\Filament\Widgets\AdminSchoolClassesTable;
+use App\Filament\Widgets\EnrollmentStatsWidget;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RedirectUserByRole;
@@ -45,6 +52,7 @@ class AdminPanelProvider extends PanelProvider {
             ->brandName('Portal Lumina')
             ->login(Login::class)
             ->passwordReset(RequestPasswordReset::class)
+            ->homeUrl(fn (): string => DashboardAdmin::getUrl(panel: 'lumina'))
             ->font('Inter Variable', url: asset('fonts/filament/filament/inter/index.css'), provider: LocalFontProvider::class, )
             ->viteTheme('resources/css/filament/lumina/theme.css')
             ->assets([
@@ -57,11 +65,22 @@ class AdminPanelProvider extends PanelProvider {
                 'primary' => Color::hex('#3D5A80'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            ->pages([
+                DashboardAdmin::class,
+                AccessPending::class,
+            ])
+            ->discoverPages(
+                in: app_path('Filament/Pages/Admin'),
+                for: 'App\\Filament\\Pages\\Admin',
+            )
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,
+                AdminEnrollmentTrendChart::class,
+                AdminOverviewStats::class,
+                AdminRecentEnrollmentsTable::class,
+                AdminSchoolClassesTable::class,
+                EnrollmentStatsWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

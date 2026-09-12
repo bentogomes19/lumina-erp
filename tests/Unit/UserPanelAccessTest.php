@@ -13,12 +13,15 @@ class UserPanelAccessTest extends TestCase {
      *
      * @return void
      */
-    public function test_active_unlocked_user_can_access_filament_panel(): void {
+    public function test_active_unlocked_user_cannot_access_an_unassigned_panel(): void {
         $user = new User([
             'active' => true,
         ]);
 
-        $this->assertTrue($user->canAccessPanel($this->createMock(Panel::class)));
+        $panel = $this->createMock(Panel::class);
+        $panel->method('getId')->willReturn('unassigned');
+
+        $this->assertFalse($user->canAccessPanel($panel));
     }
 
     /**

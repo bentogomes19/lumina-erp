@@ -1,0 +1,61 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import '../../../../vendor/spykapps/theme-edinburgh/resources/css/edinburgh.css';
+@import './utilities.css';
+@import './tokens.css';
+
+html,
+body,
+.fi,
+.fi-body,
+.fi-main,
+.fi-sidebar,
+.fi-topbar {
+    font-family: var(--lumina-font);
+}
+
+.fi-body {
+    background:
+        linear-gradient(180deg, rgb(152 122 60 / 6%), transparent 18rem),
+        var(--lumina-page-bg);
+}
+
+.fi-main { color: var(--lumina-text); }
+.fi-main > .fi-page { gap: 1rem; }
+.fi-main .fi-page-content { gap: 1.25rem; }
+
+.ms-card,
+.ac-card,
+.grades-card,
+.grades-empty-global {
+    border-color: var(--lumina-border) !important;
+    border-radius: 0.4rem !important;
+    box-shadow: var(--lumina-shadow);
+}
+
+.ms-card,
+.ac-card { background: var(--lumina-surface) !important; }
+
+.ms-card:hover,
+.ac-card:hover,
+.grades-card:hover { border-color: var(--lumina-border-strong) !important; }
+
+.grades-header { background: linear-gradient(120deg, #4c4d4d, #303133) !important; border-bottom: 3px solid var(--lumina-primary); }
+.grades-table thead tr { background: var(--lumina-surface-muted) !important; }
+.grades-table th { color: var(--lumina-text-soft) !important; border-bottom-color: var(--lumina-border) !important; }
+.grades-table tbody tr { border-bottom-color: var(--lumina-border) !important; }
+.grades-table tbody tr:hover { background: var(--ms-hover-bg) !important; }
+.grades-subject { color: var(--lumina-text) !important; }
+.grades-class-badge { background: var(--lumina-primary-soft) !important; color: var(--lumina-primary-strong) !important; }
+.grades-legend { background: var(--lumina-surface-muted) !important; border-color: var(--lumina-border) !important; }
+.grades-legend-text { color: var(--lumina-text-soft) !important; }
+
+@media (max-width: 768px) {
+    .ms-two-col { grid-template-columns: 1fr !important; }
+}
+
+@source '../../../../app/Filament/Pages/DashboardStudent.php';
+@source '../../../../app/Filament/Pages/Student/**/*.php';
+@source '../../../../app/Filament/Widgets/Student*.php';
+@source '../../../../resources/views/filament/pages/dashboard-student.blade.php';
+@source '../../../../resources/views/filament/pages/student/**/*.blade.php';
+@source '../../../../resources/views/filament/widgets/student-*.blade.php';

@@ -113,7 +113,7 @@
                     <div class="ms-subject-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem">
                         @foreach($categorySubjects as $subject)
                             @php $cs = $categoryStyles[$subject->category?->value ?? ''] ?? $defaultStyle; @endphp
-                            <a href="{{ url('/lumina/subject-detail?subject=' . $subject->id) }}"
+                            <a href="{{ url('/aluno/subject-detail?subject=' . $subject->id) }}"
                                 class="ms-subject-card">
                                 {{-- Color accent bar --}}
                                 <div style="height:3px;background:{{ $cs['accent'] }}"></div>

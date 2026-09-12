@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\AdministrativeDashboardAccess;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,12 @@ class User extends Authenticatable implements FilamentUser {
     use HasRoles;
     use Notifiable;
     use SoftDeletes;
+
+    /**
+     * Os papéis e permissões do ERP são armazenados sob o guard de autorização web,
+     * mesmo quando o usuário autentica por uma sessão de portal separada.
+     */
+    protected string $guard_name = 'web';
 
     /**
      * Número máximo de tentativas antes do bloqueio automático.
@@ -182,11 +189,13 @@ class User extends Authenticatable implements FilamentUser {
             return false;
         }
 
-        if (!$this->exists || !$this->hasRole('teacher')) {
-            return true;
-        }
-
-        return (bool) $this->teacher?->canAccessOperationally();
+        return match ($panel->getId()) {
+            'aluno' => $this->hasRole('student')
+                && $this->student()->where('status', 'active')->exists(),
+            'professor' => $this->hasRole('teacher') && (bool) $this->teacher?->canAccessOperationally(),
+            'lumina' => AdministrativeDashboardAccess::hasAdministrativeRole($this),
+            default => false,
+        };
     }
 
     /**
