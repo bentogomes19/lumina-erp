@@ -4,7 +4,7 @@ namespace App\Models;
 
 /**
  * Log de auditoria de matrículas.
- * Registros imutáveis — sem updated_at.
+ * Registros imutáveis | sem updated_at.
  *
  * @property int         $id
  * @property int         $enrollment_id

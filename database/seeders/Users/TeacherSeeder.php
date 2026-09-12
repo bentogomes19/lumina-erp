@@ -3,58 +3,31 @@
 namespace Database\Seeders\Users;
 
 use App\Models\Teacher;
-use App\Models\User;
-use Database\Factories\TeacherFactory;
+use Database\Seeders\Support\SchoolPopulation;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class TeacherSeeder extends Seeder {
-
-    /**
-     * Cria os usuários e cadastros iniciais de professores.
-     *
-     * @return void
-     */
     public function run(): void {
-
-        /* 1) Garante pelo menos um professor "fixo". */
-        $mainTeacherUser = User::firstOrCreate(
-            ['email' => 'professor@lumina.com'],
-            [
-                'uuid'     => (string) Str::uuid(),
-                'name'     => 'Professor Exemplo',
-                'password' => Hash::make('password'),
-                'active'   => true,
-            ]
-        );
-        $mainTeacherUser->assignRole('teacher');
-
-        /* 2) Cria mais usuários professores se quiser massa de teste. */
-        if (User::role('teacher')->count() < 22) {
-            $extraUsers = User::factory()->count(21)->create();
-
-            foreach ($extraUsers as $user) {
-                $user->assignRole('teacher');
+        SchoolPopulation::assertEnvironment();
+        $names = ['Ana Paula Ribeiro', 'Carlos Eduardo Santos', 'Mariana Costa', 'Rafael Oliveira', 'Juliana Almeida'];
+        foreach (SchoolPopulation::SUBJECTS as $index => $subject) {
+            $email = $index === 0 ? 'professor@lumina.com' : 'professor.'.strtolower($subject).'@lumina.com';
+            $user = SchoolPopulation::account($email, $names[$index], 'teacher');
+            if (!Teacher::where('user_id', $user->id)->exists()) {
+                Teacher::factory()->employedSince(SchoolPopulation::firstYear() - 2)->create([
+                    'user_id' => $user->id, 'name' => $user->name, 'email' => $email,
+                    'employee_number' => 'PROF-'.$subject, 'qualification' => 'Licenciatura em '.SchoolPopulation::subjectName($subject),
+                    'weekly_workload' => 40, 'max_classes' => 10,
+                ]);
             }
         }
-
-        /* 3) Pra cada user com role teacher, garantir um Teacher vinculado. */
-        $teacherUsers = User::role('teacher')->get();
-
-        foreach ($teacherUsers as $user) {
-
-            /* monta os dados padrão do professor com base no usuário. */
-            $teacherData = TeacherFactory::new()->make([
-                'user_id' => $user->id,
-                'name'    => $user->name,
-                'email'   => $user->email,
-            ])->toArray();
-
-            Teacher::firstOrCreate(
-                ['user_id' => $user->id],
-                $teacherData
-            );
+        $user = SchoolPopulation::account('professor.historico@lumina.com', 'Roberto Lima', 'teacher');
+        if (!Teacher::where('user_id', $user->id)->exists()) {
+            Teacher::factory()->employedSince(SchoolPopulation::firstYear() - 3)->create([
+                'user_id' => $user->id, 'name' => $user->name, 'email' => $user->email,
+                'employee_number' => 'PROF-ANTIGO', 'status' => 'terminated',
+                'termination_date' => (now()->year - 1).'-12-15',
+            ]);
         }
     }
 }

@@ -140,7 +140,7 @@ class TeachersTable {
                                 ->with('gradeLevel', 'schoolYear')
                                 ->get()
                                 ->mapWithKeys(fn ($c) => [
-                                    $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
+                                    $c->id => "{$c->name} | {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
                                 ])
                             )
                             ->searchable()

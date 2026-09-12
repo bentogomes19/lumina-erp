@@ -68,7 +68,7 @@ class StudentFactory extends Factory {
             'status'              => 'active',
             'enrollment_date'     => $this->faker->dateTimeBetween('-3 years', 'now')->format('Y-m-d'),
             'exit_date'           => null,
-            'meta'                => json_encode([]),
+            'meta'                => [],
             'address_district'    => $district,
             'birth_city'          => $this->faker->randomElement($cities[$state]),
             'birth_state'         => $state,
@@ -85,6 +85,16 @@ class StudentFactory extends Factory {
             'status_changed_at' => now(),
             'photo_url'         => null,
         ];
+    }
+
+    /** Ingresso no 1º ano aos seis anos, com idade coerente com o histórico. */
+    public function enteringIn(int $year): static {
+        return $this->state(fn () => [
+            'birth_date' => ($year - 6).'-03-15',
+            'enrollment_date' => "$year-02-01",
+            'registration_number' => 'ALU-'.$year.'-'.$this->faker->unique()->numerify('######'),
+            'status' => 'active', 'exit_date' => null, 'meta' => [],
+        ]);
     }
 
     /**

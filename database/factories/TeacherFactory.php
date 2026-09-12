@@ -88,6 +88,15 @@ class TeacherFactory extends Factory {
         ];
     }
 
+    /** Professor admitido antes das aulas que integram o histórico. */
+    public function employedSince(int $year): static {
+        return $this->state(fn () => [
+            'hire_date' => "$year-01-10", 'admission_date' => "$year-01-10",
+            'birth_date' => ($year - 28).'-05-20', 'status' => 'active',
+            'termination_date' => null,
+        ]);
+    }
+
     /**
      * Remove acentos de uma string.
      *

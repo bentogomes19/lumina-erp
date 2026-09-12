@@ -23,7 +23,7 @@ class RoleResource extends BaseAdminResource {
     protected static ?string $pluralModelLabel              = 'Perfil de Acesso';
     protected static ?string $modelLabel                    = 'Perfil de Acesso';
 
-    /* Apenas TI (e admin) têm acesso — o BaseAdminResource já garante TI acesso total; aqui negamos explicitamente para Secretaria e Financeiro. */
+    /* Apenas TI (e admin) têm acesso | o BaseAdminResource já garante TI acesso total; aqui negamos explicitamente para Secretaria e Financeiro. */
     /**
      * Retorna o nome da permissão necessária para visualizar o recurso.
      *

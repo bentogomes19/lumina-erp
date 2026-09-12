@@ -50,7 +50,7 @@ class StudentsRelationManager extends RelationManager {
                 ViewAction::make('verAluno')
                     ->label('Ver aluno')
                     ->icon('fas-eye')
-                    ->modalHeading(fn (Student $record): string => "Aluno — {$record->name}")
+                    ->modalHeading(fn (Student $record): string => "Aluno | {$record->name}")
                     ->modalWidth('4xl')
                     ->infolist([
                         InfoSection::make('Identificação')

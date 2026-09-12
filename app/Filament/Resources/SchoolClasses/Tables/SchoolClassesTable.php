@@ -113,7 +113,7 @@ class SchoolClassesTable {
                     Action::make('verTurma')
                         ->label('Ver turma')
                         ->icon('fas-eye')
-                        ->modalHeading(fn (SchoolClass $record): string => "Turma — {$record->name}")
+                        ->modalHeading(fn (SchoolClass $record): string => "Turma | {$record->name}")
                         ->modalWidth('3xl')
                         ->infolist([
                             InfoSection::make('Identificação')
@@ -246,7 +246,7 @@ class SchoolClassesTable {
                     Action::make('verDisciplinas')
                         ->label('Ver disciplinas')
                         ->icon('fas-book-open')
-                        ->modalHeading(fn ($record) => "Disciplinas — {$record->name}")
+                        ->modalHeading(fn ($record) => "Disciplinas | {$record->name}")
                         ->modalWidth('3xl')
                         ->infolist([
                             InfoSection::make('Disciplinas cadastradas')

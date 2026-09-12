@@ -121,7 +121,7 @@ class EnrollmentForm {
                                     $capacity = app(StudentEnrollmentService::class)->capacitySummary($schoolClass);
 
                                     return [
-                                        $schoolClass->id => "{$schoolClass->name} — {$schoolClass->gradeLevel?->name} ({$schoolClass->schoolYear?->year}) | {$capacity}",
+                                        $schoolClass->id => "{$schoolClass->name} | {$schoolClass->gradeLevel?->name} ({$schoolClass->schoolYear?->year}) | {$capacity}",
                                     ];
                                 });
                             })
@@ -159,7 +159,7 @@ class EnrollmentForm {
                             ->default(EnrollmentStatus::ACTIVE->value)
                             ->required()
                             ->disabledOn('edit')
-                            ->helperText('Para trancamentos, transferências ou cancelamentos, use as ações específicas na barra superior da página de edição — elas registram o histórico automaticamente.')
+                            ->helperText('Para trancamentos, transferências ou cancelamentos, use as ações específicas na barra superior da página de edição | elas registram o histórico automaticamente.')
                             ->columnSpanFull(),
                     ]),
             ]);

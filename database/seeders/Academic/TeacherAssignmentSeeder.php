@@ -2,48 +2,26 @@
 
 namespace Database\Seeders\Academic;
 
-use App\Models\SchoolClass;
-use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
+use Database\Seeders\Support\SchoolPopulation;
 use Illuminate\Database\Seeder;
 
 class TeacherAssignmentSeeder extends Seeder {
-
-    /**
-     * Cria as atribuições iniciais de professores às turmas e disciplinas.
-     *
-     * @return void
-     */
     public function run(): void {
-        $teachers = Teacher::all();
-        $classes  = SchoolClass::all();
-        $subjects = Subject::all();
-
-        if ($teachers->isEmpty() || $classes->isEmpty() || $subjects->isEmpty()) {
-            $this->command?->warn('TeacherAssignmentSeeder: faltam teachers, classes ou subjects. Pulei o seeder.');
-            return;
-        }
-
-        foreach ($classes as $class) {
-
-            /* escolhe de 3 a 5 disciplinas aleatórias para a turma. */
-            $classSubjects = $subjects->random(
-                min($subjects->count(), random_int(3, 5))
-            );
-
-            foreach ($classSubjects as $subject) {
-                $teacher = $teachers->random();
-
-                /* 1) cria (ou mantém) o vínculo professor+turma+disciplina. */
-                TeacherAssignment::firstOrCreate([
-                    'teacher_id' => $teacher->id,
-                    'class_id'   => $class->id,
-                    'subject_id' => $subject->id,
-                ]);
-
-                /* 2) garante o vínculo turma+disciplina na pivot class_subjects. */
-                $class->subjects()->syncWithoutDetaching([$subject->id]);
+        SchoolPopulation::assertEnvironment();
+        foreach (SchoolPopulation::classes() as $class) {
+            foreach ($class->subjects as $subject) {
+                $code = $subject->code === 'LP' && $class->schoolYear->year < now()->year ? 'ANTIGO' : $subject->code;
+                $teacher = Teacher::where('employee_number', 'PROF-'.$code)->first();
+                // Contas padrão pré-existentes podem ter outro número funcional.
+                if (!$teacher && $subject->code === 'LP') {
+                    $teacher = Teacher::whereHas('user', fn ($q) => $q->where('email', 'professor@lumina.com'))->first();
+                }
+                if (!$teacher) {
+                    throw new \RuntimeException('Professor não encontrado para a disciplina '.$subject->code);
+                }
+                TeacherAssignment::firstOrCreate(['class_id' => $class->id, 'subject_id' => $subject->id], ['teacher_id' => $teacher->id]);
             }
         }
     }

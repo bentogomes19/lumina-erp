@@ -32,7 +32,7 @@ class SchoolYearForm {
                     ->options(SchoolYearStatus::toArray())
                     ->default(SchoolYearStatus::PLANNING->value)
                     ->required()
-                    ->helperText('Somente um ano letivo pode estar "Ativo" por vez.'),
+                    ->helperText('Somente um ano pode estar ativo. Anos anteriores ao ano civil atual não podem ser ativados; ao ativar outro ano, o anterior será encerrado.'),
 
                 DatePicker::make('starts_at')
                     ->label('Data de Início')

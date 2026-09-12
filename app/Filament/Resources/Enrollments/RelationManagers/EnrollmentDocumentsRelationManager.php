@@ -67,7 +67,7 @@ class EnrollmentDocumentsRelationManager extends RelationManager {
 
             FileUpload::make('arquivo_path')
                 ->label('Arquivo Digital (opcional)')
-                ->helperText('PDF, JPG ou PNG — máx. 10MB')
+                ->helperText('PDF, JPG ou PNG | máx. 10MB')
                 ->disk('private')
                 ->directory('enrollment-documents')
                 ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])

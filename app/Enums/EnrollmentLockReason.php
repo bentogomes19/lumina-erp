@@ -4,7 +4,7 @@ namespace App\Enums;
 
 /**
  * Motivos válidos para trancamento de matrícula.
- * Lista configurável conforme spec — pode ser expandida sem migration.
+ * Lista configurável conforme spec | pode ser expandida sem migration.
  */
 enum EnrollmentLockReason: string {
 

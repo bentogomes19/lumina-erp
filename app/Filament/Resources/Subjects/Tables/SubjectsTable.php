@@ -111,7 +111,7 @@ class SubjectsTable {
                                 }
                                 return $query->orderBy('name')->get()
                                     ->mapWithKeys(fn ($c) => [
-                                        $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
+                                        $c->id => "{$c->name} | {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
                                     ]);
                             })
                             ->searchable()
@@ -174,7 +174,7 @@ class SubjectsTable {
                             ->label('Turma')
                             ->options(fn () => SchoolClass::with('gradeLevel', 'schoolYear')->get()
                                 ->mapWithKeys(fn ($c) => [
-                                    $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
+                                    $c->id => "{$c->name} | {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
                                 ]))
                             ->searchable()->preload()->required(),
                     ])

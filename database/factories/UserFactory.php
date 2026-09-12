@@ -45,7 +45,7 @@ class UserFactory extends Factory {
             'name'              => $name,
             'email'             => $email,
             'email_verified_at' => now(),
-            'password'          => bcrypt('password'),
+            'password'          => static::$password ??= bcrypt('password'),
             'cpf'               => generate_cpf(),
             'rg'                => generate_rg(),
             'birth_date'        => $this->faker->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),

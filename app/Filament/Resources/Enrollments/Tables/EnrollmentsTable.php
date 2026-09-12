@@ -153,7 +153,7 @@ class EnrollmentsTable {
                     /* Visualização / Edição. */
                     ViewAction::make()
                         ->label('Ver detalhes')
-                        ->modalHeading(fn (Enrollment $record) => "Matrícula — {$record->registration_number}")
+                        ->modalHeading(fn (Enrollment $record) => "Matrícula | {$record->registration_number}")
                         ->modalWidth('2xl')
                         ->infolist([
 
@@ -374,7 +374,7 @@ class EnrollmentsTable {
 
                         Notification::make()
                             ->title('Matrícula trancada')
-                            ->body("Nº {$record->registration_number} — trancada com sucesso.")
+                            ->body("Nº {$record->registration_number} | trancada com sucesso.")
                             ->warning()
                             ->send();
                     }),
@@ -402,7 +402,7 @@ class EnrollmentsTable {
 
                         Notification::make()
                             ->title('Matrícula reativada')
-                            ->body("Nº {$record->registration_number} — reativada com sucesso.")
+                            ->body("Nº {$record->registration_number} | reativada com sucesso.")
                             ->success()
                             ->send();
                     }),
@@ -431,7 +431,7 @@ class EnrollmentsTable {
                                         $capacity = app(StudentEnrollmentService::class)->capacitySummary($c);
 
                                         return [
-                                            $c->id => "{$c->name} — {$c->gradeLevel?->name} | Turno: {$c->shift?->label()} | {$capacity}",
+                                            $c->id => "{$c->name} | {$c->gradeLevel?->name} | Turno: {$c->shift?->label()} | {$capacity}",
                                         ];
                                     });
                             })
@@ -537,7 +537,7 @@ class EnrollmentsTable {
 
                         Notification::make()
                             ->title('Matrícula cancelada')
-                            ->body("Nº {$record->registration_number} — cancelada. O histórico acadêmico é preservado.")
+                            ->body("Nº {$record->registration_number} | cancelada. O histórico acadêmico é preservado.")
                             ->danger()
                             ->send();
                     }),
@@ -551,7 +551,7 @@ class EnrollmentsTable {
                         fn (Enrollment $record) => $record->status === EnrollmentStatus::CANCELED
                         && PermissionAccess::can('academic.enrollments.update')
                     )
-                    ->modalHeading('Reverter Cancelamento — Perfil TI')
+                    ->modalHeading('Reverter Cancelamento | Perfil TI')
                     ->modalDescription('Ação restrita ao perfil TI. A matrícula voltará ao status Ativa.')
                     ->form([
                         Textarea::make('observacao')
@@ -575,7 +575,7 @@ class EnrollmentsTable {
 
                         Notification::make()
                             ->title('Cancelamento revertido')
-                            ->body("Nº {$record->registration_number} — matrícula reativada pelo perfil TI.")
+                            ->body("Nº {$record->registration_number} | matrícula reativada pelo perfil TI.")
                             ->warning()
                             ->send();
                     }),
@@ -606,7 +606,7 @@ class EnrollmentsTable {
                                     fn () => SchoolClass::with('gradeLevel', 'schoolYear')
                                     ->get()
                                     ->mapWithKeys(fn ($c) => [
-                                        $c->id => "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
+                                        $c->id => "{$c->name} | {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
                                     ])
                                 )
                                 ->nullable()
@@ -698,8 +698,8 @@ class EnrollmentsTable {
                                 Notification::make()
                                     ->title('Exclusão em lote')
                                     ->body($deleted > 0
-                                        ? "{$deleted} excluída(s). {$blocked} não excluída(s) — possuem notas lançadas. Cancele a matrícula em vez de excluir."
-                                        : "Nenhuma excluída — matrículas com notas não podem ser excluídas. Cancele o status em vez de excluir.")
+                                        ? "{$deleted} excluída(s). {$blocked} não excluída(s) | possuem notas lançadas. Cancele a matrícula em vez de excluir."
+                                        : "Nenhuma excluída | matrículas com notas não podem ser excluídas. Cancele o status em vez de excluir.")
                                     ->warning()
                                     ->send();
                             } elseif ($deleted > 0) {

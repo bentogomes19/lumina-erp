@@ -47,7 +47,7 @@ class EnrollmentWizardSchema {
                         ->label('Tipo de cadastro')
                         ->options([
                             'existing' => 'Aluno já cadastrado no sistema',
-                            'new'      => 'Novo aluno — preencher cadastro',
+                            'new'      => 'Novo aluno | preencher cadastro',
                         ])
                         ->default('existing')
                         ->live()
@@ -63,7 +63,7 @@ class EnrollmentWizardSchema {
                         ->searchable()
                         ->preload()
                         ->options(fn () => Student::orderBy('name')->get()->mapWithKeys(fn ($s) => [
-                            $s->id => "{$s->name} — {$s->registration_number}" . ($s->cpf ? " ({$s->cpf})" : ''),
+                            $s->id => "{$s->name} | {$s->registration_number}" . ($s->cpf ? " ({$s->cpf})" : ''),
                         ]))
                         ->required(fn (Get $get) => $get('student_source') === 'existing')
                         ->visible(fn (Get $get) => $get('student_source') === 'existing')
@@ -190,7 +190,7 @@ class EnrollmentWizardSchema {
                                         $capacity = app(StudentEnrollmentService::class)->capacitySummary($schoolClass);
 
                                         return [
-                                            $schoolClass->id => "{$schoolClass->name} — {$schoolClass->gradeLevel?->name} ({$schoolClass->schoolYear?->year}) | {$capacity}",
+                                            $schoolClass->id => "{$schoolClass->name} | {$schoolClass->gradeLevel?->name} ({$schoolClass->schoolYear?->year}) | {$capacity}",
                                         ];
                                     });
                                 })
@@ -511,7 +511,7 @@ class EnrollmentWizardSchema {
 
                             $capacity = app(StudentEnrollmentService::class)->capacitySummary($c);
 
-                            return "{$c->name} — {$c->gradeLevel?->name} ({$c->schoolYear?->year}) | {$capacity}";
+                            return "{$c->name} | {$c->gradeLevel?->name} ({$c->schoolYear?->year}) | {$capacity}";
                         }),
 
                     Placeholder::make('review_date')

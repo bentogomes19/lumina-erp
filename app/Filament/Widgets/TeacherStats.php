@@ -53,7 +53,7 @@ class TeacherStats extends BaseWidget {
             ->first();
 
         $nextLabel = $nextAssessment
-            ? ($nextAssessment->title .' — '. optional($nextAssessment->scheduled_at)->format('d/m H:i'))
+            ? ($nextAssessment->title .' | '. optional($nextAssessment->scheduled_at)->format('d/m H:i'))
             : '—';
 
         return [

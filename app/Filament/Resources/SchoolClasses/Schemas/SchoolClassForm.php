@@ -37,7 +37,7 @@ class SchoolClassForm {
 
                     TextInput::make('name')
                         ->label('Nome da Turma')
-                        ->placeholder('Ex.: 1º Ano A')
+                        ->placeholder('Ex.: 1° ANO A')
                         ->required()
                         ->maxLength(80)
                         ->columnSpan(['lg' => 8]),
@@ -53,7 +53,7 @@ class SchoolClassForm {
                         ->label('Série / Etapa')
                         ->relationship('gradeLevel', 'name')
                         ->getOptionLabelFromRecordUsing(
-                            fn ($record) => $record->name.' — '.($record->stage?->label() ?? strtoupper($record->stage?->value ?? ''))
+                            fn ($record) => $record->name.' | '.($record->stage?->label() ?? strtoupper($record->stage?->value ?? ''))
                         )
                         ->searchable()
                         ->preload()

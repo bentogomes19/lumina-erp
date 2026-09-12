@@ -256,8 +256,8 @@ class EnrollmentLifecycleRulesTest extends TestCase {
             'year'      => $year,
             'starts_at' => "{$year}-02-01",
             'ends_at'   => "{$year}-12-20",
-            'is_active' => $year === 2026,
-            'status'    => 'ativo',
+            'is_active' => $year === now()->year,
+            'status'    => $year === now()->year ? 'ativo' : 'planejamento',
         ]);
     }
 

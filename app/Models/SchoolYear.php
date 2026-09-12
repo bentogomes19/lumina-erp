@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\SchoolYearStatus;
+use Illuminate\Validation\ValidationException;
 
 class SchoolYear extends BaseModel {
 
@@ -31,28 +32,27 @@ class SchoolYear extends BaseModel {
         'status'    => SchoolYearStatus::class,
     ];
 
-    /**
-     * Ao ativar um ano letivo, garante que nenhum outro fique ativo.
-     *
-     * @return void
-     */
-    protected static function booted(): void {
-        static::saving(function (self $year) {
-            if ($year->status === SchoolYearStatus::ACTIVE) {
+    /** Salva a ativação e a desativação anterior na mesma transação. */
+    public function save(array $options = []) {
+        if (!$this->status) {
+            $this->status = $this->is_active ? SchoolYearStatus::ACTIVE : SchoolYearStatus::PLANNING;
+        }
+        if ($this->status === SchoolYearStatus::ACTIVE && (int) $this->year < now()->year) {
+            throw ValidationException::withMessages([
+                'year' => 'Não é permitido ativar um ano letivo anterior ao ano atual (' . now()->year . ').',
+            ]);
+        }
+        $this->is_active = $this->status === SchoolYearStatus::ACTIVE;
 
-                /* Sincroniza is_active com status. */
-                $year->is_active = true;
-
-                /* Desativa todos os outros. */
-                static::where('id', '!=', $year->id)
-                    ->where('status', SchoolYearStatus::ACTIVE->value)
-                    ->update([
-                        'status'    => SchoolYearStatus::PLANNING->value,
-                        'is_active' => false,
-                    ]);
-            } else {
-                $year->is_active = false;
+        return $this->getConnection()->transaction(function () use ($options) {
+            // Uma ordem única de bloqueio também protege trocas entre anos existentes.
+            $this->newQuery()->orderBy('id')->lockForUpdate()->get(['id']);
+            if ($this->is_active) {
+                $this->newQuery()->where('id', '!=', $this->id ?? 0)
+                    ->where(fn ($q) => $q->where('status', SchoolYearStatus::ACTIVE->value)->orWhere('is_active', true))
+                    ->update(['status' => SchoolYearStatus::CLOSED->value, 'is_active' => false]);
             }
+            return parent::save($options);
         });
     }
 

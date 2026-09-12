@@ -231,7 +231,7 @@ class TeacherOnboardingWizardSchema {
                                     ->orderBy('name')
                                     ->get()
                                     ->mapWithKeys(fn (SchoolClass $class): array => [
-                                        $class->id => "{$class->name} — {$class->gradeLevel?->name} ({$class->schoolYear?->year})",
+                                        $class->id => "{$class->name} | {$class->gradeLevel?->name} ({$class->schoolYear?->year})",
                                     ]))
                                 ->searchable()
                                 ->preload()

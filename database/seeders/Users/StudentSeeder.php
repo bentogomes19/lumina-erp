@@ -3,56 +3,42 @@
 namespace Database\Seeders\Users;
 
 use App\Models\Student;
-use App\Models\User;
-use Database\Factories\StudentFactory;
+use Database\Seeders\Support\SchoolPopulation;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class StudentSeeder extends Seeder {
-
-    /**
-     * Cria os usuários e cadastros iniciais de alunos.
-     *
-     * @return void
-     */
     public function run(): void {
-
-        /* 1) Garante pelo menos um aluno "fixo". */
-        $mainStudentUser = User::firstOrCreate(
-            ['email' => 'aluno@lumina.com'],
-            [
-                'uuid'     => (string) Str::uuid(),
-                'name'     => 'Aluno Exemplo',
-                'password' => Hash::make('password'),
-                'active'   => true,
-            ]
-        );
-        $mainStudentUser->assignRole('student');
-
-        /* 2) Cria mais usuários alunos se quiser massa. */
-        if (User::role('student')->count() < 80) {
-            $extraUsers = User::factory()->count(80)->create();
-
-            foreach ($extraUsers as $user) {
-                $user->assignRole('student');
+        SchoolPopulation::assertEnvironment();
+        // Cada coorte ingressa no 1º ano e cursa os nove anos do fundamental.
+        // Inclui egressos para que as turmas dos anos anteriores também tenham alunos.
+        foreach (range(SchoolPopulation::firstYear() - 8, now()->year) as $entryYear) {
+            for ($position = 1; $position <= config('population.students_per_class'); $position++) {
+                $key = 'ALU-'.$entryYear.'-'.str_pad((string) $position, 3, '0', STR_PAD_LEFT);
+                if (Student::where('registration_number', $key)->exists()) {
+                    continue;
+                }
+                $main = $entryYear === now()->year - 4 && $position === 1;
+                $email = $main ? 'aluno@lumina.com' : "aluno.$entryYear.$position@lumina.com";
+                $data = Student::factory()->enteringIn($entryYear)->make(['user_id' => null, 'email' => $email]);
+                $user = SchoolPopulation::account($email, $main ? 'Lucas Henrique Silva' : $data->name, 'student');
+                $existing = Student::where('user_id', $user->id)->first();
+                // Não substituir um histórico existente: apenas identificar a conta padrão.
+                if ($existing) {
+                    $meta = is_array($existing->meta) ? $existing->meta : [];
+                    // Dados antigos do seeder podiam ter sido persistidos como string JSON.
+                    if (isset($meta[0]) && $meta[0] === '[]') {
+                        unset($meta[0]);
+                    }
+                    $existing->update(['meta' => array_merge($meta, ['cohort_start_year' => $entryYear, 'roster_position' => $position])]);
+                    continue;
+                }
+                $data->forceFill([
+                    'user_id' => $user->id, 'name' => $user->name, 'registration_number' => $key,
+                    'status' => $entryYear + 8 < now()->year ? 'graduated' : 'active',
+                    'exit_date' => $entryYear + 8 < now()->year ? ($entryYear + 8).'-12-15' : null,
+                    'meta' => ['cohort_start_year' => $entryYear, 'roster_position' => $position],
+                ])->save();
             }
-        }
-
-        /* Garante um cadastro de aluno para cada usuário com perfil de estudante. */
-        $studentUsers = User::role('student')->get();
-
-        foreach ($studentUsers as $user) {
-            $studentData = StudentFactory::new()->make([
-                'user_id' => $user->id,
-                'name'    => $user->name,
-                'email'   => $user->email,
-            ])->toArray();
-
-            Student::firstOrCreate(
-                ['user_id' => $user->id],
-                $studentData
-            );
         }
     }
 }

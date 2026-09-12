@@ -2,55 +2,30 @@
 
 namespace Database\Seeders\Academic;
 
-use App\Enums\ClassShift;
-use App\Enums\ClassStatus;
-use App\Enums\ClassType;
 use App\Models\GradeLevel;
 use App\Models\SchoolClass;
-use App\Models\SchoolYear;
-use App\Models\Teacher;
+use App\Models\Subject;
+use Database\Seeders\Support\SchoolPopulation;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class SchoolClassSeeder extends Seeder {
-
-    /**
-     * Cria as turmas escolares iniciais.
-     *
-     * @return void
-     */
     public function run(): void {
-
-        /* Pega o ano letivo ativo. */
-        $year = SchoolYear::where('is_active', true)->first()
-            ?? SchoolYear::orderByDesc('year')->first(); /* valor alternativo. */
-
-        $gradeLevels = GradeLevel::all();
-        $teachers    = Teacher::all();
-
-        if (!$year || $gradeLevels->isEmpty() || $teachers->isEmpty()) {
-            $this->command?->warn('SchoolClassSeeder: faltam year/gradeLevels/teachers, seeder pulado.');
-            return;
-        }
-
-        foreach ($gradeLevels as $gradeLevel) {
-            $randomShift = fake()->randomElement(ClassShift::cases());
-
-            SchoolClass::create([
-                'uuid' => Str::uuid(),
-                'name' => $gradeLevel->name . ' - A',
-                'code' => Str::slug($gradeLevel->name . '-A') . '-' . $year->year,
-
-                'shift' => $randomShift->value,
-
-                'homeroom_teacher_id' => $teachers->random()->id,
-                'capacity'            => 40,
-                'status'              => ClassStatus::OPEN->value,
-                'type'                => ClassType::REGULAR->value,
-
-                'grade_level_id' => $gradeLevel->id,
-                'school_year_id' => $year->id,
-            ]);
+        SchoolPopulation::assertEnvironment();
+        $subjects = Subject::whereIn('code', SchoolPopulation::SUBJECTS)->get();
+        foreach (SchoolPopulation::years() as $year) {
+            foreach (GradeLevel::whereIn('stage', ['fundamental_i', 'fundamental_ii'])->orderBy('display_order')->get() as $level) {
+                $class = SchoolClass::firstOrCreate(['code' => sprintf('TUR-%d-%02d-A', $year->year, $level->display_order)], [
+                    'uuid' => (string) Str::uuid(), 'name' => $level->display_order.'° ANO A',
+                    'grade_level_id' => $level->id, 'school_year_id' => $year->id,
+                    'capacity' => 35, 'shift' => $level->display_order <= 5 ? 'morning' : 'afternoon',
+                    'status' => SchoolPopulation::closed($year) ? 'archived' : 'open', 'type' => 'regular',
+                ]);
+                foreach ($subjects as $subject) {
+                    $level->subjects()->syncWithoutDetaching([$subject->id => ['hours_weekly' => 5]]);
+                    $class->subjects()->syncWithoutDetaching([$subject->id]);
+                }
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ use Filament\Tables\Table;
 
 /**
  * Exibe o histórico de auditoria da matrícula.
- * Somente leitura — logs são imutáveis.
+ * Somente leitura | logs são imutáveis.
  */
 class EnrollmentLogsRelationManager extends RelationManager {
 
@@ -101,7 +101,7 @@ class EnrollmentLogsRelationManager extends RelationManager {
             ])
             ->defaultSort('created_at', 'desc')
 
-            /* Sem ações — logs são somente leitura. */
+            /* Sem ações | logs são somente leitura. */
             ->recordActions([])
             ->toolbarActions([]);
     }

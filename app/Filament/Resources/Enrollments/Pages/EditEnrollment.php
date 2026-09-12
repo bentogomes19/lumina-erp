@@ -32,7 +32,7 @@ class EditEnrollment extends EditRecord {
     public function getTitle(): string {
         $record = $this->record;
         if ($record && $record->student) {
-            return "Editar Matrícula — {$record->student->name}";
+            return "Editar Matrícula | {$record->student->name}";
         }
         return 'Editar Matrícula';
     }
@@ -106,7 +106,7 @@ class EditEnrollment extends EditRecord {
 
                         Notification::make()
                             ->title('Matrícula trancada')
-                            ->body("Nº {$record->registration_number} — trancada com sucesso.")
+                            ->body("Nº {$record->registration_number} | trancada com sucesso.")
                             ->warning()
                             ->send();
                     }),
@@ -136,7 +136,7 @@ class EditEnrollment extends EditRecord {
 
                         Notification::make()
                             ->title('Matrícula reativada')
-                            ->body("Nº {$record->registration_number} — reativada com sucesso.")
+                            ->body("Nº {$record->registration_number} | reativada com sucesso.")
                             ->success()
                             ->send();
                     }),
@@ -166,7 +166,7 @@ class EditEnrollment extends EditRecord {
                                         $capacity = app(StudentEnrollmentService::class)->capacitySummary($c);
 
                                         return [
-                                            $c->id => "{$c->name} — {$c->gradeLevel?->name} | Turno: {$c->shift?->label()} | {$capacity}",
+                                            $c->id => "{$c->name} | {$c->gradeLevel?->name} | Turno: {$c->shift?->label()} | {$capacity}",
                                         ];
                                     });
                             })
@@ -280,7 +280,7 @@ class EditEnrollment extends EditRecord {
 
                         Notification::make()
                             ->title('Matrícula cancelada')
-                            ->body("Nº {$record->registration_number} — cancelada. O histórico acadêmico é preservado.")
+                            ->body("Nº {$record->registration_number} | cancelada. O histórico acadêmico é preservado.")
                             ->danger()
                             ->send();
                     }),
@@ -294,7 +294,7 @@ class EditEnrollment extends EditRecord {
                         fn () => $this->record->status === EnrollmentStatus::CANCELED
                         && PermissionAccess::can('academic.enrollments.update')
                     )
-                    ->modalHeading('Reverter Cancelamento — Perfil TI')
+                    ->modalHeading('Reverter Cancelamento | Perfil TI')
                     ->modalDescription('Ação restrita ao perfil TI. A matrícula voltará ao status Ativa.')
                     ->form([
                         Textarea::make('observacao')
@@ -318,7 +318,7 @@ class EditEnrollment extends EditRecord {
 
                         Notification::make()
                             ->title('Cancelamento revertido')
-                            ->body("Nº {$record->registration_number} — matrícula reativada pelo perfil TI.")
+                            ->body("Nº {$record->registration_number} | matrícula reativada pelo perfil TI.")
                             ->warning()
                             ->send();
                     }),

@@ -16,12 +16,12 @@ use Database\Seeders\Core\SubjectSeeder;
 use Database\Seeders\Users\AdminUserSeeder;
 use Database\Seeders\Users\StudentSeeder;
 use Database\Seeders\Users\TeacherSeeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Database\Seeders\Support\SchoolPopulation;
+use Database\Seeders\Academic\AssessmentSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder {
 
-    use WithoutModelEvents;
 
     /**
      * Executa a carga inicial de dados da aplicação.
@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder {
      * @return void
      */
     public function run(): void {
+        SchoolPopulation::assertEnvironment();
+        SchoolPopulation::normalizeLegacyRecords();
 
         /* Dados de referência Fixo. */
         $this->call([
@@ -53,6 +55,7 @@ class DatabaseSeeder extends Seeder {
             EnrollmentSeeder::class,
             LessonSeeder::class,        /* NOVO: Gerar aulas antes de registrar frequências. */
             AttendanceSeeder::class,     /* Registrar frequências baseadas nas aulas. */
+            AssessmentSeeder::class,
             GradeSeeder::class,
         ]);
     }
