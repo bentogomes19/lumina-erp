@@ -2,117 +2,110 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <title>Boletim escolar — {{ $student->name }}</title>
     <style>
         {!! file_get_contents(resource_path('css/pdf/report-card.css')) !!}
     </style>
 </head>
 <body>
-<div class="page">
+@php
+    $schoolYear      = $currentClass->schoolYear?->year ?? $generatedAt->year;
+    $selectedPeriod  = $selectedPeriod ?? 'all';
+    $termLabels      = ['b1' => '1º bimestre', 'b2' => '2º bimestre', 'b3' => '3º bimestre', 'b4' => '4º bimestre'];
+    $periodLabel     = $termLabels[$selectedPeriod] ?? 'Todos os bimestres';
+    $formatGrade     = fn ($value) => $value === null ? '—' : number_format($value, 1, ',', '');
+    $statusLabels    = ['approved' => 'Aprovado', 'recovery' => 'Recuperação', 'failed' => 'Reprovado', 'ongoing' => 'Cursando'];
+    $orderedSubjects = collect($subjects)->sortBy(fn ($item) => mb_strtolower($item['subject']?->name ?? ''));
+@endphp
 
-    {{-- Cabeçalho --}}
-    <div class="header">
-        <div class="header-top">
-            <div>
-                <div class="school-name">{{ config('app.name', 'Lumina ERP') }}</div>
-                <div class="school-sub">Sistema de Gestão Escolar</div>
-            </div>
-            <div>
-                <div class="doc-title">BOLETIM ESCOLAR</div>
-                <div class="doc-year">Ano Letivo {{ $currentClass->schoolYear?->year ?? now()->year }}</div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Dados do aluno --}}
-    <div class="student-info">
-        <div class="info-grid">
-            <div class="info-item"><label>Nome do Aluno</label><span>{{ $student->name }}</span></div>
-            <div class="info-item"><label>Matrícula</label><span>{{ $student->registration_number }}</span></div>
-            <div class="info-item"><label>Turma</label><span>{{ $currentClass->name }}</span></div>
-            @if($currentClass->gradeLevel)
-                <div class="info-item"><label>Série</label><span>{{ $currentClass->gradeLevel->name }}</span></div>
-            @endif
-            <div class="info-item"><label>Emitido em</label><span>{{ $generatedAt->format('d/m/Y H:i') }}</span></div>
-        </div>
-    </div>
-
-    {{-- Resumo --}}
-    @php
-        $col        = collect($subjects);
-        $approved   = $col->where('status', 'approved')->count();
-        $recovery   = $col->where('status', 'recovery')->count();
-        $failed     = $col->where('status', 'failed')->count();
-        $avgAll     = $col->pluck('overall_average')->filter(fn($v) => $v !== null);
-        $overallAvg = $avgAll->isNotEmpty() ? round($avgAll->avg(), 1) : null;
-        $statusLabels = ['approved' => 'Aprovado', 'recovery' => 'Recuperação', 'failed' => 'Reprovado', 'ongoing' => 'Cursando'];
-        $gradeClass = fn($v) => $v === null ? 'g-nil' : ($v >= 6 ? 'g-ok' : ($v >= 4 ? 'g-rec' : 'g-nok'));
-    @endphp
-
-    <div class="summary">
-        <div class="summary-item"><div class="val" style="color:#1e293b">{{ $col->count() }}</div><div class="lbl">Disciplinas</div></div>
-        <div class="summary-item"><div class="val g-ok">{{ $approved }}</div><div class="lbl">Aprovadas</div></div>
-        <div class="summary-item"><div class="val g-rec">{{ $recovery }}</div><div class="lbl">Recuperação</div></div>
-        <div class="summary-item"><div class="val g-nok">{{ $failed }}</div><div class="lbl">Reprovadas</div></div>
-        @if($overallAvg !== null)
-            <div class="summary-item">
-                <div class="val {{ $gradeClass($overallAvg) }}">{{ number_format($overallAvg, 1, ',', '') }}</div>
-                <div class="lbl">Média Geral</div>
-            </div>
-        @endif
-    </div>
-
-    {{-- Tabela de notas --}}
+<footer class="page-footer">
     <table>
-        <thead>
-            <tr>
-                <th style="width:30%">Disciplina</th>
-                <th>1º Bim</th>
-                <th>2º Bim</th>
-                <th>3º Bim</th>
-                <th>4º Bim</th>
-                <th>Média Final</th>
-                <th>Situação</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($subjects as $item)
-                @php
-                    $s      = $item['subject'];
-                    $terms  = $item['terms'];
-                    $over   = $item['overall_average'];
-                    $status = $item['status'];
-                @endphp
-                <tr>
-                    <td>{{ $s?->name ?? '—' }}</td>
-                    @foreach(['b1','b2','b3','b4'] as $tk)
-                        @php $fa = $terms[$tk]['final_average'] ?? null; @endphp
-                        <td class="{{ $gradeClass($fa) }}">{{ $fa !== null ? number_format($fa, 1, ',', '') : '—' }}</td>
-                    @endforeach
-                    <td class="{{ $gradeClass($over) }}">{{ $over !== null ? number_format($over, 1, ',', '') : '—' }}</td>
-                    <td><span class="badge b-{{ $status }}">{{ $statusLabels[$status] ?? $status }}</span></td>
-                </tr>
-            @endforeach
-        </tbody>
+        <tr>
+            <td>{{ config('app.name', 'Lumina ERP') }} · Registro de desempenho escolar</td>
+            <td class="text-right">Emitido em {{ $generatedAt->format('d/m/Y H:i') }}</td>
+        </tr>
     </table>
+</footer>
 
-    {{-- Assinaturas --}}
-    <div class="signatures">
-        <div class="sig-line">
-            <div class="line"></div>
-            <div class="label">Coordenação Pedagógica</div>
-        </div>
-        <div class="sig-line">
-            <div class="line"></div>
-            <div class="label">Responsável pelo Aluno</div>
-        </div>
+<header class="institution">
+    <div class="school-name">{{ config('app.name', 'Lumina ERP') }}</div>
+    <div class="school-department">Secretaria escolar · Acompanhamento pedagógico</div>
+</header>
+
+<table class="document-heading">
+    <tr>
+        <td><h1>Boletim escolar</h1><div class="document-subtitle">Registro individual de rendimento</div></td>
+        <td class="year-block"><span class="field-label">Ano letivo</span><strong>{{ $schoolYear }}</strong></td>
+    </tr>
+</table>
+
+<table class="student-record">
+    <tr>
+        <td colspan="3" class="student-name"><span class="field-label">Aluno(a)</span>{{ $student->name }}</td>
+        <td><span class="field-label">Matrícula</span>{{ $student->registration_number ?? '—' }}</td>
+    </tr>
+    <tr>
+        <td><span class="field-label">Série / Ano</span>{{ $currentClass->gradeLevel?->name ?? '—' }}</td>
+        <td><span class="field-label">Turma</span>{{ $currentClass->name }}</td>
+        <td><span class="field-label">Turno</span>{{ $currentClass->shift?->label() ?? '—' }}</td>
+        <td><span class="field-label">Período consultado</span>{{ $periodLabel }}</td>
+    </tr>
+</table>
+
+<div class="section-heading">Rendimento por componente curricular</div>
+<table class="grades">
+    <thead>
+        <tr>
+            <th rowspan="2" class="subject-heading" style="width: 26%">Componente curricular</th>
+            @foreach($termLabels as $label)
+                <th colspan="2" style="width: 12%">{{ $label }}</th>
+            @endforeach
+            <th rowspan="2" style="width: 10%">Média<br>apurada</th>
+            <th rowspan="2" style="width: 16%">Situação*</th>
+        </tr>
+        <tr>
+            @foreach($termLabels as $label)
+                <th>Média</th><th>Rec.</th>
+            @endforeach
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($orderedSubjects as $item)
+            <tr>
+                <th scope="row" class="subject-name">{{ $item['subject']?->name ?? '—' }}</th>
+                @foreach($termLabels as $key => $label)
+                    <td>{{ $formatGrade($item['terms'][$key]['final_average'] ?? null) }}</td>
+                    <td class="recovery-grade">{{ $formatGrade(data_get($item, "terms.$key.recovery.score")) }}</td>
+                @endforeach
+                <td class="average">{{ $formatGrade($item['overall_average']) }}</td>
+                <td class="status">{{ $statusLabels[$item['status']] ?? '—' }}</td>
+            </tr>
+        @empty
+            <tr><td colspan="11" class="empty-state">Não há notas lançadas para o período consultado.</td></tr>
+        @endforelse
+    </tbody>
+</table>
+
+<div class="table-notes">
+    <p><strong>Legenda:</strong> Média = média bimestral, considerando a recuperação quando houver; Rec. = nota de recuperação; — = sem lançamento ou fora do período consultado.</p>
+    <p><strong>Critério de referência:</strong> média para aprovação {{ $formatGrade(\App\Services\GradeCalculationService::MIN_APPROVAL) }} · Escala de notas: 0 a {{ $formatGrade(\App\Services\GradeCalculationService::MAX_SCORE) }}.</p>
+    <p>* A média apurada e a situação consideram as notas disponíveis no período consultado. Durante o ano letivo, os resultados são parciais e não substituem o fechamento escolar.</p>
+</div>
+
+<div class="closing-block">
+    <div class="section-heading">Observações pedagógicas</div>
+    <div class="observations">
+        <div class="writing-line"></div>
+        <div class="writing-line"></div>
+        <div class="writing-line"></div>
     </div>
-
-    {{-- Rodapé --}}
-    <div class="footer">
-        <span>Gerado em {{ $generatedAt->format('d/m/Y \à\s H:i') }}</span>
-        <span>{{ config('app.name', 'Lumina ERP') }} — Documento de uso exclusivo da instituição</span>
-    </div>
-
+    <table class="signatures">
+        <tr>
+            <td><div class="signature-line"></div><strong>Secretaria / Coordenação pedagógica</strong><br>Assinatura e carimbo</td>
+            <td class="signature-gap"></td>
+            <td><div class="signature-line"></div><strong>Responsável pelo(a) aluno(a)</strong><br>Ciência em ______ / ______ / __________</td>
+        </tr>
+    </table>
 </div>
 </body>
 </html>
