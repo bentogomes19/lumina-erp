@@ -1,53 +1,331 @@
 /* ── Light mode ── */
-        :root {
-            --ms-card-bg:        #ffffff;
-            --ms-card-border:    #e2e8f0;
-            --ms-cell-bg:        #f1f5f9;
-            --ms-bar-bg:         #e2e8f0;
-            --ms-text-primary:   #1e293b;
-            --ms-text-secondary: #64748b;
-            --ms-text-muted:     #94a3b8;
-            --ms-hover-bg:       #f8fafc;
-        }
-        /* ── Dark mode via Filament .dark ── */
-        .dark {
-            --ms-card-bg:        #080a0c;
-            --ms-card-border:    #334155;
-            --ms-cell-bg:        #0f172a;
-            --ms-bar-bg:         #10141d;
-            --ms-text-primary:   #f1f5f9;
-            --ms-text-secondary: #94a3b8;
-            --ms-text-muted:     #64748b;
-            --ms-hover-bg:       #0a0d11;
-        }
+:root {
+    --ms-card-bg: #ffffff;
+    --ms-card-border: #e2e8f0;
+    --ms-cell-bg: #f1f5f9;
+    --ms-bar-bg: #e2e8f0;
+    --ms-text-primary: #1e293b;
+    --ms-text-secondary: #64748b;
+    --ms-text-muted: #94a3b8;
+    --ms-hover-bg: #f8fafc;
+}
 
-        .ms-card { background: var(--ms-card-bg); border: 1px solid var(--ms-card-border); border-radius: 0.75rem; }
+/* ── Dark mode via Filament .dark ── */
+.dark {
+    --ms-card-bg: #080a0c;
+    --ms-card-border: #334155;
+    --ms-cell-bg: #0f172a;
+    --ms-bar-bg: #10141d;
+    --ms-text-primary: #f1f5f9;
+    --ms-text-secondary: #94a3b8;
+    --ms-text-muted: #64748b;
+    --ms-hover-bg: #0a0d11;
+}
 
-        .ms-period-btn {
-            padding: 0.375rem 0.875rem; border-radius: 999px; font-size: 0.8125rem;
-            font-weight: 500; cursor: pointer; border: 1px solid var(--ms-card-border);
-            background: var(--ms-card-bg); color: var(--ms-text-secondary); transition: all 0.15s;
-        }
-        .ms-period-btn:hover  { background: var(--ms-hover-bg); }
-        .ms-period-btn.active { background: var(--lumina-primary); border-color: var(--lumina-primary); color: #fff; }
+.ms-card {
+    background: var(--ms-card-bg);
+    border: 1px solid var(--ms-card-border);
+    border-radius: 0.75rem;
+}
 
-        .ms-freq-bar-track { width: 100%; height: 5px; border-radius: 999px; background: var(--ms-bar-bg); overflow: hidden; }
+.ms-period-btn {
+    padding: 0.375rem 0.875rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--ms-card-border);
+    background: var(--ms-card-bg);
+    color: var(--ms-text-secondary);
+    transition: all 0.15s;
+}
 
-        .ms-assess-row {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 0.5rem; padding: 0.375rem 0; font-size: 0.75rem;
-            border-bottom: 1px solid var(--ms-bar-bg);
-        }
-        .ms-assess-row:last-child { border-bottom: none; }
+.ms-period-btn:hover {
+    background: var(--ms-hover-bg);
+}
 
-        @media (max-width: 768px) {
-            .ms-stats-grid   { grid-template-columns: repeat(3, 1fr) !important; }
-            .ms-subject-grid { grid-template-columns: 1fr !important; }
-            .ms-term-grid    { grid-template-columns: repeat(2, 1fr) !important; }
-        }
+.ms-period-btn.active {
+    background: var(--lumina-primary);
+    border-color: var(--lumina-primary);
+    color: #fff;
+}
 
-        .ms-icon-xs { width: 0.875rem !important; height: 0.875rem !important; }
-        .ms-icon-sm { width: 1rem !important; height: 1rem !important; }
-        .ms-icon-md { width: 1.125rem !important; height: 1.125rem !important; }
-        .ms-icon-lg { width: 1.4rem !important; height: 1.4rem !important; }
-        .ms-icon-xl { width: 1.75rem !important; height: 1.75rem !important; }
+.ms-freq-bar-track {
+    width: 100%;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--ms-bar-bg);
+    overflow: hidden;
+}
+
+.ms-assess-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.375rem 0;
+    font-size: 0.75rem;
+    border-bottom: 1px solid var(--ms-bar-bg);
+}
+
+.ms-assess-row:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .ms-stats-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    .ms-subject-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .ms-term-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+.ms-icon-xs {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+}
+
+.ms-icon-sm {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+.ms-icon-md {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+}
+
+.ms-icon-lg {
+    width: 1.4rem !important;
+    height: 1.4rem !important;
+}
+
+.ms-icon-xl {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+}
+
+/* Minhas Notas: resumo compacto e componentes nativos do Filament. */
+.student-grades-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.sg-context p {
+    margin: 0;
+    color: var(--lumina-text-soft);
+    font-size: 0.875rem;
+}
+
+.sg-context p + p {
+    margin-top: 0.25rem;
+}
+
+.sg-context strong {
+    color: var(--lumina-text);
+}
+
+.sg-periods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.sg-periods .fi-btn {
+    min-height: 2.5rem;
+}
+
+.sg-summary .fi-wi-stats-overview-stat {
+    padding: 0.875rem 1rem;
+}
+
+.sg-summary .fi-wi-stats-overview-stat-value {
+    font-size: 1.5rem;
+}
+
+.sg-summary .fi-wi-stats-overview-stat-description {
+    font-size: 0.75rem;
+}
+
+.sg-subject-cell {
+    padding: 0.75rem 1rem;
+    min-width: 8rem;
+    max-width: 22rem;
+    white-space: normal;
+}
+
+.sg-subject-cell strong {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--lumina-text);
+}
+
+.sg-mobile-progress, .sg-mobile-terms {
+    display: none;
+}
+
+.sg-help {
+    color: var(--lumina-text-soft);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.sg-loading {
+    opacity: 0.55;
+}
+
+.sg-periods .fi-btn:focus-visible, .sg-results a:focus-visible, .sg-results button:focus-visible {
+    outline: 2px solid var(--lumina-primary-strong);
+    outline-offset: 3px;
+}
+
+.sg-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.sg-detail-intro, .sg-detail-average {
+    color: var(--lumina-text-soft);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.sg-detail-average {
+    margin-top: 1rem;
+}
+
+.sg-assessments-wrap {
+    overflow-x: auto;
+}
+
+.sg-assessments {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.sg-assessments th, .sg-assessments td {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--lumina-border);
+    text-align: left;
+}
+
+.sg-assessments thead th {
+    font-size: 0.75rem;
+    color: var(--lumina-text-soft);
+}
+
+.sg-assessments th {
+    font-weight: 500;
+}
+
+.sg-assessments td {
+    white-space: nowrap;
+}
+
+.sg-assessments small {
+    display: block;
+    color: var(--lumina-text-soft);
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 767px) {
+    .student-grades-dashboard {
+        gap: 0.875rem;
+    }
+
+    .sg-periods {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.375rem;
+    }
+
+    .sg-periods .fi-btn {
+        font-size: 0.75rem;
+        padding-inline: 0.375rem;
+    }
+
+    .sg-summary .fi-sc-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 0.5rem !important;
+    }
+
+    .sg-summary .fi-wi-stats-overview-stat {
+        padding: 0.625rem 0.5rem;
+    }
+
+    .sg-summary .fi-wi-stats-overview-stat-label {
+        font-size: 0.6875rem;
+        line-height: 1.35;
+    }
+
+    .sg-summary .fi-wi-stats-overview-stat-value {
+        font-size: 1.25rem;
+    }
+
+    .sg-summary .fi-wi-stats-overview-stat-description {
+        display: none;
+    }
+
+    .sg-subject-cell {
+        padding: 0.75rem 0.5rem;
+        min-width: 0;
+    }
+
+    .sg-subject-cell strong {
+        font-size: 0.8125rem;
+    }
+
+    .sg-mobile-progress {
+        display: block;
+        font-size: 0.6875rem;
+        color: var(--lumina-text-soft);
+        margin-top: 0.125rem;
+    }
+
+    .sg-mobile-terms {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.375rem;
+        margin: 0.5rem 0 0;
+    }
+
+    .sg-mobile-terms dt {
+        font-size: 0.625rem;
+        color: var(--lumina-text-soft);
+        white-space: nowrap;
+    }
+
+    .sg-mobile-terms dd {
+        margin: 0.125rem 0 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .sg-results .fi-ta-cell {
+        padding-inline: 0.375rem;
+    }
+
+    .sg-results .fi-ta-actions {
+        gap: 0;
+    }
+
+    .sg-results .fi-ta-actions .fi-icon {
+        display: none;
+    }
+
+    .sg-assessments {
+        font-size: 0.75rem;
+    }
+}

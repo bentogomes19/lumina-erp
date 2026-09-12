@@ -2,21 +2,70 @@
 
 namespace App\Filament\Pages\Student;
 
+use App\Enums\TermType;
 use App\Models\Grade;
+use App\Models\SchoolClass;
 use App\Services\GradeCalculationService;
 use App\Support\PermissionAccess;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\Width;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Livewire\Attributes\Locked;
 
-class MyGrades extends Page {
+class MyGrades extends Page implements HasTable {
+
+    use InteractsWithTable;
 
     protected static string|null|\BackedEnum $navigationIcon = 'fas-chart-bar';
     protected static ?string $title                          = 'Minhas Notas';
     protected static ?string $navigationLabel                = 'Minhas Notas';
     protected static ?int    $navigationSort                 = 1;
 
-    public string $selectedPeriod = 'all';
+    public const PERIODS = ['b1' => '1º bimestre', 'b2' => '2º bimestre', 'b3' => '3º bimestre', 'b4' => '4º bimestre', 'all' => 'Visão anual'];
+
+    #[Locked]
+    public string $selectedPeriod = 'b1';
+
+    protected ?array $cachedPageData = null;
+
+    public function mount(): void {
+        $currentClass = $this->currentClass();
+        if (!$currentClass) {
+            return;
+        }
+
+        $term = $currentClass->schoolYear->terms()
+            ->where('type', TermType::BIMESTER)
+            ->whereBetween('sequence', [1, 4])
+            ->whereDate('starts_at', '<=', today())
+            ->whereDate('ends_at', '>=', today())
+            ->first();
+
+        $latestTerm = Grade::where('student_id', auth()->user()?->student?->id)
+            ->where('class_id', $currentClass->id)
+            ->whereNotNull('score')
+            ->whereIn('term', ['b1', 'b2', 'b3', 'b4'])
+            ->orderByDesc('term')
+            ->value('term');
+
+        $this->selectedPeriod = $term ? 'b'.$term->sequence : ($latestTerm?->value ?? 'b1');
+    }
+
+    protected function currentClass(): ?SchoolClass {
+        return auth()->user()?->student?->classes()
+            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
+            ->with(['schoolYear', 'gradeLevel'])
+            ->first();
+    }
 
     /**
      * Determina se a página deve ser registrada na navegação.
@@ -53,7 +102,10 @@ class MyGrades extends Page {
      * @return void
      */
     public function setPeriod(string $period): void {
+        abort_unless(array_key_exists($period, self::PERIODS), 422);
         $this->selectedPeriod = $period;
+        $this->cachedPageData = null;
+        $this->resetTable();
     }
 
     /**
@@ -82,7 +134,7 @@ class MyGrades extends Page {
     protected function getHeaderActions(): array {
         return [
             Action::make('downloadReportCard')
-                ->label('Baixar Boletim (PDF)')
+                ->label('Baixar boletim')
                 ->icon('fas-download')
                 ->color('success')
                 ->visible(fn () => PermissionAccess::can('student.report-card.download'))
@@ -96,6 +148,10 @@ class MyGrades extends Page {
      * @return array
      */
     public function getPageData(): array {
+        return $this->cachedPageData ??= $this->buildPageData();
+    }
+
+    protected function buildPageData(): array {
         $student = auth()->user()?->student;
 
         $empty = [
@@ -112,10 +168,7 @@ class MyGrades extends Page {
             return $empty;
         }
 
-        $currentClass = $student->classes()
-            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-            ->with(['schoolYear', 'gradeLevel'])
-            ->first();
+        $currentClass = $this->currentClass();
 
         if (!$currentClass) {
             return array_merge($empty, ['student' => $student]);
@@ -123,13 +176,9 @@ class MyGrades extends Page {
 
         $query = Grade::where('student_id', $student->id)
             ->where('class_id', $currentClass->id)
-            ->with(['subject'])
+            ->with(['subject', 'assessment'])
             ->orderBy('term')
             ->orderBy('sequence');
-
-        if ($this->selectedPeriod !== 'all') {
-            $query->where('term', $this->selectedPeriod);
-        }
 
         $allGrades = $query->get();
         $service   = app(GradeCalculationService::class);
@@ -138,13 +187,22 @@ class MyGrades extends Page {
         foreach ($allGrades->groupBy('subject_id') as $grades) {
             /** @var \Illuminate\Support\Collection $grades */
             $subject    = $grades->first()->subject;
-            $report     = $service->subjectReport(collect($grades));
+            $periodGrades = $this->selectedPeriod === 'all'
+                ? $grades
+                : $grades->filter(fn (Grade $grade) => $grade->term?->value === $this->selectedPeriod);
+            $report     = $service->subjectReport(collect($periodGrades));
             $subjects[] = array_merge(['subject' => $subject], $report);
         }
 
-        /* Ordena por reprovado, recuperação, cursando e aprovado. */
+        $reportedIds = collect($subjects)->pluck('subject.id');
+        foreach ($currentClass->subjects()->whereNotIn('subjects.id', $reportedIds)->get() as $subject) {
+            $subjects[] = ['subject' => $subject, ...$service->subjectReport(collect())];
+        }
+
+        /* Prioriza as disciplinas que precisam de atenção e desempata pelo nome. */
         $statusOrder = ['failed' => 0, 'recovery' => 1, 'ongoing' => 2, 'approved' => 3];
-        usort($subjects, fn ($a, $b) => ($statusOrder[$a['status']] ?? 4) <=> ($statusOrder[$b['status']] ?? 4));
+        usort($subjects, fn ($a, $b) => (($statusOrder[$a['status']] ?? 4) <=> ($statusOrder[$b['status']] ?? 4))
+            ?: strcasecmp($a['subject']?->name ?? '', $b['subject']?->name ?? ''));
 
         $col      = collect($subjects);
         $averages = $col->pluck('overall_average')->filter(fn ($v) => $v !== null);
@@ -162,9 +220,81 @@ class MyGrades extends Page {
                 'average'  => $averages->isNotEmpty() ? round($averages->avg(), 1) : null,
             ],
             'selected_period' => $this->selectedPeriod,
-            'period_label'    => $this->periodLabel(),
+            'period_label'    => $this->periodLabel($currentClass->schoolYear?->year),
             'min_approval'    => GradeCalculationService::MIN_APPROVAL,
         ];
+    }
+
+    public static function progressLabel(?float $average): string {
+        return $average === null ? 'Sem nota' : ($average >= GradeCalculationService::MIN_APPROVAL ? 'Na média' : 'Abaixo da média');
+    }
+
+    public static function progressColor(?float $average): string {
+        return $average === null ? 'gray' : ($average >= GradeCalculationService::MIN_APPROVAL ? 'success' : 'warning');
+    }
+
+    public function table(Table $table): Table {
+        $format = fn ($state): string => number_format((float) $state, 1, ',', '');
+
+        return $table
+            ->heading(fn () => $this->selectedPeriod === 'all' ? 'Médias por bimestre' : 'Notas por disciplina')
+            ->description(fn () => $this->getPageData()['period_label'].' · Referência: média 6,0')
+            ->records(function (?string $search): Collection {
+                return collect($this->getPageData()['subjects'])
+                    ->mapWithKeys(fn (array $item) => [$item['subject']->id => [
+                        ...$item,
+                        'subject_name' => $item['subject']->name,
+                    ]])
+                    ->when(filled($search), fn (Collection $rows) => $rows->filter(
+                        fn (array $row) => str_contains(Str::lower($row['subject_name']), Str::lower($search)),
+                    ));
+            })
+            ->columns([
+                ViewColumn::make('subject_name')
+                    ->label('Disciplina')
+                    ->view('filament.tables.columns.student-grade-subject'),
+                ...collect(['b1', 'b2', 'b3', 'b4'])->map(fn (string $term) => TextColumn::make('terms.'.$term.'.final_average')
+                    ->label(self::PERIODS[$term])
+                    ->visible(fn () => $this->selectedPeriod === 'all')
+                    ->visibleFrom('md')
+                    ->alignCenter()
+                    ->placeholder('—')
+                    ->formatStateUsing($format))->all(),
+                TextColumn::make('overall_average')
+                    ->label(fn () => $this->selectedPeriod === 'all' ? 'Média parcial' : 'Média')
+                    ->alignCenter()
+                    ->weight(FontWeight::Bold)
+                    ->color(fn (array $record) => self::progressColor($record['overall_average']))
+                    ->placeholder('—')
+                    ->formatStateUsing($format),
+                TextColumn::make('progress')
+                    ->label('Acompanhamento')
+                    ->visibleFrom('md')
+                    ->state(fn (array $record) => self::progressLabel($record['overall_average']))
+                    ->badge()
+                    ->color(fn (array $record) => self::progressColor($record['overall_average'])),
+            ])
+            ->recordTitleAttribute('subject_name')
+            ->recordActions([
+                Action::make('gradeDetails')
+                    ->label('Detalhes')
+                    ->icon('heroicon-o-chevron-right')
+                    ->color('gray')
+                    ->modalHeading(fn (array $record) => $record['subject_name'])
+                    ->modalDescription(fn () => $this->getPageData()['period_label'])
+                    ->modalWidth(Width::ThreeExtraLarge)
+                    ->modalContent(fn (array $record) => view('filament.pages.student.partials.grade-details', [
+                        'item' => $record, 'selectedPeriod' => $this->selectedPeriod,
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Fechar'),
+            ])
+            ->searchable()
+            ->searchPlaceholder('Buscar disciplina')
+            ->paginated(false)
+            ->striped()
+            ->emptyStateHeading('Nenhuma disciplina encontrada')
+            ->emptyStateDescription('Não há notas registradas ou a busca não encontrou uma disciplina.');
     }
 
     /* Métodos privados. */
@@ -174,8 +304,8 @@ class MyGrades extends Page {
      *
      * @return string
      */
-    private function periodLabel(): string {
-        $year = now()->year;
+    private function periodLabel(?int $year = null): string {
+        $year ??= now()->year;
 
         return match ($this->selectedPeriod) {
             'b1'    => "1º Bimestre $year",
@@ -192,6 +322,7 @@ class MyGrades extends Page {
      * @return mixed
      */
     private function downloadReportCard() {
+        abort_unless(PermissionAccess::can('student.report-card.download'), 403);
         $data = $this->getPageData();
 
         if (!$data['student'] || !$data['currentClass']) {
