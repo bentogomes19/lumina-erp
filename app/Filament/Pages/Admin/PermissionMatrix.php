@@ -6,8 +6,16 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Support\PermissionAccess;
 use App\Support\PermissionCatalog;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Spatie\Permission\PermissionRegistrar;
@@ -26,6 +34,7 @@ class PermissionMatrix extends Page {
     public string $moduleFilter   = 'all';
     public string $statusFilter   = 'all';
     public array $permissionState = [];
+    public array $permissionToggleState = [];
 
     private const CRITICAL_PERMISSIONS = [
         'system.permissions.manage',
@@ -80,13 +89,97 @@ class PermissionMatrix extends Page {
         $this->loadRolePermissions();
     }
 
-    /**
-     * Retorna o nome da visualização usada pela página.
-     *
-     * @return string
-     */
-    public function getView(): string {
-        return 'filament.pages.admin.permission-matrix';
+    public function content(Schema $schema): Schema {
+        return $schema->components([
+            Section::make('Perfil selecionado')
+                ->description('Escolha o perfil e acompanhe o resumo das permissões antes de editar.')
+                ->icon('fas-user-shield')
+                ->schema([
+                    Select::make('selectedRoleId')
+                        ->label('Perfil')
+                        ->options(fn (): array => $this->roles()
+                            ->mapWithKeys(fn (Role $role): array => [
+                                $role->id => $this->roleLabel($role->name) . ' (' . $role->users_count . ' ' . ($role->users_count === 1 ? 'usuário' : 'usuários') . ')',
+                            ])
+                            ->all())
+                        ->live()
+                        ->required(),
+                    Grid::make(['default' => 2, 'xl' => 4])
+                        ->schema([
+                            TextEntry::make('summary_total')
+                                ->label('Total de permissões')
+                                ->state(fn (): int => $this->getPageData()['summary']['total'])
+                                ->icon('fas-list-check'),
+                            TextEntry::make('summary_active')
+                                ->label('Permissões ativas')
+                                ->state(fn (): int => $this->getPageData()['summary']['active'])
+                                ->icon('fas-circle-check')
+                                ->color('success'),
+                            TextEntry::make('summary_inactive')
+                                ->label('Permissões inativas')
+                                ->state(fn (): int => $this->getPageData()['summary']['inactive'])
+                                ->icon('fas-circle-xmark')
+                                ->color('danger'),
+                            TextEntry::make('summary_modules')
+                                ->label('Módulos disponíveis')
+                                ->state(fn (): int => $this->getPageData()['summary']['modules'])
+                                ->icon('fas-layer-group'),
+                        ]),
+                    Grid::make(3)
+                        ->schema([
+                            TextEntry::make('selected_role_name')
+                                ->label('Perfil selecionado')
+                                ->state(fn (): string => $this->selectedRole() ? $this->roleLabel($this->selectedRole()->name) : 'Nenhum perfil'),
+                            TextEntry::make('selected_role_guard')
+                                ->label('Guard')
+                                ->state(fn (): string => $this->selectedRole()?->guard_name ?? '—'),
+                            TextEntry::make('selected_role_users')
+                                ->label('Usuários vinculados')
+                                ->state(fn (): string => (string) ($this->selectedRole()?->users_count ?? 0)),
+                        ]),
+                ])
+                ->columns(1),
+
+            Section::make('Filtros')
+                ->description('Filtre por módulo, situação ou nome técnico da permissão.')
+                ->icon('fas-filter')
+                ->collapsible()
+                ->persistCollapsed()
+                ->schema([
+                    TextInput::make('search')
+                        ->label('Buscar permissão')
+                        ->placeholder('Ex.: matrícula, exportar...')
+                        ->prefixIcon('fas-magnifying-glass')
+                        ->live(debounce: 300),
+                    Select::make('moduleFilter')
+                        ->label('Módulo')
+                        ->options(fn (): array => ['all' => 'Todos os módulos'] + $this->modules()->mapWithKeys(fn (string $module): array => [$module => $module])->all())
+                        ->live(),
+                    Select::make('statusFilter')
+                        ->label('Situação')
+                        ->options([
+                            'all' => 'Todas',
+                            'active' => 'Ativas',
+                            'inactive' => 'Inativas',
+                        ])
+                        ->live(),
+                ])
+                ->columns(3),
+
+            Grid::make(1)
+                ->schema(fn (): array => $this->moduleSections())
+                ->columnSpanFull(),
+        ]);
+    }
+
+    protected function getHeaderActions(): array {
+        return [
+            Action::make('save')
+                ->label('Salvar alterações')
+                ->icon('fas-floppy-disk')
+                ->action(fn (): mixed => $this->save())
+                ->color('primary'),
+        ];
     }
 
     /**
@@ -109,6 +202,7 @@ class PermissionMatrix extends Page {
 
         if (!$role) {
             $this->permissionState = [];
+            $this->permissionToggleState = [];
             return;
         }
 
@@ -126,6 +220,8 @@ class PermissionMatrix extends Page {
                 $this->permissionState[$criticalPermission] = true;
             }
         }
+
+        $this->syncToggleStateFromPermissions();
     }
 
     /**
@@ -147,6 +243,7 @@ class PermissionMatrix extends Page {
         }
 
         $this->permissionState[$permission] = $nextState;
+        $this->syncToggleStateFromPermissions();
     }
 
     /**
@@ -162,6 +259,8 @@ class PermissionMatrix extends Page {
                 $this->permissionState[$permission['name']] = true;
             }
         }
+
+        $this->syncToggleStateFromPermissions();
     }
 
     /**
@@ -177,6 +276,8 @@ class PermissionMatrix extends Page {
                 $this->permissionState[$permission['name']] = false;
             }
         }
+
+        $this->syncToggleStateFromPermissions();
     }
 
     /**
@@ -196,6 +297,8 @@ class PermissionMatrix extends Page {
                 $this->permissionState[$permission['name']] = $enabled;
             }
         }
+
+        $this->syncToggleStateFromPermissions();
     }
 
     /**
@@ -361,6 +464,74 @@ class PermissionMatrix extends Page {
                     'permissions' => $permissions->values(),
                 ];
             });
+    }
+
+    /**
+     * Monta os blocos Filament agrupados por módulo, sem alterar o estado persistido.
+     *
+     * @return array<int, Section>
+     */
+    private function moduleSections(): array {
+        return $this->moduleGroups($this->filteredCatalog())
+            ->map(function (array $group, string $module): Section {
+                $moduleKey = Str::slug($module, '_');
+
+                return Section::make($group['name'])
+                    ->description($group['active'] . ' de ' . $group['total'] . ' permissões ativas')
+                    ->icon('fas-layer-group')
+                    ->collapsible()
+                    ->persistCollapsed()
+                    ->headerActions([
+                        Action::make("enable_{$moduleKey}")
+                            ->label('Marcar todas')
+                            ->icon('fas-check-double')
+                            ->color('gray')
+                            ->action(fn (): mixed => $this->enableModule($module)),
+                        Action::make("readonly_{$moduleKey}")
+                            ->label('Somente leitura')
+                            ->icon('fas-eye')
+                            ->color('gray')
+                            ->action(fn (): mixed => $this->makeModuleReadOnly($module)),
+                        Action::make("disable_{$moduleKey}")
+                            ->label('Desmarcar todas')
+                            ->icon('fas-xmark')
+                            ->color('gray')
+                            ->action(fn (): mixed => $this->disableModule($module)),
+                    ])
+                    ->schema([
+                        Grid::make(['default' => 1, 'md' => 2, 'xl' => 3])
+                            ->schema($group['permissions']->map(fn (array $permission): Toggle => $this->permissionToggle($permission))->all()),
+                    ]);
+            })
+            ->values()
+            ->all();
+    }
+
+    private function permissionToggle(array $permission): Toggle {
+        $permissionName = $permission['name'];
+        $toggleKey      = md5($permissionName);
+
+        return Toggle::make("permissionToggleState.{$toggleKey}")
+            ->label($permission['label'])
+            ->helperText(trim($permission['name'] . (!empty($permission['description']) ? ' — ' . $permission['description'] : '')))
+            ->live()
+            ->afterStateUpdated(function (bool $state) use ($permissionName, $toggleKey): void {
+                if (!$this->canSetPermission($permissionName, $state)) {
+                    $this->permissionToggleState[$toggleKey] = !$state;
+                    return;
+                }
+
+                $this->permissionState[$permissionName] = $state;
+            });
+    }
+
+    private function syncToggleStateFromPermissions(): void {
+        $this->permissionToggleState = $this->permissionCatalog()
+            ->pluck('name')
+            ->mapWithKeys(fn (string $permission): array => [
+                md5($permission) => (bool) ($this->permissionState[$permission] ?? false),
+            ])
+            ->all();
     }
 
     /**
