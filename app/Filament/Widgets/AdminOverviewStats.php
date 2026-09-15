@@ -8,7 +8,6 @@ use App\Enums\StudentStatus;
 use App\Enums\TeacherStatus;
 use App\Filament\Resources\Enrollments\EnrollmentResource;
 use App\Filament\Resources\SchoolClasses\SchoolClassResource;
-use App\Filament\Resources\SchoolYears\SchoolYearResource;
 use App\Filament\Resources\Students\StudentResource;
 use App\Filament\Resources\Teachers\TeacherResource;
 use App\Models\Enrollment;
@@ -20,8 +19,13 @@ use App\Support\AdministrativeDashboardAccess;
 use App\Support\PermissionAccess;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
+use App\Support\InteractsWithAdminDashboardFilters;
 
 class AdminOverviewStats extends StatsOverviewWidget {
+
+    use InteractsWithPageFilters;
+    use InteractsWithAdminDashboardFilters;
 
     protected ?string $heading = 'Visão geral da escola';
 
@@ -30,7 +34,7 @@ class AdminOverviewStats extends StatsOverviewWidget {
     }
 
     protected function getDescription(): ?string {
-        $year = SchoolYear::current();
+        $year = $this->dashboardSchoolYearId() ? SchoolYear::find($this->dashboardSchoolYearId()) : null;
 
         return $year
             ? "Indicadores do ano letivo {$year->year}."
@@ -38,30 +42,25 @@ class AdminOverviewStats extends StatsOverviewWidget {
     }
 
     protected function getStats(): array {
-        $year = SchoolYear::current();
+        $year = $this->dashboardSchoolYearId() ? SchoolYear::find($this->dashboardSchoolYearId()) : null;
+        $selectedStatus = $this->dashboardEnrollmentStatus();
+        $status = $selectedStatus !== 'all' ? $selectedStatus : EnrollmentStatus::ACTIVE->value;
+        $hasNonActiveStatusFilter = $selectedStatus !== 'all' && $selectedStatus !== EnrollmentStatus::ACTIVE->value;
+        $enrollmentLabel = $hasNonActiveStatusFilter ? 'Matrículas no filtro' : 'Matrículas ativas';
         $stats = [];
-
-        $yearStat = Stat::make('Ano letivo ativo', $year?->year ?? 'Não configurado')
-            ->description($year ? 'Período acadêmico em acompanhamento' : 'Configure o período da escola')
-            ->icon('fas-calendar')
-            ->color($year ? 'success' : 'warning');
-
-        if (PermissionAccess::can('academic.school_years.view_any')) {
-            $yearStat->url(SchoolYearResource::getUrl('index'));
-        }
-
-        $stats[] = $yearStat;
 
         if (PermissionAccess::can('academic.enrollments.view_any')) {
             $enrollments = $year
                 ? Enrollment::query()
                     ->where('school_year_id', $year->id)
-                    ->where('status', EnrollmentStatus::ACTIVE->value)
+                    ->where('status', $status)
+                    ->when($this->dashboardFilter('from_date'), fn ($query) => $query->whereDate('enrollment_date', '>=', $this->dashboardFilter('from_date')))
+                    ->when($this->dashboardFilter('until_date'), fn ($query) => $query->whereDate('enrollment_date', '<=', $this->dashboardFilter('until_date')))
                     ->count()
                 : 0;
 
-            $stats[] = Stat::make('Matrículas ativas', $enrollments)
-                ->description($year ? 'Vínculos ativos no ano letivo' : 'Sem ano letivo ativo')
+            $stats[] = Stat::make($enrollmentLabel, $enrollments)
+                ->description($year ? ($hasNonActiveStatusFilter ? 'Vínculos conforme o filtro' : 'Vínculos ativos no ano letivo') : 'Sem ano letivo ativo')
                 ->icon('fas-clipboard-check')
                 ->color('primary')
                 ->url(EnrollmentResource::getUrl('index'));
@@ -73,12 +72,14 @@ class AdminOverviewStats extends StatsOverviewWidget {
                     ->where('status', StudentStatus::ACTIVE->value)
                     ->whereHas('enrollments', fn ($query) => $query
                         ->where('school_year_id', $year->id)
-                        ->where('status', EnrollmentStatus::ACTIVE->value))
+                        ->where('status', $status)
+                        ->when($this->dashboardFilter('from_date'), fn ($query) => $query->whereDate('enrollment_date', '>=', $this->dashboardFilter('from_date')))
+                        ->when($this->dashboardFilter('until_date'), fn ($query) => $query->whereDate('enrollment_date', '<=', $this->dashboardFilter('until_date'))))
                     ->count()
                 : 0;
 
-            $stats[] = Stat::make('Alunos ativos', $students)
-                ->description($year ? 'Com matrícula ativa neste ano' : 'Sem ano letivo ativo')
+            $stats[] = Stat::make($hasNonActiveStatusFilter ? 'Alunos no filtro' : 'Alunos ativos', $students)
+                ->description($year ? ($hasNonActiveStatusFilter ? 'Alunos com vínculo conforme o filtro' : 'Com matrícula ativa neste ano') : 'Sem ano letivo ativo')
                 ->icon('fas-user-group')
                 ->color('info')
                 ->url(StudentResource::getUrl('index'));
@@ -118,4 +119,5 @@ class AdminOverviewStats extends StatsOverviewWidget {
 
         return $stats;
     }
+
 }

@@ -15,8 +15,15 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
+use App\Support\InteractsWithAdminDashboardFilters;
 
 class AdminSchoolClassesTable extends TableWidget {
+
+    protected string $view = 'filament.widgets.admin-table-widget';
+
+    use InteractsWithPageFilters;
+    use InteractsWithAdminDashboardFilters;
 
     protected static ?string $heading = 'Turmas do ano letivo';
 
@@ -27,15 +34,19 @@ class AdminSchoolClassesTable extends TableWidget {
             && PermissionAccess::can('academic.classes.view_any');
     }
 
+    public function getWidgetHeading(): string {
+        return static::$heading;
+    }
+
     public function table(Table $table): Table {
-        $year = SchoolYear::current();
+        $year = $this->dashboardSchoolYearId() ? SchoolYear::find($this->dashboardSchoolYearId()) : null;
 
         return $table
             ->query(SchoolClass::query()
                 ->with('gradeLevel')
                 ->withCount([
                     'enrollments as occupied_enrollments_count' => fn (Builder $query) => $query
-                        ->whereIn('status', EnrollmentStatus::occupyingValues()),
+                        ->when($this->dashboardEnrollmentStatus() !== 'all', fn (Builder $query) => $query->where('status', $this->dashboardEnrollmentStatus()), fn (Builder $query) => $query->whereIn('status', EnrollmentStatus::occupyingValues())),
                     'teacherAssignments as active_teachers_count' => fn (Builder $query) => $query
                         ->whereHas('teacher', fn (Builder $teacherQuery) => $teacherQuery
                             ->where('status', TeacherStatus::ACTIVE->value)),

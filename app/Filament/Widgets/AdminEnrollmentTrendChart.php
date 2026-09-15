@@ -8,18 +8,29 @@ use App\Support\AdministrativeDashboardAccess;
 use App\Support\PermissionAccess;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
+use App\Support\InteractsWithAdminDashboardFilters;
 
 class AdminEnrollmentTrendChart extends ChartWidget {
 
+    use InteractsWithPageFilters;
+    use InteractsWithAdminDashboardFilters;
+
+    protected string $view = 'filament.widgets.admin-chart-widget';
+
+    protected ?string $maxHeight = '280px';
+
     protected ?string $heading = 'Matrículas registradas por mês';
 
-    protected ?string $description = 'Entradas registradas no ano letivo ativo.';
+    protected ?string $description = 'Entradas registradas no período filtrado.';
 
-    protected int | string | array $columnSpan = 1;
+    protected int | string | array $columnSpan = 'full';
 
     protected ?string $emptyStateHeading = 'Sem dados de matrícula';
 
     protected ?string $emptyStateDescription = 'Ative um ano letivo e registre matrículas para acompanhar a evolução mensal.';
+
+    protected bool $isCollapsible = true;
 
     public static function canView(): bool {
         return AdministrativeDashboardAccess::hasAdministrativeRole(auth()->user())
@@ -31,9 +42,7 @@ class AdminEnrollmentTrendChart extends ChartWidget {
     }
 
     protected function getData(): array {
-        $year = SchoolYear::current();
-
-        if (!$year) {
+        if (!$this->dashboardSchoolYearId()) {
             return [];
         }
 
@@ -43,8 +52,7 @@ class AdminEnrollmentTrendChart extends ChartWidget {
             default => 'MONTH(enrollment_date)',
         };
 
-        $totals = Enrollment::query()
-            ->where('school_year_id', $year->id)
+        $totals = $this->dashboardEnrollmentQuery()
             ->whereNotNull('enrollment_date')
             ->selectRaw("{$monthExpression} as enrollment_month, COUNT(*) as total")
             ->groupBy('enrollment_month')

@@ -12,8 +12,15 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
+use App\Support\InteractsWithAdminDashboardFilters;
 
 class AdminRecentEnrollmentsTable extends TableWidget {
+
+    protected string $view = 'filament.widgets.admin-table-widget';
+
+    use InteractsWithPageFilters;
+    use InteractsWithAdminDashboardFilters;
 
     protected static ?string $heading = 'Últimas matrículas';
 
@@ -24,13 +31,17 @@ class AdminRecentEnrollmentsTable extends TableWidget {
             && PermissionAccess::can('academic.enrollments.view_any');
     }
 
+    public function getWidgetHeading(): string {
+        return static::$heading;
+    }
+
     public function table(Table $table): Table {
-        $year = SchoolYear::current();
+        $year = $this->dashboardSchoolYearId() ? SchoolYear::find($this->dashboardSchoolYearId()) : null;
 
         return $table
-            ->query(Enrollment::query()
+            ->query($this->dashboardEnrollmentQuery()
                 ->with(['student', 'schoolClass'])
-                ->when($year, fn (Builder $query) => $query->where('school_year_id', $year->id), fn (Builder $query) => $query->whereRaw('1 = 0'))
+                ->when(!$this->dashboardSchoolYearId(), fn (Builder $query) => $query->whereRaw('1 = 0'))
                 ->orderByDesc('created_at'))
             ->columns([
                 TextColumn::make('registration_number')
