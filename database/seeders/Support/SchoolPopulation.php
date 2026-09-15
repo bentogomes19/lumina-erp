@@ -26,10 +26,21 @@ class SchoolPopulation {
         if (!app()->environment(['local', 'testing'])) {
             throw new RuntimeException('A carga de dados escolares só pode ser gerada em local ou testing.');
         }
+        if (!array_key_exists(config('population.profile'), config('population.profiles', []))) {
+            throw new RuntimeException('Perfil de população inválido. Use pequena, media ou grande.');
+        }
         if (config('population.history_years') < 5 || config('population.history_years') > 10
-            || config('population.students_per_class') < 1 || config('population.students_per_class') > 35) {
+            || self::studentsPerClass() < 1 || self::studentsPerClass() > 35) {
             throw new RuntimeException('Configure de 5 a 10 anos de histórico e de 1 a 35 alunos por turma.');
         }
+    }
+
+    public static function teachersPerSubject(): int {
+        return (int) config('population.profiles.'.config('population.profile').'.teachers_per_subject', 3);
+    }
+
+    public static function studentsPerClass(): int {
+        return (int) env('SCHOOL_STUDENTS_PER_CLASS', config('population.profiles.'.config('population.profile').'.students_per_class', 12));
     }
 
     /** Renames records created by previous versions without replacing their history or relationships. */

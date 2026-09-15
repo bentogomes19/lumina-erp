@@ -15,8 +15,15 @@ class AssessmentSeeder extends Seeder {
                 foreach (range(1, 4) as $term) {
                     foreach ([1, 2] as $sequence) {
                         $date = SchoolPopulation::assessmentDate($class->schoolYear->year, $term, $sequence);
+                        // A avaliação precisa sempre apontar para uma aula existente.
+                        // Em anos de planejamento, usamos a primeira aula disponível da disciplina.
                         $lesson = Lesson::where('class_id', $class->id)->where('subject_id', $assignment->subject_id)
-                            ->whereDate('date', '>=', $date)->orderBy('date')->orderBy('start_time')->firstOrFail();
+                            ->whereDate('date', '>=', $date)->orderBy('date')->orderBy('start_time')->first()
+                            ?? Lesson::where('class_id', $class->id)->where('subject_id', $assignment->subject_id)
+                                ->orderBy('date')->orderBy('start_time')->first();
+                        if (!$lesson) {
+                            continue;
+                        }
                         $date = $lesson->date->copy()->setTimeFromTimeString($lesson->start_time->format('H:i:s'));
                         Assessment::updateOrCreate([
                             'class_id' => $class->id, 'subject_id' => $assignment->subject_id,

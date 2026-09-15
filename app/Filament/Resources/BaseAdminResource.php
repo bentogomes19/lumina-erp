@@ -8,6 +8,21 @@ use Filament\Resources\Resource;
 abstract class BaseAdminResource extends Resource {
 
     /**
+     * Exibe no menu a quantidade atual de registros do módulo.
+     * Recursos com SoftDeletes contam somente registros ativos, como nas listagens.
+     */
+    public static function getNavigationBadge(): ?string {
+        return (string) static::getModel()::count();
+    }
+
+    /**
+     * Mantém o contador com a mesma linguagem visual usada em Disciplinas.
+     */
+    public static function getNavigationBadgeColor(): ?string {
+        return 'primary';
+    }
+
+    /**
      * Determina se o usuário possui a permissão canônica informada.
      *
      * @param string $permission

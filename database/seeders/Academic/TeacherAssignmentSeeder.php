@@ -13,7 +13,9 @@ class TeacherAssignmentSeeder extends Seeder {
         foreach (SchoolPopulation::classes() as $class) {
             foreach ($class->subjects as $subject) {
                 $code = $subject->code === 'LP' && $class->schoolYear->year < now()->year ? 'ANTIGO' : $subject->code;
-                $teacher = Teacher::where('employee_number', 'PROF-'.$code)->first();
+                $teachers = Teacher::where('employee_number', 'like', 'PROF-'.$code.'%')
+                    ->where('status', 'active')->orderBy('id')->get();
+                $teacher = $teachers->get(($class->grade_level_id + $class->school_year_id) % max(1, $teachers->count()));
                 // Contas padrão pré-existentes podem ter outro número funcional.
                 if (!$teacher && $subject->code === 'LP') {
                     $teacher = Teacher::whereHas('user', fn ($q) => $q->where('email', 'professor@lumina.com'))->first();

@@ -12,7 +12,7 @@ class StudentSeeder extends Seeder {
         // Cada coorte ingressa no 1º ano e cursa os nove anos do fundamental.
         // Inclui egressos para que as turmas dos anos anteriores também tenham alunos.
         foreach (range(SchoolPopulation::firstYear() - 8, now()->year) as $entryYear) {
-            for ($position = 1; $position <= config('population.students_per_class'); $position++) {
+            for ($position = 1; $position <= SchoolPopulation::studentsPerClass(); $position++) {
                 $key = 'ALU-'.$entryYear.'-'.str_pad((string) $position, 3, '0', STR_PAD_LEFT);
                 if (Student::where('registration_number', $key)->exists()) {
                     continue;

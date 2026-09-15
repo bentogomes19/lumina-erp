@@ -16,6 +16,8 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Spatie\Permission\PermissionRegistrar;
@@ -151,10 +153,6 @@ class PermissionMatrix extends Page {
                         ->placeholder('Ex.: matrícula, exportar...')
                         ->prefixIcon('fas-magnifying-glass')
                         ->live(debounce: 300),
-                    Select::make('moduleFilter')
-                        ->label('Módulo')
-                        ->options(fn (): array => ['all' => 'Todos os módulos'] + $this->modules()->mapWithKeys(fn (string $module): array => [$module => $module])->all())
-                        ->live(),
                     Select::make('statusFilter')
                         ->label('Situação')
                         ->options([
@@ -164,10 +162,13 @@ class PermissionMatrix extends Page {
                         ])
                         ->live(),
                 ])
-                ->columns(3),
+                ->columns(2),
 
-            Grid::make(1)
-                ->schema(fn (): array => $this->moduleSections())
+            Tabs::make('Módulos de acesso')
+                ->label('Módulos')
+                ->tabs(fn (): array => $this->moduleTabs())
+                ->persistTabInQueryString('module')
+                ->scrollable()
                 ->columnSpanFull(),
         ]);
     }
@@ -507,6 +508,63 @@ class PermissionMatrix extends Page {
             ->all();
     }
 
+    /**
+     * Monta a barra horizontal de módulos usando as Tabs nativas do Filament.
+     * Apenas o módulo ativo renderiza seus toggles, reduzindo o scroll da página.
+     *
+     * @return array<int, Tab>
+     */
+    private function moduleTabs(): array {
+        return $this->modules()
+            ->map(function (string $module): Tab {
+                $moduleKey = Str::slug($module, '_');
+                $permissions = $this->filteredCatalog($module);
+                $total = $this->coherentCatalog()->where('module', $module)->count();
+
+                return Tab::make($module)
+                    ->icon('fas-layer-group')
+                    ->badge((string) $total)
+                    ->badgeColor('primary')
+                    ->schema([
+                        Section::make($module)
+                            ->description(fn (): string => $this->moduleDescription($module))
+                            ->icon('fas-layer-group')
+                            ->headerActions([
+                                Action::make("enable_tab_{$moduleKey}")
+                                    ->label('Marcar todas')
+                                    ->icon('fas-check-double')
+                                    ->color('gray')
+                                    ->action(fn (): mixed => $this->enableModule($module)),
+                                Action::make("readonly_tab_{$moduleKey}")
+                                    ->label('Somente leitura')
+                                    ->icon('fas-eye')
+                                    ->color('gray')
+                                    ->action(fn (): mixed => $this->makeModuleReadOnly($module)),
+                                Action::make("disable_tab_{$moduleKey}")
+                                    ->label('Desmarcar todas')
+                                    ->icon('fas-xmark')
+                                    ->color('gray')
+                                    ->action(fn (): mixed => $this->disableModule($module)),
+                            ])
+                            ->schema([
+                                Grid::make(['default' => 1, 'md' => 2, 'xl' => 3])
+                                    ->schema($permissions
+                                        ->map(fn (array $permission): Toggle => $this->permissionToggle($permission))
+                                        ->all()),
+                            ]),
+                    ]);
+            })
+            ->values()
+            ->all();
+    }
+
+    private function moduleDescription(string $module): string {
+        $permissions = $this->filteredCatalog($module);
+        $active = $permissions->filter(fn (array $permission): bool => (bool) ($this->permissionState[$permission['name']] ?? false))->count();
+
+        return $active . ' de ' . $permissions->count() . ' permissões exibidas estão ativas';
+    }
+
     private function permissionToggle(array $permission): Toggle {
         $permissionName = $permission['name'];
         $toggleKey      = md5($permissionName);
@@ -539,10 +597,11 @@ class PermissionMatrix extends Page {
      *
      * @return Collection
      */
-    private function filteredCatalog(): Collection {
+    private function filteredCatalog(?string $module = null): Collection {
         return $this->coherentCatalog()
-            ->filter(function (array $permission): bool {
-                if ($this->moduleFilter !== 'all' && $permission['module'] !== $this->moduleFilter) {
+            ->filter(function (array $permission) use ($module): bool {
+                $selectedModule = $module ?? ($this->moduleFilter !== 'all' ? $this->moduleFilter : null);
+                if ($selectedModule !== null && $permission['module'] !== $selectedModule) {
                     return false;
                 }
 
