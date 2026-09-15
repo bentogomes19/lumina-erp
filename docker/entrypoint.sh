@@ -12,9 +12,10 @@ if ! grep -q '^APP_KEY=' .env 2>/dev/null; then
 	echo 'APP_KEY=' >> .env
 fi
 
-# Gera APP_KEY se o artisan estiver disponível (após composer install)
-if [ -f vendor/autoload.php ]; then
-	php artisan key:generate --force --no-interaction 2>/dev/null || true
+# Gera APP_KEY somente quando ela ainda estiver vazia.
+# Regenerá-la a cada reinício invalida todas as sessões existentes.
+if [ -f vendor/autoload.php ] && ! grep -q '^APP_KEY=.\+' .env 2>/dev/null; then
+	php artisan key:generate --no-interaction 2>/dev/null || true
 fi
 
 exec "$@"

@@ -74,7 +74,8 @@ class TeachersTable
                 TrashedFilter::make(),
                 SelectFilter::make('status')
                     ->label('Status')
-                    ->options(TeacherStatus::options()),
+                    ->options(TeacherStatus::options())
+                    ->default(TeacherStatus::ACTIVE->value),
             ])
             ->recordActions([
                 EditAction::make(),

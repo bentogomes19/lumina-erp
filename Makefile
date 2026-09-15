@@ -29,7 +29,7 @@ help:
 
 # Gera APP_KEY no .env (garante .env e linha APP_KEY= antes de rodar key:generate)
 key:
-	docker exec $(APP_CONTAINER) sh -c "test -f .env || cp .env.example .env; grep -q '^APP_KEY=' .env 2>/dev/null || echo 'APP_KEY=' >> .env; php artisan key:generate --force"
+	docker exec $(APP_CONTAINER) sh -c "test -f .env || cp .env.example .env; grep -q '^APP_KEY=' .env 2>/dev/null || echo 'APP_KEY=' >> .env; grep -q '^APP_KEY=.\+' .env 2>/dev/null || php artisan key:generate --no-interaction"
 
 # Limpa caches do Laravel (use após alterar .env, rotas, config, views)
 clear:
@@ -59,7 +59,7 @@ bootstrap:
 	@echo "Gerando a chave da aplicação..."
 	docker exec $(APP_CONTAINER) sh -c \
 		"grep -q '^APP_KEY=' .env 2>/dev/null || echo 'APP_KEY=' >> .env; \
-		php artisan key:generate --force"
+		grep -q '^APP_KEY=.\+' .env 2>/dev/null || php artisan key:generate --no-interaction"
 	@echo "Descobrindo pacotes Laravel..."
 	docker exec $(APP_CONTAINER) php artisan package:discover --ansi
 	@echo "▶ Publicando assets do Filament..."
@@ -103,7 +103,7 @@ install:
 	@echo "▶ Finalizando Laravel e Filament..."
 	docker exec $(APP_CONTAINER) php artisan package:discover --ansi
 	docker exec $(APP_CONTAINER) php artisan filament:assets --ansi
-	docker exec $(APP_CONTAINER) php artisan key:generate --force
+	docker exec $(APP_CONTAINER) sh -c "grep -q '^APP_KEY=.\+' .env 2>/dev/null || php artisan key:generate --no-interaction"
 	docker exec $(APP_CONTAINER) php artisan optimize:clear
 	@echo "✅ Dependências instaladas."
 
@@ -117,6 +117,7 @@ fresh:
 	docker exec -it $(APP_CONTAINER) php artisan migrate:fresh --seed
 
 test:
+	docker exec $(APP_CONTAINER) php artisan config:clear --no-ansi
 	docker exec -it $(APP_CONTAINER) ./vendor/bin/phpunit
 
 lint:

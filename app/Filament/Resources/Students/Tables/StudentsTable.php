@@ -7,6 +7,7 @@ use App\Enums\StudentStatus;
 use App\Filament\Actions\GuardedForceDeleteBulkAction;
 use App\Filament\Resources\Enrollments\EnrollmentResource;
 use App\Models\Student;
+use App\Models\SchoolYear;
 use App\Services\Enrollments\StudentEnrollmentService;
 use BackedEnum;
 use Carbon\Carbon;
@@ -76,10 +77,19 @@ class StudentsTable
             ])
             ->filters([
                 TrashedFilter::make(),
-                SelectFilter::make('status')->label('Status')->options(StudentStatus::options()),
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options(StudentStatus::options())
+                    ->default(StudentStatus::ACTIVE->value),
                 SelectFilter::make('class_id')
                     ->label('Turma (Ano atual)')
-                    ->relationship('classes', 'name')
+                    ->relationship(
+                        'classes',
+                        'name',
+                        fn ($query) => $query->where('classes.school_year_id', SchoolYear::query()
+                            ->where('is_active', true)
+                            ->value('id'))
+                    )
                     ->searchable()->preload(),
             ])
             ->recordActions([

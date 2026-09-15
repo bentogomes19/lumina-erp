@@ -8,6 +8,7 @@ use App\Enums\EnrollmentStatus;
 use App\Filament\Actions\GuardedForceDeleteBulkAction;
 use App\Filament\Actions\WarnedDeleteBulkAction;
 use App\Models\SchoolClass;
+use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Services\Enrollments\StudentEnrollmentService;
 use Filament\Actions\Action;
@@ -25,6 +26,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section as InfoSection;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -109,6 +111,19 @@ class SchoolClassesTable
                     ->alignRight(),
             ])
             ->filters([
+                SelectFilter::make('school_year_id')
+                    ->label('Ano letivo')
+                    ->options(fn () => SchoolYear::query()
+                        ->orderByDesc('year')
+                        ->pluck('year', 'id'))
+                    ->default(fn () => SchoolYear::query()
+                        ->where('is_active', true)
+                        ->value('id')),
+
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options(ClassStatus::options()),
+
                 TrashedFilter::make(),
             ])
             ->recordActions([
