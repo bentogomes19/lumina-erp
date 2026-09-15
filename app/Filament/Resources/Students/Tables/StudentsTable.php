@@ -24,6 +24,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class StudentsTable
 {
@@ -33,6 +34,7 @@ class StudentsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('currentActiveEnrollment.schoolClass'))
             ->columns([
                 TextColumn::make('registration_number')->label('Matrícula')->searchable()->copyable(),
                 TextColumn::make('name')->label('Nome')->searchable()->sortable(),
@@ -52,7 +54,11 @@ class StudentsTable
                             ->orderByRaw('birth_date IS NULL') /* nulos por último. */
                             ->orderBy('birth_date', $direction === 'asc' ? 'desc' : 'asc');
                     }),
-                TextColumn::make('classes.name')->label('Turmas')->limit(20)->toggleable(),
+                TextColumn::make('currentActiveEnrollment.schoolClass.name')
+                    ->label('Turma atual')
+                    ->placeholder('Sem turma ativa no ano atual')
+                    ->limit(28)
+                    ->toggleable(),
                 TextColumn::make('email')->label('E-mail')->toggleable(),
                 TextColumn::make('phone_number')->label('Telefone')->toggleable(),
                 BadgeColumn::make('status')

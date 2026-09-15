@@ -13,6 +13,38 @@ body,
     font-family: var(--lumina-font);
 }
 
+/*
+ * O nome institucional é configurável e pode ser maior que o texto padrão.
+ * Mantemos o branding completo sem permitir que ele invada o título do login.
+ */
+.fi-auth-layout .fi-simple-header {
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.fi-auth-layout .fi-simple-header .fi-logo {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.fi-auth-layout .fi-simple-header .fi-logo img,
+.fi-auth-layout .fi-simple-header img.fi-logo {
+    display: block;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: left center;
+}
+
+.fi-auth-layout .fi-simple-header-heading {
+    margin-top: 0;
+    line-height: 1.25;
+}
+
 .fi-body {
     background:
         linear-gradient(180deg, rgb(152 122 60 / 6%), transparent 18rem),

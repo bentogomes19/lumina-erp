@@ -6,6 +6,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use App\Notifications\PasswordReset as PasswordResetNotification;
+use App\Support\SystemBranding;
 use Filament\Auth\Notifications\ResetPassword as FilamentPasswordResetNotification;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
@@ -31,6 +32,8 @@ class AppServiceProvider extends ServiceProvider {
      * @return void
      */
     public function boot(): void {
+        view()->share('systemBranding', app(SystemBranding::class));
+
         FilamentView::registerRenderHook(
             PanelsRenderHook::HEAD_START,
             function (): string {

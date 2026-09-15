@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\AssessmentType;
+use App\Models\SystemParameter;
 use Illuminate\Support\Collection;
 
 /**
@@ -52,7 +53,9 @@ class GradeCalculationService {
      *
      * @return string
      */
-    public function status(?float $average, float $minApproval = self::MIN_APPROVAL, float $minRecovery = self::MIN_RECOVERY): string {
+    public function status(?float $average, ?float $minApproval = null, ?float $minRecovery = null): string {
+        $minApproval ??= (float) SystemParameter::read('academic.minimum_grade', self::MIN_APPROVAL);
+        $minRecovery ??= self::MIN_RECOVERY;
         if ($average === null) {
             return 'ongoing';
         }
@@ -79,7 +82,8 @@ class GradeCalculationService {
      *
      * @return array{
      */
-    public function subjectReport(Collection $grades, float $minApproval = self::MIN_APPROVAL): array {
+    public function subjectReport(Collection $grades, ?float $minApproval = null): array {
+        $minApproval ??= (float) SystemParameter::read('academic.minimum_grade', self::MIN_APPROVAL);
         $regular  = $grades->filter(fn ($g) => $g->assessment_type !== AssessmentType::RECOVERY);
         $recovery = $grades->filter(fn ($g) => $g->assessment_type === AssessmentType::RECOVERY);
 

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\SchoolClasses\Schemas;
 use App\Enums\ClassShift;
 use App\Enums\ClassStatus;
 use App\Enums\ClassType;
+use App\Models\SystemParameter;
 use Illuminate\Validation\Rules\Enum as EnumRule;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -106,6 +107,7 @@ class SchoolClassForm {
                         ->label('Capacidade Máxima')
                         ->placeholder('Sem limite')
                         ->numeric()
+                        ->default(fn (): int => (int) SystemParameter::read('academic.default_class_capacity', 35))
                         ->minValue(1)
                         ->maxValue(60)
                         ->helperText('Deixe vazio para uma turma ilimitada. Recomendado: 25 a 40 alunos.'),

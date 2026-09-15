@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\SystemBranding;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -39,7 +40,7 @@ class FirstAccessInvitation extends Notification {
      */
     public function toMail(object $notifiable): MailMessage {
         return (new MailMessage())
-            ->subject('Seu primeiro acesso ao Portal Lumina')
+            ->subject('Seu primeiro acesso ao '.app(SystemBranding::class)->institutionName())
             ->greeting("Olá, {$notifiable->name}!")
             ->line('Sua conta foi criada. Use o botão abaixo para definir sua senha de acesso.')
             ->action('Definir minha senha', $this->url)

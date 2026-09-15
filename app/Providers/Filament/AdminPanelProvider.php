@@ -11,6 +11,7 @@ use App\Filament\Widgets\AdminOverviewStats;
 use App\Filament\Widgets\AdminRecentEnrollmentsTable;
 use App\Filament\Widgets\AdminSchoolClassesTable;
 use App\Filament\Widgets\EnrollmentStatsWidget;
+use App\Support\SystemBranding;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RedirectUserByRole;
@@ -50,7 +51,9 @@ class AdminPanelProvider extends PanelProvider {
             ->default()
             ->id('lumina')
             ->path('lumina')
-            ->brandName('Portal Lumina')
+            ->brandName(fn (): string => app(SystemBranding::class)->institutionName())
+            ->brandLogo(fn (): ?string => app(SystemBranding::class)->logoUrl())
+            ->brandLogoHeight('2.25rem')
             ->login(Login::class)
             ->passwordReset(RequestPasswordReset::class)
             ->homeUrl(fn (): string => DashboardAdmin::getUrl(panel: 'lumina'))

@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\SystemBranding;
 use Illuminate\Auth\Notifications\ResetPassword as BaseNotification;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -23,7 +24,7 @@ class PasswordReset extends BaseNotification {
         $expires = (int) config('auth.passwords.users.expire', 60);
 
         return (new MailMessage())
-            ->subject('Recuperação de senha do Portal Lumina')
+            ->subject('Recuperação de senha do '.app(SystemBranding::class)->institutionName())
             ->greeting("Olá, {$notifiable->name}!")
             ->line('Recebemos uma solicitação para redefinir a senha da sua conta.')
             ->action('Redefinir minha senha', $this->resetUrl($notifiable))

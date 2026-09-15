@@ -15,6 +15,7 @@ use App\Filament\Widgets\MyClassesTable;
 use App\Filament\Widgets\RecentAttendanceTeacher;
 use App\Filament\Widgets\TeacherAttendanceWidget;
 use App\Filament\Widgets\TeacherStats;
+use App\Support\SystemBranding;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
 use Filament\FontProviders\LocalFontProvider;
@@ -40,7 +41,9 @@ class TeacherPanelProvider extends PanelProvider {
             ->id('professor')
             ->path('professor')
             ->authGuard('teacher')
-            ->brandName('Portal do Professor | Lumina')
+            ->brandName(fn (): string => 'Portal do Professor | '.app(SystemBranding::class)->institutionName())
+            ->brandLogo(fn (): ?string => app(SystemBranding::class)->logoUrl())
+            ->brandLogoHeight('2.25rem')
             ->login(Login::class)
             ->passwordReset(RequestPasswordReset::class)
             ->font('Inter Variable', url: asset('fonts/filament/filament/inter/index.css'), provider: LocalFontProvider::class)

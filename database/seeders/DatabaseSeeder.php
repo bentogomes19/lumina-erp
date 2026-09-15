@@ -13,6 +13,7 @@ use Database\Seeders\Academic\TeacherAssignmentSeeder;
 use Database\Seeders\Core\GradeLevelSeeder;
 use Database\Seeders\Core\RolesPermissionsSeeder;
 use Database\Seeders\Core\SubjectSeeder;
+use Database\Seeders\Core\SystemParameterSeeder;
 use Database\Seeders\Users\AdminUserSeeder;
 use Database\Seeders\Users\StudentSeeder;
 use Database\Seeders\Users\TeacherSeeder;
@@ -39,6 +40,7 @@ class DatabaseSeeder extends Seeder {
             SchoolYearSeeder::class,
             SchoolHolidaySeeder::class,  /* NOVO: Criar feriados antes de gerar aulas. */
             RolesPermissionsSeeder::class,
+            SystemParameterSeeder::class,
         ]);
 
         /* Usuários Básicos. */

@@ -9,6 +9,7 @@
 </head>
 <body>
 @php
+    $documentLogo = $systemBranding->documentLogoDataUri();
     $schoolYear      = $currentClass->schoolYear?->year ?? $generatedAt->year;
     $selectedPeriod  = $selectedPeriod ?? 'all';
     $termLabels      = ['b1' => '1º bimestre', 'b2' => '2º bimestre', 'b3' => '3º bimestre', 'b4' => '4º bimestre'];
@@ -21,14 +22,17 @@
 <footer class="page-footer">
     <table>
         <tr>
-            <td>{{ config('app.name', 'Lumina ERP') }} · Registro de desempenho escolar</td>
+            <td>{{ $systemBranding->institutionName() }} · Registro de desempenho escolar</td>
             <td class="text-right">Emitido em {{ $generatedAt->format('d/m/Y H:i') }}</td>
         </tr>
     </table>
 </footer>
 
 <header class="institution">
-    <div class="school-name">{{ config('app.name', 'Lumina ERP') }}</div>
+    @if($documentLogo)
+        <img src="{{ $documentLogo }}" alt="{{ $systemBranding->institutionName() }}" style="height:32px; max-width:150px; object-fit:contain; margin-bottom:6px;">
+    @endif
+    <div class="school-name">{{ $systemBranding->institutionName() }}</div>
     <div class="school-department">Secretaria escolar · Acompanhamento pedagógico</div>
 </header>
 

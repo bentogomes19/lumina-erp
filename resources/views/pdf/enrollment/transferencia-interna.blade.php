@@ -5,13 +5,17 @@
     @include('pdf.enrollment.partials.styles')
 </head>
 <body>
+@php($documentLogo = $systemBranding->documentLogoDataUri())
 <div class="page">
 
     {{-- Cabeçalho --}}
     <div class="header">
         <div class="header-top">
             <div>
-                <div class="school-name">{{ config('app.name', 'Lumina ERP') }}</div>
+                @if($documentLogo)
+                    <img src="{{ $documentLogo }}" alt="{{ $systemBranding->institutionName() }}" style="height:28px; max-width:130px; object-fit:contain; margin-bottom:4px;">
+                @endif
+                <div class="school-name">{{ $systemBranding->institutionName() }}</div>
                 <div class="school-sub">Sistema de Gestão Escolar</div>
             </div>
             <div>
@@ -130,7 +134,7 @@
     <div class="footer">
         <span>Emitido em: {{ $generatedAt->format('d/m/Y \à\s H:i:s') }}</span>
         <span>Matrícula origem: {{ $enrollment->registration_number }}</span>
-        <span>{{ config('app.name') }}</span>
+        <span>{{ $systemBranding->institutionName() }}</span>
     </div>
 
 </div>

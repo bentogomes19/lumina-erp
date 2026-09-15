@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use App\Enums\Gender;
+use App\Enums\EnrollmentStatus;
 use App\Enums\StudentStatus;
+use App\Enums\SchoolYearStatus;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Student extends BaseModel {
@@ -99,6 +102,20 @@ class Student extends BaseModel {
      */
     public function enrollments() {
         return $this->hasMany(Enrollment::class);
+    }
+
+    /**
+     * Retorna somente a matrícula ativa do ano letivo vigente.
+     *
+     * O histórico continua disponível em enrollments(); esta relação é
+     * específica para telas operacionais que precisam exibir a turma atual.
+     */
+    public function currentActiveEnrollment(): HasOne
+    {
+        return $this->hasOne(Enrollment::class)
+            ->where('status', EnrollmentStatus::ACTIVE->value)
+            ->whereHas('schoolYear', fn ($query) => $query->where('status', SchoolYearStatus::ACTIVE->value))
+            ->latestOfMany();
     }
 
     /**

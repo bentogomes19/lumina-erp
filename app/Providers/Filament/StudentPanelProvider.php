@@ -12,6 +12,7 @@ use App\Filament\Widgets\StudentGradesTableWidget;
 use App\Filament\Widgets\StudentGradesWidget;
 use App\Filament\Widgets\StudentProfileWidget;
 use App\Filament\Widgets\UpcomingAssessments;
+use App\Support\SystemBranding;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
 use Filament\Http\Middleware\Authenticate;
@@ -38,7 +39,9 @@ class StudentPanelProvider extends PanelProvider {
             ->id('aluno')
             ->path('aluno')
             ->authGuard('student')
-            ->brandName('Portal do Aluno | Lumina')
+            ->brandName(fn (): string => 'Portal do Aluno | '.app(SystemBranding::class)->institutionName())
+            ->brandLogo(fn (): ?string => app(SystemBranding::class)->logoUrl())
+            ->brandLogoHeight('2.25rem')
             ->passwordReset(RequestPasswordReset::class)
             ->homeUrl(fn (): string => DashboardStudent::getUrl(panel: 'aluno'))
             ->viteTheme('resources/css/filament/aluno/theme.css')
