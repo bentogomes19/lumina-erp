@@ -1,5 +1,9 @@
 <?php
 
+use App\Console\Commands\DiagnoseDirectPermissions;
+use App\Console\Commands\DiagnoseSchemaIntegrity;
+use App\Console\Commands\DiagnoseTeacherDeletion;
+use App\Providers\AuthServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,14 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withCommands([
-        App\Console\Commands\DiagnoseDirectPermissions::class,
+        DiagnoseDirectPermissions::class,
+        DiagnoseSchemaIntegrity::class,
+        DiagnoseTeacherDeletion::class,
     ])
     ->withProviders([
-        App\Providers\AuthServiceProvider::class,
+        AuthServiceProvider::class,
     ])
-    ->withMiddleware(function (Middleware $middleware): void {
-
-    })
-    ->withExceptions(function (Exceptions $exceptions): void {
-
-    })->create();
+    ->withMiddleware(function (Middleware $middleware): void {})
+    ->withExceptions(function (Exceptions $exceptions): void {})->create();

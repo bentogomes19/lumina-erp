@@ -164,6 +164,9 @@
                                         <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8125rem;color:var(--ms-text-secondary)">
                                             @svg('fas-user', 'ms-icon-xs', ['style' => 'color:var(--ms-text-muted);flex-shrink:0'])
                                             <span>Prof. {{ $subject->teacher_name }}</span>
+                                            @if($subject->teacher_is_inactive)
+                                                <span style="display:inline-flex;padding:0.125rem 0.5rem;border-radius:9999px;background:#f3f4f6;color:#4b5563;font-size:0.625rem;font-weight:600">Inativo</span>
+                                            @endif
                                         </div>
                                     @endif
 

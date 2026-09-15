@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use App\Enums\SchoolYearStatus;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Validation\ValidationException;
 
-class SchoolYear extends BaseModel {
+class SchoolYear extends BaseModel
+{
+    use SoftDeletes;
 
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
@@ -27,19 +30,20 @@ class SchoolYear extends BaseModel {
      */
     protected $casts = [
         'starts_at' => 'date',
-        'ends_at'   => 'date',
+        'ends_at' => 'date',
         'is_active' => 'boolean',
-        'status'    => SchoolYearStatus::class,
+        'status' => SchoolYearStatus::class,
     ];
 
     /** Salva a ativação e a desativação anterior na mesma transação. */
-    public function save(array $options = []) {
-        if (!$this->status) {
+    public function save(array $options = [])
+    {
+        if (! $this->status) {
             $this->status = $this->is_active ? SchoolYearStatus::ACTIVE : SchoolYearStatus::PLANNING;
         }
         if ($this->status === SchoolYearStatus::ACTIVE && (int) $this->year < now()->year) {
             throw ValidationException::withMessages([
-                'year' => 'Não é permitido ativar um ano letivo anterior ao ano atual (' . now()->year . ').',
+                'year' => 'Não é permitido ativar um ano letivo anterior ao ano atual ('.now()->year.').',
             ]);
         }
         $this->is_active = $this->status === SchoolYearStatus::ACTIVE;
@@ -52,6 +56,7 @@ class SchoolYear extends BaseModel {
                     ->where(fn ($q) => $q->where('status', SchoolYearStatus::ACTIVE->value)->orWhere('is_active', true))
                     ->update(['status' => SchoolYearStatus::CLOSED->value, 'is_active' => false]);
             }
+
             return parent::save($options);
         });
     }
@@ -61,7 +66,8 @@ class SchoolYear extends BaseModel {
      *
      * @return mixed
      */
-    public function terms() {
+    public function terms()
+    {
         return $this->hasMany(SchoolYearTerm::class)->orderBy('sequence');
     }
 
@@ -70,7 +76,8 @@ class SchoolYear extends BaseModel {
      *
      * @return mixed
      */
-    public function gradeLevel() {
+    public function gradeLevel()
+    {
         return $this->belongsTo(GradeLevel::class);
     }
 
@@ -79,7 +86,8 @@ class SchoolYear extends BaseModel {
      *
      * @return mixed
      */
-    public function classes() {
+    public function classes()
+    {
         return $this->hasMany(SchoolClass::class);
     }
 
@@ -88,36 +96,35 @@ class SchoolYear extends BaseModel {
      *
      * @return mixed
      */
-    public function enrollments() {
+    public function enrollments()
+    {
         return $this->hasMany(Enrollment::class);
     }
 
     /**
      * Retorna o ano letivo com status ativo.
-     *
-     * @return self|null
      */
-    public static function current(): ?self {
+    public static function current(): ?self
+    {
         return static::where('status', SchoolYearStatus::ACTIVE->value)->first();
     }
 
     /**
      * Retorna o ano letivo ativo.
      *
-     * @return self|null
      *
      * @deprecated Use current().
      */
-    public static function active(): ?self {
+    public static function active(): ?self
+    {
         return static::current();
     }
 
     /**
      * Retorna o período avaliativo aberto para lançamento de notas hoje.
-     *
-     * @return SchoolYearTerm|null
      */
-    public function currentTerm(): ?SchoolYearTerm {
+    public function currentTerm(): ?SchoolYearTerm
+    {
         return $this->terms()
             ->where('grade_entry_starts_at', '<=', now())
             ->where('grade_entry_ends_at', '>=', now())

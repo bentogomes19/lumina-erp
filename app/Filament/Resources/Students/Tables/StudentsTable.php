@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Students\Tables;
 
 use App\Enums\StudentOnboardingState;
 use App\Enums\StudentStatus;
+use App\Filament\Actions\GuardedForceDeleteBulkAction;
 use App\Filament\Resources\Enrollments\EnrollmentResource;
 use App\Models\Student;
 use App\Services\Enrollments\StudentEnrollmentService;
@@ -14,23 +15,22 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-class StudentsTable {
-
+class StudentsTable
+{
     /**
      * Configura as colunas, os filtros e as ações da tabela de alunos.
-     *
-     * @param Table $table
-     *
-     * @return Table
      */
-    public static function configure(Table $table): Table {
+    public static function configure(Table $table): Table
+    {
         return $table
             ->columns([
                 TextColumn::make('registration_number')->label('Matrícula')->searchable()->copyable(),
@@ -58,13 +58,14 @@ class StudentsTable {
                     ->label('Status')
                     ->formatStateUsing(function ($state) {
                         $value = $state instanceof BackedEnum ? $state->value : $state;   /* enum ou string. */
+
                         return StudentStatus::options()[$value] ?? '—';
                     })
                     ->colors([
                         'success' => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::ACTIVE->value,
                         'warning' => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::SUSPENDED->value,
-                        'info'    => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::GRADUATED->value,
-                        'gray'    => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::INACTIVE->value,
+                        'info' => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::GRADUATED->value,
+                        'gray' => fn ($state) => ($state instanceof BackedEnum ? $state->value : $state) === StudentStatus::INACTIVE->value,
                     ]),
                 BadgeColumn::make('onboarding_state')
                     ->label('Onboarding')
@@ -74,6 +75,7 @@ class StudentsTable {
                 TextColumn::make('enrollment_date')->label('Ingresso')->date()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                TrashedFilter::make(),
                 SelectFilter::make('status')->label('Status')->options(StudentStatus::options()),
                 SelectFilter::make('class_id')
                     ->label('Turma (Ano atual)')
@@ -85,7 +87,7 @@ class StudentsTable {
                 Action::make('criarAcesso')
                     ->label('Criar usuário')
                     ->icon('fas-user-plus')
-                    ->visible(fn (Student $record): bool => !$record->user_id
+                    ->visible(fn (Student $record): bool => ! $record->user_id
                         && app(StudentEnrollmentService::class)->onboardingState($record) !== StudentOnboardingState::INCONSISTENT)
                     ->modalHeading(fn ($record) => "Criar usuário para {$record->name}")
                     ->modalDescription('Será criado e vinculado 1 usuário com o papel Aluno. Nenhum convite será enviado nesta operação.')
@@ -140,7 +142,7 @@ class StudentsTable {
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->action(function ($records) {
-                            $user    = auth()->user();
+                            $user = auth()->user();
                             $deleted = 0;
                             $blocked = 0;
                             foreach ($records as $student) {
@@ -156,7 +158,7 @@ class StudentsTable {
                                     ->title('Exclusão em lote')
                                     ->body($deleted > 0
                                         ? "{$deleted} aluno(s) excluído(s). {$blocked} não puderam ser excluídos por possuírem matrículas ou vínculo com turmas."
-                                        : "Nenhum aluno excluído. Alunos com matrículas ou vínculo com turmas não podem ser excluídos.")
+                                        : 'Nenhum aluno excluído. Alunos com matrículas ou vínculo com turmas não podem ser excluídos.')
                                     ->warning()
                                     ->send();
                             } elseif ($deleted > 0) {
@@ -167,11 +169,12 @@ class StudentsTable {
                                     ->send();
                             }
                         }),
+                    GuardedForceDeleteBulkAction::make(),
                     BulkAction::make('bulkStatus')
                         ->label('Alterar status (selecionados)')
                         ->icon('fas-sliders')
                         ->form([
-                            \Filament\Forms\Components\Select::make('status')
+                            Select::make('status')
                                 ->label('Novo status')
                                 ->options(StudentStatus::options())
                                 ->required(),
@@ -179,7 +182,7 @@ class StudentsTable {
                         ->action(function ($records, array $data) {
                             $status = $data['status'];
                             $records->each->update([
-                                'status'            => $status,
+                                'status' => $status,
                                 'status_changed_at' => now(),
                             ]);
 

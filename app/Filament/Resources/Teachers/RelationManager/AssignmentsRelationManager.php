@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Teachers\RelationManager;
 
 use App\Filament\Resources\SchoolClasses\SchoolClassResource;
+use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use App\Services\Teachers\TeacherOnboardingService;
 use App\Support\PermissionAccess;
@@ -20,20 +21,19 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
-class AssignmentsRelationManager extends RelationManager {
-
+class AssignmentsRelationManager extends RelationManager
+{
     protected static string $relationship = 'teacherAssignments';
-    protected static ?string $title       = 'Turmas & Disciplinas';
+
+    protected static ?string $title = 'Turmas & Disciplinas';
 
     /**
      * Configura o formulário do recurso.
-     *
-     * @param Schema $schema
-     *
-     * @return Schema
      */
-    public function form(Schema $schema): Schema {
+    public function form(Schema $schema): Schema
+    {
         return $schema->schema([
             Select::make('class_id')
                 ->label('Turma')
@@ -75,16 +75,21 @@ class AssignmentsRelationManager extends RelationManager {
 
     /**
      * Configura a tabela e suas ações.
-     *
-     * @param Table $table
-     *
-     * @return Table
      */
-    public function table(Table $table): Table {
+    public function table(Table $table): Table
+    {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with([
+                'subject' => fn ($subject) => $subject->withTrashed(),
+                'schoolClass' => fn ($schoolClass) => $schoolClass->withTrashed(),
+            ]))
             ->columns([
                 TextColumn::make('schoolClass.name')
                     ->label('Turma')
+                    ->formatStateUsing(fn (?string $state, TeacherAssignment $record): string => self::displayName(
+                        $state,
+                        $record->schoolClass?->trashed() ?? false,
+                    ))
                     ->searchable()
                     ->sortable()
                     ->url(
@@ -108,6 +113,10 @@ class AssignmentsRelationManager extends RelationManager {
 
                 TextColumn::make('subject.name')
                     ->label('Disciplina')
+                    ->formatStateUsing(fn (?string $state, TeacherAssignment $record): string => self::displayName(
+                        $state,
+                        $record->subject?->trashed() ?? false,
+                    ))
                     ->searchable()
                     ->sortable(),
             ])
@@ -115,7 +124,7 @@ class AssignmentsRelationManager extends RelationManager {
                 CreateAction::make()
                     ->label('Vincular')
                     ->using(function (array $data) {
-                        /** @var \App\Models\Teacher $teacher */
+                        /** @var Teacher $teacher */
                         $teacher = $this->getOwnerRecord();
 
                         return app(TeacherOnboardingService::class)->createAssignment($teacher, $data);
@@ -125,7 +134,7 @@ class AssignmentsRelationManager extends RelationManager {
                 EditAction::make()
                     ->label('Editar')
                     ->using(function (TeacherAssignment $record, array $data) {
-                        /** @var \App\Models\Teacher $teacher */
+                        /** @var Teacher $teacher */
                         $teacher = $this->getOwnerRecord();
 
                         return app(TeacherOnboardingService::class)
@@ -137,5 +146,10 @@ class AssignmentsRelationManager extends RelationManager {
             ->bulkActions([
                 DeleteBulkAction::make()->label('Remover selecionados'),
             ]);
+    }
+
+    private static function displayName(?string $name, bool $trashed): string
+    {
+        return ($name ?? 'Indisponível').($trashed ? ' · Inativo' : '');
     }
 }

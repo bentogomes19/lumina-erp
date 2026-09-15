@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Teachers\Tables;
 
 use App\Enums\TeacherOnboardingState;
 use App\Enums\TeacherStatus;
+use App\Filament\Actions\GuardedForceDeleteBulkAction;
+use App\Filament\Actions\WarnedDeleteBulkAction;
 use App\Models\SchoolClass;
 use App\Models\Teacher;
 use App\Services\Teachers\TeacherOnboardingService;
@@ -12,9 +14,7 @@ use App\Support\TeacherAssignmentCurriculum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -30,16 +30,13 @@ use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class TeachersTable {
-
+class TeachersTable
+{
     /**
      * Configura as colunas, os filtros e as ações da tabela de professores.
-     *
-     * @param Table $table
-     *
-     * @return Table
      */
-    public static function configure(Table $table): Table {
+    public static function configure(Table $table): Table
+    {
         return $table
             ->columns([
                 TextColumn::make('employee_number')->label('Matrícula')->searchable()->copyable()->toggleable(),
@@ -53,16 +50,16 @@ class TeachersTable {
                     ->formatStateUsing(
                         fn ($state) => $state
                         ? (is_string($state)
-                            ? \App\Enums\TeacherStatus::from($state)->label()
+                            ? TeacherStatus::from($state)->label()
                             : $state->label())
                         : '—'
                     )
                     ->color(fn ($state) => match (is_string($state) ? $state : $state?->value) {
-                        'active'     => 'success',
-                        'inactive'   => 'gray',
+                        'active' => 'success',
+                        'inactive' => 'gray',
                         'sabbatical' => 'warning',
                         'terminated' => 'danger',
-                        default      => 'secondary',
+                        default => 'secondary',
                     }),
                 TextColumn::make('onboarding_state')
                     ->label('Onboarding')
@@ -84,7 +81,7 @@ class TeachersTable {
                 Action::make('criarAcesso')
                     ->label('Criar usuário')
                     ->icon('fas-user-plus')
-                    ->visible(fn (Teacher $record): bool => !$record->user_id)
+                    ->visible(fn (Teacher $record): bool => ! $record->user_id)
                     ->modalHeading(fn ($record) => "Criar usuário para {$record->name}")
                     ->modalDescription('Será criado e vinculado 1 usuário docente. Nenhum convite será enviado nesta operação.')
                     ->modalSubmitActionLabel('Criar usuário sem convite')
@@ -137,11 +134,11 @@ class TeachersTable {
                             ->label('Turma')
                             ->options(
                                 fn () => SchoolClass::query()
-                                ->with('gradeLevel', 'schoolYear')
-                                ->get()
-                                ->mapWithKeys(fn ($c) => [
-                                    $c->id => "{$c->name} | {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
-                                ])
+                                    ->with('gradeLevel', 'schoolYear')
+                                    ->get()
+                                    ->mapWithKeys(fn ($c) => [
+                                        $c->id => "{$c->name} | {$c->gradeLevel?->name} ({$c->schoolYear?->year})",
+                                    ])
                             )
                             ->searchable()
                             ->preload()
@@ -187,8 +184,13 @@ class TeachersTable {
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    WarnedDeleteBulkAction::make()
+                        ->impactWarning(
+                            'Atenção: professores com vínculos ativos',
+                            'professor',
+                            'professores',
+                        ),
+                    GuardedForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
 
                     BulkAction::make('alterarStatus')
@@ -202,7 +204,7 @@ class TeachersTable {
                                 ->required(),
                         ])
                         ->action(function (Collection $records, array $data) {
-                            $novo  = $data['status'];
+                            $novo = $data['status'];
                             $total = 0;
 
                             DB::transaction(function () use ($records, $novo, &$total) {
@@ -211,7 +213,7 @@ class TeachersTable {
 
                             Notification::make()
                                 ->title('Status atualizado')
-                                ->body("{$total} professor(es) atualizado(s) para " . (TeacherStatus::from($novo)->label()))
+                                ->body("{$total} professor(es) atualizado(s) para ".(TeacherStatus::from($novo)->label()))
                                 ->success()
                                 ->send();
                         })

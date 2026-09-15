@@ -85,6 +85,9 @@
                                 <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem;font-size:0.9375rem;color:var(--ms-text-primary)">
                                     @svg('fas-user', '', ['style' => 'width:1rem;height:1rem;color:var(--ms-text-secondary)'])
                                     <span>Professor(a): <strong>{{ $teacher->name }}</strong></span>
+                                    @if($teacher->trashed())
+                                        <span style="display:inline-flex;padding:0.125rem 0.5rem;border-radius:9999px;background:#f3f4f6;color:#4b5563;font-size:0.6875rem;font-weight:600">Inativo</span>
+                                    @endif
                                 </div>
                             @endif
                         </div>

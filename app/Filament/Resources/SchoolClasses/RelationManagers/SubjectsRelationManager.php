@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SchoolClasses\RelationManagers;
 
+use App\Models\SchoolClass;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use App\Services\Teachers\TeacherOnboardingService;
@@ -12,21 +13,21 @@ use Filament\Forms\Components\Select;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
-class SubjectsRelationManager extends RelationManager {
-
+class SubjectsRelationManager extends RelationManager
+{
     protected static string $relationship = 'subjects';
-    protected static ?string $title       = 'Disciplinas da Turma';
+
+    protected static ?string $title = 'Disciplinas da Turma';
 
     /**
      * Configura a tabela e suas ações.
-     *
-     * @param Table $table
-     *
-     * @return Table
      */
-    public function table(Table $table): Table {
+    public function table(Table $table): Table
+    {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->withTrashed())
             ->columns([
                 TextColumn::make('code')
                     ->label('Código')
@@ -35,6 +36,8 @@ class SubjectsRelationManager extends RelationManager {
 
                 TextColumn::make('name')
                     ->label('Disciplina')
+                    ->formatStateUsing(fn (?string $state, $record): string => ($state ?? 'Indisponível')
+                        .($record->trashed() ? ' · Inativo' : ''))
                     ->searchable()
                     ->sortable(),
 
@@ -51,14 +54,19 @@ class SubjectsRelationManager extends RelationManager {
                         /* teacherAssignments da turma filtrados pela disciplina atual. */
                         $assignments = $class->teacherAssignments()
                             ->where('subject_id', $record->id)
-                            ->with('teacher')
+                            ->with(['teacher' => fn ($query) => $query->withTrashed()])
                             ->get();
 
                         return $assignments
-                            ->map(fn ($a) => $a->teacher?->name)
+                            ->map(fn ($a) => $a->teacher
+                                ? $a->teacher->name.($a->teacher->trashed() ? ' · Inativo' : '')
+                                : null)
                             ->filter()
-                            ->join(', ');
+                            ->values()
+                            ->all();
                     })
+                    ->badge()
+                    ->color(fn (string $state): string => str_ends_with($state, '· Inativo') ? 'gray' : 'primary')
                     ->toggleable(),
             ])
             ->headerActions([
@@ -80,7 +88,7 @@ class SubjectsRelationManager extends RelationManager {
                             ->placeholder('Atribuir depois, se necessário'),
                     ])
                     ->after(function ($record, array $data) {
-                        /** @var \App\Models\SchoolClass $class */
+                        /** @var SchoolClass $class */
                         $class = $this->getOwnerRecord();
 
                         if (blank($data['teacher_id'] ?? null)) {
@@ -90,7 +98,7 @@ class SubjectsRelationManager extends RelationManager {
                         $teacher = Teacher::findOrFail($data['teacher_id']);
 
                         app(TeacherOnboardingService::class)->createAssignment($teacher, [
-                            'class_id'   => $class->id,
+                            'class_id' => $class->id,
                             'subject_id' => $record->id,
                         ]);
                     }),
@@ -129,11 +137,12 @@ class SubjectsRelationManager extends RelationManager {
                         if ($assignment) {
                             app(TeacherOnboardingService::class)
                                 ->updateAssignment($assignment, [], $teacher);
+
                             return;
                         }
 
                         app(TeacherOnboardingService::class)->createAssignment($teacher, [
-                            'class_id'   => $class->id,
+                            'class_id' => $class->id,
                             'subject_id' => $record->id,
                         ]);
                     }),

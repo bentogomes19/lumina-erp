@@ -11,49 +11,47 @@ use App\Models\TeacherAssignment;
 use App\Support\PermissionAccess;
 use Filament\Pages\Page;
 
-class SubjectDetail extends Page {
+class SubjectDetail extends Page
+{
+    protected static ?string $navigationLabel = null;
 
-    protected static ?string $navigationLabel                = null;
-    protected static bool $shouldRegisterNavigation          = false;
-    protected static ?string $slug                           = 'subject-detail';
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?string $slug = 'subject-detail';
+
     protected static string|null|\BackedEnum $navigationIcon = 'fas-book-open';
 
     public ?int $subjectId = null;
 
     /**
      * Determina se o usuário atual pode acessar a página.
-     *
-     * @return bool
      */
-    public static function canAccess(): bool {
+    public static function canAccess(): bool
+    {
         return PermissionAccess::can('student.subjects.view');
     }
 
     /**
      * Retorna o nome da visualização usada pela página.
-     *
-     * @return string
      */
-    public function getView(): string {
+    public function getView(): string
+    {
         return 'filament.pages.student.subject-detail';
     }
 
     /**
      * Inicializa o estado necessário para exibir a página.
-     *
-     * @param int|null $subject
-     *
-     * @return void
      */
-    public function mount(?int $subject = null): void {
+    public function mount(?int $subject = null): void
+    {
         $this->subjectId = $subject ?? request()->query('subject');
 
-        if (!$this->subjectId) {
+        if (! $this->subjectId) {
             abort(404, 'Disciplina não especificada');
         }
 
         $student = Student::where('user_id', auth()->id())->first();
-        if (!$student) {
+        if (! $student) {
             abort(403, 'Estudante não encontrado');
         }
 
@@ -63,30 +61,29 @@ class SubjectDetail extends Page {
             ->whereHas('subjects', fn ($q) => $q->where('subjects.id', $this->subjectId))
             ->exists();
 
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             abort(403, 'Você não tem acesso a esta disciplina');
         }
     }
 
     /**
      * Retorna o título exibido na página.
-     *
-     * @return string
      */
-    public function getTitle(): string {
+    public function getTitle(): string
+    {
         $subject = Subject::find($this->subjectId);
+
         return $subject?->name ?? 'Detalhes da Disciplina';
     }
 
     /**
      * Retorna os dados completos da disciplina, incluindo professor, notas, frequência e aulas.
-     *
-     * @return array
      */
-    public function getSubjectData(): array {
+    public function getSubjectData(): array
+    {
         $student = Student::where('user_id', auth()->id())->first();
 
-        if (!$student || !$this->subjectId) {
+        if (! $student || ! $this->subjectId) {
             return $this->emptyData();
         }
 
@@ -96,20 +93,20 @@ class SubjectDetail extends Page {
             ->with(['schoolYear', 'gradeLevel'])
             ->first();
 
-        if (!$currentClass) {
+        if (! $currentClass) {
             return $this->emptyData();
         }
 
         $subject = Subject::with(['gradeLevels'])->find($this->subjectId);
 
-        if (!$subject) {
+        if (! $subject) {
             return $this->emptyData();
         }
 
         /* Atribuição do professor. */
         $assignment = TeacherAssignment::where('class_id', $currentClass->id)
             ->where('subject_id', $subject->id)
-            ->with('teacher')
+            ->with(['teacher' => fn ($query) => $query->withTrashed()])
             ->first();
 
         /* Carga horária semanal obtida da tabela associativa. */
@@ -128,10 +125,10 @@ class SubjectDetail extends Page {
 
         $termAverages = [];
         foreach (['b1', 'b2', 'b3', 'b4'] as $term) {
-            $termGrades          = $grades->filter(fn ($g) => $g->term?->value === $term);
+            $termGrades = $grades->filter(fn ($g) => $g->term?->value === $term);
             $termAverages[$term] = [
                 'average' => $termGrades->isNotEmpty() ? round($termGrades->avg('score'), 1) : null,
-                'grades'  => $termGrades,
+                'grades' => $termGrades,
             ];
         }
 
@@ -143,10 +140,10 @@ class SubjectDetail extends Page {
             ->where('subject_id', $subject->id)
             ->get();
 
-        $totalClasses      = $attendances->count();
-        $presences         = $attendances->where('status', 'present')->count();
-        $absences          = $attendances->where('status', 'absent')->count();
-        $lates             = $attendances->where('status', 'late')->count();
+        $totalClasses = $attendances->count();
+        $presences = $attendances->where('status', 'present')->count();
+        $absences = $attendances->where('status', 'absent')->count();
+        $lates = $attendances->where('status', 'late')->count();
         $attendancePercent = $totalClasses > 0
             ? round((($presences + $lates) / $totalClasses) * 100, 1)
             : null;
@@ -166,6 +163,7 @@ class SubjectDetail extends Page {
                     ->first();
 
                 $lesson->student_attendance = $attendance;
+
                 return $lesson;
             });
 
@@ -174,10 +172,10 @@ class SubjectDetail extends Page {
             return $att->created_at?->format('Y-m') ?? 'unknown';
         })->map(function ($group) {
             return [
-                'total'   => $group->count(),
+                'total' => $group->count(),
                 'present' => $group->where('status', 'present')->count(),
-                'absent'  => $group->where('status', 'absent')->count(),
-                'late'    => $group->where('status', 'late')->count(),
+                'absent' => $group->where('status', 'absent')->count(),
+                'late' => $group->where('status', 'late')->count(),
                 'percent' => $group->count() > 0
                     ? round((($group->where('status', 'present')->count() + $group->where('status', 'late')->count()) / $group->count()) * 100, 1)
                     : 0,
@@ -185,50 +183,49 @@ class SubjectDetail extends Page {
         });
 
         return [
-            'student'            => $student,
-            'currentClass'       => $currentClass,
-            'subject'            => $subject,
-            'teacher'            => $assignment?->teacher,
-            'hours_weekly'       => $hoursWeekly,
-            'grades'             => $grades,
-            'term_averages'      => $termAverages,
-            'overall_average'    => $overallAverage,
-            'total_classes'      => $totalClasses,
-            'presences'          => $presences,
-            'absences'           => $absences,
-            'lates'              => $lates,
+            'student' => $student,
+            'currentClass' => $currentClass,
+            'subject' => $subject,
+            'teacher' => $assignment?->teacher,
+            'hours_weekly' => $hoursWeekly,
+            'grades' => $grades,
+            'term_averages' => $termAverages,
+            'overall_average' => $overallAverage,
+            'total_classes' => $totalClasses,
+            'presences' => $presences,
+            'absences' => $absences,
+            'lates' => $lates,
             'attendance_percent' => $attendancePercent,
-            'lessons'            => $lessons,
-            'monthly_stats'      => $monthlyStats,
-            'syllabus'           => $gradeLevelPivot?->pivot?->syllabus,
-            'objectives'         => $gradeLevelPivot?->pivot?->objectives,
+            'lessons' => $lessons,
+            'monthly_stats' => $monthlyStats,
+            'syllabus' => $gradeLevelPivot?->pivot?->syllabus,
+            'objectives' => $gradeLevelPivot?->pivot?->objectives,
         ];
     }
 
     /**
      * Retorna a estrutura vazia de dados da página.
-     *
-     * @return array
      */
-    private function emptyData(): array {
+    private function emptyData(): array
+    {
         return [
-            'student'            => null,
-            'currentClass'       => null,
-            'subject'            => null,
-            'teacher'            => null,
-            'hours_weekly'       => null,
-            'grades'             => collect(),
-            'term_averages'      => [],
-            'overall_average'    => null,
-            'total_classes'      => 0,
-            'presences'          => 0,
-            'absences'           => 0,
-            'lates'              => 0,
+            'student' => null,
+            'currentClass' => null,
+            'subject' => null,
+            'teacher' => null,
+            'hours_weekly' => null,
+            'grades' => collect(),
+            'term_averages' => [],
+            'overall_average' => null,
+            'total_classes' => 0,
+            'presences' => 0,
+            'absences' => 0,
+            'lates' => 0,
             'attendance_percent' => null,
-            'lessons'            => collect(),
-            'monthly_stats'      => collect(),
-            'syllabus'           => null,
-            'objectives'         => null,
+            'lessons' => collect(),
+            'monthly_stats' => collect(),
+            'syllabus' => null,
+            'objectives' => null,
         ];
     }
 }

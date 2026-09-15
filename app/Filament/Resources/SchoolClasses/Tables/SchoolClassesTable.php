@@ -5,15 +5,15 @@ namespace App\Filament\Resources\SchoolClasses\Tables;
 use App\Enums\ClassShift;
 use App\Enums\ClassStatus;
 use App\Enums\EnrollmentStatus;
+use App\Filament\Actions\GuardedForceDeleteBulkAction;
+use App\Filament\Actions\WarnedDeleteBulkAction;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Services\Enrollments\StudentEnrollmentService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
@@ -30,21 +30,20 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rules\Enum as EnumRule;
 
-class SchoolClassesTable {
-
+class SchoolClassesTable
+{
     /**
      * Configura as colunas, os filtros e as ações da tabela de turmas.
-     *
-     * @param Table $table
-     *
-     * @return Table
      */
-    public static function configure(Table $table): Table {
+    public static function configure(Table $table): Table
+    {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->withCount([
-                'enrollments as occupied_slots_count' => fn (Builder $enrollments) => $enrollments
-                    ->whereIn('status', EnrollmentStatus::occupyingValues()),
-            ]))
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->with(['homeroomTeacher' => fn ($teacher) => $teacher->withTrashed()])
+                ->withCount([
+                    'enrollments as occupied_slots_count' => fn (Builder $enrollments) => $enrollments
+                        ->whereIn('status', EnrollmentStatus::occupyingValues()),
+                ]))
             ->recordAction('verTurma')
             ->columns([
                 TextColumn::make('code')
@@ -67,10 +66,10 @@ class SchoolClassesTable {
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state?->label() ?? '—')
                     ->color(fn ($state) => match ($state) {
-                        ClassShift::MORNING   => 'success',
+                        ClassShift::MORNING => 'success',
                         ClassShift::AFTERNOON => 'warning',
-                        ClassShift::EVENING   => 'info',
-                        default               => 'gray',
+                        ClassShift::EVENING => 'info',
+                        default => 'gray',
                     }),
 
                 TextColumn::make('type')
@@ -83,13 +82,17 @@ class SchoolClassesTable {
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state?->label() ?? '—')
                     ->color(fn ($state) => match ($state) {
-                        ClassStatus::OPEN     => 'success',
-                        ClassStatus::CLOSED   => 'danger',
+                        ClassStatus::OPEN => 'success',
+                        ClassStatus::CLOSED => 'danger',
                         ClassStatus::ARCHIVED => 'gray',
-                        default               => 'secondary',
+                        default => 'secondary',
                     }),
 
-                TextColumn::make('homeroomTeacher.name')->label('Professor Resp.')->toggleable(),
+                TextColumn::make('homeroomTeacher.name')
+                    ->label('Professor Resp.')
+                    ->formatStateUsing(fn (?string $state, SchoolClass $record): string => ($state ?? 'Não definido')
+                        .($record->homeroomTeacher?->trashed() ? ' · Inativo' : ''))
+                    ->toggleable(),
 
                 TextColumn::make('occupied_slots_count')
                     ->label('Ocupação')
@@ -134,10 +137,10 @@ class SchoolClassesTable {
                                         ->badge()
                                         ->formatStateUsing(fn ($state) => $state instanceof ClassStatus ? $state->label() : '—')
                                         ->color(fn ($state) => match ($state) {
-                                            ClassStatus::OPEN     => 'success',
-                                            ClassStatus::CLOSED   => 'danger',
+                                            ClassStatus::OPEN => 'success',
+                                            ClassStatus::CLOSED => 'danger',
                                             ClassStatus::ARCHIVED => 'gray',
-                                            default               => 'gray',
+                                            default => 'gray',
                                         }),
                                 ]),
                             InfoSection::make('Contexto acadêmico')
@@ -155,6 +158,8 @@ class SchoolClassesTable {
                                         ->formatStateUsing(fn ($state) => $state?->label() ?? '—'),
                                     TextEntry::make('homeroomTeacher.name')
                                         ->label('Professor responsável')
+                                        ->formatStateUsing(fn (?string $state, SchoolClass $record): string => ($state ?? 'Não definido')
+                                            .($record->homeroomTeacher?->trashed() ? ' · Inativo' : ''))
                                         ->placeholder('Não definido')
                                         ->columnSpan(2),
                                     TextEntry::make('occupation')
@@ -281,15 +286,19 @@ class SchoolClassesTable {
                         ->modalSubmitAction(false),
                 ])
                     ->label('Ações')
-                    ->icon('fas-ellipsis-vertical')
+                    ->icon('fas-ellipsis-vertical'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    WarnedDeleteBulkAction::make()
+                        ->impactWarning(
+                            'Atenção: turmas com vínculos ativos',
+                            'turma',
+                            'turmas',
+                        ),
+                    GuardedForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
             ]);
     }
-
 }

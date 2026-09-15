@@ -9,50 +9,50 @@ use App\Models\TeacherAssignment;
 use App\Support\PermissionAccess;
 use Filament\Pages\Page;
 
-class MySubjects extends Page {
+class MySubjects extends Page
+{
+    protected static ?string $navigationLabel = 'Minhas Disciplinas';
 
-    protected static ?string $navigationLabel                = 'Minhas Disciplinas';
-    protected static ?string $title                          = 'Minhas Disciplinas';
-    protected static ?string $slug                           = 'my-subjects';
+    protected static ?string $title = 'Minhas Disciplinas';
+
+    protected static ?string $slug = 'my-subjects';
+
     protected static string|null|\BackedEnum $navigationIcon = 'fas-book-open';
-    protected static ?int $navigationSort                    = 3;
+
+    protected static ?int $navigationSort = 3;
 
     /**
      * Determina se a página deve ser registrada na navegação.
-     *
-     * @return bool
      */
-    public static function shouldRegisterNavigation(): bool {
+    public static function shouldRegisterNavigation(): bool
+    {
         return PermissionAccess::can('student.subjects.view');
     }
 
     /**
      * Determina se o usuário atual pode acessar a página.
-     *
-     * @return bool
      */
-    public static function canAccess(): bool {
+    public static function canAccess(): bool
+    {
         return PermissionAccess::can('student.subjects.view');
     }
 
     /**
      * Retorna o nome da visualização usada pela página.
-     *
-     * @return string
      */
-    public function getView(): string {
+    public function getView(): string
+    {
         return 'filament.pages.student.my-subjects';
     }
 
     /**
      * Retorna o aluno, a turma atual e as disciplinas com professor, notas e frequência.
-     *
-     * @return array
      */
-    public function getPageData(): array {
+    public function getPageData(): array
+    {
         $student = Student::where('user_id', auth()->id())->first();
 
-        if (!$student) {
+        if (! $student) {
             return ['student' => null, 'currentClass' => null, 'subjects' => collect(), 'stats' => []];
         }
 
@@ -61,7 +61,7 @@ class MySubjects extends Page {
             ->with(['schoolYear', 'gradeLevel', 'subjects.gradeLevels'])
             ->first();
 
-        if (!$currentClass) {
+        if (! $currentClass) {
             return ['student' => $student, 'currentClass' => null, 'subjects' => collect(), 'stats' => []];
         }
 
@@ -69,7 +69,7 @@ class MySubjects extends Page {
 
         /* Carrega as atribuições de professores desta turma. */
         $assignments = TeacherAssignment::where('class_id', $currentClass->id)
-            ->with('teacher')
+            ->with(['teacher' => fn ($query) => $query->withTrashed()])
             ->get()
             ->keyBy('subject_id');
 
@@ -87,8 +87,8 @@ class MySubjects extends Page {
 
         /* Complementa os dados de cada disciplina. */
         $enriched = $subjects->map(function ($subject) use ($assignments, $grades, $attendances, $currentClass) {
-            $assignment         = $assignments->get($subject->id);
-            $subjectGrades      = $grades->get($subject->id, collect());
+            $assignment = $assignments->get($subject->id);
+            $subjectGrades = $grades->get($subject->id, collect());
             $subjectAttendances = $attendances->get($subject->id, collect());
 
             /* Carga horária semanal obtida da tabela grade_level_subject. */
@@ -100,7 +100,7 @@ class MySubjects extends Page {
             /* Média das notas por período. */
             $termAverages = [];
             foreach (['b1', 'b2', 'b3', 'b4'] as $term) {
-                $termGrades          = $subjectGrades->filter(fn ($g) => $g->term?->value === $term);
+                $termGrades = $subjectGrades->filter(fn ($g) => $g->term?->value === $term);
                 $termAverages[$term] = $termGrades->isNotEmpty()
                     ? round($termGrades->avg('score'), 1)
                     : null;
@@ -111,24 +111,25 @@ class MySubjects extends Page {
                 : null;
 
             /* Estatísticas de frequência. */
-            $totalClasses      = $subjectAttendances->count();
-            $presences         = $subjectAttendances->where('status', 'present')->count();
-            $absences          = $subjectAttendances->where('status', 'absent')->count();
+            $totalClasses = $subjectAttendances->count();
+            $presences = $subjectAttendances->where('status', 'present')->count();
+            $absences = $subjectAttendances->where('status', 'absent')->count();
             $attendancePercent = $totalClasses > 0
                 ? round(($presences / $totalClasses) * 100, 1)
                 : null;
 
-            $subject->teacher_name       = $assignment?->teacher?->name;
-            $subject->hours_weekly       = $hoursWeekly;
-            $subject->term_averages      = $termAverages;
-            $subject->overall_average    = $overallAverage;
+            $subject->teacher_name = $assignment?->teacher?->name;
+            $subject->teacher_is_inactive = $assignment?->teacher?->trashed() ?? false;
+            $subject->hours_weekly = $hoursWeekly;
+            $subject->term_averages = $termAverages;
+            $subject->overall_average = $overallAverage;
             $subject->attendance_percent = $attendancePercent;
-            $subject->total_classes      = $totalClasses;
-            $subject->presences          = $presences;
-            $subject->absences           = $absences;
+            $subject->total_classes = $totalClasses;
+            $subject->presences = $presences;
+            $subject->absences = $absences;
 
             return $subject;
-        })->sortBy(fn ($s) => $s->category?->value . $s->name);
+        })->sortBy(fn ($s) => $s->category?->value.$s->name);
 
         /* Estatísticas gerais. */
         $allGrades = Grade::where('student_id', $student->id)
@@ -139,8 +140,8 @@ class MySubjects extends Page {
             ->get();
 
         $stats = [
-            'total_subjects'     => $subjects->count(),
-            'overall_average'    => $allGrades->isNotEmpty() ? round($allGrades->avg('score'), 1) : null,
+            'total_subjects' => $subjects->count(),
+            'overall_average' => $allGrades->isNotEmpty() ? round($allGrades->avg('score'), 1) : null,
             'attendance_percent' => $allAttendance->count() > 0
                 ? round(($allAttendance->where('status', 'present')->count() / $allAttendance->count()) * 100, 1)
                 : null,
@@ -148,10 +149,10 @@ class MySubjects extends Page {
         ];
 
         return [
-            'student'      => $student,
+            'student' => $student,
             'currentClass' => $currentClass,
-            'subjects'     => $enriched,
-            'stats'        => $stats,
+            'subjects' => $enriched,
+            'stats' => $stats,
         ];
     }
 }
