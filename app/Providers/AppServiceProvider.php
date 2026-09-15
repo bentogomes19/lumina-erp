@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Events\EnrollmentStatusChanged;
+use App\Listeners\RecordEnrollmentStatusChange;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -71,5 +73,7 @@ class AppServiceProvider extends ServiceProvider {
                 'login_attempts'        => 0,
             ]);
         });
+
+        Event::listen(EnrollmentStatusChanged::class, RecordEnrollmentStatusChange::class);
     }
 }

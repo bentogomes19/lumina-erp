@@ -355,6 +355,7 @@ class EnrollmentLifecycleRulesTest extends TestCase {
             $table->boolean('is_active')->default(false);
             $table->string('status')->default('planejamento');
             $table->timestamps();
+            $table->softDeletes();
         });
         Schema::create('classes', function (Blueprint $table): void {
             $table->id();

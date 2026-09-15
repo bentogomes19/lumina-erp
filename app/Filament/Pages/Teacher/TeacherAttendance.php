@@ -12,12 +12,12 @@ use App\Models\Enrollment;
 use App\Models\SchoolClass;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
+use App\Modules\Attendance\Application\RecordTeacherAttendance;
 use App\Services\CurrentTeacherService;
 use App\Support\PermissionAccess;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class TeacherAttendance extends Page {
@@ -216,63 +216,18 @@ class TeacherAttendance extends Page {
 
         $canCreate = PermissionAccess::can('teacher.attendance.create');
         $canUpdate = PermissionAccess::can('teacher.attendance.update');
-        $created   = 0;
-        $updated   = 0;
+        $this->saveSummary = app(RecordTeacherAttendance::class)->execute(
+            students: $students,
+            schoolClass: $context['class'],
+            subject: $context['subject'],
+            date: $context['date'],
+            attendanceRows: $this->attendanceRows,
+            canCreate: $canCreate,
+            canUpdate: $canUpdate,
+            recordedBy: auth()->id(),
+        );
 
-        DB::transaction(function () use ($students, $context, $teacher, $canCreate, $canUpdate, &$created, &$updated) {
-            foreach ($students as $student) {
-                $studentId = (int) $student['student_id'];
-                $isPresent = $this->attendanceRows[$studentId]['present'] ?? ($student['status'] === AttendanceStatus::PRESENT->value);
-                $status    = $isPresent ? AttendanceStatus::PRESENT->value : AttendanceStatus::ABSENT->value;
-
-                $attributes = [
-                    'student_id' => $studentId,
-                    'class_id'   => $context['class']->id,
-                    'subject_id' => $context['subject']->id,
-                    'date'       => $context['date'],
-                ];
-
-                $existing = Attendance::query()
-                    ->where($attributes)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($existing) {
-                    if (!$canUpdate) {
-                        throw ValidationException::withMessages([
-                            'teacher' => 'Você não tem permissão para atualizar frequência existente.',
-                        ]);
-                    }
-
-                    $existing->update([
-                        'status'      => $status,
-                        'recorded_by' => auth()->id(),
-                    ]);
-
-                    $updated++;
-                    continue;
-                }
-
-                if (!$canCreate) {
-                    throw ValidationException::withMessages(['teacher' => 'Você não tem permissão para criar frequência nova.',]);
-                }
-
-                Attendance::create($attributes + [
-                    'status'      => $status,
-                    'recorded_by' => auth()->id(),
-                ]);
-
-                $created++;
-            }
-        });
-
-        $this->saveSummary = [
-            'created' => $created,
-            'updated' => $updated,
-            'total'   => $created + $updated,
-            'present' => $students->filter(fn (array $row) => ($this->attendanceRows[$row['student_id']]['present'] ?? ($row['status'] === AttendanceStatus::PRESENT->value)))->count(),
-            'absent'  => $students->filter(fn (array $row) => !($this->attendanceRows[$row['student_id']]['present'] ?? ($row['status'] === AttendanceStatus::PRESENT->value)))->count(),
-        ];
+        $this->saveSummary['total'] = $this->saveSummary['created'] + $this->saveSummary['updated'];
 
         $this->syncAttendanceRows();
         Notification::make()

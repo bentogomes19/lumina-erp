@@ -6,6 +6,9 @@ use App\Enums\EnrollmentStatus;
 use App\Enums\StudentAccessAction;
 use App\Enums\StudentOnboardingState;
 use App\Enums\StudentStatus;
+use App\Events\EnrollmentStatusChanged;
+use App\Modules\Enrollments\Application\EnrollmentCapacityService;
+use App\Modules\Enrollments\Domain\Rules\EnrollmentTransition;
 use App\Models\Enrollment;
 use App\Models\EnrollmentLog;
 use App\Models\Role;
@@ -23,18 +26,11 @@ use RuntimeException;
 
 class StudentEnrollmentService {
 
-    /**
-     * Transições comuns permitidas para o ciclo de vida da matrícula.
-     *
-     * @var array<string, array<int, string>>
-     */
-    private const ALLOWED_STATUS_TRANSITIONS = [
-        'Ativa'     => ['Suspensa', 'Trancada', 'Transferida Interna', 'Transferida Externa', 'Cancelada', 'Completa'],
-        'Suspensa'  => ['Ativa', 'Cancelada', 'Transferida Externa'],
-        'Trancada'  => ['Ativa', 'Cancelada', 'Transferida Externa'],
-        'Completa'  => ['Ativa'],
-        'Cancelada' => ['Ativa'],
-    ];
+    public function __construct(
+        private readonly EnrollmentTransition $enrollmentTransition,
+        private readonly EnrollmentCapacityService $enrollmentCapacity,
+    ) {
+    }
 
     /**
      * Cria aluno, matrícula, usuário, papel e auditoria em uma única transação.
@@ -613,14 +609,7 @@ class StudentEnrollmentService {
      * @return int
      */
     public function occupiedSlots(SchoolClass $schoolClass): int {
-        if (array_key_exists('occupied_slots_count', $schoolClass->getAttributes())) {
-            return (int) $schoolClass->getAttribute('occupied_slots_count');
-        }
-
-        return Enrollment::query()
-            ->where('class_id', $schoolClass->id)
-            ->whereIn('status', EnrollmentStatus::occupyingValues())
-            ->count();
+        return $this->enrollmentCapacity->occupiedSlots($schoolClass);
     }
 
     /**
@@ -631,11 +620,7 @@ class StudentEnrollmentService {
      * @return int|null
      */
     public function remainingSlots(SchoolClass $schoolClass): ?int {
-        if (!$schoolClass->capacity) {
-            return null;
-        }
-
-        return max(0, $schoolClass->capacity - $this->occupiedSlots($schoolClass));
+        return $this->enrollmentCapacity->remainingSlots($schoolClass);
     }
 
     /**
@@ -646,15 +631,7 @@ class StudentEnrollmentService {
      * @return string
      */
     public function capacitySummary(SchoolClass $schoolClass): string {
-        $occupied = $this->occupiedSlots($schoolClass);
-
-        if (!$schoolClass->capacity) {
-            return "Ocupação: {$occupied} | Vagas: ilimitadas";
-        }
-
-        $remaining = max(0, $schoolClass->capacity - $occupied);
-
-        return "Ocupação: {$occupied}/{$schoolClass->capacity} | Vagas restantes: {$remaining}";
+        return $this->enrollmentCapacity->summary($schoolClass);
     }
 
     /**
@@ -761,14 +738,14 @@ class StudentEnrollmentService {
 
         $locked->update(array_merge($attributes, ['status' => $targetStatus]));
 
-        EnrollmentLog::registrar(
+        event(new EnrollmentStatusChanged(
             enrollment: $locked,
-            acao: $action,
-            statusAnterior: $oldStatus?->value,
-            statusNovo: $targetStatus->value,
-            observacao: $observation,
+            previousStatus: $oldStatus,
+            newStatus: $targetStatus,
+            action: $action,
+            observation: $observation,
             operatorId: $operatorId,
-        );
+        ));
 
         return $locked->refresh();
     }
@@ -791,7 +768,7 @@ class StudentEnrollmentService {
             return;
         }
 
-        if ($allowedSources !== null && !in_array($oldStatus, $allowedSources, true)) {
+        if (!$this->enrollmentTransition->hasAllowedSource($oldStatus, $allowedSources)) {
             throw ValidationException::withMessages([
                 'status' => "A transição de {$oldStatus->label()} para {$targetStatus->label()} não é permitida neste fluxo.",
             ]);
@@ -801,24 +778,13 @@ class StudentEnrollmentService {
             return;
         }
 
-        if (in_array($targetStatus, [
-            EnrollmentStatus::LOCKED,
-            EnrollmentStatus::CANCELED,
-            EnrollmentStatus::TRANSFERRED_INTERNAL,
-            EnrollmentStatus::TRANSFERRED_EXTERNAL,
-        ], true) || in_array($oldStatus, [
-            EnrollmentStatus::CANCELED,
-            EnrollmentStatus::TRANSFERRED_INTERNAL,
-            EnrollmentStatus::TRANSFERRED_EXTERNAL,
-        ], true)) {
+        if ($this->enrollmentTransition->requiresSpecificOperation($oldStatus, $targetStatus)) {
             throw ValidationException::withMessages([
                 'status' => 'Use a operação específica da matrícula para esta transição.',
             ]);
         }
 
-        $allowedTargets = self::ALLOWED_STATUS_TRANSITIONS[$oldStatus->value] ?? [];
-
-        if (!in_array($targetStatus->value, $allowedTargets, true)) {
+        if (!$this->enrollmentTransition->allowsGenericTransition($oldStatus, $targetStatus)) {
             throw ValidationException::withMessages([
                 'status' => "A transição de {$oldStatus->label()} para {$targetStatus->label()} não é permitida.",
             ]);

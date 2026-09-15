@@ -13,12 +13,12 @@ use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
+use App\Modules\Assessments\Application\RecordTeacherGrades;
 use App\Services\CurrentTeacherService;
 use App\Support\PermissionAccess;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class TeacherGrades extends Page {
@@ -294,80 +294,21 @@ class TeacherGrades extends Page {
         $assessmentType = $this->mapAssessmentType($assessment->assessment_type);
         $sequence       = 1;
 
-        $created = 0;
-        $updated = 0;
+        $summary = app(RecordTeacherGrades::class)->execute(
+            teacher: $teacher,
+            assessment: $assessment,
+            students: $students,
+            gradeRows: $this->gradeRows,
+            maxScore: $maxScore,
+            term: $term,
+            assessmentType: $assessmentType,
+            sequence: $sequence,
+            publish: $publish,
+            postedBy: auth()->id(),
+        );
 
-        DB::transaction(function () use ($students, $assessment, $maxScore, $term, $assessmentType, $sequence, $publish, $teacher, &$created, &$updated) {
-            foreach ($students as $student) {
-                $studentId = (int) $student['student_id'];
-                $score     = $this->gradeRows[$studentId]['score'] ?? null;
-                $comment   = $this->gradeRows[$studentId]['comment'] ?? null;
-
-                if ($score === null || $score === '') {
-                    throw ValidationException::withMessages([
-                        "gradeRows.{$studentId}.score" => 'Informe a nota do aluno.',
-                    ]);
-                }
-
-                $scoreValue = (float) $score;
-
-                if ($scoreValue < 0) {
-                    throw ValidationException::withMessages([
-                        "gradeRows.{$studentId}.score" => 'A nota não pode ser menor que zero.',
-                    ]);
-                }
-
-                if ($scoreValue > $maxScore) {
-                    throw ValidationException::withMessages([
-                        "gradeRows.{$studentId}.score" => 'A nota não pode ser maior que a nota máxima da avaliação.',
-                    ]);
-                }
-
-                $attributes = [
-                    'enrollment_id'   => $student['enrollment_id'],
-                    'subject_id'      => $assessment->subject_id,
-                    'term'            => $term,
-                    'assessment_type' => $assessmentType,
-                    'sequence'        => $sequence,
-                ];
-
-                $data = [
-                    'assessment_id'   => $assessment->id,
-                    'enrollment_id'   => $student['enrollment_id'],
-                    'class_id'        => $assessment->class_id,
-                    'subject_id'      => $assessment->subject_id,
-                    'teacher_id'      => $teacher->id,
-                    'term'            => $term,
-                    'assessment_type' => $assessmentType,
-                    'sequence'        => $sequence,
-                    'student_id'      => $studentId,
-                    'score'           => $scoreValue,
-                    'max_score'       => $maxScore,
-                    'weight'          => (float) ($assessment->weight ?? 1),
-                    'comment'         => $comment,
-                    'date_recorded'   => now()->toDateString(),
-                    'posted_by'       => $publish ? auth()->id() : null,
-                    'locked_at'       => $publish ? now() : null,
-                    'origin'          => 'manual',
-                ];
-
-                $existing = Grade::query()->where($attributes)->lockForUpdate()->first();
-
-                if ($existing) {
-                    if ($existing->locked_at) {
-                        throw ValidationException::withMessages([
-                            'assessment' => 'Notas já publicadas não podem ser alteradas.',
-                        ]);
-                    }
-
-                    $existing->update($data);
-                    $updated++;
-                } else {
-                    Grade::create($attributes + $data);
-                    $created++;
-                }
-            }
-        });
+        $created = $summary['created'];
+        $updated = $summary['updated'];
 
         $this->saveSummary = [
             'created'   => $created,
