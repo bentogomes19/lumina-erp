@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use App\Support\PermissionCatalog;
+use App\Support\PermissionAccess;
 use Filament\Resources\Resource;
 
 abstract class BaseAdminResource extends Resource {
@@ -35,7 +35,7 @@ abstract class BaseAdminResource extends Resource {
             return false;
         }
 
-        return PermissionCatalog::contains($permission) && $user->can($permission);
+        return PermissionAccess::for($user, $permission);
     }
 
     /**

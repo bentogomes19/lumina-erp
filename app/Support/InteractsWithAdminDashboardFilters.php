@@ -3,8 +3,8 @@
 namespace App\Support;
 
 use App\Enums\EnrollmentStatus;
-use App\Models\Enrollment;
 use App\Models\SchoolYear;
+use App\Modules\Reports\Application\DashboardEnrollmentQuery;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -27,14 +27,11 @@ trait InteractsWithAdminDashboardFilters {
     }
 
     protected function dashboardEnrollmentQuery(): Builder {
-        $from = $this->dashboardFilter('from_date');
-        $until = $this->dashboardFilter('until_date');
-        $status = $this->dashboardEnrollmentStatus();
-
-        return Enrollment::query()
-            ->when($this->dashboardSchoolYearId(), fn (Builder $query, int $yearId) => $query->where('school_year_id', $yearId))
-            ->when($status && $status !== 'all', fn (Builder $query) => $query->where('status', $status))
-            ->when($from, fn (Builder $query) => $query->whereDate('enrollment_date', '>=', $from))
-            ->when($until, fn (Builder $query) => $query->whereDate('enrollment_date', '<=', $until));
+        return app(DashboardEnrollmentQuery::class)->build(
+            schoolYearId: $this->dashboardSchoolYearId(),
+            status: $this->dashboardEnrollmentStatus(),
+            from: $this->dashboardFilter('from_date'),
+            until: $this->dashboardFilter('until_date'),
+        );
     }
 }

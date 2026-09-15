@@ -75,4 +75,16 @@ class PermissionAccessTest extends TestCase {
 
         $this->assertTrue(PermissionAccess::can('student.grades.view'));
     }
+
+    /**
+     * Garante que Policies e portais usem a mesma porta de autorização.
+     *
+     * @return void
+     */
+    public function test_explicit_user_entry_point_uses_the_same_authorization_rules(): void {
+        $user = Mockery::mock(User::class)->makePartial();
+        $user->shouldReceive('can')->once()->with('academic.students.view_any')->andReturnTrue();
+
+        $this->assertTrue(PermissionAccess::for($user, 'academic.students.view_any'));
+    }
 }
