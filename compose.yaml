@@ -7,6 +7,8 @@ services:
     working_dir: /dev/lumina-erp
     volumes:
       - .:/dev/lumina-erp
+      # Reutiliza as chaves e o known_hosts do host; nada é gravado na imagem.
+      - ${HOME}/.ssh:/home/dev/.ssh:ro
     env_file:
       - .env
     depends_on:
