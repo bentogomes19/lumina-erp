@@ -18,6 +18,12 @@ class GradeCalculationService {
     public const MIN_RECOVERY = 4.0;
     public const MAX_SCORE    = 10.0;
 
+    public function minimumApproval(): float {
+        $value = (float) SystemParameter::read('academic.minimum_grade', self::MIN_APPROVAL);
+
+        return $value >= 0 && $value <= self::MAX_SCORE ? $value : self::MIN_APPROVAL;
+    }
+
     /**
      * Calcula a média ponderada de uma coleção de modelos Grade.
      * Notas com score nulo são excluídas (não tratadas como zero).
@@ -54,7 +60,7 @@ class GradeCalculationService {
      * @return string
      */
     public function status(?float $average, ?float $minApproval = null, ?float $minRecovery = null): string {
-        $minApproval ??= (float) SystemParameter::read('academic.minimum_grade', self::MIN_APPROVAL);
+        $minApproval ??= $this->minimumApproval();
         $minRecovery ??= self::MIN_RECOVERY;
         if ($average === null) {
             return 'ongoing';
@@ -83,7 +89,7 @@ class GradeCalculationService {
      * @return array{
      */
     public function subjectReport(Collection $grades, ?float $minApproval = null): array {
-        $minApproval ??= (float) SystemParameter::read('academic.minimum_grade', self::MIN_APPROVAL);
+        $minApproval ??= $this->minimumApproval();
         $regular  = $grades->filter(fn ($g) => $g->assessment_type !== AssessmentType::RECOVERY);
         $recovery = $grades->filter(fn ($g) => $g->assessment_type === AssessmentType::RECOVERY);
 

@@ -161,7 +161,7 @@ class MyGrades extends Page implements HasTable {
             'stats'           => ['total' => 0, 'approved' => 0, 'recovery' => 0, 'failed' => 0, 'ongoing' => 0, 'average' => null],
             'selected_period' => $this->selectedPeriod,
             'period_label'    => $this->periodLabel(),
-            'min_approval'    => GradeCalculationService::MIN_APPROVAL,
+            'min_approval'    => app(GradeCalculationService::class)->minimumApproval(),
         ];
 
         if (!$student) {
@@ -221,16 +221,16 @@ class MyGrades extends Page implements HasTable {
             ],
             'selected_period' => $this->selectedPeriod,
             'period_label'    => $this->periodLabel($currentClass->schoolYear?->year),
-            'min_approval'    => GradeCalculationService::MIN_APPROVAL,
+            'min_approval'    => $service->minimumApproval(),
         ];
     }
 
     public static function progressLabel(?float $average): string {
-        return $average === null ? 'Sem nota' : ($average >= GradeCalculationService::MIN_APPROVAL ? 'Na média' : 'Abaixo da média');
+        return $average === null ? 'Sem nota' : ($average >= app(GradeCalculationService::class)->minimumApproval() ? 'Na média' : 'Abaixo da média');
     }
 
     public static function progressColor(?float $average): string {
-        return $average === null ? 'gray' : ($average >= GradeCalculationService::MIN_APPROVAL ? 'success' : 'warning');
+        return $average === null ? 'gray' : ($average >= app(GradeCalculationService::class)->minimumApproval() ? 'success' : 'warning');
     }
 
     public function table(Table $table): Table {
@@ -238,7 +238,7 @@ class MyGrades extends Page implements HasTable {
 
         return $table
             ->heading(fn () => $this->selectedPeriod === 'all' ? 'Médias por bimestre' : 'Notas por disciplina')
-            ->description(fn () => $this->getPageData()['period_label'].' · Referência: média 6,0')
+            ->description(fn () => $this->getPageData()['period_label'].' · Média da escola: '.number_format($this->getPageData()['min_approval'], 1, ',', ''))
             ->records(function (?string $search): Collection {
                 return collect($this->getPageData()['subjects'])
                     ->mapWithKeys(fn (array $item) => [$item['subject']->id => [
@@ -259,6 +259,7 @@ class MyGrades extends Page implements HasTable {
                     ->visibleFrom('md')
                     ->alignCenter()
                     ->placeholder('—')
+                    ->color(fn ($state) => self::progressColor($state === null ? null : (float) $state))
                     ->formatStateUsing($format))->all(),
                 TextColumn::make('overall_average')
                     ->label(fn () => $this->selectedPeriod === 'all' ? 'Média parcial' : 'Média')
@@ -285,6 +286,7 @@ class MyGrades extends Page implements HasTable {
                     ->modalWidth(Width::ThreeExtraLarge)
                     ->modalContent(fn (array $record) => view('filament.pages.student.partials.grade-details', [
                         'item' => $record, 'selectedPeriod' => $this->selectedPeriod,
+                        'minimumGrade' => $this->getPageData()['min_approval'],
                     ]))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Fechar'),
@@ -335,6 +337,7 @@ class MyGrades extends Page implements HasTable {
             'subjects'       => $data['subjects'],
             'stats'          => $data['stats'],
             'selectedPeriod' => $data['selected_period'],
+            'minimumGrade'   => $data['min_approval'],
             'generatedAt'    => now(),
         ])->setPaper('a4', 'portrait');
 

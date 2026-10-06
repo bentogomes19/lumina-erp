@@ -27,7 +27,7 @@ final class RecordTeacherGrades {
      * @param bool $publish
      * @param int|null $postedBy
      *
-     * @return array{created:int, updated:int}
+     * @return array{created:int, updated:int, deleted:int}
      */
     public function execute(
         Teacher $teacher,
@@ -43,6 +43,7 @@ final class RecordTeacherGrades {
     ): array {
         $created = 0;
         $updated = 0;
+        $deleted = 0;
 
         DB::transaction(function () use (
             $students,
@@ -57,6 +58,7 @@ final class RecordTeacherGrades {
             $postedBy,
             &$created,
             &$updated,
+            &$deleted,
         ): void {
             // Serializa os lançamentos da mesma avaliação antes de procurar notas existentes.
             $lockedAssessment = Assessment::query()->whereKey($assessment->id)->lockForUpdate()->firstOrFail();
@@ -76,8 +78,23 @@ final class RecordTeacherGrades {
                 $comment = $gradeRows[$studentId]['comment'] ?? null;
 
                 if ($score === null || $score === '') {
+                    if (!$publish) {
+                        $existing = Grade::query()->where('assessment_id', $assessment->id)
+                            ->where('student_id', $studentId)->lockForUpdate()->first();
+                        if ($existing && !$existing->locked_at) {
+                            $existing->delete();
+                            $deleted++;
+                        }
+                        continue;
+                    }
                     throw ValidationException::withMessages([
                         "gradeRows.{$studentId}.score" => 'Informe a nota do aluno.',
+                    ]);
+                }
+
+                if (!is_numeric($score)) {
+                    throw ValidationException::withMessages([
+                        "gradeRows.{$studentId}.score" => 'Informe uma nota numérica.',
                     ]);
                 }
 
@@ -138,6 +155,6 @@ final class RecordTeacherGrades {
             }
         });
 
-        return compact('created', 'updated');
+        return compact('created', 'updated', 'deleted');
     }
 }

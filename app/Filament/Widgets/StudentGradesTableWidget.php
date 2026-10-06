@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Grade;
+use App\Services\GradeCalculationService;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Collection;
 
@@ -41,6 +42,7 @@ class StudentGradesTableWidget extends Widget {
                 'termLabels'        => [],
                 'termAverages'      => [],
                 'availableTerms'    => [],
+                'minimumGrade'      => app(GradeCalculationService::class)->minimumApproval(),
             ];
         }
 
@@ -56,6 +58,7 @@ class StudentGradesTableWidget extends Widget {
                 'termLabels'        => [],
                 'termAverages'      => [],
                 'availableTerms'    => [],
+                'minimumGrade'      => app(GradeCalculationService::class)->minimumApproval(),
             ];
         }
 
@@ -142,6 +145,7 @@ class StudentGradesTableWidget extends Widget {
             'termLabels'        => $termLabels,
             'termAverages'      => $termAverages,
             'availableTerms'    => $gradesByTerm->keys()->values()->all(),
+            'minimumGrade'      => app(GradeCalculationService::class)->minimumApproval(),
         ];
     }
 }

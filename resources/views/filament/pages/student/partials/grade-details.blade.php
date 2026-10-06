@@ -28,7 +28,7 @@
                                     </th>
                                     <td>{{ $grade->date_recorded?->format('d/m/Y') ?? '—' }}</td>
                                     <td>{{ $format($grade->weight ?? 1) }}</td>
-                                    <td><strong>{{ $format($grade->score) }}</strong> / {{ $format($grade->max_score ?? 10) }}</td>
+                                    <td><strong style="color:{{ $grade->score === null ? 'inherit' : ($grade->score >= $minimumGrade ? '#166534' : '#9a3412') }}">{{ $format($grade->score) }}</strong> / {{ $format($grade->max_score ?? 10) }}</td>
                                 </tr>
                             @endforeach
                             @if($term['recovery'])

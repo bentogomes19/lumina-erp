@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Grade;
+use App\Services\GradeCalculationService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -66,12 +67,13 @@ class StudentGradesOverviewWidget extends BaseWidget {
         $highestGrade = $grades->max('score');
         $lowestGrade  = $grades->min('score');
         $disciplines  = $grades->groupBy('subject_id')->count();
+        $minimumGrade = app(GradeCalculationService::class)->minimumApproval();
 
         return [
             Stat::make('Média Geral', number_format($averageGrade, 2, ',', '.'))
                 ->description('De todas as avaliações')
                 ->icon('fas-star')
-                ->color($averageGrade >= 7 ? 'success' : ($averageGrade >= 5 ? 'warning' : 'danger')),
+                ->color($averageGrade === null ? 'gray' : ($averageGrade >= $minimumGrade ? 'success' : 'warning')),
 
             Stat::make('Avaliações', $totalGrades)
                 ->description('Notas registradas')
@@ -86,12 +88,12 @@ class StudentGradesOverviewWidget extends BaseWidget {
             Stat::make('Maior Nota', number_format($highestGrade, 2, ',', '.'))
                 ->description('Melhor desempenho')
                 ->icon('fas-arrow-trend-up')
-                ->color('success'),
+                ->color($highestGrade >= $minimumGrade ? 'success' : 'warning'),
 
             Stat::make('Menor Nota', number_format($lowestGrade, 2, ',', '.'))
                 ->description('Desempenho mais baixo')
                 ->icon('fas-arrow-trend-down')
-                ->color('danger'),
+                ->color($lowestGrade >= $minimumGrade ? 'success' : 'warning'),
         ];
     }
 }

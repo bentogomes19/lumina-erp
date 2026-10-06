@@ -4,9 +4,7 @@ namespace App\Filament\Pages\Teacher;
 
 use App\Enums\AssessmentType;
 use App\Enums\ClassStatus;
-use App\Enums\EnrollmentStatus;
 use App\Enums\SchoolYearStatus;
-use App\Enums\TeacherStatus;
 use App\Enums\Term;
 use App\Filament\Pages\Teacher\Concerns\HasTeacherPortalAccess;
 use App\Models\Assessment;
@@ -14,22 +12,14 @@ use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
+use App\Models\SchoolYear;
 use App\Modules\Assessments\Application\RecordTeacherGrades;
 use App\Services\CurrentTeacherService;
+use App\Services\GradeCalculationService;
 use App\Services\TeacherRosterService;
 use App\Support\PermissionAccess;
 use Filament\Notifications\Notification;
-use Filament\Actions\Action;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Actions;
-use Filament\Schemas\Components\Callout;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Text;
-use Filament\Schemas\Schema;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -141,28 +131,6 @@ class TeacherGrades extends Page {
         return 'filament.pages.teacher.teacher-grades';
     }
 
-    private function gradeStudentComponents(): array {
-        $data = $this->getPageData();
-        if ($data['students']->isEmpty()) {
-            return [Text::make($data['contextError'] ?? 'Nenhum aluno encontrado para esta avaliação.')];
-        }
-
-        return $data['students']->map(function (array $row) use ($data) {
-            $studentId = $row['student_id'];
-            $disabled = $row['locked'] || $data['assessmentClosed'] || $data['schoolYearClosed'];
-
-            return Section::make($row['student_name'])
-                ->description($row['registration_number'].' · Número '.$row['roll_number'])
-                ->schema([
-                    TextInput::make("gradeRows.{$studentId}.score")
-                        ->label('Nota')->numeric()->minValue(0)->maxValue($row['max_score'])
-                        ->disabled($disabled),
-                    Textarea::make("gradeRows.{$studentId}.comment")
-                        ->label('Observação')->rows(1)->disabled($disabled),
-                ])->columns(2)->compact();
-        })->all();
-    }
-
     /**
      * Retorna os dados necessários para montar a página.
      *
@@ -171,6 +139,7 @@ class TeacherGrades extends Page {
     public function getPageData(): array {
         $teacher     = $this->currentTeacher();
         $assignments = $this->teacherAssignments($teacher);
+        $minimumGrade = app(GradeCalculationService::class)->minimumApproval();
         $context     = $this->resolveContext($teacher, $assignments);
 
         if (!$teacher || $assignments->isEmpty()) {
@@ -191,6 +160,7 @@ class TeacherGrades extends Page {
                 'hasLockedGrades' => false,
                 'contextError' => !$teacher ? 'Nenhum professor vinculado ao usuário atual.' : 'Você não possui turmas ou disciplinas atribuídas.',
                 'saveSummary'  => $this->saveSummary,
+                'minimumGrade' => $minimumGrade,
             ];
         }
 
@@ -250,6 +220,7 @@ class TeacherGrades extends Page {
             'hasLockedGrades'  => $hasLockedGrades,
             'contextError'     => $contextError,
             'saveSummary'      => $this->saveSummary,
+            'minimumGrade'     => $minimumGrade,
         ];
     }
 
@@ -294,7 +265,7 @@ class TeacherGrades extends Page {
             ]);
         }
 
-        $context = $this->resolveContext($teacher, $assignments, true);
+        $context = $this->resolveContext($teacher, $assignments);
 
         if (!$context) {
             throw ValidationException::withMessages([
@@ -364,6 +335,7 @@ class TeacherGrades extends Page {
         $this->saveSummary = [
             'created'   => $created,
             'updated'   => $updated,
+            'deleted'   => $summary['deleted'],
             'total'     => $created + $updated,
             'published' => $publish,
         ];
@@ -372,7 +344,7 @@ class TeacherGrades extends Page {
 
         Notification::make()
             ->title($publish ? 'Notas publicadas' : 'Rascunho salvo')
-            ->body(sprintf('%d registros salvos.', $created + $updated))
+            ->body(sprintf('%d registros salvos e %d removidos.', $created + $updated, $summary['deleted']))
             ->success()
             ->send();
     }
@@ -394,7 +366,9 @@ class TeacherGrades extends Page {
      * @return Collection
      */
     private function teacherAssignments(?Teacher $teacher = null): Collection {
-        return app(CurrentTeacherService::class)->assignments($teacher);
+        return app(CurrentTeacherService::class)->currentAssignments($teacher)
+            ->filter(fn (TeacherAssignment $assignment) => $assignment->schoolClass?->status === ClassStatus::OPEN)
+            ->values();
     }
 
     /**
@@ -417,11 +391,10 @@ class TeacherGrades extends Page {
      *
      * @param Teacher|null $teacher
      * @param Collection $assignments
-     * @param bool $strict
      *
      * @return array|null
      */
-    private function resolveContext(?Teacher $teacher, Collection $assignments, bool $strict = false): ?array {
+    private function resolveContext(?Teacher $teacher, Collection $assignments): ?array {
         if (!$teacher || $assignments->isEmpty() || !$this->selectedClassId || !$this->selectedSubjectId || !$this->selectedAssessmentId) {
             return null;
         }
@@ -440,10 +413,11 @@ class TeacherGrades extends Page {
             ->where('id', $this->selectedAssessmentId)
             ->where('class_id', $assignment->class_id)
             ->where('subject_id', $assignment->subject_id)
+            ->where('school_year_id', SchoolYear::current()?->id)
             ->with(['schoolYear'])
             ->first();
 
-        if (!$assessment) {
+        if (!$assessment || (int) $assignment->schoolClass?->school_year_id !== (int) $assessment->school_year_id) {
             return null;
         }
 
@@ -473,12 +447,12 @@ class TeacherGrades extends Page {
             $grade   = $existing->get($enrollment->student_id);
             $student = $enrollment->student;
 
-            $score = $this->gradeRows[$enrollment->student_id]['score']
-                ?? $grade?->score
-                ?? null;
-            $comment = $this->gradeRows[$enrollment->student_id]['comment']
-                ?? $grade?->comment
-                ?? null;
+            $score = array_key_exists($enrollment->student_id, $this->gradeRows)
+                ? ($this->gradeRows[$enrollment->student_id]['score'] ?? null)
+                : $grade?->score;
+            $comment = array_key_exists($enrollment->student_id, $this->gradeRows)
+                ? ($this->gradeRows[$enrollment->student_id]['comment'] ?? null)
+                : $grade?->comment;
 
             $this->gradeRows[$enrollment->student_id] = [
                 'score'   => $score,
@@ -580,19 +554,20 @@ class TeacherGrades extends Page {
      * @return array
      */
     private function assessmentOptions(?Teacher $teacher, ?int $classId, ?int $subjectId): array {
-        if (!$teacher) {
+        $yearId = SchoolYear::current()?->id;
+        if (!$teacher || !$yearId || !$classId || !$subjectId
+            || !$this->teacherAssignments($teacher)->contains(fn (TeacherAssignment $assignment) =>
+                (int) $assignment->class_id === (int) $classId
+                && (int) $assignment->subject_id === (int) $subjectId
+            )) {
             return [];
         }
 
-        $query = Assessment::query()->forTeacher($teacher->id)->orderByDesc('date');
-
-        if ($classId) {
-            $query->where('class_id', $classId);
-        }
-
-        if ($subjectId) {
-            $query->where('subject_id', $subjectId);
-        }
+        $query = Assessment::query()->forTeacher($teacher->id)
+            ->where('school_year_id', $yearId)
+            ->where('class_id', $classId)
+            ->where('subject_id', $subjectId)
+            ->orderByDesc('date');
 
         return $query
             ->get()

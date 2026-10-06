@@ -78,11 +78,15 @@
             <tr>
                 <th scope="row" class="subject-name">{{ $item['subject']?->name ?? '—' }}</th>
                 @foreach($termLabels as $key => $label)
-                    <td>{{ $formatGrade($item['terms'][$key]['final_average'] ?? null) }}</td>
-                    <td class="recovery-grade">{{ $formatGrade(data_get($item, "terms.$key.recovery.score")) }}</td>
+                    @php
+                        $termAverage = $item['terms'][$key]['final_average'] ?? null;
+                        $recoveryScore = data_get($item, "terms.$key.recovery.score");
+                    @endphp
+                    <td class="{{ $termAverage === null ? '' : ($termAverage >= $minimumGrade ? 'grade-passing' : 'grade-attention') }}">{{ $formatGrade($termAverage) }}</td>
+                    <td class="recovery-grade {{ $recoveryScore === null ? '' : ($recoveryScore >= $minimumGrade ? 'grade-passing' : 'grade-attention') }}">{{ $formatGrade($recoveryScore) }}</td>
                 @endforeach
-                <td class="average">{{ $formatGrade($item['overall_average']) }}</td>
-                <td class="status">{{ $statusLabels[$item['status']] ?? '—' }}</td>
+                <td class="average {{ $item['overall_average'] === null ? '' : ($item['overall_average'] >= $minimumGrade ? 'grade-passing' : 'grade-attention') }}">{{ $formatGrade($item['overall_average']) }}</td>
+                <td class="status {{ $item['overall_average'] === null ? '' : ($item['overall_average'] >= $minimumGrade ? 'grade-passing' : 'grade-attention') }}">{{ $statusLabels[$item['status']] ?? '—' }}</td>
             </tr>
         @empty
             <tr><td colspan="11" class="empty-state">Não há notas lançadas para o período consultado.</td></tr>
@@ -92,7 +96,7 @@
 
 <div class="table-notes">
     <p><strong>Legenda:</strong> Média = média bimestral, considerando a recuperação quando houver; Rec. = nota de recuperação; — = sem lançamento ou fora do período consultado.</p>
-    <p><strong>Critério de referência:</strong> média para aprovação {{ $formatGrade(\App\Services\GradeCalculationService::MIN_APPROVAL) }} · Escala de notas: 0 a {{ $formatGrade(\App\Services\GradeCalculationService::MAX_SCORE) }}.</p>
+    <p><strong>Critério de referência:</strong> média para aprovação {{ $formatGrade($minimumGrade) }} · Escala de notas: 0 a {{ $formatGrade(\App\Services\GradeCalculationService::MAX_SCORE) }}.</p>
     <p>* A média apurada e a situação consideram as notas disponíveis no período consultado. Durante o ano letivo, os resultados são parciais e não substituem o fechamento escolar.</p>
 </div>
 

@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Grade;
 use App\Models\Student;
+use App\Services\GradeCalculationService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -42,15 +43,15 @@ class StudentGradesStatsWidget extends BaseWidget {
         /* Conta quantas disciplinas o aluno está cursando. */
         $subjects = $grades->pluck('subject_id')->unique()->count();
 
-        /* Verifica desempenho (considerando 7.0 como média mínima) */
-        $passingGrades = $grades->filter(fn ($grade) => $grade->score >= 7.0)->count();
+        $minimum = app(GradeCalculationService::class)->minimumApproval();
+        $passingGrades = $grades->filter(fn ($grade) => $grade->score !== null && $grade->score >= $minimum)->count();
         $passingRate   = $totalGrades > 0 ? round(($passingGrades / $totalGrades) * 100, 1) : 0;
 
         return [
-            Stat::make('Média Geral', $averageScore ? number_format($averageScore, 2, ',', '.') : '-')
+            Stat::make('Média Geral', $averageScore !== null ? number_format($averageScore, 2, ',', '.') : '-')
                 ->description('Média de todas as avaliações')
                 ->descriptionIcon('fas-chart-bar')
-                ->color($averageScore >= 7.0 ? 'success' : ($averageScore >= 5.0 ? 'warning' : 'danger'))
+                ->color($averageScore === null ? 'gray' : ($averageScore >= $minimum ? 'success' : 'warning'))
                 ->chart($this->getScoresTrend()),
 
             Stat::make('Disciplinas', $subjects)
@@ -58,13 +59,13 @@ class StudentGradesStatsWidget extends BaseWidget {
                 ->descriptionIcon('fas-book-open')
                 ->color('info'),
 
-            Stat::make('Maior Nota', $highestScore ? number_format($highestScore, 2, ',', '.') : '-')
+            Stat::make('Maior Nota', $highestScore !== null ? number_format($highestScore, 2, ',', '.') : '-')
                 ->description('Melhor desempenho')
                 ->descriptionIcon('fas-arrow-trend-up')
-                ->color('success'),
+                ->color($highestScore === null ? 'gray' : ($highestScore >= $minimum ? 'success' : 'warning')),
 
             Stat::make('Aproveitamento', $passingRate . '%')
-                ->description('Notas acima de 7.0')
+                ->description('Notas na média (≥ '.number_format($minimum, 1, ',', '').')')
                 ->descriptionIcon('fas-circle-check')
                 ->color($passingRate >= 70 ? 'success' : ($passingRate >= 50 ? 'warning' : 'danger')),
         ];

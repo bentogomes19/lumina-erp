@@ -7,6 +7,8 @@
             $termLabels = $data['termLabels'];
             $termAverages = $data['termAverages'];
             $availableTerms = $data['availableTerms'] ?? [];
+            $minimumGrade = $data['minimumGrade'];
+            $minimumLabel = number_format($minimumGrade, 1, ',', '');
         @endphp
 
         {{-- Combobox: selecionar boletim por bimestre --}}
@@ -64,7 +66,7 @@
                                                     @if (isset($subjectData['grades'][$assessment]))
                                                         @php
                                                             $score = $subjectData['grades'][$assessment];
-                                                            $level = $score >= 7 ? 'good' : ($score >= 5 ? 'warn' : 'bad');
+                                                            $level = $score >= $minimumGrade ? 'good' : 'bad';
                                                         @endphp
                                                         <span class="grade-value {{ $level }}">
                                                             {{ number_format($score, 1, ',', '.') }}
@@ -78,7 +80,7 @@
                                             <td class="text-center">
                                                 @php
                                                     $avg = $subjectData['average'];
-                                                    $level = $avg >= 7 ? 'good' : ($avg >= 5 ? 'warn' : 'bad');
+                                                    $level = $avg >= $minimumGrade ? 'good' : 'bad';
                                                 @endphp
                                                 <span class="grade-avg-value {{ $level }}">
                                                     {{ number_format($avg, 1, ',', '.') }}
@@ -111,15 +113,15 @@
             <div class="grades-legend">
                 <div class="grades-legend-item">
                     <span class="legend-dot good"></span>
-                    <span class="grades-legend-text">Bom (≥ 7,0)</span>
+                    <span class="grades-legend-text">Na média (≥ {{ $minimumLabel }})</span>
                 </div>
                 <div class="grades-legend-item">
                     <span class="legend-dot warn"></span>
-                    <span class="grades-legend-text">Atenção (5,0 a 6,9)</span>
+                    <span class="grades-legend-text">Referência: média da escola {{ $minimumLabel }}</span>
                 </div>
                 <div class="grades-legend-item">
                     <span class="legend-dot bad"></span>
-                    <span class="grades-legend-text">Baixo (&lt; 5,0)</span>
+                    <span class="grades-legend-text">Abaixo da média (&lt; {{ $minimumLabel }})</span>
                 </div>
             </div>
         </div>

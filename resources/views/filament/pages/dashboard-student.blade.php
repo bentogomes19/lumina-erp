@@ -18,7 +18,8 @@
 
         /* Define as cores conforme o percentual. */
         $freqColor  = fn($r) => $r >= 75 ? '#22c55e' : ($r >= 60 ? '#eab308' : '#ef4444');
-        $gradeColor = fn($v) => $v === null ? 'var(--ms-text-muted)' : ($v >= 6.0 ? '#22c55e' : ($v >= 4.0 ? '#eab308' : '#ef4444'));
+        $minimumGrade = app(\App\Services\GradeCalculationService::class)->minimumApproval();
+        $gradeColor = fn($v) => $v === null ? 'var(--ms-text-muted)' : ($v >= $minimumGrade ? '#22c55e' : ($v >= 4.0 ? '#eab308' : '#ef4444'));
 
         /* Obtém as iniciais do nome do aluno. */
         $initials = collect(explode(' ', $student?->name ?? 'A'))
@@ -356,7 +357,7 @@
                             <div style="display:flex;flex-direction:column;gap:0">
                                 @foreach($recentGrades as $grade)
                                     @php
-                                        $gc = $grade->score >= 6.0 ? '#22c55e' : ($grade->score >= 4.0 ? '#eab308' : '#ef4444');
+                                        $gc = $grade->score >= $minimumGrade ? '#22c55e' : ($grade->score >= 4.0 ? '#eab308' : '#ef4444');
                                         $typeLabel = $assessmentTypeLabels[$grade->assessment_type?->value ?? ''] ?? 'Avaliação';
                                     @endphp
                                     <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid var(--ms-bar-bg)">

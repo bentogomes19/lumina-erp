@@ -6,6 +6,7 @@
         $currentClass = $data['currentClass'];
         $hoursWeekly = $data['hours_weekly'];
         $overallAverage = $data['overall_average'];
+        $minimumGrade = app(\App\Services\GradeCalculationService::class)->minimumApproval();
         $attendancePercent = $data['attendance_percent'];
         $totalClasses = $data['total_classes'];
         $presences = $data['presences'];
@@ -97,8 +98,8 @@
                     <div style="display:flex;gap:0.75rem;flex-shrink:0">
                         @if($overallAverage !== null)
                             @php
-                                $avgBg    = $overallAverage >= 7 ? 'rgba(34,197,94,0.15)'  : ($overallAverage >= 5 ? 'rgba(234,179,8,0.15)'  : 'rgba(239,68,68,0.15)');
-                                $avgColor = $overallAverage >= 7 ? '#22c55e'               : ($overallAverage >= 5 ? '#eab308'               : '#ef4444');
+                                $avgBg    = $overallAverage >= $minimumGrade ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)';
+                                $avgColor = $overallAverage >= $minimumGrade ? '#16a34a' : '#c2410c';
                             @endphp
                             <div style="text-align:center">
                                 <div style="width:4rem;height:4rem;border-radius:50%;background:{{ $avgBg }};color:{{ $avgColor }};font-size:1.25rem;font-weight:700;display:flex;align-items:center;justify-content:center">
@@ -160,8 +161,8 @@
                             @php
                                 $termData  = $termAverages[$termKey];
                                 $termVal   = $termData['average'];
-                                $termColor = $termVal !== null ? ($termVal >= 7 ? '#22c55e' : ($termVal >= 5 ? '#eab308' : '#ef4444')) : '#475569';
-                                $termBg    = $termVal !== null ? ($termVal >= 7 ? 'rgba(34,197,94,0.12)' : ($termVal >= 5 ? 'rgba(234,179,8,0.12)' : 'rgba(239,68,68,0.12)')) : 'rgba(71,85,105,0.12)';
+                                $termColor = $termVal !== null ? ($termVal >= $minimumGrade ? '#16a34a' : '#c2410c') : '#475569';
+                                $termBg    = $termVal !== null ? ($termVal >= $minimumGrade ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,22,0.12)') : 'rgba(71,85,105,0.12)';
                             @endphp
                             <div style="border-radius:0.75rem;padding:1rem;background:{{ $termBg }};border:1px solid {{ $termColor }}33">
                                 <p style="font-size:0.6875rem;font-weight:500;color:var(--ms-text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin:0">

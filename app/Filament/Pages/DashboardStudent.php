@@ -101,8 +101,8 @@ class DashboardStudent extends Page {
                 ->get();
 
             $bySubject   = $allGrades->groupBy('subject_id');
-            $subjectAvgs = $bySubject->map(fn ($g) => $g->avg('score'))->filter();
-            $minApproval = GradeCalculationService::MIN_APPROVAL;
+            $subjectAvgs = $bySubject->map(fn ($g) => $g->avg('score'))->filter(fn ($average) => $average !== null);
+            $minApproval = app(GradeCalculationService::class)->minimumApproval();
 
             $gradeStats = [
                 'average'  => $subjectAvgs->isNotEmpty() ? round($subjectAvgs->avg(), 1) : null,

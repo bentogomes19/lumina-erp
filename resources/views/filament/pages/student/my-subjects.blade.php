@@ -5,6 +5,7 @@
         $currentClass = $data['currentClass'];
         $subjects = $data['subjects'];
         $stats = $data['stats'];
+        $minimumGrade = app(\App\Services\GradeCalculationService::class)->minimumApproval();
 
         $categoryStyles = [
             'linguagens'          => ['accent' => '#0284c7', 'bg' => 'rgba(2,132,199,0.12)', 'text' => '#0369a1'],
@@ -55,7 +56,7 @@
         @if($currentClass && $subjects->isNotEmpty())
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
                 @php
-                    $avgColor  = ($stats['overall_average'] !== null && $stats['overall_average'] >= 6) ? '#22c55e' : '#ef4444';
+                    $avgColor  = ($stats['overall_average'] !== null && $stats['overall_average'] >= $minimumGrade) ? '#22c55e' : '#ef4444';
                     $freqColor = ($stats['attendance_percent'] !== null && $stats['attendance_percent'] >= 75) ? '#22c55e' : '#f97316';
                     $statCards = [
                         ['icon' => 'fas-book-open',   'value' => $stats['total_subjects'],                                                                                              'label' => 'Disciplinas',  'color' => 'var(--lumina-primary)'],
@@ -146,8 +147,8 @@
                                         {{-- Indicador da média geral --}}
                                         @if($subject->overall_average !== null)
                                             @php
-                                                $badgeBg    = $subject->overall_average >= 7 ? 'rgba(34,197,94,0.15)'  : ($subject->overall_average >= 5 ? 'rgba(234,179,8,0.15)'  : 'rgba(239,68,68,0.15)');
-                                                $badgeColor = $subject->overall_average >= 7 ? '#22c55e'               : ($subject->overall_average >= 5 ? '#eab308'               : '#ef4444');
+                                                $badgeBg    = $subject->overall_average >= $minimumGrade ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)';
+                                                $badgeColor = $subject->overall_average >= $minimumGrade ? '#16a34a' : '#c2410c';
                                             @endphp
                                             <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center">
                                                 <span
@@ -180,7 +181,7 @@
                                                 @foreach(['b1' => '1º Bim', 'b2' => '2º Bim', 'b3' => '3º Bim', 'b4' => '4º Bim'] as $termKey => $termLabel)
                                                     @php
                                                         $termVal   = $subject->term_averages[$termKey];
-                                                        $termColor = $termVal !== null ? ($termVal >= 7 ? '#22c55e' : ($termVal >= 5 ? '#eab308' : '#ef4444')) : 'var(--ms-text-muted)';
+                                                        $termColor = $termVal !== null ? ($termVal >= $minimumGrade ? '#16a34a' : '#c2410c') : 'var(--ms-text-muted)';
                                                     @endphp
                                                     <div style="border-radius:0.375rem;padding:0.375rem;text-align:center;background:var(--ms-cell-bg)">
                                                         <p style="font-size:0.5625rem;color:var(--ms-text-muted);margin:0">{{ $termLabel }}</p>

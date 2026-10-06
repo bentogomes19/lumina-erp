@@ -48,7 +48,10 @@ class SystemParameterForm
                             ->helperText('O tipo determina como o valor será validado e interpretado.'),
                     ]),
                     TextInput::make('value')->label('Valor atual')->visible(fn ($get): bool => !in_array($get('type'), ['boolean', 'select', 'file'], true))
-                        ->required(fn ($get): bool => $get('type') !== 'file')->numeric(fn ($get): bool => in_array($get('type'), ['integer', 'decimal'], true)),
+                        ->required(fn ($get): bool => $get('type') !== 'file')->numeric(fn ($get): bool => in_array($get('type'), ['integer', 'decimal'], true))
+                        ->minValue(fn ($get) => $get('key') === 'academic.minimum_grade' ? 0 : null)
+                        ->maxValue(fn ($get) => $get('key') === 'academic.minimum_grade' ? 10 : null)
+                        ->helperText(fn ($get) => $get('key') === 'academic.minimum_grade' ? 'Média da escola na escala de 0 a 10. Altera as cores e o acompanhamento das notas no portal do aluno e no boletim.' : null),
                     TextInput::make('default_value')->label('Valor padrão')->disabled()->dehydrated(false)
                         ->helperText('Referência original do sistema. O valor padrão não é alterado ao personalizar a regra.'),
                     Toggle::make('boolean_value')->label('Ativo')->formatStateUsing(fn ($state): bool => filter_var($state, FILTER_VALIDATE_BOOLEAN))
