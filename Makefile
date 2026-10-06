@@ -37,6 +37,9 @@ ssh:
 	@set -eu; \
 	ssh_dir="$$HOME/.ssh"; \
 	key="$$ssh_dir/id_ed25519"; \
+	printf "Informe seu nome para identificar os commits: "; \
+	read -r name; \
+	if [ -z "$$name" ]; then echo "O nome não pode ficar vazio." >&2; exit 1; fi; \
 	printf "Informe seu e-mail para identificar a chave SSH: "; \
 	read -r email; \
 	if [ -z "$$email" ]; then echo "O e-mail não pode ficar vazio." >&2; exit 1; fi; \
@@ -54,7 +57,18 @@ ssh:
 	set +e; ssh_output=$$(ssh -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1); ssh_status=$$?; set -e; \
 	printf '%s\n' "$$ssh_output"; \
 	if printf '%s\n' "$$ssh_output" | grep -q "successfully authenticated"; then \
+		git config --local user.name "$$name"; \
+		git config --local user.email "$$email"; \
+		origin_url=$$(git remote get-url origin); \
+		case "$$origin_url" in \
+			https://github.com/*) repo_path=$${origin_url#https://github.com/}; ssh_url="git@github.com:$$repo_path" ;; \
+			git@github.com:*) ssh_url="$$origin_url" ;; \
+			*) echo "Origin não é um URL GitHub compatível: $$origin_url" >&2; exit 1 ;; \
+		esac; \
+		git remote set-url origin "$$ssh_url"; \
 		echo "✅ Conexão SSH com o GitHub validada."; \
+		echo "✅ Identidade de commit configurada neste repositório."; \
+		echo "✅ Origin configurado para SSH: $$(git remote get-url origin)"; \
 	else \
 		echo "❌ Não foi possível autenticar no GitHub. Confira se a chave foi adicionada à conta correta e tente novamente." >&2; exit 1; \
 	fi

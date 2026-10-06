@@ -20,7 +20,7 @@ make ssh
 make bootstrap
 ```
 
-O `make ssh` solicita o e-mail do desenvolvedor e o usa como comentário ao criar uma chave Ed25519 em `~/.ssh/id_ed25519`. Se já existir uma chave, ela é reutilizada sem alterações. O comando mostra somente a chave pública e aguarda você adicioná-la ao GitHub; depois de confirmar com Enter, testa a autenticação SSH. A chave privada permanece no computador e o container a acessa em modo somente leitura.
+O `make ssh` solicita nome e e-mail do desenvolvedor. O e-mail é usado como comentário ao criar uma chave Ed25519 em `~/.ssh/id_ed25519`; se já existir uma chave, ela é reutilizada sem alterações. O comando mostra somente a chave pública e aguarda você adicioná-la ao GitHub; depois de confirmar com Enter, testa a autenticação SSH, configura a identidade de commit neste repositório e converte o remoto `origin` do GitHub para SSH. A chave privada permanece no computador e o container a acessa em modo somente leitura.
 
 Depois abra **http://lumina/** no browser.
 
