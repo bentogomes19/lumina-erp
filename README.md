@@ -11,11 +11,16 @@ Lumina ERP é um sistema de gestão acadêmica, tem a finalidade de simplificar 
 
 **Pré-requisitos:** [Docker](https://docs.docker.com/get-docker) e Git. Para enviar código (push) sem senha: [SSH no GitHub](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) ou [GitHub CLI](https://cli.github.com).
 
+Clone o repositório e, na pasta do projeto, configure o SSH antes de inicializar o ambiente:
+
 ```bash
 git clone git@github.com:SEU_ORG_OU_USUARIO/lumina-erp.git
 cd lumina-erp
+make ssh
 make bootstrap
 ```
+
+O `make ssh` solicita o e-mail do desenvolvedor e o usa como comentário ao criar uma chave Ed25519 em `~/.ssh/id_ed25519`. Se já existir uma chave, ela é reutilizada sem alterações. O comando mostra somente a chave pública e aguarda você adicioná-la ao GitHub; depois de confirmar com Enter, testa a autenticação SSH. A chave privada permanece no computador e o container a acessa em modo somente leitura.
 
 Depois abra **http://lumina/** no browser.
 
@@ -37,6 +42,7 @@ O `make bootstrap` cria o `.env` (se não existir), sobe os containers (app, ngi
 | Comando | Descrição |
 |---------|-----------|
 | `make bootstrap` | Do zero: .env + up + install + migrate --seed |
+| `make ssh` | Cria/reutiliza chave SSH, aguarda cadastro no GitHub e testa a conexão |
 | `make up` | Sobe os containers |
 | `make down` | Para os containers |
 | `make shell` | Entra no container (zsh) |
@@ -70,4 +76,3 @@ Para adicionar workers de fila no futuro, use o perfil `workers` no `compose.yam
 ---
 
 [📕 Documentação Oficial - Clique Aqui](./docs/index.md)
-

@@ -165,6 +165,16 @@
             </div>
         </div>
 
+        <div class="teacher-assessments-card" style="padding:1rem 1.25rem">
+            <label for="teacher-assessments-year" style="display:block;margin-bottom:.4rem;font-weight:600">Ano letivo</label>
+            <select id="teacher-assessments-year" wire:model.live="selectedSchoolYearId" style="width:100%;max-width:18rem;border:1px solid var(--ms-card-border);border-radius:.5rem;padding:.5rem;background:var(--ms-card-bg)">
+                @foreach($data['schoolYears'] as $id => $year)
+                    <option value="{{ $id }}">{{ $year }}</option>
+                @endforeach
+            </select>
+            <p style="margin:.5rem 0 0;color:var(--ms-text-secondary)">Anos anteriores disponíveis somente para consulta.</p>
+        </div>
+
         @if($teacher && $isBlocked)
             <div class="teacher-assessments-alert">
                 <strong>Criação desabilitada.</strong> Professores afastados, inativos ou desligados não podem criar avaliações.

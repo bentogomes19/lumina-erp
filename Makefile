@@ -4,7 +4,7 @@
 # Todos os comandos php artisan e composer rodam DENTRO do container (lumina-app).
 # Use os alvos abaixo em vez de rodar artisan no host.
 
-.PHONY: help build up down restart rebuild shell install migrate seed fresh test lint lint-fix clean bootstrap key clear
+.PHONY: help build up down restart rebuild shell install migrate seed fresh test lint lint-fix clean bootstrap key clear ssh
 
 APP_CONTAINER = lumina-app
 
@@ -17,6 +17,7 @@ help:
 	@echo "  make restart   - Reinicia os containers"
 	@echo "  make rebuild   - Rebuild completo (Dockerfile/compose) e sobe de novo"
 	@echo "  make shell     - Entra no container da aplicação (zsh)"
+	@echo "  make ssh       - Configura e testa a chave SSH do GitHub (no host)"
 	@echo "  make install   - composer install + npm ci/build + key:generate (dentro do app)"
 	@echo "  make migrate   - Roda migrations (dentro do app)"
 	@echo "  make seed      - Roda migrations + seeders (dentro do app)"
@@ -30,6 +31,33 @@ help:
 # Gera APP_KEY no .env (garante .env e linha APP_KEY= antes de rodar key:generate)
 key:
 	docker exec $(APP_CONTAINER) sh -c "test -f .env || cp .env.example .env; grep -q '^APP_KEY=' .env 2>/dev/null || echo 'APP_KEY=' >> .env; grep -q '^APP_KEY=.\+' .env 2>/dev/null || php artisan key:generate --no-interaction"
+
+# Configura SSH no host: o compose monta ~/.ssh no container como somente leitura.
+ssh:
+	@set -eu; \
+	ssh_dir="$$HOME/.ssh"; \
+	key="$$ssh_dir/id_ed25519"; \
+	printf "Informe seu e-mail para identificar a chave SSH: "; \
+	read -r email; \
+	if [ -z "$$email" ]; then echo "O e-mail não pode ficar vazio." >&2; exit 1; fi; \
+	if [ ! -f "$$key" ]; then \
+		mkdir -p "$$ssh_dir"; chmod 700 "$$ssh_dir"; \
+		ssh-keygen -t ed25519 -C "$$email" -f "$$key" -N ""; \
+	else \
+		echo "Chave existente encontrada: $$key (o e-mail informado não altera a chave existente)"; \
+	fi; \
+	if [ ! -f "$$key.pub" ]; then echo "Arquivo de chave pública não encontrado: $$key.pub" >&2; exit 1; fi; \
+	echo; echo "Copie a chave pública abaixo e adicione em https://github.com/settings/keys"; \
+	echo "(Settings → SSH and GPG keys → New SSH key)"; echo; cat "$$key.pub"; echo; \
+	printf "Depois de salvar a chave no GitHub, pressione ENTER para testar (Ctrl+C para cancelar): "; \
+	read -r confirm; \
+	set +e; ssh_output=$$(ssh -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1); ssh_status=$$?; set -e; \
+	printf '%s\n' "$$ssh_output"; \
+	if printf '%s\n' "$$ssh_output" | grep -q "successfully authenticated"; then \
+		echo "✅ Conexão SSH com o GitHub validada."; \
+	else \
+		echo "❌ Não foi possível autenticar no GitHub. Confira se a chave foi adicionada à conta correta e tente novamente." >&2; exit 1; \
+	fi
 
 # Limpa caches do Laravel (use após alterar .env, rotas, config, views)
 clear:

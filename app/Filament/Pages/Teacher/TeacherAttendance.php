@@ -3,21 +3,26 @@
 namespace App\Filament\Pages\Teacher;
 
 use App\Enums\AttendanceStatus;
-use App\Enums\EnrollmentStatus;
+use App\Enums\ClassStatus;
+use App\Enums\LessonStatus;
 use App\Enums\SchoolYearStatus;
-use App\Enums\TeacherStatus;
 use App\Filament\Pages\Teacher\Concerns\HasTeacherPortalAccess;
 use App\Models\Attendance;
 use App\Models\Enrollment;
+use App\Models\Lesson;
 use App\Models\SchoolClass;
+use App\Models\SchoolYear;
+use App\Models\SystemParameter;
 use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use App\Modules\Attendance\Application\RecordTeacherAttendance;
 use App\Services\CurrentTeacherService;
+use App\Services\TeacherRosterService;
 use App\Support\PermissionAccess;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class TeacherAttendance extends Page {
@@ -36,16 +41,23 @@ class TeacherAttendance extends Page {
 
     public ?int $selectedSubjectId = null;
 
+    public ?int $selectedLessonId = null;
+
     public string $selectedDate;
 
     /**
-     * Status temporários da frequência, indexados por student_id.
+     * Situação temporária da frequência, indexada por student_id.
      *
-     * @var array<int, array{present:bool}>
+     * @var array<int, array{status:string|null}>
      */
     public array $attendanceRows = [];
 
+    /** @var array<int, array<int, string>> */
+    public array $statusSelections = [];
+
     public ?array $saveSummary = null;
+
+    public ?int $selectedStudentId = null;
 
     /**
      * Inicializa o estado necessário para exibir a página.
@@ -57,10 +69,17 @@ class TeacherAttendance extends Page {
 
         $teacher         = $this->currentTeacher();
         $assignments     = $this->teacherAssignments($teacher);
-        $firstAssignment = $assignments->first();
+        $requestedClassId = request()->integer('class_id');
+        $requestedSubjectId = request()->integer('subject_id');
+        $firstAssignment = $assignments->first(fn (TeacherAssignment $assignment) =>
+            (int) $assignment->class_id === $requestedClassId
+            && (int) $assignment->subject_id === $requestedSubjectId
+        ) ?? $assignments->first();
 
         $this->selectedClassId   = $firstAssignment?->class_id;
         $this->selectedSubjectId = $firstAssignment?->subject_id;
+        $this->selectedDate      = $this->defaultDateForSelection();
+        $this->selectedLessonId  = $this->firstAvailableLessonId();
 
         $this->syncAttendanceRows();
     }
@@ -71,7 +90,11 @@ class TeacherAttendance extends Page {
      * @return void
      */
     public function updatedSelectedClassId(): void {
+        $this->selectedStudentId = null;
         $this->selectedSubjectId = $this->firstAvailableSubjectId($this->selectedClassId);
+        $this->selectedDate = $this->defaultDateForSelection();
+        $this->selectedLessonId  = $this->firstAvailableLessonId();
+        $this->attendanceRows = [];
         $this->saveSummary       = null;
         $this->syncAttendanceRows();
     }
@@ -82,6 +105,10 @@ class TeacherAttendance extends Page {
      * @return void
      */
     public function updatedSelectedSubjectId(): void {
+        $this->selectedStudentId = null;
+        $this->selectedDate = $this->defaultDateForSelection();
+        $this->selectedLessonId = $this->firstAvailableLessonId();
+        $this->attendanceRows = [];
         $this->saveSummary = null;
         $this->syncAttendanceRows();
     }
@@ -92,6 +119,16 @@ class TeacherAttendance extends Page {
      * @return void
      */
     public function updatedSelectedDate(): void {
+        $this->selectedStudentId = null;
+        $this->selectedLessonId = $this->firstAvailableLessonId();
+        $this->attendanceRows = [];
+        $this->saveSummary = null;
+        $this->syncAttendanceRows();
+    }
+
+    public function updatedSelectedLessonId(): void {
+        $this->selectedStudentId = null;
+        $this->attendanceRows = [];
         $this->saveSummary = null;
         $this->syncAttendanceRows();
     }
@@ -103,6 +140,37 @@ class TeacherAttendance extends Page {
      */
     public function getView(): string {
         return 'filament.pages.teacher.teacher-attendance';
+    }
+
+    public function markAllPresent(): void {
+        $data = $this->getPageData();
+        abort_unless($data['canEdit'] ?? false, 403);
+
+        foreach ($data['students'] as $student) {
+            $this->statusSelections[$student['student_id']] = [AttendanceStatus::PRESENT->value];
+        }
+    }
+
+    public function togglePresence(int $studentId): void {
+        $data = $this->getPageData();
+        abort_unless($data['canEdit'] ?? false, 403);
+        abort_unless($data['students']->contains(fn (array $row) => (int) $row['student_id'] === $studentId), 403);
+
+        $current = $this->statusSelections[$studentId][0] ?? null;
+        $present = in_array($current, [AttendanceStatus::PRESENT->value, AttendanceStatus::LATE->value], true);
+        $this->statusSelections[$studentId] = [$present ? AttendanceStatus::ABSENT->value : AttendanceStatus::PRESENT->value];
+    }
+
+    public function openStudentDetails(int $studentId): void {
+        abort_unless($this->studentDetailsEnabled(), 403);
+        $data = $this->getPageData();
+        abort_unless($data['students']->contains(fn (array $row) => (int) $row['student_id'] === $studentId), 403);
+
+        $this->selectedStudentId = $studentId;
+    }
+
+    public function closeStudentDetails(): void {
+        $this->selectedStudentId = null;
     }
 
     /**
@@ -121,15 +189,21 @@ class TeacherAttendance extends Page {
                 'assignments'  => $assignments,
                 'classes'      => [],
                 'subjects'     => [],
+                'lessons'      => [],
                 'context'      => null,
                 'students'     => collect(),
                 'summary'      => $this->emptySummary(),
                 'canCreate'    => PermissionAccess::can('teacher.attendance.create'),
                 'canUpdate'    => PermissionAccess::can('teacher.attendance.update'),
                 'canSubmit'    => false,
+                'canEdit'      => false,
+                'schoolYearClosed' => false,
                 'isBlocked'    => $this->teacherIsBlocked($teacher),
                 'saveSummary'  => $this->saveSummary,
                 'contextError' => !$teacher ? 'Nenhum professor vinculado ao usuário atual.' : 'Você não possui turmas/disciplina atribuídas.',
+                'schoolYear' => SchoolYear::current(),
+                'studentDetailsEnabled' => false,
+                'studentDetails' => null,
             ];
         }
 
@@ -141,34 +215,54 @@ class TeacherAttendance extends Page {
         $hasExistingRecords = false;
 
         if ($context) {
-            $students           = $this->buildStudents($context['class']->id, $context['subject']->id, $context['date']);
+            $students           = $this->buildStudents($context['lesson'])
+                ->map(function (array $row): array {
+                    $selected = $this->statusSelections[$row['student_id']] ?? [];
+                    $row['status'] = count($selected) === 1 ? $selected[0] : null;
+                    return $row;
+                });
             $summary            = $this->buildSummary($students);
             $hasExistingRecords = $students->contains(fn (array $row) => !empty($row['attendance_id']));
-            $schoolYearClosed   = $context['schoolYear']?->status === SchoolYearStatus::CLOSED;
+            $schoolYearClosed   = $context['schoolYear']?->status !== SchoolYearStatus::ACTIVE;
+            $schoolYearClosed   = $schoolYearClosed || $context['class']?->status !== ClassStatus::OPEN;
         } elseif ($this->selectedClassId || $this->selectedSubjectId) {
-            $contextError = 'A turma e a disciplina selecionadas precisam estar vinculadas ao seu cadastro.';
+            $contextError = 'Selecione uma aula programada para a turma, disciplina e data informadas.';
         }
 
         $canCreate = PermissionAccess::can('teacher.attendance.create');
         $canUpdate = PermissionAccess::can('teacher.attendance.update');
-        $canSubmit = !$isBlocked && !$schoolYearClosed && ($canCreate || $canUpdate) && !empty($students);
+        $canEdit = $context !== null && !$isBlocked && !$schoolYearClosed && ($canCreate || $canUpdate)
+            && $context['lesson']->date->lte(today())
+            && !in_array($context['lesson']->status, [LessonStatus::CANCELLED, LessonStatus::RESCHEDULED], true)
+            && $students->isNotEmpty();
+        $canSubmit = $canEdit
+            && $students->every(fn (array $row) => count($this->statusSelections[$row['student_id']] ?? []) === 1);
+        $studentDetailsEnabled = $this->studentDetailsEnabled();
+        $studentDetails = $studentDetailsEnabled && $context && $this->selectedStudentId
+            ? $this->resolveStudentDetails($context['lesson'], $this->selectedStudentId)
+            : null;
 
         return [
             'teacher'            => $teacher,
             'assignments'        => $assignments,
             'classes'            => $this->classOptions($assignments),
             'subjects'           => $this->subjectOptions($assignments, $this->selectedClassId),
+            'lessons'            => $this->lessonOptions(),
             'context'            => $context,
             'students'           => $students,
             'summary'            => $summary,
             'canCreate'          => $canCreate,
             'canUpdate'          => $canUpdate,
             'canSubmit'          => $canSubmit,
+            'canEdit'            => $canEdit,
             'isBlocked'          => $isBlocked,
             'schoolYearClosed'   => $schoolYearClosed,
             'hasExistingRecords' => $hasExistingRecords,
             'saveSummary'        => $this->saveSummary,
             'contextError'       => $contextError,
+            'schoolYear'         => SchoolYear::current(),
+            'studentDetailsEnabled' => $studentDetailsEnabled,
+            'studentDetails'     => $studentDetails,
         ];
     }
 
@@ -200,13 +294,30 @@ class TeacherAttendance extends Page {
             ]);
         }
 
-        if ($context['schoolYear']?->status === SchoolYearStatus::CLOSED) {
+        if ($context['schoolYear']?->status !== SchoolYearStatus::ACTIVE) {
             throw ValidationException::withMessages([
                 'selectedDate' => 'Não é possível editar frequência em período letivo fechado.',
             ]);
         }
 
-        $students = $this->buildStudents($context['class']->id, $context['subject']->id, $context['date']);
+        if ($context['class']?->status !== ClassStatus::OPEN) {
+            throw ValidationException::withMessages(['class_id' => 'A turma precisa estar aberta para lançar frequência.']);
+        }
+
+        if ($context['lesson']->date->isFuture()) {
+            throw ValidationException::withMessages(['selectedLessonId' => 'A chamada não pode ser lançada antes da aula.']);
+        }
+
+        if (in_array($context['lesson']->status, [LessonStatus::CANCELLED, LessonStatus::RESCHEDULED], true)) {
+            throw ValidationException::withMessages(['selectedLessonId' => 'Aula cancelada ou reagendada não pode receber chamada.']);
+        }
+
+        $students = $this->buildStudents($context['lesson']);
+
+        foreach ($students as $student) {
+            $selected = $this->statusSelections[$student['student_id']] ?? [];
+            $this->attendanceRows[$student['student_id']]['status'] = count($selected) === 1 ? $selected[0] : null;
+        }
 
         if ($students->isEmpty()) {
             throw ValidationException::withMessages([
@@ -220,7 +331,7 @@ class TeacherAttendance extends Page {
             students: $students,
             schoolClass: $context['class'],
             subject: $context['subject'],
-            date: $context['date'],
+            lesson: $context['lesson'],
             attendanceRows: $this->attendanceRows,
             canCreate: $canCreate,
             canUpdate: $canUpdate,
@@ -229,10 +340,11 @@ class TeacherAttendance extends Page {
 
         $this->saveSummary['total'] = $this->saveSummary['created'] + $this->saveSummary['updated'];
 
+        $this->attendanceRows = [];
         $this->syncAttendanceRows();
         Notification::make()
             ->title('Frequência salva')
-            ->body(sprintf('%d registros criados e %d atualizados.', $created, $updated))
+            ->body(sprintf('%d registros criados e %d atualizados.', $this->saveSummary['created'], $this->saveSummary['updated']))
             ->success()
             ->send();
     }
@@ -254,7 +366,7 @@ class TeacherAttendance extends Page {
      * @return Collection
      */
     private function teacherAssignments(?Teacher $teacher = null): Collection {
-        return app(CurrentTeacherService::class)->assignments($teacher);
+        return app(CurrentTeacherService::class)->currentAssignments($teacher);
     }
 
     /**
@@ -269,11 +381,7 @@ class TeacherAttendance extends Page {
             return true;
         }
 
-        return in_array($teacher->status, [
-            TeacherStatus::SABBATICAL,
-            TeacherStatus::INACTIVE,
-            TeacherStatus::TERMINATED,
-        ], true);
+        return !$teacher->canAccessOperationally();
     }
 
     /**
@@ -286,7 +394,7 @@ class TeacherAttendance extends Page {
      * @return array|null
      */
     private function resolveContext(?Teacher $teacher, Collection $assignments, bool $strict = false): ?array {
-        if (!$teacher || $assignments->isEmpty() || !$this->selectedClassId || !$this->selectedSubjectId || !$this->selectedDate) {
+        if (!$teacher || $assignments->isEmpty() || !$this->selectedClassId || !$this->selectedSubjectId || !$this->selectedDate || !$this->selectedLessonId) {
             return null;
         }
 
@@ -305,11 +413,25 @@ class TeacherAttendance extends Page {
             return null;
         }
 
+        $lesson = Lesson::query()
+            ->whereKey($this->selectedLessonId)
+            ->where('teacher_id', $teacher->id)
+            ->where('class_id', $schoolClass->id)
+            ->where('subject_id', $subject->id)
+            ->where('school_year_id', $schoolClass->school_year_id)
+            ->whereDate('date', $this->selectedDate)
+            ->first();
+
+        if (!$lesson) {
+            return null;
+        }
+
         return [
             'assignment' => $assignment,
             'class'      => $schoolClass,
             'subject'    => $subject,
             'schoolYear' => $schoolClass->schoolYear,
+            'lesson'     => $lesson,
             'date'       => $this->selectedDate,
         ];
     }
@@ -317,28 +439,15 @@ class TeacherAttendance extends Page {
     /**
      * Monta os dados dos alunos usados nos lançamentos.
      *
-     * @param int $classId
-     * @param int $subjectId
-     * @param string $date
+     * @param Lesson $lesson
      *
      * @return Collection
      */
-    private function buildStudents(int $classId, int $subjectId, string $date): Collection {
-        $enrollments = Enrollment::query()
-            ->where('class_id', $classId)
-            ->whereIn('status', [
-                EnrollmentStatus::ACTIVE->value,
-                EnrollmentStatus::SUSPENDED->value,
-                EnrollmentStatus::LOCKED->value,
-            ])
-            ->with(['student'])
-            ->orderBy('roll_number')
-            ->get();
+    private function buildStudents(Lesson $lesson): Collection {
+        $enrollments = app(TeacherRosterService::class)->forLesson($lesson);
 
         $existing = Attendance::query()
-            ->where('class_id', $classId)
-            ->where('subject_id', $subjectId)
-            ->whereDate('date', $date)
+            ->where('lesson_id', $lesson->id)
             ->with('student')
             ->get()
             ->keyBy('student_id');
@@ -346,22 +455,21 @@ class TeacherAttendance extends Page {
         return $enrollments->map(function (Enrollment $enrollment) use ($existing) {
             $attendance = $existing->get($enrollment->student_id);
             $student    = $enrollment->student;
-            $status     = $attendance?->status?->value ?? AttendanceStatus::PRESENT->value;
-            $isPresent  = $this->attendanceRows[$enrollment->student_id]['present'] ?? ($status === AttendanceStatus::PRESENT->value);
+            $status = $this->attendanceRows[$enrollment->student_id]['status'] ?? $attendance?->status?->value;
 
             $this->attendanceRows[$enrollment->student_id] = [
-                'present' => $isPresent,
+                'status' => $status,
             ];
 
             return [
                 'attendance_id'       => $attendance?->id,
                 'student_id'          => $enrollment->student_id,
                 'student_name'        => $student?->name ?? '—',
+                'photo_url'           => $this->studentPhotoUrl($student?->photo_url),
                 'registration_number' => $student?->registration_number ?? '—',
                 'roll_number'         => $enrollment->roll_number,
                 'enrollment_status'   => $enrollment->status?->label() ?? (string) $enrollment->status,
                 'status'              => $status,
-                'is_present'          => $isPresent,
             ];
         });
     }
@@ -378,18 +486,60 @@ class TeacherAttendance extends Page {
 
         if (!$context) {
             $this->attendanceRows = [];
+            $this->statusSelections = [];
             return;
         }
 
-        $students = $this->buildStudents($context['class']->id, $context['subject']->id, $context['date']);
+        $students = $this->buildStudents($context['lesson']);
 
         $this->attendanceRows = $students->mapWithKeys(function (array $row) {
             return [
                 $row['student_id'] => [
-                    'present' => $row['is_present'],
+                    'status' => $row['status'],
                 ],
             ];
         })->all();
+        $this->statusSelections = $students->mapWithKeys(fn (array $row) => [
+            $row['student_id'] => [$row['status'] ?? AttendanceStatus::PRESENT->value],
+        ])->all();
+    }
+
+    private function studentDetailsEnabled(): bool {
+        return (bool) SystemParameter::read('teacher.student_details_enabled', false);
+    }
+
+    private function resolveStudentDetails(Lesson $lesson, int $studentId): ?array {
+        $enrollment = app(TeacherRosterService::class)->forLesson($lesson)
+            ->first(fn (Enrollment $row) => (int) $row->student_id === $studentId);
+        $student = $enrollment?->student;
+
+        if (!$student) {
+            return null;
+        }
+
+        return [
+            'name' => $student->name,
+            'registration' => $student->registration_number,
+            'photo' => $this->studentPhotoUrl($student->photo_url),
+            'class' => $lesson->schoolClass?->name,
+            'rollNumber' => $enrollment->roll_number,
+            'enrollmentStatus' => $enrollment->status?->label() ?? '—',
+            'birthDate' => $student->birth_date?->format('d/m/Y'),
+            'guardian' => $student->guardian_main,
+            'guardianPhone' => $student->guardian_phone,
+        ];
+    }
+
+    private function studentPhotoUrl(?string $path): ?string {
+        if (!$path) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
     }
 
     /**
@@ -455,31 +605,59 @@ class TeacherAttendance extends Page {
             ?->subject_id;
     }
 
-    /**
-     * Retorna os estados de frequência disponíveis para a chamada.
-     *
-     * @return array
-     */
-    private function attendanceStatusOptions(): array {
-        return [
-            AttendanceStatus::PRESENT->value => AttendanceStatus::PRESENT->label(),
-            AttendanceStatus::ABSENT->value  => AttendanceStatus::ABSENT->label(),
-        ];
+    /** Aulas concretas da data escolhida; cada chamada pertence a uma aula. */
+    private function lessonOptions(): array {
+        $teacher = $this->currentTeacher();
+        if (!$teacher || !$this->selectedClassId || !$this->selectedSubjectId || !$this->selectedDate) {
+            return [];
+        }
+
+        $assignment = $this->teacherAssignments($teacher)->first(fn (TeacherAssignment $item) =>
+            (int) $item->class_id === (int) $this->selectedClassId
+            && (int) $item->subject_id === (int) $this->selectedSubjectId
+        );
+        if (!$assignment) {
+            return [];
+        }
+
+        return Lesson::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('class_id', $assignment->class_id)
+            ->where('subject_id', $assignment->subject_id)
+            ->where('school_year_id', $assignment->schoolClass?->school_year_id)
+            ->whereDate('date', $this->selectedDate)
+            ->orderBy('start_time')
+            ->get()
+            ->mapWithKeys(fn (Lesson $lesson) => [
+                $lesson->id => $lesson->start_time?->format('H:i') . '–' . $lesson->end_time?->format('H:i'),
+            ])
+            ->all();
     }
 
-    /**
-     * Retorna a cor usada para representar o status de frequência.
-     *
-     * @param string $status
-     *
-     * @return string
-     */
-    private function attendanceStatusColor(string $status): string {
-        return match ($status) {
-            AttendanceStatus::PRESENT->value => 'success',
-            AttendanceStatus::ABSENT->value  => 'danger',
-            default                          => 'gray',
-        };
+    private function firstAvailableLessonId(): ?int {
+        $options = $this->lessonOptions();
+
+        return $options ? (int) array_key_first($options) : null;
+    }
+
+    private function defaultDateForSelection(): string {
+        $teacher = $this->currentTeacher();
+        $assignment = $this->teacherAssignments($teacher)->first(fn (TeacherAssignment $item) =>
+            (int) $item->class_id === (int) $this->selectedClassId
+            && (int) $item->subject_id === (int) $this->selectedSubjectId
+        );
+
+        if (!$teacher || !$assignment || $assignment->schoolClass?->schoolYear?->status === SchoolYearStatus::ACTIVE) {
+            return today()->toDateString();
+        }
+
+        return Lesson::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('class_id', $assignment->class_id)
+            ->where('subject_id', $assignment->subject_id)
+            ->where('school_year_id', $assignment->schoolClass?->school_year_id)
+            ->orderByDesc('date')
+            ->first(['date'])?->date?->toDateString() ?? today()->toDateString();
     }
 
     /**
@@ -494,8 +672,8 @@ class TeacherAttendance extends Page {
 
         return [
             'total'   => $collection->count(),
-            'present' => $collection->where('status', AttendanceStatus::PRESENT->value)->count(),
-            'absent'  => $collection->where('status', AttendanceStatus::ABSENT->value)->count(),
+            'present' => $collection->filter(fn (array $row) => in_array($row['status'], [AttendanceStatus::PRESENT->value, AttendanceStatus::LATE->value], true))->count(),
+            'absent'  => $collection->filter(fn (array $row) => in_array($row['status'], [AttendanceStatus::ABSENT->value, AttendanceStatus::EXCUSED->value], true))->count(),
         ];
     }
 

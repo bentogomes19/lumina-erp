@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Pdf\EnrollmentPdfController;
+use App\Http\Controllers\Pdf\TeacherReportPdfController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('filament.lumina.auth.login'));
@@ -15,4 +16,9 @@ Route::middleware(['auth'])->prefix('pdf/enrollment')->name('pdf.enrollment.')->
     Route::get('{enrollment}/transferencia-externa', [EnrollmentPdfController::class, 'transferenciaExterna'])->name('transferencia-externa');
     Route::get('{enrollment}/trancamento', [EnrollmentPdfController::class, 'trancamento'])->name('trancamento');
     Route::get('{enrollment}/cancelamento', [EnrollmentPdfController::class, 'cancelamento'])->name('cancelamento');
+});
+
+Route::middleware(['auth:teacher'])->prefix('professor/relatorios')->name('professor.reports.')->group(function () {
+    Route::get('avaliacao/{assessment}/notas', [TeacherReportPdfController::class, 'grades'])->name('grades');
+    Route::get('aula/{lesson}/frequencia', [TeacherReportPdfController::class, 'attendance'])->name('attendance');
 });

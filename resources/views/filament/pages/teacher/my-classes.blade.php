@@ -165,11 +165,21 @@
         }
     </style>
 
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+        <p style="margin:0;color:var(--ms-text-secondary)">
+            {{ $this->showHistory ? 'Histórico de turmas e disciplinas' : 'Turmas e disciplinas do ano letivo atual' }}
+            @if($data['currentYear']) · {{ $data['currentYear'] }} @endif
+        </p>
+        <x-filament::button type="button" color="gray" wire:click="$toggle('showHistory')">
+            {{ $this->showHistory ? 'Mostrar ano atual' : 'Ver histórico' }}
+        </x-filament::button>
+    </div>
+
     @if($assignments->isEmpty())
         <div class="my-classes-empty">
             <x-filament::icon icon="fas-chalkboard-user" class="w-12 h-12" />
             <h3>Nenhuma turma encontrada</h3>
-            <p>Você ainda não possui turmas ou disciplinas atribuídas.</p>
+            <p>{{ $this->showHistory ? 'Nenhum vínculo histórico encontrado.' : 'Nenhuma turma atribuída no ano letivo atual.' }}</p>
         </div>
     @else
         <div class="my-classes-grid">
@@ -182,6 +192,7 @@
                     $statusValue = $class?->status?->value ?? 'open';
                     $statusLabel = $class?->status?->label() ?? '—';
                     $shiftLabel = $class?->shift?->label() ?? '—';
+                    $isCurrentYear = (int) $class?->school_year_id === (int) (\App\Models\SchoolYear::current()?->id ?? 0);
                 @endphp
                 <div class="my-classes-card">
                     <div class="my-classes-card-header">
@@ -205,7 +216,7 @@
                         </div>
                         <div class="my-classes-info-row">
                             <x-filament::icon icon="fas-calendar" class="w-4 h-4" />
-                            <span>Período Letivo: <strong>{{ $schoolYear?->name ?? '—' }}</strong></span>
+                            <span>Ano letivo: <strong>{{ $schoolYear?->year ?? '—' }}</strong></span>
                         </div>
                         <div class="my-classes-info-row">
                             <x-filament::icon icon="fas-users" class="w-4 h-4" />
@@ -224,27 +235,27 @@
                     </div>
 
                     <div class="my-classes-card-actions">
-                        <a href="#" class="my-classes-action" title="Ver alunos">
+                        <button type="button" wire:click="showStudents({{ $class->id }})" class="my-classes-action" title="Ver alunos">
                             <x-filament::icon icon="fas-users" class="w-4 h-4" />
                             Ver alunos
-                        </a>
+                        </button>
 
-                        @if(\App\Support\PermissionAccess::can('teacher.attendance.create'))
-                            <a href="#" class="my-classes-action" title="Lançar frequência">
+                        @if($isCurrentYear && \App\Support\PermissionAccess::can('teacher.attendance.view'))
+                            <a href="{{ \App\Filament\Pages\Teacher\TeacherAttendance::getUrl(['class_id' => $class->id, 'subject_id' => $subject->id], panel: 'professor') }}" class="my-classes-action" title="Lançar frequência">
                                 <x-filament::icon icon="fas-clipboard-check" class="w-4 h-4" />
                                 Lançar frequência
                             </a>
                         @endif
 
-                        @if(\App\Support\PermissionAccess::can('teacher.grades.create'))
-                            <a href="#" class="my-classes-action" title="Lançar notas">
+                        @if(\App\Support\PermissionAccess::can('teacher.grades.view'))
+                            <a href="{{ \App\Filament\Pages\Teacher\TeacherGrades::getUrl(['class_id' => $class->id, 'subject_id' => $subject->id], panel: 'professor') }}" class="my-classes-action" title="Lançar notas">
                                 <x-filament::icon icon="fas-pen-to-square" class="w-4 h-4" />
-                                Lançar notas
+                                {{ $isCurrentYear ? 'Lançar notas' : 'Consultar notas' }}
                             </a>
                         @endif
 
-                        @if(\App\Support\PermissionAccess::can('teacher.assessments.create'))
-                            <a href="#" class="my-classes-action" title="Criar avaliação">
+                        @if($isCurrentYear && \App\Support\PermissionAccess::can('teacher.assessments.create'))
+                            <a href="{{ \App\Filament\Pages\Teacher\TeacherAssessments::getUrl(panel: 'professor') }}" class="my-classes-action" title="Criar avaliação">
                                 <x-filament::icon icon="fas-clipboard-list" class="w-4 h-4" />
                                 Criar avaliação
                             </a>
@@ -253,5 +264,17 @@
                 </div>
             @endforeach
         </div>
+    @endif
+    @if($this->selectedClassId)
+        <x-filament::section heading="Alunos da turma" style="margin-top:1rem">
+            <x-filament::button type="button" color="gray" wire:click="closeStudents">Fechar</x-filament::button>
+            <ul style="margin-top:1rem">
+                @forelse($data['selectedStudents'] as $enrollment)
+                    <li>{{ $enrollment->roll_number ?? '—' }} · {{ $enrollment->student?->name ?? '—' }}</li>
+                @empty
+                    <li>Nenhum aluno encontrado.</li>
+                @endforelse
+            </ul>
+        </x-filament::section>
     @endif
 </x-filament-panels::page>

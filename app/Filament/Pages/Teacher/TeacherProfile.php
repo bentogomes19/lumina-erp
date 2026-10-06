@@ -59,7 +59,7 @@ class TeacherProfile extends Page {
      */
     public function getPageData(): array {
         $teacher     = $this->currentTeacher();
-        $assignments = app(CurrentTeacherService::class)->assignments($teacher);
+        $assignments = app(CurrentTeacherService::class)->currentAssignments($teacher);
         $user        = $teacher?->user;
 
         $subjects = $assignments->pluck('subject')

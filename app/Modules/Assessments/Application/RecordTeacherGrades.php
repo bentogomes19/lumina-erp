@@ -3,6 +3,7 @@
 namespace App\Modules\Assessments\Application;
 
 use App\Models\Assessment;
+use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\Teacher;
 use Illuminate\Support\Collection;
@@ -57,8 +58,20 @@ final class RecordTeacherGrades {
             &$created,
             &$updated,
         ): void {
+            // Serializa os lançamentos da mesma avaliação antes de procurar notas existentes.
+            $lockedAssessment = Assessment::query()->whereKey($assessment->id)->lockForUpdate()->firstOrFail();
+            if ((int) $lockedAssessment->teacher_id !== (int) $teacher->id || $lockedAssessment->isClosed()) {
+                throw ValidationException::withMessages(['assessment' => 'Avaliação indisponível para este professor.']);
+            }
+
             foreach ($students as $student) {
                 $studentId = (int) $student['student_id'];
+                $enrollment = Enrollment::query()->find($student['enrollment_id']);
+                if (!$enrollment || (int) $enrollment->student_id !== $studentId
+                    || (int) $enrollment->class_id !== (int) $lockedAssessment->class_id
+                    || (int) $enrollment->school_year_id !== (int) $lockedAssessment->school_year_id) {
+                    throw ValidationException::withMessages(["gradeRows.{$studentId}.score" => 'Aluno fora da turma e do ano da avaliação.']);
+                }
                 $score = $gradeRows[$studentId]['score'] ?? null;
                 $comment = $gradeRows[$studentId]['comment'] ?? null;
 
@@ -83,11 +96,8 @@ final class RecordTeacherGrades {
                 }
 
                 $attributes = [
-                    'enrollment_id'   => $student['enrollment_id'],
-                    'subject_id'      => $assessment->subject_id,
-                    'term'            => $term,
-                    'assessment_type' => $assessmentType,
-                    'sequence'        => $sequence,
+                    'assessment_id' => $assessment->id,
+                    'student_id'    => $studentId,
                 ];
 
                 $data = [

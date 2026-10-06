@@ -6,16 +6,29 @@ use App\Enums\LessonStatus;
 use App\Enums\TeacherStatus;
 use App\Filament\Pages\Teacher\Concerns\HasTeacherPortalAccess;
 use App\Models\Lesson;
+use App\Models\SchoolYear;
 use App\Services\CurrentTeacherService;
 use Carbon\Carbon;
 use Filament\Pages\Page;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
+use Filament\Schemas\Schema as FilamentSchema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class TeacherSchedule extends Page {
+class TeacherSchedule extends Page implements HasTable {
 
     use HasTeacherPortalAccess;
+    use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'Agenda de Aulas';
 
@@ -41,13 +54,54 @@ class TeacherSchedule extends Page {
 
     public ?int $selectedLessonId = null;
 
+    public function mount(): void {
+        $this->filterSchoolYear = (string) (SchoolYear::current()?->id ?? '');
+    }
+
     /**
      * Retorna o nome da visualização usada pela página.
      *
      * @return string
      */
     public function getView(): string {
-        return 'filament.pages.teacher.teacher-schedule-weekly';
+        return 'filament.pages.teacher.teacher-schedule';
+    }
+
+    public function table(Table $table): Table {
+        $lessonIds = $this->getPageData()['lessons']->pluck('id')->all();
+
+        return $table->query(Lesson::query()->whereIn('id', $lessonIds)->with(['schoolClass.schoolYear', 'subject']))
+            ->columns([
+                TextColumn::make('date')->label('Data')->date('d/m/Y')->sortable(),
+                TextColumn::make('start_time')->label('Início')->dateTime('H:i')->sortable(),
+                TextColumn::make('end_time')->label('Fim')->dateTime('H:i'),
+                TextColumn::make('schoolClass.name')->label('Turma'),
+                TextColumn::make('subject.name')->label('Disciplina'),
+                TextColumn::make('topic')->label('Tema')->limit(50),
+                TextColumn::make('status')->label('Situação')->badge()->formatStateUsing(fn ($state) => $state?->label() ?? (string) $state),
+            ])
+            ->recordActions([
+                Action::make('details')->label('Detalhes')->icon('fas-eye')
+                    ->action(fn (Lesson $record) => $this->selectLesson($record->id)),
+            ])
+            ->defaultSort('date');
+    }
+
+    private function lessonDetailComponents(): array {
+        $lesson = $this->getPageData()['selectedLesson'];
+        if (!$lesson) {
+            return [];
+        }
+
+        return [
+            Text::make('Turma: '.($lesson->schoolClass?->name ?? '—')),
+            Text::make('Disciplina: '.($lesson->subject?->name ?? '—')),
+            Text::make('Tema: '.($lesson->topic ?: 'Não informado')),
+            Text::make('Conteúdo: '.($lesson->content ?: 'Não informado')),
+            Actions::make([
+                Action::make('closeLessonDetails')->label('Fechar detalhes')->action(fn () => $this->closeLessonDetails()),
+            ]),
+        ];
     }
 
     /**
@@ -77,19 +131,12 @@ class TeacherSchedule extends Page {
 
         $isOnLeave   = $teacher->status === TeacherStatus::SABBATICAL || $teacher->status === TeacherStatus::INACTIVE;
         $assignments = $service->assignments($teacher);
-        $classIds    = $assignments->pluck('class_id')->filter()->unique()->values();
-        $subjectIds  = $assignments->pluck('subject_id')->filter()->unique()->values();
         $weekStart   = $this->currentWeekStart();
         $weekEnd     = $weekStart->copy()->addDays(4);
 
-        $query = Lesson::query()
-            ->where(function ($q) use ($teacher, $classIds, $subjectIds) {
-                $q->where('teacher_id', $teacher->id)
-                    ->orWhere(function ($nested) use ($classIds, $subjectIds) {
-                        $nested->whereIn('class_id', $classIds)
-                            ->whereIn('subject_id', $subjectIds);
-                    });
-            })->whereBetween('date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+        $query = $service->scopeAssignedPairs(Lesson::query(), $assignments)
+            ->where('teacher_id', $teacher->id)
+            ->whereBetween('date', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->whereIn('status', collect(LessonStatus::cases())->pluck('value')->all())
             ->with(['schoolClass.gradeLevel', 'schoolClass.schoolYear', 'subject', 'schoolYear']);
 
@@ -280,13 +327,13 @@ class TeacherSchedule extends Page {
         $schoolYears = $assignments->pluck('schoolClass.schoolYear')
             ->filter()
             ->unique('id')
-            ->mapWithKeys(fn ($y) => [$y->id => $y->name])
+            ->mapWithKeys(fn ($y) => [$y->id => $y->year])
             ->all();
 
         $classes = $assignments->pluck('schoolClass')
             ->filter()
             ->unique('id')
-            ->mapWithKeys(fn ($c) => [$c->id => $c->name])
+            ->mapWithKeys(fn ($c) => [$c->id => $c->name.' · '.($c->schoolYear?->year ?? '—')])
             ->all();
 
         $subjects = $assignments->pluck('subject')
@@ -316,6 +363,10 @@ class TeacherSchedule extends Page {
      */
     public function updatedFilterSchoolYear(): void {
         $this->selectedLessonId = null;
+        $year = $this->filterSchoolYear ? SchoolYear::find($this->filterSchoolYear) : null;
+        $this->weekOffset = $year && (int) $year->year !== (int) now()->year
+            ? (int) now()->startOfWeek()->diffInWeeks($year->starts_at->copy()->startOfWeek(), false)
+            : 0;
     }
 
     /**
@@ -351,7 +402,8 @@ class TeacherSchedule extends Page {
      * @return void
      */
     public function resetFilters(): void {
-        $this->filterSchoolYear = '';
+        $this->filterSchoolYear = (string) (SchoolYear::current()?->id ?? '');
+        $this->weekOffset = 0;
         $this->filterClass      = '';
         $this->filterSubject    = '';
         $this->filterShift      = '';

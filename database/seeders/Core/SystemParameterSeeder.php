@@ -31,6 +31,7 @@ class SystemParameterSeeder extends Seeder
             ['key' => 'academic.minimum_attendance', 'name' => 'Frequência mínima obrigatória', 'category' => 'Regras acadêmicas', 'type' => SystemParameterType::DECIMAL, 'value' => '75.0', 'description' => 'Percentual mínimo de presença exigido para aprovação por frequência.'],
             ['key' => 'academic.term_model', 'name' => 'Modelo do período letivo', 'category' => 'Regras acadêmicas', 'type' => SystemParameterType::SELECT, 'value' => 'bimestre', 'options' => ['bimestre', 'trimestre', 'semestre'], 'description' => 'Define a organização dos períodos avaliativos e a nomenclatura exibida nos portais.'],
             ['key' => 'academic.default_class_capacity', 'name' => 'Capacidade padrão das turmas', 'category' => 'Regras acadêmicas', 'type' => SystemParameterType::INTEGER, 'value' => '35', 'description' => 'Quantidade padrão de vagas sugerida ao criar uma nova turma.'],
+            ['key' => 'teacher.student_details_enabled', 'name' => 'Detalhes do aluno no Portal do Professor', 'category' => 'Regras acadêmicas', 'type' => SystemParameterType::BOOLEAN, 'value' => '0', 'description' => 'Permite ao professor abrir dados acadêmicos e contato do responsável de alunos vinculados à aula selecionada.'],
         ];
 
         foreach ($parameters as $parameter) {

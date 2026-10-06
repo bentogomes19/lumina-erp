@@ -414,6 +414,9 @@
             </div>
 
             <div class="teacher-grades-actions" style="margin-top:1rem">
+                @if($selectedAssessment)
+                    <x-filament::button tag="a" :href="route('professor.reports.grades', $selectedAssessment)" target="_blank" color="gray" icon="fas-file-pdf">Imprimir PDF</x-filament::button>
+                @endif
                 @if($canSave)
                     <x-filament::button
                         type="button"

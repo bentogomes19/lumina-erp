@@ -3,9 +3,11 @@
 namespace App\Modules\Attendance\Application;
 
 use App\Enums\AttendanceStatus;
+use App\Enums\LessonStatus;
 use App\Models\Attendance;
 use App\Models\SchoolClass;
 use App\Models\Subject;
+use App\Models\Lesson;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -20,7 +22,7 @@ final class RecordTeacherAttendance {
      * @param SchoolClass $schoolClass
      * @param Subject $subject
      * @param string $date
-     * @param array<int, array{present:bool}> $attendanceRows
+     * @param array<int, array{status:string|null}> $attendanceRows
      * @param bool $canCreate
      * @param bool $canUpdate
      * @param int|null $recordedBy
@@ -31,7 +33,7 @@ final class RecordTeacherAttendance {
         Collection $students,
         SchoolClass $schoolClass,
         Subject $subject,
-        string $date,
+        Lesson $lesson,
         array $attendanceRows,
         bool $canCreate,
         bool $canUpdate,
@@ -44,7 +46,7 @@ final class RecordTeacherAttendance {
             $students,
             $schoolClass,
             $subject,
-            $date,
+            $lesson,
             $attendanceRows,
             $canCreate,
             $canUpdate,
@@ -52,16 +54,28 @@ final class RecordTeacherAttendance {
             &$created,
             &$updated,
         ): void {
+            $lockedLesson = Lesson::query()->whereKey($lesson->id)->lockForUpdate()->firstOrFail();
+            if ((int) $lockedLesson->class_id !== (int) $schoolClass->id
+                || (int) $lockedLesson->subject_id !== (int) $subject->id) {
+                throw ValidationException::withMessages(['lesson' => 'A aula não pertence à turma e disciplina selecionadas.']);
+            }
+
+            if (in_array($lockedLesson->status, [LessonStatus::CANCELLED, LessonStatus::RESCHEDULED], true)) {
+                throw ValidationException::withMessages(['lesson' => 'Aula cancelada ou reagendada não pode receber chamada.']);
+            }
+
             foreach ($students as $student) {
                 $studentId = (int) $student['student_id'];
-                $isPresent = $attendanceRows[$studentId]['present'] ?? ($student['status'] === AttendanceStatus::PRESENT->value);
-                $status = $isPresent ? AttendanceStatus::PRESENT->value : AttendanceStatus::ABSENT->value;
+                $status = $attendanceRows[$studentId]['status'] ?? null;
+                if (!in_array($status, array_keys(AttendanceStatus::options()), true)) {
+                    throw ValidationException::withMessages([
+                        "attendanceRows.{$studentId}.status" => 'Selecione a situação de frequência do aluno.',
+                    ]);
+                }
 
                 $attributes = [
                     'student_id' => $studentId,
-                    'class_id'   => $schoolClass->id,
-                    'subject_id' => $subject->id,
-                    'date'       => $date,
+                    'lesson_id'  => $lockedLesson->id,
                 ];
 
                 $existing = Attendance::query()
@@ -92,15 +106,22 @@ final class RecordTeacherAttendance {
                 }
 
                 Attendance::create($attributes + [
+                    'class_id'    => $schoolClass->id,
+                    'subject_id'  => $subject->id,
+                    'date'        => $lockedLesson->date->toDateString(),
                     'status'      => $status,
                     'recorded_by' => $recordedBy,
                 ]);
 
                 $created++;
             }
+
+            $lockedLesson->markAttendanceTaken($recordedBy);
         });
 
-        $present = $students->filter(fn (array $student): bool => (bool) ($attendanceRows[$student['student_id']]['present'] ?? ($student['status'] === AttendanceStatus::PRESENT->value)))->count();
+        $present = $students->filter(fn (array $student): bool =>
+            AttendanceStatus::from($attendanceRows[$student['student_id']]['status'])->countsAsPresent()
+        )->count();
 
         return [
             'created' => $created,

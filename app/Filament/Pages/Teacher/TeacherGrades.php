@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\Teacher;
 
 use App\Enums\AssessmentType;
+use App\Enums\ClassStatus;
 use App\Enums\EnrollmentStatus;
 use App\Enums\SchoolYearStatus;
 use App\Enums\TeacherStatus;
@@ -15,9 +16,20 @@ use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use App\Modules\Assessments\Application\RecordTeacherGrades;
 use App\Services\CurrentTeacherService;
+use App\Services\TeacherRosterService;
 use App\Support\PermissionAccess;
 use Filament\Notifications\Notification;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Callout;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -70,7 +82,12 @@ class TeacherGrades extends Page {
     public function mount(): void {
         $teacher         = $this->currentTeacher();
         $assignments     = $this->teacherAssignments($teacher);
-        $firstAssignment = $assignments->first();
+        $requestedClassId = request()->integer('class_id');
+        $requestedSubjectId = request()->integer('subject_id');
+        $firstAssignment = $assignments->first(fn (TeacherAssignment $assignment) =>
+            (int) $assignment->class_id === $requestedClassId
+            && (int) $assignment->subject_id === $requestedSubjectId
+        ) ?? $assignments->first();
 
         $this->selectedClassId      = $firstAssignment?->class_id;
         $this->selectedSubjectId    = $firstAssignment?->subject_id;
@@ -85,6 +102,7 @@ class TeacherGrades extends Page {
      * @return void
      */
     public function updatedSelectedClassId(): void {
+        $this->gradeRows = [];
         $this->selectedSubjectId    = $this->firstAvailableSubjectId($this->selectedClassId);
         $this->selectedAssessmentId = $this->firstAvailableAssessmentId($this->currentTeacher(), $this->selectedClassId, $this->selectedSubjectId);
         $this->saveSummary          = null;
@@ -97,6 +115,7 @@ class TeacherGrades extends Page {
      * @return void
      */
     public function updatedSelectedSubjectId(): void {
+        $this->gradeRows = [];
         $this->selectedAssessmentId = $this->firstAvailableAssessmentId($this->currentTeacher(), $this->selectedClassId, $this->selectedSubjectId);
         $this->saveSummary          = null;
         $this->syncGradeRows();
@@ -108,6 +127,7 @@ class TeacherGrades extends Page {
      * @return void
      */
     public function updatedSelectedAssessmentId(): void {
+        $this->gradeRows = [];
         $this->saveSummary = null;
         $this->syncGradeRows();
     }
@@ -119,6 +139,28 @@ class TeacherGrades extends Page {
      */
     public function getView(): string {
         return 'filament.pages.teacher.teacher-grades';
+    }
+
+    private function gradeStudentComponents(): array {
+        $data = $this->getPageData();
+        if ($data['students']->isEmpty()) {
+            return [Text::make($data['contextError'] ?? 'Nenhum aluno encontrado para esta avaliação.')];
+        }
+
+        return $data['students']->map(function (array $row) use ($data) {
+            $studentId = $row['student_id'];
+            $disabled = $row['locked'] || $data['assessmentClosed'] || $data['schoolYearClosed'];
+
+            return Section::make($row['student_name'])
+                ->description($row['registration_number'].' · Número '.$row['roll_number'])
+                ->schema([
+                    TextInput::make("gradeRows.{$studentId}.score")
+                        ->label('Nota')->numeric()->minValue(0)->maxValue($row['max_score'])
+                        ->disabled($disabled),
+                    Textarea::make("gradeRows.{$studentId}.comment")
+                        ->label('Observação')->rows(1)->disabled($disabled),
+                ])->columns(2)->compact();
+        })->all();
     }
 
     /**
@@ -144,6 +186,9 @@ class TeacherGrades extends Page {
                 'canSave'      => false,
                 'canPublish'   => false,
                 'isBlocked'    => $this->teacherIsBlocked($teacher),
+                'assessmentClosed' => false,
+                'schoolYearClosed' => false,
+                'hasLockedGrades' => false,
                 'contextError' => !$teacher ? 'Nenhum professor vinculado ao usuário atual.' : 'Você não possui turmas ou disciplinas atribuídas.',
                 'saveSummary'  => $this->saveSummary,
             ];
@@ -161,7 +206,8 @@ class TeacherGrades extends Page {
             $students         = $this->buildStudents($context['assessment']);
             $summary          = $this->buildSummary($students);
             $assessmentClosed = $context['assessment']->isClosed();
-            $schoolYearClosed = $context['schoolYear']?->status === SchoolYearStatus::CLOSED;
+            $schoolYearClosed = $context['schoolYear']?->status !== SchoolYearStatus::ACTIVE;
+            $schoolYearClosed = $schoolYearClosed || $context['class']?->status !== ClassStatus::OPEN;
             $hasLockedGrades  = Grade::query()
                 ->where('assessment_id', $context['assessment']->id)
                 ->whereNotNull('locked_at')
@@ -184,6 +230,7 @@ class TeacherGrades extends Page {
             && !$isBlocked
             && !$assessmentClosed
             && !$schoolYearClosed
+            && !$hasLockedGrades
             && $students->isNotEmpty();
 
         return [
@@ -263,10 +310,14 @@ class TeacherGrades extends Page {
             ]);
         }
 
-        if ($context['schoolYear']?->status === SchoolYearStatus::CLOSED) {
+        if ($context['schoolYear']?->status !== SchoolYearStatus::ACTIVE) {
             throw ValidationException::withMessages([
                 'assessment' => 'Período letivo fechado bloqueia edição de notas.',
             ]);
+        }
+
+        if ($context['class']?->status !== ClassStatus::OPEN) {
+            throw ValidationException::withMessages(['class_id' => 'A turma precisa estar aberta para lançar notas.']);
         }
 
         $students = $this->buildStudents($assessment);
@@ -358,11 +409,7 @@ class TeacherGrades extends Page {
             return true;
         }
 
-        return in_array($teacher->status, [
-            TeacherStatus::SABBATICAL,
-            TeacherStatus::INACTIVE,
-            TeacherStatus::TERMINATED,
-        ], true);
+        return !$teacher->canAccessOperationally();
     }
 
     /**
@@ -402,6 +449,7 @@ class TeacherGrades extends Page {
 
         return [
             'assessment' => $assessment,
+            'class' => $assignment->schoolClass,
             'schoolYear' => $assessment->schoolYear,
         ];
     }
@@ -414,16 +462,7 @@ class TeacherGrades extends Page {
      * @return Collection
      */
     private function buildStudents(Assessment $assessment): Collection {
-        $enrollments = Enrollment::query()
-            ->where('class_id', $assessment->class_id)
-            ->whereIn('status', [
-                EnrollmentStatus::ACTIVE->value,
-                EnrollmentStatus::SUSPENDED->value,
-                EnrollmentStatus::LOCKED->value,
-            ])
-            ->with(['student'])
-            ->orderBy('roll_number')
-            ->get();
+        $enrollments = app(TeacherRosterService::class)->forAssessment($assessment);
 
         $existing = Grade::query()
             ->where('assessment_id', $assessment->id)

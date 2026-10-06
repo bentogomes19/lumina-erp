@@ -2,11 +2,13 @@
 
 namespace App\Filament\Pages\Teacher;
 
+use App\Enums\ClassStatus;
 use App\Enums\SchoolYearStatus;
 use App\Enums\TeacherStatus;
 use App\Filament\Pages\Teacher\Concerns\HasTeacherPortalAccess;
 use App\Models\Assessment;
 use App\Models\SchoolClass;
+use App\Models\SchoolYear;
 use App\Models\Teacher;
 use App\Services\CurrentTeacherService;
 use App\Support\PermissionAccess;
@@ -18,6 +20,11 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -40,6 +47,16 @@ class TeacherAssessments extends Page implements HasTable {
     protected static string|null|\BackedEnum $navigationIcon = 'fas-clipboard-question';
     protected static ?int $navigationSort                    = 4;
     protected static ?string $teacherPortalPermission        = 'teacher.assessments.view';
+
+    public ?int $selectedSchoolYearId = null;
+
+    public function mount(): void {
+        $this->selectedSchoolYearId = SchoolYear::current()?->id;
+    }
+
+    public function updatedSelectedSchoolYearId(): void {
+        $this->resetTable();
+    }
 
     /**
      * Retorna o nome da visualização usada pela página.
@@ -68,6 +85,10 @@ class TeacherAssessments extends Page implements HasTable {
         return [
             'teacher'     => $teacher,
             'assignments' => $assignments,
+            'visibleAssignmentCount' => $assignments->filter(fn ($assignment) =>
+                (int) $assignment->schoolClass?->school_year_id === (int) $this->selectedSchoolYearId
+            )->count(),
+            'schoolYears' => $this->schoolYearOptions($teacher),
             'stats'       => [
                 'total'  => $assessments->count(),
                 'open'   => $assessments->where('status', 'open')->count(),
@@ -148,15 +169,11 @@ class TeacherAssessments extends Page implements HasTable {
             ->filters([
                 SelectFilter::make('class_id')
                     ->label('Turma')
-                    ->options(fn () => $this->classOptions($teacher)),
+                    ->options(fn () => $this->classOptions($teacher, false)),
 
                 SelectFilter::make('subject_id')
                     ->label('Disciplina')
-                    ->options(fn () => $this->subjectOptions($teacher)),
-
-                SelectFilter::make('school_year_id')
-                    ->label('Período')
-                    ->options(fn () => $this->schoolYearOptions($teacher)),
+                    ->options(fn () => $this->subjectOptions($teacher, null, false)),
 
                 SelectFilter::make('status')
                     ->label('Status')
@@ -165,10 +182,15 @@ class TeacherAssessments extends Page implements HasTable {
             ->headerActions([
                 CreateAction::make()
                     ->label('Criar avaliação')
+                    ->modalHeading('Criar avaliação')
                     ->icon('fas-plus')
-                    ->visible(fn () => $this->canCreateAssessments($this->currentTeacher(), $this->teacherAssignments()))
+                    ->visible(fn () => $this->canCreateAssessments($this->currentTeacher(), app(CurrentTeacherService::class)->currentAssignments()))
                     ->form($this->assessmentFormSchema())
                     ->using(function (array $data) {
+                        if (!$this->canCreateAssessments($this->currentTeacher(), app(CurrentTeacherService::class)->currentAssignments())) {
+                            throw ValidationException::withMessages(['school_year_id' => 'Você não pode criar avaliações neste ano letivo.']);
+                        }
+
                         return Assessment::create($this->prepareAssessmentPayload($data, null));
                     }),
             ])
@@ -179,6 +201,10 @@ class TeacherAssessments extends Page implements HasTable {
                     ->visible(fn (Assessment $record) => $this->canUpdateAssessment($record))
                     ->form($this->assessmentFormSchema())
                     ->using(function (Assessment $record, array $data) {
+                        if (!$this->canUpdateAssessment($record)) {
+                            throw ValidationException::withMessages(['assessment' => 'Você não pode editar esta avaliação.']);
+                        }
+
                         $record->update($this->prepareAssessmentPayload($data, $record));
 
                         return $record;
@@ -229,8 +255,9 @@ class TeacherAssessments extends Page implements HasTable {
             return Assessment::query()->whereRaw('1 = 0');
         }
 
-        return Assessment::query()
+        return app(CurrentTeacherService::class)->scopeAssignedPairs(Assessment::query(), $this->teacherAssignments($teacher))
             ->forTeacher($teacher->id)
+            ->where('school_year_id', $this->selectedSchoolYearId ?? 0)
             ->with(['schoolClass.schoolYear', 'subject', 'teacher']);
     }
 
@@ -250,11 +277,12 @@ class TeacherAssessments extends Page implements HasTable {
                 ->options(fn () => $this->classOptions($this->currentTeacher()))
                 ->searchable()
                 ->required()
-                ->live(),
+                ->live()
+                ->afterStateUpdated(fn (Set $set): mixed => $set('subject_id', null)),
 
             Select::make('subject_id')
                 ->label('Disciplina')
-                ->options(fn () => $this->subjectOptions($this->currentTeacher()))
+                ->options(fn (Get $get) => $this->subjectOptions($this->currentTeacher(), $get('class_id')))
                 ->searchable()
                 ->required(),
 
@@ -313,13 +341,13 @@ class TeacherAssessments extends Page implements HasTable {
 
         $assignments = $this->teacherAssignments($teacher);
 
-        if ($record === null && $this->teacherIsBlocked($teacher)) {
+        if ($this->teacherIsBlocked($teacher)) {
             throw ValidationException::withMessages([
                 'teacher_id' => 'Professor afastado, inativo ou desligado não pode criar avaliações.',
             ]);
         }
 
-        if (!$data['class_id'] || !$data['subject_id']) {
+        if (empty($data['class_id']) || empty($data['subject_id'])) {
             throw ValidationException::withMessages([
                 'class_id' => 'Selecione uma turma e uma disciplina válidas.',
             ]);
@@ -338,10 +366,14 @@ class TeacherAssessments extends Page implements HasTable {
 
         $schoolYear = $assignment->schoolClass?->schoolYear;
 
-        if ($schoolYear?->status === SchoolYearStatus::CLOSED) {
+        if ($schoolYear?->status !== SchoolYearStatus::ACTIVE) {
             throw ValidationException::withMessages([
                 'school_year_id' => 'Não é possível lançar avaliação em período letivo encerrado.',
             ]);
+        }
+
+        if ($assignment->schoolClass?->status !== ClassStatus::OPEN) {
+            throw ValidationException::withMessages(['class_id' => 'A turma precisa estar aberta para receber avaliações.']);
         }
 
         $maxScore = (float) ($data['max_score'] ?? 0);
@@ -372,7 +404,7 @@ class TeacherAssessments extends Page implements HasTable {
             'scheduled_at' => $data['scheduled_at'] ?? null,
             'max_score'    => $maxScore,
             'weight'       => (float) ($data['weight'] ?? 1),
-            'status'       => $data['status'] ?? 'open',
+            'status'       => $record?->status ?? 'open',
         ];
     }
 
@@ -407,7 +439,11 @@ class TeacherAssessments extends Page implements HasTable {
         return PermissionAccess::can('teacher.assessments.create')
             && $teacher !== null
             && !$this->teacherIsBlocked($teacher)
-            && $assignments->isNotEmpty();
+            && $this->selectedSchoolYearId === SchoolYear::current()?->id
+            && $assignments->contains(fn ($assignment) =>
+                $assignment->schoolClass?->schoolYear?->status === SchoolYearStatus::ACTIVE
+                && $assignment->schoolClass?->status === ClassStatus::OPEN
+            );
     }
 
     /**
@@ -422,7 +458,13 @@ class TeacherAssessments extends Page implements HasTable {
 
         return PermissionAccess::can('teacher.assessments.update')
             && $teacher !== null
+            && $teacher->canAccessOperationally()
             && (int) $record->teacher_id === (int) $teacher->id
+            && $record->schoolYear?->status === SchoolYearStatus::ACTIVE
+            && $record->schoolClass?->status === ClassStatus::OPEN
+            && $this->teacherAssignments($teacher)->contains(fn ($assignment) =>
+                (int) $assignment->class_id === (int) $record->class_id
+                && (int) $assignment->subject_id === (int) $record->subject_id)
             && !$record->isClosed();
     }
 
@@ -438,7 +480,13 @@ class TeacherAssessments extends Page implements HasTable {
 
         return PermissionAccess::can('teacher.assessments.close')
             && $teacher !== null
+            && $teacher->canAccessOperationally()
             && (int) $record->teacher_id === (int) $teacher->id
+            && $record->schoolYear?->status === SchoolYearStatus::ACTIVE
+            && $record->schoolClass?->status === ClassStatus::OPEN
+            && $this->teacherAssignments($teacher)->contains(fn ($assignment) =>
+                (int) $assignment->class_id === (int) $record->class_id
+                && (int) $assignment->subject_id === (int) $record->subject_id)
             && !$record->isClosed();
     }
 
@@ -454,11 +502,7 @@ class TeacherAssessments extends Page implements HasTable {
             return true;
         }
 
-        return in_array($teacher->status, [
-            TeacherStatus::SABBATICAL,
-            TeacherStatus::INACTIVE,
-            TeacherStatus::TERMINATED,
-        ], true);
+        return !$teacher->canAccessOperationally();
     }
 
     /**
@@ -468,10 +512,13 @@ class TeacherAssessments extends Page implements HasTable {
      *
      * @return array
      */
-    private function classOptions(?Teacher $teacher): array {
-        return $this->teacherAssignments($teacher)
+    private function classOptions(?Teacher $teacher, bool $currentOnly = true): array {
+        return ($currentOnly
+            ? app(CurrentTeacherService::class)->currentAssignments($teacher)
+            : $this->teacherAssignments($teacher))
             ->pluck('schoolClass')
             ->filter()
+            ->when($currentOnly, fn (Collection $classes) => $classes->filter(fn (SchoolClass $class) => $class->status === ClassStatus::OPEN))
             ->unique('id')
             ->sortBy('name')
             ->mapWithKeys(fn ($class) => [
@@ -488,8 +535,14 @@ class TeacherAssessments extends Page implements HasTable {
      *
      * @return array
      */
-    private function subjectOptions(?Teacher $teacher, $classId = null): array {
-        $assignments = $this->teacherAssignments($teacher);
+    private function subjectOptions(?Teacher $teacher, $classId = null, bool $currentOnly = true): array {
+        $assignments = $currentOnly
+            ? app(CurrentTeacherService::class)->currentAssignments($teacher)
+            : $this->teacherAssignments($teacher);
+
+        if ($currentOnly) {
+            $assignments = $assignments->filter(fn ($assignment) => $assignment->schoolClass?->status === ClassStatus::OPEN);
+        }
 
         if ($classId) {
             $assignments = $assignments->where('class_id', (int) $classId);
@@ -587,12 +640,12 @@ class TeacherAssessments extends Page implements HasTable {
      */
     private function assessmentTypeOptions(): array {
         return [
-            'prova'       => 'Prova',
-            'trabalho'    => 'Trabalho',
-            'atividade'   => 'Atividade',
-            'seminario'   => 'Seminário',
-            'projeto'     => 'Projeto',
-            'recuperacao' => 'Recuperação',
+            'test'        => 'Prova',
+            'work'        => 'Trabalho',
+            'activity'    => 'Atividade',
+            'seminar'     => 'Seminário',
+            'project'     => 'Projeto',
+            'recovery'    => 'Recuperação',
             'outro'       => 'Outro',
         ];
     }
@@ -605,7 +658,15 @@ class TeacherAssessments extends Page implements HasTable {
      * @return string
      */
     private function assessmentTypeLabel(string $type): string {
-        return $this->assessmentTypeOptions()[$type] ?? ucfirst($type);
+        return $this->assessmentTypeOptions()[$type] ?? match ($type) {
+            'prova' => 'Prova',
+            'trabalho' => 'Trabalho',
+            'atividade' => 'Atividade',
+            'projeto' => 'Projeto',
+            'seminario' => 'Seminário',
+            'recuperacao' => 'Recuperação',
+            default => ucfirst($type),
+        };
     }
 
     /**
@@ -617,12 +678,12 @@ class TeacherAssessments extends Page implements HasTable {
      */
     private function assessmentTypeColor(string $type): string {
         return match ($type) {
-            'prova'       => 'danger',
-            'trabalho'    => 'warning',
-            'atividade'   => 'info',
-            'seminario'   => 'primary',
-            'projeto'     => 'success',
-            'recuperacao' => 'gray',
+            'test', 'prova' => 'danger',
+            'work', 'trabalho' => 'warning',
+            'activity', 'atividade' => 'info',
+            'seminar', 'seminario' => 'primary',
+            'project', 'projeto' => 'success',
+            'recovery', 'recuperacao' => 'gray',
             default       => 'gray',
         };
     }
