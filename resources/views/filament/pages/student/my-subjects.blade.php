@@ -62,7 +62,7 @@
                         ['icon' => 'fas-book-open',   'value' => $stats['total_subjects'],                                                                                              'label' => 'Disciplinas',  'color' => 'var(--lumina-primary)'],
                         ['icon' => 'fas-chart-bar',   'value' => $stats['overall_average'] !== null    ? number_format($stats['overall_average'], 1, ',', '.')    . '' : '—',           'label' => 'Média Geral',  'color' => $avgColor],
                         ['icon' => 'fas-circle-check','value' => $stats['attendance_percent'] !== null ? number_format($stats['attendance_percent'], 1, ',', '.') . '%' : '—',          'label' => 'Frequência',   'color' => $freqColor],
-                        ['icon' => 'fas-clock',       'value' => $stats['total_hours_weekly'] ?: '—',                                                                                   'label' => 'Horas/Semana', 'color' => '#0f766e'],
+                        ['icon' => 'fas-clock',       'value' => $stats['total_hours_weekly'] ?: '—',                                                                                   'label' => 'Horas/Semana', 'color' => 'var(--lumina-primary)'],
                     ];
                 @endphp
                 @foreach($statCards as $card)

@@ -15,22 +15,21 @@ use App\Filament\Widgets\UpcomingAssessments;
 use App\Support\SystemBranding;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
+use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Caresome\FilamentAuthDesigner\AuthDesignerPlugin;
-use Caresome\FilamentAuthDesigner\Data\AuthPageConfig;
-use Caresome\FilamentAuthDesigner\Enums\MediaPosition;
-use SpyApp\ThemeEdinburgh\ThemeEdinburghPlugin;
+use Khwr\FilamentQt5Theme\FilamentQt5ThemePlugin;
 
 class StudentPanelProvider extends PanelProvider {
 
@@ -42,9 +41,14 @@ class StudentPanelProvider extends PanelProvider {
             ->brandName(fn (): string => 'Portal do Aluno | '.app(SystemBranding::class)->institutionName())
             ->brandLogo(fn (): ?string => app(SystemBranding::class)->logoUrl())
             ->brandLogoHeight('2.25rem')
+            ->login(StudentLogin::class)
             ->passwordReset(RequestPasswordReset::class)
             ->homeUrl(fn (): string => DashboardStudent::getUrl(panel: 'aluno'))
+            ->font('Inter Variable', url: asset('fonts/filament/filament/inter/index.css'), provider: LocalFontProvider::class)
             ->viteTheme('resources/css/filament/aluno/theme.css')
+            ->colors([
+                'primary' => Color::hex('#3D5A80'),
+            ])
             ->pages([
                 DashboardStudent::class,
             ])
@@ -78,13 +82,7 @@ class StudentPanelProvider extends PanelProvider {
                 EnsurePasswordWasChanged::class,
             ])
             ->plugins([
-                ThemeEdinburghPlugin::make(),
-                AuthDesignerPlugin::make()
-                    ->login(fn (AuthPageConfig $config) => $config
-                        ->media(asset('images/student-login-background.png'), alt: 'Pátio de uma escola histórica em Edimburgo')
-                        ->mediaPosition(MediaPosition::Cover)
-                        ->blur(2)
-                        ->usingPage(StudentLogin::class)),
+                FilamentQt5ThemePlugin::make(),
             ]);
     }
 }

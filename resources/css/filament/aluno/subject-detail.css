@@ -1,28 +1,4 @@
-/* ── Light mode (default) ── */
-        :root {
-            --ms-card-bg:        #ffffff;
-            --ms-card-border:    #e2e8f0;
-            --ms-cell-bg:        #f1f5f9;
-            --ms-bar-bg:         #e2e8f0;
-            --ms-text-primary:   #1e293b;
-            --ms-text-secondary: #64748b;
-            --ms-text-muted:     #94a3b8;
-            --ms-hover-bg:       #f8fafc;
-        }
-
-        /* ── Dark mode — controlado pela classe .dark do Filament ── */
-        .dark {
-            --ms-card-bg:        #080a0c;
-            --ms-card-border:    #334155;
-            --ms-cell-bg:        #0f172a;
-            --ms-bar-bg:         #10141d;
-            --ms-text-primary:   #f1f5f9;
-            --ms-text-secondary: #94a3b8;
-            --ms-text-muted:     #64748b;
-            --ms-hover-bg:       #0a0d11;
-        }
-
-        /* ── Base card ── */
+/* ── Base card ── */
         .ms-card {
             background: var(--ms-card-bg);
             border: 1px solid var(--ms-card-border);

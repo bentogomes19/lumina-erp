@@ -4,19 +4,19 @@
         $currentClass = $data['currentClass'];
     @endphp
 
-    <div class="student-grades-dashboard">
+    <div class="space-y-6">
         @if(!$data['student'] || !$currentClass)
             <x-filament::section>
                 <x-slot name="heading">Nenhuma turma ativa encontrada</x-slot>
                 Suas notas aparecerão aqui quando houver uma matrícula no ano letivo vigente.
             </x-filament::section>
         @else
-            <div class="sg-context">
-                <p><strong>{{ $currentClass->name }}</strong> <span>· Ano letivo {{ $currentClass->schoolYear?->year }}</span></p>
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+                <p><strong class="text-gray-950 dark:text-white">{{ $currentClass->name }}</strong> <span>· Ano letivo {{ $currentClass->schoolYear?->year }}</span></p>
                 <p>Consulte as médias e abra os detalhes de cada disciplina para ver as avaliações.</p>
             </div>
 
-            <div class="sg-periods" role="group" aria-label="Período das notas">
+            <div class="flex flex-wrap gap-2" role="group" aria-label="Período das notas">
                 @foreach(\App\Filament\Pages\Student\MyGrades::PERIODS as $key => $label)
                     <x-filament::button
                         :color="$this->selectedPeriod === $key ? 'primary' : 'gray'"
@@ -30,19 +30,15 @@
                 @endforeach
             </div>
 
-            <div class="sg-summary">
-                @livewire(\App\Filament\Widgets\StudentGradeSummary::class, ['stats' => $data['stats']])
-            </div>
-
-            <div class="sg-results" wire:loading.class="sg-loading" wire:target="setPeriod">
+            <div wire:loading.class="opacity-50" wire:target="setPeriod">
                 {{ $this->table }}
             </div>
-            <p class="sg-help" role="status" aria-live="polite">
+            <p class="text-sm text-gray-600 dark:text-gray-400" role="status" aria-live="polite">
                 {{ $data['period_label'] }} · {{ $data['stats']['total'] }} disciplinas.
                 @if($data['stats']['ongoing'] > 0)
                     {{ $data['stats']['ongoing'] }} sem nota neste período.
                 @endif
-                As médias são parciais e consideram as notas já lançadas. “Abaixo da média” indica necessidade de atenção, não uma reprovação definitiva.
+                * Média final e situação consideram as notas já lançadas; antes do fechamento dos quatro bimestres, os resultados são parciais. “Abaixo da média” indica necessidade de atenção, não uma reprovação definitiva.
             </p>
         @endif
     </div>

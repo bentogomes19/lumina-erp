@@ -21,7 +21,7 @@
         $dowNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
         $categories = [
-            'assessment'  => ['label' => 'Avaliações',    'color' => '#3b82f6', 'icon' => 'fas-pen-to-square'],
+            'assessment'  => ['label' => 'Avaliações',    'color' => 'var(--lumina-primary)', 'icon' => 'fas-pen-to-square'],
             'holiday'     => ['label' => 'Feriados',      'color' => '#ef4444', 'icon' => 'fas-flag'],
             'recess'      => ['label' => 'Recessos',      'color' => '#0284c7', 'icon' => 'fas-sun'],
             'school_event'=> ['label' => 'Eventos',       'color' => '#10b981', 'icon' => 'fas-star'],
@@ -360,7 +360,7 @@
                                                         </span>
                                                     @endif
                                                     @if($ev['impacts_grade'])
-                                                        <span style="font-size:0.6rem;color:#3b82f6;display:flex;align-items:center;gap:2px">
+                                                        <span style="font-size:0.6rem;color:var(--lumina-primary);display:flex;align-items:center;gap:2px">
                                                             @svg('fas-graduation-cap', '', ['style' => 'width:0.625rem;height:0.625rem'])
                                                             Impacta nota
                                                         </span>
@@ -538,7 +538,7 @@
                         {{-- Impact badges --}}
                         <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;flex-wrap:wrap">
                             <template x-if="selectedEvent.impacts_grade">
-                                <span style="font-size:0.6875rem;font-weight:500;padding:3px 8px;border-radius:999px;background:rgba(59,130,246,0.12);color:#3b82f6;display:flex;align-items:center;gap:4px">
+                                <span style="font-size:0.6875rem;font-weight:500;padding:3px 8px;border-radius:999px;background:var(--lumina-primary-soft);color:var(--lumina-primary);display:flex;align-items:center;gap:4px">
                                     @svg('fas-graduation-cap', '', ['style' => 'width:0.75rem;height:0.75rem'])
                                     Impacta nota
                                 </span>

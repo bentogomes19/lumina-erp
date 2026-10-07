@@ -161,6 +161,14 @@ Para o resumo de notas, recuperações são excluídas e é calculada a média s
 
 A página localiza a turma do ano ativo e consulta todas as notas do aluno nessa turma. O aluno pode alternar entre ano completo e `b1`, `b2`, `b3`, `b4`.
 
+A visão inicial é o boletim anual compacto: uma linha por disciplina da turma e colunas para os quatro bimestres, média final, notas de recuperação identificadas pelo bimestre e situação. Em telas estreitas, a tabela permite rolagem horizontal. Antes do fechamento do ano, a média final e a situação são parciais.
+
+O portal do aluno usa a mesma base visual, fonte, paleta azul e plugin Qt5 do painel administrativo em suas páginas de dashboard, notas, frequência, disciplinas e calendário. A dependência Edinburgh foi removida. “Minhas Notas” usa a tabela e os botões nativos do Filament, sem os cards de média do período, disciplinas na média ou disciplinas que precisam de atenção.
+
+Ao selecionar um bimestre, a tabela mostra uma linha por disciplina e colunas para todas as avaliações lançadas naquele período (por exemplo, Prova 1, Prova 2 e Trabalho 1), seguidas de recuperação e média final. O número de colunas acompanha as avaliações existentes; notas não lançadas aparecem como travessão. A tabela não tem busca por disciplina.
+
+As colunas Prova 1 e Prova 2 permanecem visíveis mesmo quando ainda não há lançamentos no bimestre, assim como Recuperação e Média Final.
+
 As notas são agrupadas por disciplina e processadas por `GradeCalculationService`:
 
 - notas sem `score` não entram na média;
@@ -174,13 +182,13 @@ As notas são agrupadas por disciplina e processadas por `GradeCalculationServic
 - sem média calculável é `ongoing`;
 - o serviço estima pontos necessários em uma futura avaliação de peso 1, limitado a 10.
 
-A página ordena disciplinas na sequência: reprovada, recuperação, em andamento e aprovada.
+A tabela anual, as tabelas bimestrais e o PDF apresentam as disciplinas em ordem alfabética, independentemente da situação do aluno.
 
 #### Boletim em PDF
 
 O botão “Baixar Boletim (PDF)” aparece com `student.report-card.download`. O PDF é gerado dentro da própria página usando os dados já filtrados pelo aluno autenticado e pela turma atual.
 
-Quando um período foi selecionado na tela, o PDF usa o mesmo conjunto filtrado. Sem aluno ou turma, o método encerra sem download e sem mensagem específica.
+O PDF sempre usa os dados do ano completo, mesmo quando a tela está filtrada por bimestre. Ele apresenta uma coluna por bimestre, média final, recuperação e situação para cada disciplina. Sem aluno ou turma, o método encerra sem download e sem mensagem específica.
 
 ### 7.3 Frequência
 

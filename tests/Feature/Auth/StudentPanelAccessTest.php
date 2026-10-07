@@ -2,11 +2,14 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Filament\Pages\Auth\StudentLogin;
 use App\Models\Role;
 use App\Models\Student;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class StudentPanelAccessTest extends TestCase {
@@ -38,6 +41,28 @@ class StudentPanelAccessTest extends TestCase {
         $this->assertFalse($user->canAccessPanel(Filament::getPanel('aluno')));
     }
 
+    public function test_student_can_submit_login_and_authenticate_on_student_guard(): void {
+        Role::create(['name' => 'student', 'guard_name' => 'web']);
+        $user = User::factory()->create([
+            'email' => 'aluno@example.test',
+            'password' => Hash::make('Senha-aluno-2026'),
+            'active' => true,
+            'force_password_change' => false,
+        ]);
+        $user->assignRole('student');
+        Student::factory()->create(['user_id' => $user->id, 'status' => 'active']);
+
+        Filament::setCurrentPanel(Filament::getPanel('aluno'));
+
+        Livewire::test(StudentLogin::class)
+            ->set('data.email', $user->email)
+            ->set('data.password', 'Senha-aluno-2026')
+            ->call('authenticate')
+            ->assertHasNoFormErrors();
+
+        $this->assertAuthenticatedAs($user, 'student');
+    }
+
     public function test_administrative_role_is_limited_to_the_administrative_panel(): void {
         Role::create(['name' => 'admin', 'guard_name' => 'web']);
         $user = User::factory()->create();
@@ -62,9 +87,8 @@ class StudentPanelAccessTest extends TestCase {
             ->assertSee('lumina:theme:aluno')
             ->assertDontSee('lumina:theme:lumina')
             ->assertDontSee('lumina:theme:professor')
-            ->assertSee('student-login-background.png')
-            ->assertSee('auth-designer')
-            ->assertDontSee('johnrivera7/filament-mia-theme/mia.css');
+            ->assertSee('filament-qt5-theme-styles.css')
+            ->assertDontSee('student-login-background.png');
 
         $this->get('/lumina/login')
             ->assertOk()

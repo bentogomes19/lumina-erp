@@ -191,7 +191,7 @@
             @if($subject->description || $syllabus || $objectives)
                 <div class="ms-card" style="padding:1.25rem">
                     <h3 style="font-size:1rem;font-weight:600;color:var(--ms-text-primary);margin:0 0 1rem 0;display:flex;align-items:center;gap:0.5rem">
-                        @svg('fas-file-lines', '', ['style' => 'width:1.125rem;height:1.125rem;color:#0284c7'])
+                        @svg('fas-file-lines', '', ['style' => 'width:1.125rem;height:1.125rem;color:var(--lumina-primary)'])
                         Ementa e Descrição
                     </h3>
 
@@ -230,9 +230,9 @@
 
                     @if($hoursWeekly)
                         <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--ms-bar-bg)">
-                            <div style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 0.875rem;background:rgba(2,132,199,0.12);border-radius:0.5rem">
-                                @svg('fas-clock', '', ['style' => 'width:1rem;height:1rem;color:#38bdf8'])
-                                <span style="font-size:0.875rem;color:#bae6fd">
+                            <div style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 0.875rem;background:var(--lumina-primary-soft);border-radius:0.5rem">
+                                @svg('fas-clock', '', ['style' => 'width:1rem;height:1rem;color:var(--lumina-primary)'])
+                                <span style="font-size:0.875rem;color:var(--lumina-primary-strong)">
                                     <strong>{{ $hoursWeekly }}</strong> horas semanais
                                 </span>
                             </div>

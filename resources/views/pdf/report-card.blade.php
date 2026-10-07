@@ -11,12 +11,10 @@
 @php
     $documentLogo = $systemBranding->documentLogoDataUri();
     $schoolYear      = $currentClass->schoolYear?->year ?? $generatedAt->year;
-    $selectedPeriod  = $selectedPeriod ?? 'all';
     $termLabels      = ['b1' => '1º bimestre', 'b2' => '2º bimestre', 'b3' => '3º bimestre', 'b4' => '4º bimestre'];
-    $periodLabel     = $termLabels[$selectedPeriod] ?? 'Todos os bimestres';
     $formatGrade     = fn ($value) => $value === null ? '—' : number_format($value, 1, ',', '');
     $statusLabels    = ['approved' => 'Aprovado', 'recovery' => 'Recuperação', 'failed' => 'Reprovado', 'ongoing' => 'Cursando'];
-    $orderedSubjects = collect($subjects)->sortBy(fn ($item) => mb_strtolower($item['subject']?->name ?? ''));
+    $orderedSubjects = $subjects;
 @endphp
 
 <footer class="page-footer">
@@ -52,7 +50,7 @@
         <td><span class="field-label">Série / Ano</span>{{ $currentClass->gradeLevel?->name ?? '—' }}</td>
         <td><span class="field-label">Turma</span>{{ $currentClass->name }}</td>
         <td><span class="field-label">Turno</span>{{ $currentClass->shift?->label() ?? '—' }}</td>
-        <td><span class="field-label">Período consultado</span>{{ $periodLabel }}</td>
+        <td><span class="field-label">Período consultado</span>Ano letivo completo</td>
     </tr>
 </table>
 
@@ -60,17 +58,13 @@
 <table class="grades">
     <thead>
         <tr>
-            <th rowspan="2" class="subject-heading" style="width: 26%">Componente curricular</th>
+            <th class="subject-heading" style="width: 27%">Componente curricular</th>
             @foreach($termLabels as $label)
-                <th colspan="2" style="width: 12%">{{ $label }}</th>
+                <th style="width: 9%">{{ $label }}</th>
             @endforeach
-            <th rowspan="2" style="width: 10%">Média<br>apurada</th>
-            <th rowspan="2" style="width: 16%">Situação*</th>
-        </tr>
-        <tr>
-            @foreach($termLabels as $label)
-                <th>Média</th><th>Rec.</th>
-            @endforeach
+            <th style="width: 10%">Média<br>final*</th>
+            <th style="width: 15%">Recuperação</th>
+            <th style="width: 12%">Situação*</th>
         </tr>
     </thead>
     <tbody>
@@ -80,24 +74,23 @@
                 @foreach($termLabels as $key => $label)
                     @php
                         $termAverage = $item['terms'][$key]['final_average'] ?? null;
-                        $recoveryScore = data_get($item, "terms.$key.recovery.score");
                     @endphp
                     <td class="{{ $termAverage === null ? '' : ($termAverage >= $minimumGrade ? 'grade-passing' : 'grade-attention') }}">{{ $formatGrade($termAverage) }}</td>
-                    <td class="recovery-grade {{ $recoveryScore === null ? '' : ($recoveryScore >= $minimumGrade ? 'grade-passing' : 'grade-attention') }}">{{ $formatGrade($recoveryScore) }}</td>
                 @endforeach
                 <td class="average {{ $item['overall_average'] === null ? '' : ($item['overall_average'] >= $minimumGrade ? 'grade-passing' : 'grade-attention') }}">{{ $formatGrade($item['overall_average']) }}</td>
+                <td class="recovery-grade">{{ \App\Filament\Pages\Student\MyGrades::recoverySummary($item) }}</td>
                 <td class="status {{ $item['overall_average'] === null ? '' : ($item['overall_average'] >= $minimumGrade ? 'grade-passing' : 'grade-attention') }}">{{ $statusLabels[$item['status']] ?? '—' }}</td>
             </tr>
         @empty
-            <tr><td colspan="11" class="empty-state">Não há notas lançadas para o período consultado.</td></tr>
+            <tr><td colspan="8" class="empty-state">Não há disciplinas registradas para o ano letivo.</td></tr>
         @endforelse
     </tbody>
 </table>
 
 <div class="table-notes">
-    <p><strong>Legenda:</strong> Média = média bimestral, considerando a recuperação quando houver; Rec. = nota de recuperação; — = sem lançamento ou fora do período consultado.</p>
+    <p><strong>Legenda:</strong> Cada bimestre mostra a média apurada, considerando a recuperação quando houver. Recuperação mostra o bimestre e a nota obtida. — = sem lançamento.</p>
     <p><strong>Critério de referência:</strong> média para aprovação {{ $formatGrade($minimumGrade) }} · Escala de notas: 0 a {{ $formatGrade(\App\Services\GradeCalculationService::MAX_SCORE) }}.</p>
-    <p>* A média apurada e a situação consideram as notas disponíveis no período consultado. Durante o ano letivo, os resultados são parciais e não substituem o fechamento escolar.</p>
+    <p>* A média final e a situação consideram as notas disponíveis. Antes do fechamento dos quatro bimestres, os resultados são parciais e não substituem o fechamento escolar.</p>
 </div>
 
 <div class="closing-block">

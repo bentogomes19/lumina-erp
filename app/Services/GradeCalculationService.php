@@ -110,7 +110,7 @@ class GradeCalculationService {
 
             $avg   = $this->weightedAverage($termGrades);
             $final = ($termRecovery !== null && $avg !== null)
-                ? max($avg, $termRecovery->score ?? $avg)
+                ? max($avg, $termRecovery->score === null ? $avg : (float) $termRecovery->score)
                 : $avg;
 
             $termData[$termKey] = [

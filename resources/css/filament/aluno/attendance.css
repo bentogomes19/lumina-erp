@@ -1,27 +1,4 @@
-/* ── Light mode ── */
-        :root {
-            --ms-card-bg:        #ffffff;
-            --ms-card-border:    #e2e8f0;
-            --ms-cell-bg:        #f1f5f9;
-            --ms-bar-bg:         #e2e8f0;
-            --ms-text-primary:   #1e293b;
-            --ms-text-secondary: #64748b;
-            --ms-text-muted:     #94a3b8;
-            --ms-hover-bg:       #f8fafc;
-        }
-        /* ── Dark mode via Filament .dark ── */
-        .dark {
-            --ms-card-bg:        #080a0c;
-            --ms-card-border:    #334155;
-            --ms-cell-bg:        #0f172a;
-            --ms-bar-bg:         #10141d;
-            --ms-text-primary:   #f1f5f9;
-            --ms-text-secondary: #94a3b8;
-            --ms-text-muted:     #64748b;
-            --ms-hover-bg:       #0a0d11;
-        }
-
-        .ms-card {
+.ms-card {
             background: var(--ms-card-bg);
             border: 1px solid var(--ms-card-border);
             border-radius: 0.75rem;
@@ -64,10 +41,10 @@
             background: var(--ms-cell-bg);
         }
         .ms-cal-day.today      { outline: 2px solid var(--lumina-primary); outline-offset: 1px; }
-        .ms-cal-day.present    { background: rgba(34,197,94,0.20);  color: #16a34a; font-weight: 700; }
-        .ms-cal-day.absent     { background: rgba(239,68,68,0.20);  color: #dc2626; font-weight: 700; }
-        .ms-cal-day.late       { background: rgba(234,179,8,0.20);  color: #ca8a04; font-weight: 700; }
-        .ms-cal-day.excused    { background: rgba(6,182,212,0.20);  color: #0891b2; font-weight: 700; }
+        .ms-cal-day.present    { background: color-mix(in srgb, var(--lumina-success) 20%, transparent); color: var(--lumina-success); font-weight: 700; }
+        .ms-cal-day.absent     { background: color-mix(in srgb, var(--lumina-danger) 20%, transparent); color: var(--lumina-danger); font-weight: 700; }
+        .ms-cal-day.late       { background: color-mix(in srgb, var(--lumina-warning) 20%, transparent); color: var(--lumina-warning); font-weight: 700; }
+        .ms-cal-day.excused    { background: color-mix(in srgb, var(--lumina-info) 20%, transparent); color: var(--lumina-info); font-weight: 700; }
         .ms-cal-day.weekend    { opacity: 0.35; }
         .ms-cal-day.empty      { background: transparent; }
 

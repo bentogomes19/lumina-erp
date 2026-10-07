@@ -1,32 +1,4 @@
-/* ── CSS Variables ── */
-        :root {
-            --ac-card-bg:        #ffffff;
-            --ac-card-border:    #e2e8f0;
-            --ac-cell-bg:        #f8fafc;
-            --ac-cell-border:    #e2e8f0;
-            --ac-bar-bg:         #e2e8f0;
-            --ac-text-primary:   #1e293b;
-            --ac-text-secondary: #64748b;
-            --ac-text-muted:     #94a3b8;
-            --ac-hover-bg:       #f1f5f9;
-            --ac-today-ring:     var(--lumina-primary);
-            --ac-weekend-bg:     #f8fafc;
-        }
-        .dark {
-            --ac-card-bg:        #080a0c;
-            --ac-card-border:    #334155;
-            --ac-cell-bg:        #0c1019;
-            --ac-cell-border:    #1e293b;
-            --ac-bar-bg:         #10141d;
-            --ac-text-primary:   #f1f5f9;
-            --ac-text-secondary: #94a3b8;
-            --ac-text-muted:     #64748b;
-            --ac-hover-bg:       #0a0d11;
-            --ac-today-ring:     var(--lumina-primary);
-            --ac-weekend-bg:     #0a0d11;
-        }
-
-        .ac-card {
+.ac-card {
             background: var(--ac-card-bg);
             border: 1px solid var(--ac-card-border);
             border-radius: 0.75rem;

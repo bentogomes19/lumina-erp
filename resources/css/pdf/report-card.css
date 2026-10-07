@@ -139,11 +139,6 @@ h1 {
     padding: 1.8mm 1mm;
 }
 
-.grades thead tr + tr th {
-    background: #f3f4f5;
-    font-size: 6.5pt;
-}
-
 .grades .subject-heading, .grades .subject-name {
     text-align: left;
     padding-left: 2.5mm;
@@ -171,6 +166,7 @@ h1 {
 
 .grades .recovery-grade {
     color: #505861;
+    font-size: 7pt;
 }
 
 .grades .grade-passing { color: #166534; background: #ecfdf3; font-weight: bold; }

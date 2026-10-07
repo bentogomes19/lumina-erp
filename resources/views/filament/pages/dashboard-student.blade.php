@@ -201,7 +201,7 @@
                             'icon'  => 'fas-clipboard-list',
                             'value' => $upcomingAssessments->count(),
                             'label' => 'Próximas Avaliações',
-                            'color' => '#0f766e',
+                            'color' => 'var(--lumina-primary)',
                             'sub'   => 'nos próximos 7 dias',
                         ],
                     ]);
@@ -291,7 +291,7 @@
                 {{-- Próximas avaliações --}}
                 <div class="ms-card" style="padding:1.25rem">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
-                        @svg('fas-clipboard-list', '', ['style' => 'width:1.125rem;height:1.125rem;color:#0f766e'])
+                        @svg('fas-clipboard-list', '', ['style' => 'width:1.125rem;height:1.125rem;color:var(--lumina-primary)'])
                         <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Próximas Avaliações</h3>
                     </div>
 
@@ -305,7 +305,7 @@
                                 @php
                                     $daysUntil = now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($assessment->scheduled_at)->startOfDay(), false);
                                     $isUrgent  = $daysUntil <= 2;
-                                    $urgColor  = $isUrgent ? '#ef4444' : ($daysUntil <= 4 ? '#eab308' : '#0f766e');
+                                    $urgColor  = $isUrgent ? '#ef4444' : ($daysUntil <= 4 ? '#eab308' : 'var(--lumina-primary)');
                                 @endphp
                                 <div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.625rem;border-radius:0.5rem;background:var(--ms-cell-bg)">
                                     {{-- Data --}}
@@ -418,7 +418,7 @@
 
                             if ($canViewCalendar) {
                                 $shortcuts[] =
-                                ['href' => '/aluno/academic-calendar', 'icon' => 'fas-calendar',         'label' => 'Calendário Escolar', 'color' => '#0f766e', 'badge' => null];
+                                ['href' => '/aluno/academic-calendar', 'icon' => 'fas-calendar',         'label' => 'Calendário Escolar', 'color' => 'var(--lumina-primary)', 'badge' => null];
                             }
                         @endphp
                         @foreach($shortcuts as $sh)

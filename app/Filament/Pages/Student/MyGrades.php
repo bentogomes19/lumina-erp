@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages\Student;
 
-use App\Enums\TermType;
+use App\Enums\AssessmentType;
 use App\Models\Grade;
 use App\Models\SchoolClass;
 use App\Services\GradeCalculationService;
@@ -13,7 +13,6 @@ use Filament\Pages\Page;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
@@ -33,32 +32,9 @@ class MyGrades extends Page implements HasTable {
     public const PERIODS = ['b1' => '1º bimestre', 'b2' => '2º bimestre', 'b3' => '3º bimestre', 'b4' => '4º bimestre', 'all' => 'Visão anual'];
 
     #[Locked]
-    public string $selectedPeriod = 'b1';
+    public string $selectedPeriod = 'all';
 
     protected ?array $cachedPageData = null;
-
-    public function mount(): void {
-        $currentClass = $this->currentClass();
-        if (!$currentClass) {
-            return;
-        }
-
-        $term = $currentClass->schoolYear->terms()
-            ->where('type', TermType::BIMESTER)
-            ->whereBetween('sequence', [1, 4])
-            ->whereDate('starts_at', '<=', today())
-            ->whereDate('ends_at', '>=', today())
-            ->first();
-
-        $latestTerm = Grade::where('student_id', auth()->user()?->student?->id)
-            ->where('class_id', $currentClass->id)
-            ->whereNotNull('score')
-            ->whereIn('term', ['b1', 'b2', 'b3', 'b4'])
-            ->orderByDesc('term')
-            ->value('term');
-
-        $this->selectedPeriod = $term ? 'b'.$term->sequence : ($latestTerm?->value ?? 'b1');
-    }
 
     protected function currentClass(): ?SchoolClass {
         return auth()->user()?->student?->classes()
@@ -136,7 +112,7 @@ class MyGrades extends Page implements HasTable {
             Action::make('downloadReportCard')
                 ->label('Baixar boletim')
                 ->icon('fas-download')
-                ->color('success')
+                ->color('primary')
                 ->visible(fn () => PermissionAccess::can('student.report-card.download'))
                 ->action(fn () => $this->downloadReportCard()),
         ];
@@ -151,16 +127,18 @@ class MyGrades extends Page implements HasTable {
         return $this->cachedPageData ??= $this->buildPageData();
     }
 
-    protected function buildPageData(): array {
+    protected function buildPageData(?string $period = null): array {
+        $period ??= $this->selectedPeriod;
         $student = auth()->user()?->student;
 
         $empty = [
             'student'         => null,
             'currentClass'    => null,
             'subjects'        => [],
+            'assessment_columns' => [],
             'stats'           => ['total' => 0, 'approved' => 0, 'recovery' => 0, 'failed' => 0, 'ongoing' => 0, 'average' => null],
-            'selected_period' => $this->selectedPeriod,
-            'period_label'    => $this->periodLabel(),
+            'selected_period' => $period,
+            'period_label'    => $this->periodLabel(null, $period),
             'min_approval'    => app(GradeCalculationService::class)->minimumApproval(),
         ];
 
@@ -187,9 +165,9 @@ class MyGrades extends Page implements HasTable {
         foreach ($allGrades->groupBy('subject_id') as $grades) {
             /** @var \Illuminate\Support\Collection $grades */
             $subject    = $grades->first()->subject;
-            $periodGrades = $this->selectedPeriod === 'all'
+            $periodGrades = $period === 'all'
                 ? $grades
-                : $grades->filter(fn (Grade $grade) => $grade->term?->value === $this->selectedPeriod);
+                : $grades->filter(fn (Grade $grade) => $grade->term?->value === $period);
             $report     = $service->subjectReport(collect($periodGrades));
             $subjects[] = array_merge(['subject' => $subject], $report);
         }
@@ -199,18 +177,50 @@ class MyGrades extends Page implements HasTable {
             $subjects[] = ['subject' => $subject, ...$service->subjectReport(collect())];
         }
 
-        /* Prioriza as disciplinas que precisam de atenção e desempata pelo nome. */
-        $statusOrder = ['failed' => 0, 'recovery' => 1, 'ongoing' => 2, 'approved' => 3];
-        usort($subjects, fn ($a, $b) => (($statusOrder[$a['status']] ?? 4) <=> ($statusOrder[$b['status']] ?? 4))
-            ?: strcasecmp($a['subject']?->name ?? '', $b['subject']?->name ?? ''));
+        usort($subjects, fn (array $a, array $b) =>
+            strnatcasecmp(Str::ascii($a['subject']?->name ?? ''), Str::ascii($b['subject']?->name ?? ''))
+            ?: strnatcasecmp($a['subject']?->name ?? '', $b['subject']?->name ?? '')
+            ?: (($a['subject']?->id ?? 0) <=> ($b['subject']?->id ?? 0)));
 
         $col      = collect($subjects);
         $averages = $col->pluck('overall_average')->filter(fn ($v) => $v !== null);
+
+        $assessmentColumns = [];
+        if ($period !== 'all') {
+            foreach (AssessmentType::cases() as $type) {
+                if ($type === AssessmentType::RECOVERY) {
+                    continue;
+                }
+
+                $maximum = $col->max(function (array $item) use ($period, $type): int {
+                    $prefix = $type->value.'_';
+                    $slots = array_keys($this->assessmentScoresForPeriod($item, $period));
+
+                    return collect($slots)
+                        ->filter(fn (string $key) => str_starts_with($key, $prefix))
+                        ->map(fn (string $key) => (int) substr($key, strlen($prefix)))
+                        ->max() ?? 0;
+                }) ?? 0;
+
+                // O boletim bimestral mantém as duas provas previstas mesmo antes dos lançamentos.
+                if ($type === AssessmentType::TEST) {
+                    $maximum = max(2, $maximum);
+                }
+
+                for ($number = 1; $number <= $maximum; $number++) {
+                    $assessmentColumns[] = [
+                        'key' => $type->value.'_'.$number,
+                        'label' => $type->label().' '.$number,
+                    ];
+                }
+            }
+        }
 
         return [
             'student'      => $student,
             'currentClass' => $currentClass,
             'subjects'     => $subjects,
+            'assessment_columns' => $assessmentColumns,
             'stats'        => [
                 'total'    => $col->count(),
                 'approved' => $col->where('status', 'approved')->count(),
@@ -219,8 +229,8 @@ class MyGrades extends Page implements HasTable {
                 'ongoing'  => $col->where('status', 'ongoing')->count(),
                 'average'  => $averages->isNotEmpty() ? round($averages->avg(), 1) : null,
             ],
-            'selected_period' => $this->selectedPeriod,
-            'period_label'    => $this->periodLabel($currentClass->schoolYear?->year),
+            'selected_period' => $period,
+            'period_label'    => $this->periodLabel($currentClass->schoolYear?->year, $period),
             'min_approval'    => $service->minimumApproval(),
         ];
     }
@@ -237,40 +247,56 @@ class MyGrades extends Page implements HasTable {
         $format = fn ($state): string => number_format((float) $state, 1, ',', '');
 
         return $table
-            ->heading(fn () => $this->selectedPeriod === 'all' ? 'Médias por bimestre' : 'Notas por disciplina')
+            ->heading(fn () => $this->selectedPeriod === 'all' ? 'Meu boletim' : 'Boletim do '.self::PERIODS[$this->selectedPeriod])
             ->description(fn () => $this->getPageData()['period_label'].' · Média da escola: '.number_format($this->getPageData()['min_approval'], 1, ',', ''))
-            ->records(function (?string $search): Collection {
+            ->records(function (): Collection {
                 return collect($this->getPageData()['subjects'])
                     ->mapWithKeys(fn (array $item) => [$item['subject']->id => [
                         ...$item,
                         'subject_name' => $item['subject']->name,
-                    ]])
-                    ->when(filled($search), fn (Collection $rows) => $rows->filter(
-                        fn (array $row) => str_contains(Str::lower($row['subject_name']), Str::lower($search)),
-                    ));
+                        'assessment_scores' => $this->assessmentScores($item),
+                    ]]);
             })
             ->columns([
-                ViewColumn::make('subject_name')
+                TextColumn::make('subject_name')
                     ->label('Disciplina')
-                    ->view('filament.tables.columns.student-grade-subject'),
+                    ->weight(FontWeight::SemiBold)
+                    ->wrap(),
+                ...collect($this->getPageData()['assessment_columns'])->map(fn (array $column) => TextColumn::make('assessment_scores.'.$column['key'])
+                    ->label($column['label'])
+                    ->alignCenter()
+                    ->placeholder('—')
+                    ->formatStateUsing($format))->all(),
                 ...collect(['b1', 'b2', 'b3', 'b4'])->map(fn (string $term) => TextColumn::make('terms.'.$term.'.final_average')
                     ->label(self::PERIODS[$term])
                     ->visible(fn () => $this->selectedPeriod === 'all')
-                    ->visibleFrom('md')
                     ->alignCenter()
                     ->placeholder('—')
                     ->color(fn ($state) => self::progressColor($state === null ? null : (float) $state))
                     ->formatStateUsing($format))->all(),
+                TextColumn::make('term_recovery')
+                    ->label('Recuperação')
+                    ->visible(fn () => $this->selectedPeriod !== 'all')
+                    ->state(fn (array $record) => data_get($record, 'terms.'.$this->selectedPeriod.'.recovery.score'))
+                    ->alignCenter()
+                    ->placeholder('—')
+                    ->formatStateUsing($format),
                 TextColumn::make('overall_average')
-                    ->label(fn () => $this->selectedPeriod === 'all' ? 'Média parcial' : 'Média')
+                    ->label(fn () => $this->selectedPeriod === 'all' ? 'Média final*' : 'Média final')
                     ->alignCenter()
                     ->weight(FontWeight::Bold)
                     ->color(fn (array $record) => self::progressColor($record['overall_average']))
                     ->placeholder('—')
                     ->formatStateUsing($format),
+                TextColumn::make('recovery_summary')
+                    ->label('Recuperação')
+                    ->visible(fn () => $this->selectedPeriod === 'all')
+                    ->state(fn (array $record) => self::recoverySummary($record))
+                    ->alignCenter()
+                    ->placeholder('—'),
                 TextColumn::make('progress')
-                    ->label('Acompanhamento')
-                    ->visibleFrom('md')
+                    ->label('Situação')
+                    ->visible(fn () => $this->selectedPeriod === 'all')
                     ->state(fn (array $record) => self::progressLabel($record['overall_average']))
                     ->badge()
                     ->color(fn (array $record) => self::progressColor($record['overall_average'])),
@@ -291,12 +317,50 @@ class MyGrades extends Page implements HasTable {
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Fechar'),
             ])
-            ->searchable()
-            ->searchPlaceholder('Buscar disciplina')
             ->paginated(false)
             ->striped()
             ->emptyStateHeading('Nenhuma disciplina encontrada')
-            ->emptyStateDescription('Não há notas registradas ou a busca não encontrou uma disciplina.');
+            ->emptyStateDescription('Não há disciplinas registradas para esta turma.');
+    }
+
+    private function assessmentScores(array $item): array {
+        if ($this->selectedPeriod === 'all') {
+            return [];
+        }
+
+        return $this->assessmentScoresForPeriod($item, $this->selectedPeriod);
+    }
+
+    private function assessmentScoresForPeriod(array $item, string $period): array {
+        $scores = [];
+        foreach (AssessmentType::cases() as $type) {
+            if ($type === AssessmentType::RECOVERY) {
+                continue;
+            }
+
+            $grades = $item['terms'][$period]['grades']
+                ->filter(fn (Grade $grade) => $grade->assessment_type === $type)
+                ->values();
+
+            foreach ($grades as $grade) {
+                $number = max(1, (int) $grade->sequence);
+                while (array_key_exists($type->value.'_'.$number, $scores)) {
+                    $number++;
+                }
+                $scores[$type->value.'_'.$number] = $grade->score;
+            }
+        }
+
+        return $scores;
+    }
+
+    public static function recoverySummary(array $record): string {
+        $scores = collect(['b1', 'b2', 'b3', 'b4'])
+            ->map(fn (string $term) => [$term, data_get($record, "terms.$term.recovery.score")])
+            ->filter(fn (array $entry) => $entry[1] !== null)
+            ->map(fn (array $entry) => substr($entry[0], 1).'º: '.number_format((float) $entry[1], 1, ',', ''));
+
+        return $scores->isEmpty() ? '—' : $scores->implode(' · ');
     }
 
     /* Métodos privados. */
@@ -306,10 +370,11 @@ class MyGrades extends Page implements HasTable {
      *
      * @return string
      */
-    private function periodLabel(?int $year = null): string {
+    private function periodLabel(?int $year = null, ?string $period = null): string {
         $year ??= now()->year;
+        $period ??= $this->selectedPeriod;
 
-        return match ($this->selectedPeriod) {
+        return match ($period) {
             'b1'    => "1º Bimestre $year",
             'b2'    => "2º Bimestre $year",
             'b3'    => "3º Bimestre $year",
@@ -325,7 +390,7 @@ class MyGrades extends Page implements HasTable {
      */
     private function downloadReportCard() {
         abort_unless(PermissionAccess::can('student.report-card.download'), 403);
-        $data = $this->getPageData();
+        $data = $this->buildPageData('all');
 
         if (!$data['student'] || !$data['currentClass']) {
             return;
