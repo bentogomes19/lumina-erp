@@ -1,33 +1,25 @@
-# Visão Geral do Lumina ERP
+# Visão geral do Lumina ERP
 
-## Propósito
+## Objetivo e escopo
 
-O **Lumina ERP** é um sistema de gestão escolar focado em:
-- Centralizar dados acadêmicos, administrativos e financeiros.
-- Reduzir trabalho manual de secretaria.
-- Gerar informações confiáveis para coordenação e direção.
+O Lumina ERP centraliza cadastros e operações acadêmicas de uma escola em uma aplicação web. O recorte implementado cobre usuários e permissões, alunos e professores, estrutura acadêmica, turmas, matrículas, avaliações, notas, frequência, indicadores administrativos e documentos PDF. Gestão financeira e integrações externas não fazem parte do produto demonstrado.
 
-## Públicos
+## Perfis e entrada
 
-- **Secretaria** – cadastro de alunos, turmas, matrículas, históricos.
-- **Coordenação/ Direção** – relatórios, indicadores, visão macro.
-- **Professores** – lançamento de notas, frequências, planos de aula.
-- **Responsáveis / Alunos** (futuro) – acesso a boletins, comunicados.
+| Perfil | Entrada | Uso principal |
+| --- | --- | --- |
+| Administração/secretaria | `/lumina/login` | Cadastros, matrículas, estrutura acadêmica e permissões conforme o papel |
+| Professor | `/professor/login` | Turmas, avaliações, notas e frequência das atribuições permitidas |
+| Aluno | `/aluno/login` | Consulta de disciplinas, notas, frequência e calendário |
 
-## Módulos
+Os painéis são configurados separadamente em `app/Providers/Filament`. O controle de acesso combina autenticação, papéis, permissões e verificações de contexto nos fluxos.
 
-- **Acadêmico**
-    - Alunos, professores, turmas, anos letivos, matrículas, avaliações.
-- **Administração**
-    - Usuários, papéis, permissões (Spatie).
-- **Financeiro** (futuro)
-    - Mensalidades, boletos, inadimplência.
-- **Integrações** (futuro)
-    - APIs para integrações com outros sistemas escolares.
+## Arquitetura
 
-## Tecnologias
+- PHP 8.4, Laravel 12 e Filament 5 no backend e na interface administrativa.
+- MySQL 8 para persistência; migrations e seeders em `database/`.
+- Vite, Tailwind CSS e JavaScript para assets.
+- Docker Compose com serviços `app`, `nginx` e `db` para desenvolvimento local.
+- DomPDF para documentos acadêmicos em PDF.
 
-- **Backend:** Laravel + PHP 8.x
-- **Admin UI:** Filament
-- **Banco de Dados:** MySQL / MariaDB
-- **Infra:** Docker (containers para app, banco, etc.)
+O projeto é um **protótipo acadêmico**. A [validação de demonstração](./validacao-demonstracao.md) registra o que foi comprovado e os bloqueios conhecidos; ela não substitui uma homologação de produção.

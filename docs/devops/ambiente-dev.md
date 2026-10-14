@@ -1,6 +1,6 @@
 # Ambiente de desenvolvimento – Lumina ERP
 
-Este guia cobre **clone**, **autenticação com GitHub** e **primeiro refresh no browser** no menor tempo possível.
+Este guia cobre instalação e execução local. PHP 8.4, Composer e Node 22 estão dentro do container `app`; no computador são necessários Git e Docker Compose. Make é opcional.
 
 ---
 
@@ -24,7 +24,7 @@ Para clonar e **enviar alterações** (push) sem ficar digitando senha, use uma 
 
 4. **Clonar com SSH** (em vez de HTTPS):
    ```bash
-   git clone git@github.com:SEU_ORG_OU_USUARIO/lumina-erp.git
+   git clone git@github.com:bentogomes19/lumina-erp.git
    cd lumina-erp
    ```
    Assim, `git push` e `git pull` não pedem senha.
@@ -41,7 +41,7 @@ Para clonar e **enviar alterações** (push) sem ficar digitando senha, use uma 
 
 3. **Clonar** (o CLI já usa a sessão):
    ```bash
-   gh repo clone SEU_ORG_OU_USUARIO/lumina-erp
+   gh repo clone bentogomes19/lumina-erp
    cd lumina-erp
    ```
 
@@ -90,7 +90,7 @@ Objetivo: **mínimo de passos** entre clonar e abrir a aplicação no browser.
 ### Com Make (recomendado)
 
 ```bash
-git clone git@github.com:SEU_ORG_OU_USUARIO/lumina-erp.git
+git clone git@github.com:bentogomes19/lumina-erp.git
 cd lumina-erp
 make bootstrap
 ```
@@ -100,9 +100,9 @@ O `make bootstrap`:
 1. Copia `.env.example` → `.env` se não existir
 2. Sobe os containers (app, nginx, MySQL)
 3. Espera o banco ficar saudável
-4. Roda `composer install`, `php artisan key:generate`, `migrate --seed`
+4. Executa `composer install`, `npm ci`, `npm run build`, geração da chave, publicação de assets e `migrate --seed`
 
-Depois, abra no browser: **http://lumina/**.
+Depois, abra **http://localhost/lumina/login**. Para usar o nome `lumina`, configure o arquivo hosts e abra **http://lumina/lumina/login**. O portal docente fica em `/professor/login` e o discente em `/aluno/login`.
 
 ### Sem Make (PowerShell / Bash)
 
@@ -113,7 +113,13 @@ Se não tiver Make, na raiz do projeto:
 if (!(Test-Path .env)) { Copy-Item .env.example .env }
 docker compose up -d --build
 # Aguardar ~20s para o MySQL subir, depois:
-docker exec lumina-app sh -c "composer install && php artisan key:generate && php artisan migrate --seed"
+docker exec lumina-app composer install --no-scripts
+docker exec lumina-app npm ci
+docker exec lumina-app npm run build
+docker exec lumina-app php artisan key:generate
+docker exec lumina-app php artisan package:discover
+docker exec lumina-app php artisan filament:assets
+docker exec lumina-app php artisan migrate --seed --force
 ```
 
 **Bash:**
@@ -121,10 +127,16 @@ docker exec lumina-app sh -c "composer install && php artisan key:generate && ph
 [ -f .env ] || cp .env.example .env
 docker compose up -d --build
 sleep 25
-docker exec lumina-app sh -c "composer install && php artisan key:generate && php artisan migrate --seed"
+docker exec lumina-app composer install --no-scripts
+docker exec lumina-app npm ci
+docker exec lumina-app npm run build
+docker exec lumina-app php artisan key:generate
+docker exec lumina-app php artisan package:discover
+docker exec lumina-app php artisan filament:assets
+docker exec lumina-app php artisan migrate --seed --force
 ```
 
-Em seguida: **http://lumina/**.
+Em seguida: **http://localhost/lumina/login** (ou `http://lumina/lumina/login` com o host configurado).
 
 ---
 
@@ -152,6 +164,6 @@ Em seguida: **http://lumina/**.
 1. **Autenticação (uma vez):** SSH ou `gh auth login`.
 2. **Clone:** `git clone ...` (de preferência via SSH).
 3. **Subir e instalar:** `make bootstrap`.
-4. **Abrir:** http://lumina/.
+4. **Abrir:** http://localhost/lumina/login.
 
 Isso reduz o tempo entre “clonagem” e “primeiro refresh no browser” ao mínimo possível, com um único comando após o clone.

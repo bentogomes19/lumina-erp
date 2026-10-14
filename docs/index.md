@@ -1,31 +1,22 @@
-# Lumina ERP – Documentação
+# Documentação do Lumina ERP
 
-Bem-vindo à documentação do **Lumina ERP**, sistema de gestão escolar.
+**Estado em 06/10/2026:** protótipo funcional para demonstração local, com pendências de teste e padronização. O escopo implementado se concentra em gestão acadêmica, usuários e permissões, portal docente e portal discente. Não há módulo financeiro operacional nem API pública de negócio.
 
-<div align="center">
-  <b>Estado atual:</b> <span style="color:orange;">Em desenvolvimento (MVP)</span><br />
-  <b>Módulos ativos:</b> Acadêmico, Usuários, Permissões
-</div>
+## Comece aqui
 
----
+- [Visão geral e escopo](./visao-geral.md)
+- [Instalação e ambiente](./devops/ambiente-dev.md)
+- [Validação e roteiro de demonstração](./validacao-demonstracao.md)
+- [Modelo relacional](./banco-de-dados/modelo-relacional.md)
 
-## Seções principais
+## Regras e fluxos
 
-- [Visão Geral](./visao-geral.md)
-- [Análise geral e fluxos de cadastro](./analise-geral-e-fluxos-de-cadastro.md)
-- [Portal do Aluno](./portal-do-aluno.md)
-- [Domínio Escolar](./dominio-escolar/visao-geral-dominio.md)
-- [Arquitetura](./arquitetura/arquitetura-geral.md)
-- [Banco de Dados](./banco-de-dados/modelo-relacional.md)
-- [API](./api/autenticacao.md)
-- [DevOps / Ambiente](./devops/ambiente-dev.md)
-- [Roadmap](./roadmap.md)
+- [Matrículas](./regras-matricula.md)
+- [Portal do aluno](./portal-do-aluno.md)
+- [Portal do professor — análise histórica](./teacher-portal.md)
+- [Permissões diretas excepcionais](./permissoes-diretas.md)
+- [Frequência](./sistema-de-frequencias.md)
+- [Dias letivos](./sistema-de-dias-letivos.md)
+- [Análise geral e fluxos de cadastro — levantamento histórico](./analise-geral-e-fluxos-de-cadastro.md)
 
-<details>
-  <summary><b>Guia rápido para novos devs</b></summary>
-
-1. Leia a [Visão Geral](./visao-geral.md)
-2. Configure o ambiente: [Ambiente Dev](./devops/ambiente-dev.md)
-3. Entenda o domínio: [Domínio Escolar](./dominio-escolar/visao-geral-dominio.md)
-
-</details>
+Os dois levantamentos históricos descrevem versões anteriores e podem conter problemas já corrigidos. Para rotas, versões e estado de testes atuais, use o roteiro de validação e o código-fonte.

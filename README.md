@@ -1,78 +1,37 @@
-# Lumina ERP 
+# Lumina ERP
 
-Sistema de Gestão Escolar desenvolvido em **Laravel + Filament + Docker**.
+Sistema web de gestão escolar desenvolvido com **PHP 8.4, Laravel 12, Filament 5 e MySQL 8**. O projeto reúne administração acadêmica, portal do professor e portal do aluno.
 
-## Introdução do Sistema
-Lumina ERP é um sistema de gestão acadêmica, tem a finalidade de simplificar os processos.
+## Instalação para demonstração local
 
----
-
-## 🚀 Do clone ao primeiro refresh no browser
-
-**Pré-requisitos:** [Docker](https://docs.docker.com/get-docker) e Git. Para enviar código (push) sem senha: [SSH no GitHub](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) ou [GitHub CLI](https://cli.github.com).
-
-Clone o repositório e, na pasta do projeto, configure o SSH antes de inicializar o ambiente:
+Pré-requisitos no computador: Docker com Compose, Git e Make. PHP, Composer e Node são fornecidos pelo container; a imagem usa Node 22. A porta HTTP definida em `APP_PORT` (padrão 80) precisa estar livre.
 
 ```bash
-git clone git@github.com:SEU_ORG_OU_USUARIO/lumina-erp.git
+git clone https://github.com/bentogomes19/lumina-erp.git
 cd lumina-erp
-make ssh
 make bootstrap
 ```
 
-O `make ssh` solicita nome e e-mail do desenvolvedor. O e-mail é usado como comentário ao criar uma chave Ed25519 em `~/.ssh/id_ed25519`; se já existir uma chave, ela é reutilizada sem alterações. O comando mostra somente a chave pública e aguarda você adicioná-la ao GitHub; depois de confirmar com Enter, testa a autenticação SSH, configura a identidade de commit neste repositório e converte o remoto `origin` do GitHub para SSH. A chave privada permanece no computador e o container a acessa em modo somente leitura.
+O bootstrap cria `.env`, sobe app/nginx/MySQL, instala dependências, compila os assets, gera `APP_KEY` e executa migrations com dados de demonstração. A carga escolar é permitida apenas em `APP_ENV=local` ou `testing`. Revise a configuração antes de usar uma base com dados que deseja preservar. Para contribuir via SSH, veja o [guia de ambiente](./docs/devops/ambiente-dev.md).
 
-Depois abra **http://lumina/** no browser.
+Abra `http://localhost/lumina/login` ou, após mapear `127.0.0.1 lumina` no arquivo hosts, `http://lumina/lumina/login`. Os outros portais ficam em `/professor/login` e `/aluno/login`. Se a porta 80 estiver ocupada, defina `APP_PORT` no `.env` e acesse `http://localhost:PORTA`.
 
-Para abrir pelo nome local `lumina/` no Windows, adicione esta linha no arquivo `C:\Windows\System32\drivers\etc\hosts` executando o editor como administrador:
+As contas de demonstração são criadas pelos seeders; veja o [roteiro de validação](./docs/validacao-demonstracao.md). O ambiente padrão grava e-mails no log (`MAIL_MAILER=log`), então convites e recuperação de senha não chegam a uma caixa de entrada real.
 
-```text
-127.0.0.1 lumina
+## Verificações no container
+
+```bash
+docker compose ps
+docker compose exec -T app php artisan migrate:status
+docker compose exec -T app npm run build
+docker compose exec -T app php -d memory_limit=512M ./vendor/bin/phpunit --no-progress
+docker compose exec -T app ./vendor/bin/pint --test
 ```
 
-O nginx publica a porta HTTP padrão `80`, então não é necessário informar `:8000` na URL.
+Em 06/10/2026, o build e as migrations passaram, mas a suíte de testes e o Pint **não** passaram; veja os [resultados e limitações](./docs/validacao-demonstracao.md).
 
-O `make bootstrap` cria o `.env` (se não existir), sobe os containers (app, nginx, MySQL), instala dependências e roda as migrations com seeders.
+## Documentação
 
-**Sem Make?** Veja o passo a passo e alternativas em [Ambiente Dev](./docs/devops/ambiente-dev.md) (inclui **autenticação GitHub** e comandos PowerShell/Bash).
-
----
-
-## Comandos úteis (Makefile)
-| Comando | Descrição |
-|---------|-----------|
-| `make bootstrap` | Do zero: .env + up + install + migrate --seed |
-| `make ssh` | Cria/reutiliza chave SSH, aguarda cadastro no GitHub e testa a conexão |
-| `make up` | Sobe os containers |
-| `make down` | Para os containers |
-| `make shell` | Entra no container (zsh) |
-| `make migrate` | Roda migrations |
-| `make seed` | Migrations + seeders |
-| `make test` | PHPUnit |
-| `make lint` | Laravel Pint (checagem) |
-
----
-
-## Infraestrutura e DevOps
-
-- **Docker**: `Dockerfile` (PHP 8.2-FPM, Composer, Node 18), `compose.yaml` (app, nginx, MySQL 8) com healthcheck no banco e variáveis via `.env`. Dentro do container o projeto fica em **`/dev/lumina-erp`**.
-- **.dockerignore**: reduz tamanho do contexto de build e acelera o build.
-- **CI (GitHub Actions)**: em cada push/PR em `main` e `develop` roda **Laravel Pint**, **PHPUnit** (com MySQL em serviço) e **build da imagem Docker** (`.github/workflows/ci.yaml`).
-- **Makefile**: atalhos para bootstrap, build, up, down, shell, migrate, seed, test e lint.
-
-Para adicionar workers de fila no futuro, use o perfil `workers` no `compose.yaml` (serviço `queue` comentado).
-
-<div style="
-    border: 1px solid #d39aadff;
-    background-color: rgba(175, 9, 180, 1);
-    padding: 10px 20px;
-    text-align: center;
-    font-weight: bold;
-    color: white;
-">
-    📕 Documentação Oficial
-</div>
-
----
-
-[📕 Documentação Oficial - Clique Aqui](./docs/index.md)
+- [Índice](./docs/index.md)
+- [Ambiente e instalação detalhada](./docs/devops/ambiente-dev.md)
+- [Validação e demonstração](./docs/validacao-demonstracao.md)
