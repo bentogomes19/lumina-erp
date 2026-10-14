@@ -5,6 +5,7 @@ namespace Tests\Feature\Enrollments;
 use App\Enums\EnrollmentStatus;
 use App\Models\Enrollment;
 use App\Models\GradeLevel;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
@@ -31,6 +32,7 @@ class EnrollmentCapacityTest extends TestCase {
     protected function setUp(): void {
         parent::setUp();
 
+        $this->travelTo('2026-10-14 12:00:00');
         Filament::setCurrentPanel(Filament::getPanel('lumina'));
     }
 
@@ -127,6 +129,26 @@ class EnrollmentCapacityTest extends TestCase {
     }
 
     /**
+     * Uma transferência confirmada libera a vaga de origem e ocupa a de destino.
+     */
+    public function test_successful_transfer_moves_the_occupied_slot(): void {
+        $schoolYear  = $this->schoolYear(2026);
+        $sourceClass = $this->schoolClass(capacity: 1, schoolYear: $schoolYear, name: 'Turma Origem');
+        $targetClass = $this->schoolClass(capacity: 1, schoolYear: $schoolYear, name: 'Turma Destino');
+        $source      = $this->enrollment($sourceClass, EnrollmentStatus::ACTIVE);
+
+        $newEnrollment = $this->service()->transfer($source, $targetClass->id, 'Mudança de turno');
+
+        $this->assertSame(EnrollmentStatus::TRANSFERRED_INTERNAL, $source->fresh()->status);
+        $this->assertSame(EnrollmentStatus::ACTIVE, $newEnrollment->status);
+        $this->assertSame($source->id, $newEnrollment->previous_enrollment_id);
+        $this->assertSame(0, $this->service()->occupiedSlots($sourceClass));
+        $this->assertSame(1, $this->service()->remainingSlots($sourceClass));
+        $this->assertSame(1, $this->service()->occupiedSlots($targetClass));
+        $this->assertSame(0, $this->service()->remainingSlots($targetClass));
+    }
+
+    /**
      * Verifica que rematrícula também respeita a lotação da turma de destino.
      *
      * @return void
@@ -168,9 +190,11 @@ class EnrollmentCapacityTest extends TestCase {
         $this->assertSame(3, $this->service()->occupiedSlots($schoolClass));
 
         $this->assertValidationMessage(
-            fn () => $this->service()->updateStatus($canceled, EnrollmentStatus::ACTIVE),
+            fn () => $this->service()->restoreCanceled($canceled, 'Retorno à turma.'),
             'A turma Turma 2026 atingiu a capacidade de 3 vagas. Ocupação atual: 3.',
         );
+
+        $this->assertSame(EnrollmentStatus::CANCELED, $canceled->fresh()->status);
 
         $this->service()->cancel($active, 'Teste de liberação de vaga.');
         $this->service()->restoreCanceled($canceled, 'Teste de retomada de vaga.');
@@ -221,6 +245,13 @@ class EnrollmentCapacityTest extends TestCase {
             'force_password_change' => false,
         ]);
         $user->syncRoles([$role]);
+        foreach ([
+            'academic.classes.view_any',
+            'academic.enrollments.view_any',
+            'academic.enrollments.create',
+        ] as $permissionName) {
+            $role->givePermissionTo(Permission::findOrCreate($permissionName, 'web'));
+        }
         $this->schoolClass(capacity: 20);
 
         $this->actingAs($user)
@@ -289,7 +320,7 @@ class EnrollmentCapacityTest extends TestCase {
             'starts_at' => "{$year}-02-01",
             'ends_at'   => "{$year}-12-20",
             'is_active' => $year === 2026,
-            'status'    => 'ativo',
+            'status'    => $year === 2026 ? 'ativo' : 'encerrado',
         ]);
     }
 
