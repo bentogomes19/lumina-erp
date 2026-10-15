@@ -4,6 +4,7 @@ namespace Tests\Feature\Pdf;
 
 use App\Models\Enrollment;
 use App\Models\GradeLevel;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
@@ -41,6 +42,21 @@ class EnrollmentPdfAuthorizationTest extends TestCase {
     }
 
     /**
+     * Confirma que cada rota autorizada produz bytes de um PDF real.
+     */
+    #[DataProvider('endpointProvider')]
+    public function test_each_enrollment_document_renders_a_real_pdf(string $route): void {
+        $user       = $this->userWithRole('admin');
+        $enrollment = $this->enrollmentFor();
+
+        $response = $this->actingAs($user)->get(route($route, $enrollment));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+    }
+
+    /**
      * Verifica se um aluno não pode emitir documentos da matrícula de outro aluno.
      *
      * @param string $route
@@ -54,6 +70,19 @@ class EnrollmentPdfAuthorizationTest extends TestCase {
 
         $this->actingAs($studentUser)
             ->get(route($route, $anotherEnrollment))
+            ->assertForbidden();
+    }
+
+    /**
+     * O nome do perfil, isoladamente, não concede acesso aos documentos.
+     */
+    public function test_administrative_role_without_document_permission_is_denied(): void {
+        $user = User::factory()->create();
+        $user->assignRole(Role::findOrCreate('admin', 'web'));
+        $enrollment = $this->enrollmentFor();
+
+        $this->actingAs($user)
+            ->get(route('pdf.enrollment.comprovante', $enrollment))
             ->assertForbidden();
     }
 
@@ -204,8 +233,18 @@ class EnrollmentPdfAuthorizationTest extends TestCase {
     private function userWithRole(string $role, bool $active = true): User {
         $user = User::factory()->create(['active' => $active]);
 
-        Role::findOrCreate($role, 'web');
-        $user->assignRole($role);
+        $assignedRole = Role::findOrCreate($role, 'web');
+        $documentPermission = match ($role) {
+            'admin', 'ti', 'secretaria', 'financeiro' => 'academic.enrollments.documents.view',
+            'student' => 'student.documents.view',
+            default => null,
+        };
+
+        if ($documentPermission !== null) {
+            $assignedRole->givePermissionTo(Permission::findOrCreate($documentPermission, 'web'));
+        }
+
+        $user->assignRole($assignedRole);
 
         return $user;
     }

@@ -61,10 +61,10 @@ class SubjectFactory extends Factory {
 
         $subjectName = $this->faker->randomElement(array_keys($availableSubjects));
         $code        = $availableSubjects[$subjectName];
+        $uniqueCode  = strtoupper($code).'-'.$this->faker->unique()->numerify('######');
 
         return [
-            'code'               => strtoupper($code),
-            'normalized_code'    => strtolower($code),
+            'code'               => $uniqueCode,
             'name'               => $subjectName,
             'category'           => $category,
             'status'             => 'active',

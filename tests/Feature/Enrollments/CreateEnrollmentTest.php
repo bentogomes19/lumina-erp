@@ -59,7 +59,7 @@ class CreateEnrollmentTest extends TestCase {
      */
     public function test_student_access_uses_role_permissions_without_direct_copy(): void {
         $schoolClass = $this->schoolClass();
-        $permission  = Permission::create([
+        $permission  = Permission::firstOrCreate([
             'name'       => 'student.dashboard.view',
             'guard_name' => 'web',
         ]);

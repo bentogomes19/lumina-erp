@@ -67,7 +67,7 @@ class TeacherOnboardingTest extends TestCase {
      * @return void
      */
     public function test_teacher_access_uses_role_permissions_without_direct_copy(): void {
-        $permission = Permission::create([
+        $permission = Permission::firstOrCreate([
             'name'       => 'teacher.dashboard.view',
             'guard_name' => 'web',
         ]);
@@ -169,7 +169,7 @@ class TeacherOnboardingTest extends TestCase {
             ]),
             array_merge($this->teacherData('DOC-003'), [
                 'cpf'   => '123.456.789-09',
-                'email' => ' PROFESSOR@EXAMPLE.TEST ',
+                'email' => ' PROFESSOR-001@EXAMPLE.TEST ',
             ]),
         ];
 
@@ -500,7 +500,7 @@ class TeacherOnboardingTest extends TestCase {
      * @return User
      */
     private function actingAsUserWithCurriculumExceptionPermission(): User {
-        $permission = Permission::create([
+        $permission = Permission::firstOrCreate([
             'name'       => 'admin.teachers.assignments.curriculum_exception',
             'guard_name' => 'web',
         ]);

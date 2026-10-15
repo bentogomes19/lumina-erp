@@ -77,7 +77,7 @@ class TeacherGradesExperienceTest extends TestCase
         foreach ([$first, $second] as $student) {
             Enrollment::factory()->create(['student_id' => $student->id, 'class_id' => $class->id, 'school_year_id' => $year->id]);
         }
-        SystemParameter::create(['key' => 'academic.minimum_grade', 'name' => 'Média mínima', 'category' => 'Regras acadêmicas', 'type' => 'decimal', 'value' => '7.0', 'default_value' => '6.0', 'is_active' => true, 'is_system' => true]);
+        SystemParameter::create(['key' => 'academic.minimum_grade', 'name' => 'Média mínima', 'description' => 'Nota mínima para aprovação.', 'category' => 'Regras acadêmicas', 'type' => 'decimal', 'value' => '7.0', 'default_value' => '6.0', 'is_active' => true, 'is_system' => true]);
         $this->assertSame(7.0, app(GradeCalculationService::class)->minimumApproval());
 
         Livewire::test(TeacherGrades::class)

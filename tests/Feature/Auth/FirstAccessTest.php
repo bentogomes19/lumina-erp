@@ -5,6 +5,8 @@ namespace Tests\Feature\Auth;
 use App\Filament\Pages\Auth\RequestPasswordReset;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Models\Role;
+use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
 use App\Notifications\FirstAccessInvitation;
 use App\Notifications\PasswordReset as PasswordResetNotification;
@@ -52,15 +54,30 @@ class FirstAccessTest extends TestCase {
                 'email' => "{$roleName}@example.test",
             ]);
             $user->syncRoles([$roleName]);
+            if ($roleName === 'student') {
+                Student::factory()->create(['user_id' => $user->id]);
+            } else {
+                Teacher::factory()->create(['user_id' => $user->id]);
+            }
 
             $url    = app(FirstAccessInvitationService::class)->issue($user);
             $this->assertSame(
                 $roleName === 'student' ? '/aluno/password-reset/reset' : '/professor/password-reset/reset',
                 parse_url($url, PHP_URL_PATH),
             );
-            $status = $this->resetPasswordFromUrl($user, $url, "Senha-{$roleName}-2026");
+            $panelId = $roleName === 'student' ? 'aluno' : 'professor';
+            Filament::setCurrentPanel(Filament::getPanel($panelId));
+            $this->get($url)->assertOk();
+            Livewire::test(ResetPasswordPage::class, [
+                'email' => $user->email,
+                'token' => $this->tokenFromUrl($url),
+            ])
+                ->set('password', "Senha-{$roleName}-2026")
+                ->set('passwordConfirmation', "Senha-{$roleName}-2026")
+                ->call('resetPassword')
+                ->assertHasNoFormErrors();
 
-            $this->assertSame(Password::PASSWORD_RESET, $status);
+            $this->assertFalse(Password::broker()->tokenExists($user, $this->tokenFromUrl($url)));
             $this->assertFalse($user->fresh()->force_password_change);
             $this->assertTrue(Hash::check("Senha-{$roleName}-2026", $user->fresh()->password));
             Notification::assertSentTo($user, FirstAccessInvitation::class);
@@ -130,13 +147,33 @@ class FirstAccessTest extends TestCase {
     public function test_active_user_can_request_password_recovery(): void {
         Notification::fake();
         $user = $this->user(['force_password_change' => false]);
+        $user->assignRole(Role::findOrCreate('admin', 'web'));
 
         Livewire::test(RequestPasswordReset::class)
             ->set('data.email', $user->email)
             ->call('request');
 
-        Notification::assertSentTo($user, PasswordResetNotification::class);
+        $resetUrl = null;
+        Notification::assertSentTo($user, PasswordResetNotification::class, function ($notification) use (&$resetUrl): bool {
+            $resetUrl = $notification->url;
+
+            return parse_url($resetUrl, PHP_URL_PATH) === '/lumina/password-reset/reset';
+        });
         $this->assertDatabaseHas('password_reset_tokens', ['email' => $user->email]);
+        $this->assertTrue(Password::broker()->tokenExists($user, $this->tokenFromUrl($resetUrl)));
+
+        Livewire::test(ResetPasswordPage::class, [
+            'email' => $user->email,
+            'token' => $this->tokenFromUrl($resetUrl),
+        ])
+            ->set('password', 'Senha-recuperada-2026')
+            ->set('passwordConfirmation', 'Senha-recuperada-2026')
+            ->call('resetPassword')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue(Hash::check('Senha-recuperada-2026', $user->fresh()->password));
+        $this->assertFalse(Password::broker()->tokenExists($user, $this->tokenFromUrl($resetUrl)));
+        $this->assertFalse($user->fresh()->force_password_change);
     }
 
     /**
@@ -147,6 +184,7 @@ class FirstAccessTest extends TestCase {
     public function test_filament_reset_page_completes_first_access(): void {
         Notification::fake();
         $user = $this->user();
+        $user->assignRole(Role::findOrCreate('admin', 'web'));
         $url  = app(FirstAccessInvitationService::class)->issue($user);
 
         $this->get($url)->assertOk();

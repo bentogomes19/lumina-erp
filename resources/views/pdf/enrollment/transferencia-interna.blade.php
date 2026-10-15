@@ -5,7 +5,9 @@
     @include('pdf.enrollment.partials.styles')
 </head>
 <body>
-@php($documentLogo = $systemBranding->documentLogoDataUri())
+@php
+    $documentLogo = $systemBranding->documentLogoDataUri();
+@endphp
 <div class="page">
 
     {{-- Cabeçalho --}}
