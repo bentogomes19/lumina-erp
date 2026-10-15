@@ -3,6 +3,7 @@
 namespace App\Services\Enrollments;
 
 use App\Enums\EnrollmentStatus;
+use App\Enums\SchoolYearStatus;
 use App\Enums\StudentAccessAction;
 use App\Enums\StudentOnboardingState;
 use App\Enums\StudentStatus;
@@ -682,6 +683,12 @@ class StudentEnrollmentService {
         $status = $data['status'] ?? EnrollmentStatus::ACTIVE;
         $status = $status instanceof EnrollmentStatus ? $status : EnrollmentStatus::from($status);
 
+        if ($schoolClass->schoolYear?->status === SchoolYearStatus::CLOSED) {
+            throw ValidationException::withMessages([
+                'school_year_id' => 'Não é possível criar matrícula em um ano letivo encerrado.',
+            ]);
+        }
+
         $this->ensureClassHasSlot($schoolClass, $status);
         $this->ensureStudentHasNoActiveEnrollmentInYear(
             (int) $data['student_id'],
@@ -690,11 +697,24 @@ class StudentEnrollmentService {
             $status,
         );
 
-        return Enrollment::create(array_merge($data, [
+        $enrollment = Enrollment::create(array_merge($data, [
             'class_id'       => $schoolClass->id,
             'school_year_id' => $schoolClass->school_year_id,
             'status'         => $status,
         ]));
+
+        if ($status === EnrollmentStatus::ACTIVE) {
+            $student = Student::query()->findOrFail($enrollment->student_id);
+
+            if ($student->status !== StudentStatus::ACTIVE) {
+                $student->update([
+                    'status' => StudentStatus::ACTIVE,
+                    'status_changed_at' => now(),
+                ]);
+            }
+        }
+
+        return $enrollment;
     }
 
     /**

@@ -87,10 +87,7 @@ class StudentAttendance extends Page implements HasTable {
             return $empty;
         }
 
-        $currentClass = $student->classes()
-            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-            ->with(['schoolYear', 'gradeLevel'])
-            ->first();
+        $currentClass = $student->currentClass();
 
         if (!$currentClass) {
             return array_merge($empty, ['student' => $student]);
@@ -146,9 +143,7 @@ class StudentAttendance extends Page implements HasTable {
             return $table->query(Attendance::query()->whereRaw('1 = 0'));
         }
 
-        $currentClass = $student->classes()
-            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-            ->first();
+        $currentClass = $student->currentClass();
 
         if (!$currentClass) {
             return $table->query(Attendance::query()->whereRaw('1 = 0'));
@@ -275,7 +270,7 @@ class StudentAttendance extends Page implements HasTable {
         $absent  = $records->where('status', AttendanceStatus::ABSENT)->count();
         $excused = $records->where('status', AttendanceStatus::EXCUSED)->count();
 
-        $rate       = $total > 0 ? round(($present + $late + $excused) / $total * 100, 1) : 0.0;
+        $rate       = $total > 0 ? round(($present + $late) / $total * 100, 1) : 0.0;
         $maxAllowed = $total > 0 ? (int) floor($total * (1 - $minRate / 100)) : 0;
 
         return [
@@ -287,7 +282,7 @@ class StudentAttendance extends Page implements HasTable {
             'rate'                 => $rate,
             'alert'                => $rate < $minRate && $total > 0,
             'max_allowed_absences' => $maxAllowed,
-            'remaining_absences'   => $maxAllowed - $absent,
+            'remaining_absences'   => $maxAllowed - $absent - $excused,
         ];
     }
 
@@ -309,7 +304,7 @@ class StudentAttendance extends Page implements HasTable {
             $sPresent = $subjectRecords->whereIn('status', [AttendanceStatus::PRESENT, AttendanceStatus::LATE])->count();
             $sAbsent  = $subjectRecords->where('status', AttendanceStatus::ABSENT)->count();
             $sExcused = $subjectRecords->where('status', AttendanceStatus::EXCUSED)->count();
-            $sRate    = $sTotal > 0 ? round(($sPresent + $sExcused) / $sTotal * 100, 1) : 0.0;
+            $sRate    = $sTotal > 0 ? round($sPresent / $sTotal * 100, 1) : 0.0;
             $sMax     = $sTotal > 0 ? (int) floor($sTotal * (1 - $minRate / 100)) : 0;
 
             $stats[] = [
@@ -320,7 +315,7 @@ class StudentAttendance extends Page implements HasTable {
                 'excused'            => $sExcused,
                 'rate'               => $sRate,
                 'alert'              => $sRate < $minRate && $sTotal > 0,
-                'remaining_absences' => $sMax - $sAbsent,
+                'remaining_absences' => $sMax - $sAbsent - $sExcused,
             ];
         }
 

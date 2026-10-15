@@ -81,10 +81,7 @@ class DashboardStudent extends Page {
         $cacheKey = "dashboard_student_{$student->id}";
 
         return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($student) {
-            $currentClass = $student->classes()
-                ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-                ->with(['schoolYear', 'gradeLevel'])
-                ->first();
+            $currentClass = $student->currentClass();
 
             if (!$currentClass) {
                 return array_merge($this->emptyData(), ['student' => $student]);
@@ -132,7 +129,7 @@ class DashboardStudent extends Page {
             $recentGrades = Grade::where('student_id', $student->id)
                 ->where('class_id', $currentClass->id)
                 ->whereNotNull('score')
-                ->with(['subject'])
+                ->with(['subject', 'assessment'])
                 ->latest('date_recorded')
                 ->limit(6)
                 ->get();

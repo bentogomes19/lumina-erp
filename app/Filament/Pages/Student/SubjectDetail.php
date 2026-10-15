@@ -56,10 +56,9 @@ class SubjectDetail extends Page
         }
 
         /* Verifica se o aluno está matriculado em uma turma que possui esta disciplina. */
-        $hasAccess = $student->classes()
-            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-            ->whereHas('subjects', fn ($q) => $q->where('subjects.id', $this->subjectId))
-            ->exists();
+        $hasAccess = $student->currentClass()?->subjects()
+            ->where('subjects.id', $this->subjectId)
+            ->exists() ?? false;
 
         if (! $hasAccess) {
             abort(403, 'Você não tem acesso a esta disciplina');
@@ -87,13 +86,9 @@ class SubjectDetail extends Page
             return $this->emptyData();
         }
 
-        $currentClass = $student->classes()
-            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-            ->whereHas('subjects', fn ($q) => $q->where('subjects.id', $this->subjectId))
-            ->with(['schoolYear', 'gradeLevel'])
-            ->first();
+        $currentClass = $student->currentClass();
 
-        if (! $currentClass) {
+        if (! $currentClass || ! $currentClass->subjects()->where('subjects.id', $this->subjectId)->exists()) {
             return $this->emptyData();
         }
 

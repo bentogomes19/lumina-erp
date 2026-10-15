@@ -118,6 +118,14 @@ class Student extends BaseModel {
             ->latestOfMany();
     }
 
+    /** Retorna a turma da matrícula ativa no ano letivo vigente. */
+    public function currentClass(): ?SchoolClass
+    {
+        return $this->currentActiveEnrollment()
+            ->with(['schoolClass.schoolYear', 'schoolClass.gradeLevel'])
+            ->first()?->schoolClass;
+    }
+
     /**
      * Retorna as turmas nas quais o aluno está matriculado.
      *

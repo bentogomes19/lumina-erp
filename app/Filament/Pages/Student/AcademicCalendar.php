@@ -213,10 +213,7 @@ class AcademicCalendar extends Page
             return $this->emptyData();
         }
 
-        $currentClass = $student->classes()
-            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-            ->with(['schoolYear', 'gradeLevel'])
-            ->first();
+        $currentClass = $student->currentClass();
 
         if (! $currentClass) {
             return array_merge($this->emptyData(), ['student' => $student]);

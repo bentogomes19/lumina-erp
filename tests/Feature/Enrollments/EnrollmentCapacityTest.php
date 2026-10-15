@@ -3,6 +3,7 @@
 namespace Tests\Feature\Enrollments;
 
 use App\Enums\EnrollmentStatus;
+use App\Enums\StudentStatus;
 use App\Models\Enrollment;
 use App\Models\GradeLevel;
 use App\Models\Permission;
@@ -55,6 +56,47 @@ class EnrollmentCapacityTest extends TestCase {
         );
 
         $this->assertDatabaseCount('enrollments', 1);
+    }
+
+    public function test_closed_school_year_rejects_new_enrollment(): void {
+        $schoolClass = $this->schoolClass(capacity: 35, schoolYear: $this->schoolYear(2025));
+
+        try {
+            $this->service()->enrollExistingStudent([
+                'class_id' => $schoolClass->id,
+                'student_id' => $this->student()->id,
+                'status' => EnrollmentStatus::ACTIVE,
+            ]);
+            $this->fail('O ano letivo encerrado deveria bloquear a matrícula.');
+        } catch (ValidationException $exception) {
+            $this->assertSame(
+                'Não é possível criar matrícula em um ano letivo encerrado.',
+                $exception->errors()['school_year_id'][0],
+            );
+        }
+
+        $this->assertDatabaseCount('enrollments', 0);
+    }
+
+    public function test_new_active_enrollment_reactivates_previously_graduated_student(): void {
+        $schoolClass = $this->schoolClass(capacity: 35);
+        $student = $this->student();
+        $student->update(['status' => StudentStatus::GRADUATED]);
+
+        $this->service()->enrollExistingStudent([
+            'class_id' => $schoolClass->id,
+            'student_id' => $student->id,
+            'status' => EnrollmentStatus::ACTIVE,
+        ]);
+
+        $this->assertSame(StudentStatus::ACTIVE, $student->fresh()->status);
+    }
+
+    public function test_new_class_generates_uuid_when_admin_form_does_not_supply_one(): void {
+        $schoolClass = SchoolClass::factory()->create(['uuid' => null]);
+
+        $this->assertNotEmpty($schoolClass->uuid);
+        $this->assertSame(36, strlen($schoolClass->uuid));
     }
 
     /**

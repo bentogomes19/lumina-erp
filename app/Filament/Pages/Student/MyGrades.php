@@ -37,10 +37,7 @@ class MyGrades extends Page implements HasTable {
     protected ?array $cachedPageData = null;
 
     protected function currentClass(): ?SchoolClass {
-        return auth()->user()?->student?->classes()
-            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-            ->with(['schoolYear', 'gradeLevel'])
-            ->first();
+        return auth()->user()?->student?->currentClass();
     }
 
     /**

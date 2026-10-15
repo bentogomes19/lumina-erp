@@ -42,6 +42,12 @@ class SchoolClass extends BaseModel {
         'type'   => ClassType::class,
     ];
 
+    protected static function booted(): void {
+        static::creating(function (self $schoolClass): void {
+            $schoolClass->fillUuidIfMissing();
+        });
+    }
+
     /**
      * Filtra turmas abertas.
      *

@@ -649,12 +649,12 @@ class TeacherGrades extends Page {
      */
     private function mapAssessmentType(?string $assessmentType): string {
         return match ($assessmentType) {
-            'prova'       => AssessmentType::TEST->value,
-            'trabalho'    => AssessmentType::WORK->value,
-            'atividade'   => AssessmentType::QUIZ->value,
-            'seminario'   => AssessmentType::PARTICIPATION->value,
-            'projeto'     => AssessmentType::PROJECT->value,
-            'recuperacao' => AssessmentType::RECOVERY->value,
+            'test', 'prova'           => AssessmentType::TEST->value,
+            'work', 'trabalho'        => AssessmentType::WORK->value,
+            'activity', 'atividade'   => AssessmentType::QUIZ->value,
+            'seminar', 'seminario'    => AssessmentType::PARTICIPATION->value,
+            'project', 'projeto'      => AssessmentType::PROJECT->value,
+            'recovery', 'recuperacao' => AssessmentType::RECOVERY->value,
             default       => AssessmentType::TEST->value,
         };
     }

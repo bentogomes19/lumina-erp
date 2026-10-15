@@ -37,6 +37,9 @@
             'project'       => 'Projeto',
             'participation' => 'Participação',
             'recovery'      => 'Recuperação',
+            'activity'      => 'Atividade',
+            'seminar'       => 'Seminário',
+            'outro'         => 'Outro',
         ];
     @endphp
 
@@ -303,7 +306,7 @@
                         <div style="display:flex;flex-direction:column;gap:0.625rem">
                             @foreach($upcomingAssessments as $assessment)
                                 @php
-                                    $daysUntil = now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($assessment->scheduled_at)->startOfDay(), false);
+                                    $daysUntil = (int) round(now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($assessment->scheduled_at)->startOfDay(), false));
                                     $isUrgent  = $daysUntil <= 2;
                                     $urgColor  = $isUrgent ? '#ef4444' : ($daysUntil <= 4 ? '#eab308' : 'var(--lumina-primary)');
                                 @endphp
@@ -358,7 +361,7 @@
                                 @foreach($recentGrades as $grade)
                                     @php
                                         $gc = $grade->score >= $minimumGrade ? '#22c55e' : ($grade->score >= 4.0 ? '#eab308' : '#ef4444');
-                                        $typeLabel = $assessmentTypeLabels[$grade->assessment_type?->value ?? ''] ?? 'Avaliação';
+                                        $typeLabel = $assessmentTypeLabels[$grade->assessment?->assessment_type ?? $grade->assessment_type?->value ?? ''] ?? 'Avaliação';
                                     @endphp
                                     <div style="display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid var(--ms-bar-bg)">
                                         <div style="width:2.25rem;height:2.25rem;border-radius:50%;background:{{ $gc }}1a;display:flex;align-items:center;justify-content:center;flex-shrink:0">

@@ -211,10 +211,10 @@ A página permite filtrar por ano completo ou pelos quatro bimestres. Apresenta:
 - tabela paginada com data, disciplina, horário, status, observação e tópico da aula;
 - filtros adicionais por status e disciplina.
 
-Na página, presença, atraso e falta justificada entram no numerador do percentual geral. A fórmula é:
+Na página, presença e atraso entram no numerador do percentual geral. A falta justificada continua no total de aulas e no consumo do limite estimado de faltas. A fórmula é:
 
 ```text
-(presenças + atrasos + faltas justificadas) / total × 100
+(presenças + atrasos) / total × 100
 ```
 
 O alerta só aparece quando há registros e o percentual é inferior a 75%.
@@ -244,7 +244,7 @@ A fonte de disciplinas é a relação `class_subjects` da turma escolhida. Para 
 - presenças, faltas e percentual de frequência;
 - link para detalhes.
 
-Nessa página, o percentual considera apenas status `present` no numerador. Atrasos e faltas justificadas não são considerados presença. As médias também são simples, incluem as notas recuperativas e não usam `GradeCalculationService`.
+Nessa página, o percentual considera `present` e `late` no numerador. Faltas justificadas não são consideradas presença. As médias também são simples, incluem as notas recuperativas e não usam `GradeCalculationService`.
 
 ### 7.5 Detalhe da Disciplina
 
@@ -252,7 +252,7 @@ Nessa página, o percentual considera apenas status `present` no numerador. Atra
 
 **Classe:** `App\Filament\Pages\Student\SubjectDetail`
 
-No `mount`, a página exige o parâmetro `subject`, resolve o aluno e verifica se a disciplina pertence a uma turma do ano ativo vinculada ao estudante.
+No `mount`, a página exige o parâmetro `subject`, resolve o aluno e verifica se a disciplina pertence à turma da matrícula ativa no ano vigente.
 
 Conteúdo:
 
@@ -411,7 +411,7 @@ Na ausência de aluno ou turma, o módulo retorna estados vazios. Algumas telas 
 
 ### RNF-ALU-008 — Consistência
 
-O mesmo indicador acadêmico deveria produzir o mesmo valor em todas as páginas. Este requisito não é atendido integralmente no estado atual.
+O mesmo indicador acadêmico deveria produzir o mesmo valor em todas as páginas. A frequência foi alinhada entre as telas, mas as fórmulas de média de notas ainda divergem.
 
 ### RNF-ALU-009 — Testabilidade
 
@@ -423,9 +423,9 @@ O download do boletim ocorre dentro da página e não registra explicitamente hi
 
 ## 11. Inconsistências e limitações conhecidas
 
-### 11.1 Seleção de matrícula/turma sem status
+### 11.1 Seleção de matrícula/turma atual
 
-Todas as páginas procuram a primeira turma ligada a um ano ativo, mas a relação `Student::classes()` não filtra status da matrícula. Matrículas canceladas, concluídas, transferidas ou trancadas podem participar da seleção. Se houver mais de uma turma no ano, `first()` escolhe uma sem ordenação de negócio.
+As páginas do portal agora selecionam a turma pela matrícula ativa no ano letivo vigente. Isso exclui matrículas transferidas, canceladas e históricas da visualização atual.
 
 ### 11.2 Notas não publicadas podem ser exibidas
 
@@ -442,16 +442,16 @@ O professor usa `Grade.locked_at` como indicação de publicação, e períodos 
 
 Além disso, a view de disciplinas usa faixas visuais próximas de 7 e 5, enquanto o serviço oficial classifica aprovação em 6 e recuperação em 4.
 
-### 11.4 Fórmulas de frequência divergentes
+### 11.4 Fórmula de frequência unificada
 
 | Local | Conta como presença |
 |---|---|
 | `Attendance::calculateFrequency` e dashboard | Presente + atraso |
-| Página Frequência | Presente + atraso + falta justificada |
-| Minhas Disciplinas | Somente presente |
+| Página Frequência | Presente + atraso |
+| Minhas Disciplinas | Presente + atraso |
 | Detalhe da Disciplina | Presente + atraso |
 
-O enum `AttendanceStatus::countsAsPresent()` considera presente e atraso, não falta justificada.
+O enum `AttendanceStatus::countsAsPresent()` considera presente e atraso, não falta justificada. As faltas justificadas seguem computadas no total de aulas e no limite de faltas.
 
 ### 11.5 Períodos ignoram configuração acadêmica
 

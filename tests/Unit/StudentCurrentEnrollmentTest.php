@@ -48,4 +48,35 @@ class StudentCurrentEnrollmentTest extends TestCase
         $this->assertSame('7º Ano A - Atual', $student->currentActiveEnrollment?->schoolClass?->name);
         $this->assertNotSame('6º Ano A - Histórico', $student->currentActiveEnrollment?->schoolClass?->name);
     }
+
+    public function test_current_class_ignores_transferred_enrollment_in_the_same_year(): void
+    {
+        $year = SchoolYear::factory()->active()->create();
+        $originalClass = SchoolClass::factory()->create([
+            'name' => '5º Ano A - Origem',
+            'school_year_id' => $year->id,
+        ]);
+        $newClass = SchoolClass::factory()->create([
+            'name' => '5º Ano B - Destino',
+            'school_year_id' => $year->id,
+        ]);
+        $student = Student::factory()->create();
+
+        Enrollment::create([
+            'student_id' => $student->id,
+            'class_id' => $originalClass->id,
+            'school_year_id' => $year->id,
+            'status' => EnrollmentStatus::TRANSFERRED_INTERNAL,
+            'enrollment_date' => $year->starts_at,
+        ]);
+        Enrollment::create([
+            'student_id' => $student->id,
+            'class_id' => $newClass->id,
+            'school_year_id' => $year->id,
+            'status' => EnrollmentStatus::ACTIVE,
+            'enrollment_date' => $year->starts_at,
+        ]);
+
+        $this->assertSame($newClass->id, $student->currentClass()?->id);
+    }
 }

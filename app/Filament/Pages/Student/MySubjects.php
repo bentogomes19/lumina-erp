@@ -56,14 +56,13 @@ class MySubjects extends Page
             return ['student' => null, 'currentClass' => null, 'subjects' => collect(), 'stats' => []];
         }
 
-        $currentClass = $student->classes()
-            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-            ->with(['schoolYear', 'gradeLevel', 'subjects.gradeLevels'])
-            ->first();
+        $currentClass = $student->currentClass();
 
         if (! $currentClass) {
             return ['student' => $student, 'currentClass' => null, 'subjects' => collect(), 'stats' => []];
         }
+
+        $currentClass->load('subjects.gradeLevels');
 
         $subjects = $currentClass->subjects;
 
@@ -112,7 +111,7 @@ class MySubjects extends Page
 
             /* Estatísticas de frequência. */
             $totalClasses = $subjectAttendances->count();
-            $presences = $subjectAttendances->where('status', 'present')->count();
+            $presences = $subjectAttendances->filter(fn ($attendance) => $attendance->status?->countsAsPresent())->count();
             $absences = $subjectAttendances->where('status', 'absent')->count();
             $attendancePercent = $totalClasses > 0
                 ? round(($presences / $totalClasses) * 100, 1)
@@ -143,7 +142,7 @@ class MySubjects extends Page
             'total_subjects' => $subjects->count(),
             'overall_average' => $allGrades->isNotEmpty() ? round($allGrades->avg('score'), 1) : null,
             'attendance_percent' => $allAttendance->count() > 0
-                ? round(($allAttendance->where('status', 'present')->count() / $allAttendance->count()) * 100, 1)
+                ? round(($allAttendance->filter(fn ($attendance) => $attendance->status?->countsAsPresent())->count() / $allAttendance->count()) * 100, 1)
                 : null,
             'total_hours_weekly' => $enriched->sum('hours_weekly'),
         ];

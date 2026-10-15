@@ -11,6 +11,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord\Concerns\HasWizard;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class CreateEnrollment extends CreateRecord {
 
@@ -54,7 +55,17 @@ class CreateEnrollment extends CreateRecord {
      * @return Model
      */
     protected function handleRecordCreation(array $data): Model {
-        $this->enrollmentResult = app(StudentEnrollmentService::class)->create($data);
+        try {
+            $this->enrollmentResult = app(StudentEnrollmentService::class)->create($data);
+        } catch (ValidationException $exception) {
+            Notification::make()
+                ->title('Matrícula não realizada')
+                ->body(collect($exception->errors())->flatten()->first() ?? 'Revise os dados da matrícula.')
+                ->danger()
+                ->send();
+
+            throw $exception;
+        }
 
         return $this->enrollmentResult->enrollment;
     }
