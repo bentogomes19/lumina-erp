@@ -47,9 +47,7 @@ class StudentGradesTableWidget extends Widget {
         }
 
         /* Obtém a turma ativa atual. */
-        $currentClass = $user->student->classes()
-            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-            ->first();
+        $currentClass = $user->student->currentClass();
 
         if (!$currentClass) {
             return [
@@ -63,7 +61,7 @@ class StudentGradesTableWidget extends Widget {
         }
 
         /* Busca notas do aluno da turma atual (ano letivo ativo) */
-        $grades = Grade::query()
+        $grades = Grade::published()
             ->where('student_id', $user->student->id)
             ->where('class_id', $currentClass->id)
             ->with(['subject', 'schoolClass'])
@@ -102,7 +100,7 @@ class StudentGradesTableWidget extends Widget {
                     'name'     => $subjectName,
                     'class'    => $className,
                     'grades'   => [],
-                    'average'  => $gradesBySequence->avg(),
+                    'average'  => app(GradeCalculationService::class)->subjectReport($subjectGrades)['terms'][$term]['final_average'],
                     'lastDate' => $subjectGrades->max('date_recorded')?->format('d/m/Y'),
                 ];
 

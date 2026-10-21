@@ -5,7 +5,6 @@ namespace App\Filament\Widgets;
 use App\Enums\Term;
 use App\Models\Grade;
 use App\Models\Subject;
-use Filament\Tables\Columns\Summarizers\Average;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
@@ -44,8 +43,14 @@ class StudentGradesWidget extends TableWidget {
                     return Grade::query()->whereRaw('1 = 0');
                 }
 
-                return Grade::query()
+                $currentClass = $user->student->currentClass();
+                if (!$currentClass) {
+                    return Grade::query()->whereRaw('1 = 0');
+                }
+
+                return Grade::published()
                     ->where('student_id', $user->student->id)
+                    ->where('class_id', $currentClass->id)
                     ->with(['subject', 'schoolClass'])
                     ->orderBy('term')          /* organiza por bimestre. */
                     ->orderBy('subject_id')    /* depois por disciplina. */
@@ -116,18 +121,7 @@ class StudentGradesWidget extends TableWidget {
                     ->label('Nota')
                     ->numeric(decimalPlaces: 2)
                     ->weight('bold')
-                    ->sortable()
-                    ->summarize([
-                        Average::make()
-                            ->label('Média da disciplina no bimestre')
-                            ->formatStateUsing(function ($state) {
-                                if ($state === null) {
-                                    return '-';
-                                }
-
-                                return number_format((float) $state, 2, ',', '.');
-                            }),
-                    ]),
+                    ->sortable(),
 
                 TextColumn::make('max_score')
                     ->label('Máx.')

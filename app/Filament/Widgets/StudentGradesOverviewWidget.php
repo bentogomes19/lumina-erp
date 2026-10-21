@@ -33,9 +33,7 @@ class StudentGradesOverviewWidget extends BaseWidget {
         }
 
         /* Obtém a turma ativa atual. */
-        $currentClass = $user->student->classes()
-            ->whereHas('schoolYear', fn ($q) => $q->where('is_active', true))
-            ->first();
+        $currentClass = $user->student->currentClass();
 
         if (!$currentClass) {
             return [
@@ -47,7 +45,7 @@ class StudentGradesOverviewWidget extends BaseWidget {
         }
 
         /* Busca notas do aluno da turma atual (ano letivo ativo) */
-        $grades = Grade::query()
+        $grades = Grade::published()
             ->where('student_id', $user->student->id)
             ->where('class_id', $currentClass->id)
             ->get();
@@ -63,15 +61,15 @@ class StudentGradesOverviewWidget extends BaseWidget {
 
         /* Calcula estatísticas. */
         $totalGrades  = $grades->count();
-        $averageGrade = $grades->avg('score');
+        $averageGrade = app(GradeCalculationService::class)->overallAverage($grades);
         $highestGrade = $grades->max('score');
         $lowestGrade  = $grades->min('score');
         $disciplines  = $grades->groupBy('subject_id')->count();
         $minimumGrade = app(GradeCalculationService::class)->minimumApproval();
 
         return [
-            Stat::make('Média Geral', number_format($averageGrade, 2, ',', '.'))
-                ->description('De todas as avaliações')
+            Stat::make('Média Geral', $averageGrade !== null ? number_format($averageGrade, 2, ',', '.') : '-')
+                ->description('Média anual das disciplinas')
                 ->icon('fas-star')
                 ->color($averageGrade === null ? 'gray' : ($averageGrade >= $minimumGrade ? 'success' : 'warning')),
 

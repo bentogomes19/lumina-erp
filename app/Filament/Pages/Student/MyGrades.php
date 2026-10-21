@@ -149,7 +149,7 @@ class MyGrades extends Page implements HasTable {
             return array_merge($empty, ['student' => $student]);
         }
 
-        $query = Grade::where('student_id', $student->id)
+        $query = Grade::published()->where('student_id', $student->id)
             ->where('class_id', $currentClass->id)
             ->with(['subject', 'assessment'])
             ->orderBy('term')

@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Models\Grade;
 use App\Models\Teacher;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -154,6 +155,12 @@ final class RecordTeacherGrades {
                 }
             }
         });
+
+        if ($publish) {
+            foreach ($students as $student) {
+                Cache::forget('dashboard_student_'.(int) $student['student_id']);
+            }
+        }
 
         return compact('created', 'updated', 'deleted');
     }

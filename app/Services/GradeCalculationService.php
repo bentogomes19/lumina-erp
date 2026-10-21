@@ -144,6 +144,16 @@ class GradeCalculationService {
         ];
     }
 
+    /** Média geral das médias anuais por disciplina, sem contar disciplinas sem nota. */
+    public function overallAverage(Collection $grades): ?float {
+        $averages = $grades
+            ->groupBy('subject_id')
+            ->map(fn (Collection $subjectGrades) => $this->subjectReport($subjectGrades)['overall_average'])
+            ->filter(fn ($average) => $average !== null);
+
+        return $averages->isNotEmpty() ? round($averages->avg(), 1) : null;
+    }
+
     /* Auxiliares. */
 
     /**

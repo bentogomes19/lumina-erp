@@ -32,11 +32,14 @@ class StudentGradesStatsWidget extends BaseWidget {
             return [];
         }
 
-        $grades = Grade::where('student_id', $student->id)->get();
+        $currentClass = $student->currentClass();
+        $grades = $currentClass
+            ? Grade::published()->where('student_id', $student->id)->where('class_id', $currentClass->id)->get()
+            : collect();
 
         /* Calcula estatísticas. */
         $totalGrades  = $grades->count();
-        $averageScore = $grades->avg('score');
+        $averageScore = app(GradeCalculationService::class)->overallAverage($grades);
         $highestScore = $grades->max('score');
         $lowestScore  = $grades->min('score');
 
@@ -49,7 +52,7 @@ class StudentGradesStatsWidget extends BaseWidget {
 
         return [
             Stat::make('Média Geral', $averageScore !== null ? number_format($averageScore, 2, ',', '.') : '-')
-                ->description('Média de todas as avaliações')
+                ->description('Média anual das disciplinas')
                 ->descriptionIcon('fas-chart-bar')
                 ->color($averageScore === null ? 'gray' : ($averageScore >= $minimum ? 'success' : 'warning'))
                 ->chart($this->getScoresTrend()),
@@ -85,7 +88,13 @@ class StudentGradesStatsWidget extends BaseWidget {
         }
 
         /* Pega as últimas 7 notas para mostrar tendência. */
-        $recentGrades = Grade::where('student_id', $student->id)
+        $currentClass = $student->currentClass();
+        if (!$currentClass) {
+            return [];
+        }
+
+        $recentGrades = Grade::published()->where('student_id', $student->id)
+            ->where('class_id', $currentClass->id)
             ->orderBy('date_recorded', 'desc')
             ->limit(7)
             ->pluck('score')

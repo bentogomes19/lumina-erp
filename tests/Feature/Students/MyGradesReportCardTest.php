@@ -264,6 +264,7 @@ class MyGradesReportCardTest extends TestCase {
             'score' => $score,
             'sequence' => $sequence,
             'weight' => 1,
+            'locked_at' => now(),
         ]);
     }
 }

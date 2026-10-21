@@ -2,9 +2,8 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Enrollment;
 use App\Models\Grade;
-use App\Models\SchoolYear;
+use App\Services\GradeCalculationService;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -37,61 +36,33 @@ class StudentProfileWidget extends StatsOverviewWidget {
             ];
         }
 
-        /* Ano letivo atual (ativo) */
-        $currentYear = SchoolYear::where('is_active', true)->first();
-
-        /* Matrícula do ano letivo atual. */
-        $enrollment = null;
-
-        if ($currentYear) {
-            $enrollment = Enrollment::query()
-                ->where('student_id', $student->id)
-                ->whereHas('schoolClass', fn ($q) => $q->where('school_year_id', $currentYear->id))
-                ->with(['schoolClass.schoolYear', 'schoolClass.gradeLevel'])
-                ->first();
-        }
-
-        /* Usa a matrícula mais recente quando não houver uma no ano letivo ativo. */
-        if (!$enrollment) {
-            $enrollment = Enrollment::query()
-                ->where('student_id', $student->id)
-                ->with(['schoolClass.schoolYear', 'schoolClass.gradeLevel'])
-                ->latest()
-                ->first();
-        }
-
-        $schoolClass = $enrollment?->schoolClass;
+        $schoolClass = $student->currentClass();
 
         $anoLetivo = $schoolClass?->schoolYear?->year ?? 'Não definido';
         $turmaNome = $schoolClass?->name ?? 'Sem turma';
         $serie     = $schoolClass?->gradeLevel?->name ?? 'Sem série';
 
-        /* Notas: se quiser considerar só o ano atual, filtra pelo school_year_id. */
-        $gradesQuery = Grade::query()
-            ->where('student_id', $student->id);
-
-        if ($currentYear) {
-            $gradesQuery->whereHas('schoolClass', fn ($q) => $q->where('school_year_id', $currentYear->id));
-        }
-
-        $mediaNotas  = (float) $gradesQuery->avg('score');
-        $disciplinas = $gradesQuery->distinct('subject_id')->count('subject_id');
+        $grades = $schoolClass
+            ? Grade::published()->where('student_id', $student->id)->where('class_id', $schoolClass->id)->get()
+            : collect();
+        $mediaNotas  = app(GradeCalculationService::class)->overallAverage($grades);
+        $disciplinas = $grades->pluck('subject_id')->unique()->count();
 
         return [
             Stat::make('Ano Letivo', $anoLetivo)
-                ->description($currentYear ? 'Ano corrente da matrícula' : 'Nenhum ano letivo ativo')
+                ->description($schoolClass ? 'Ano corrente da matrícula' : 'Nenhum ano letivo ativo')
                 ->icon('fas-calendar')
-                ->color($currentYear ? 'info' : 'gray'),
+                ->color($schoolClass ? 'info' : 'gray'),
 
             Stat::make('Turma', $turmaNome)
                 ->description("Série: {$serie}")
                 ->icon('fas-user-group')
                 ->color($schoolClass ? 'primary' : 'gray'),
 
-            Stat::make('Média Geral', number_format($mediaNotas, 2, ',', '.'))
-                ->description($mediaNotas > 0 ? 'Média das avaliações' : 'Sem notas ainda')
+            Stat::make('Média Geral', $mediaNotas !== null ? number_format($mediaNotas, 2, ',', '.') : '-')
+                ->description($mediaNotas !== null ? 'Média anual das disciplinas' : 'Sem notas ainda')
                 ->icon('fas-graduation-cap')
-                ->color($mediaNotas > 0 ? 'success' : 'gray'),
+                ->color($mediaNotas !== null ? 'success' : 'gray'),
         ];
     }
 }

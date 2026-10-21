@@ -8,6 +8,7 @@ use App\Models\Lesson;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\TeacherAssignment;
+use App\Services\GradeCalculationService;
 use App\Support\PermissionAccess;
 use Filament\Pages\Page;
 
@@ -111,23 +112,24 @@ class SubjectDetail extends Page
         $hoursWeekly = $gradeLevelPivot?->pivot?->hours_weekly;
 
         /* Notas. */
-        $grades = Grade::where('student_id', $student->id)
+        $grades = Grade::published()->where('student_id', $student->id)
             ->where('class_id', $currentClass->id)
             ->where('subject_id', $subject->id)
             ->orderBy('term', 'asc')
             ->orderBy('assessment_type', 'asc')
             ->get();
 
+        $report = app(GradeCalculationService::class)->subjectReport($grades);
         $termAverages = [];
         foreach (['b1', 'b2', 'b3', 'b4'] as $term) {
             $termGrades = $grades->filter(fn ($g) => $g->term?->value === $term);
             $termAverages[$term] = [
-                'average' => $termGrades->isNotEmpty() ? round($termGrades->avg('score'), 1) : null,
+                'average' => $report['terms'][$term]['final_average'],
                 'grades' => $termGrades,
             ];
         }
 
-        $overallAverage = $grades->isNotEmpty() ? round($grades->avg('score'), 1) : null;
+        $overallAverage = $report['overall_average'];
 
         /* Frequência. */
         $attendances = Attendance::where('student_id', $student->id)

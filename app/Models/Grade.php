@@ -4,8 +4,14 @@ namespace App\Models;
 
 use App\Enums\AssessmentType;
 use App\Enums\Term;
+use Illuminate\Database\Eloquent\Builder;
 
 class Grade extends BaseModel {
+
+    /** Notas visíveis no portal do aluno após a publicação. */
+    public function scopePublished(Builder $query): Builder {
+        return $query->whereNotNull('locked_at');
+    }
 
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.

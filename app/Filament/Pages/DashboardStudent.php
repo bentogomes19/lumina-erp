@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Enums\AssessmentType;
 use App\Models\Assessment;
 use App\Models\Attendance;
 use App\Models\Grade;
@@ -91,22 +90,20 @@ class DashboardStudent extends Page {
             $attendanceData = Attendance::calculateFrequency($student->id, $currentClass->id);
 
             /* Médias por disciplina → média geral. */
-            $allGrades = Grade::where('student_id', $student->id)
+            $allGrades = Grade::published()->where('student_id', $student->id)
                 ->where('class_id', $currentClass->id)
-                ->where('assessment_type', '!=', AssessmentType::RECOVERY->value)
-                ->whereNotNull('score')
                 ->get();
 
-            $bySubject   = $allGrades->groupBy('subject_id');
-            $subjectAvgs = $bySubject->map(fn ($g) => $g->avg('score'))->filter(fn ($average) => $average !== null);
-            $minApproval = app(GradeCalculationService::class)->minimumApproval();
+            $service = app(GradeCalculationService::class);
+            $reports = $allGrades->groupBy('subject_id')
+                ->map(fn ($grades) => $service->subjectReport($grades));
 
             $gradeStats = [
-                'average'  => $subjectAvgs->isNotEmpty() ? round($subjectAvgs->avg(), 1) : null,
-                'total'    => $bySubject->count(),
-                'approved' => $subjectAvgs->filter(fn ($a) => $a >= $minApproval)->count(),
-                'recovery' => $subjectAvgs->filter(fn ($a) => $a >= 4.0 && $a < $minApproval)->count(),
-                'failed'   => $subjectAvgs->filter(fn ($a) => $a < 4.0)->count(),
+                'average'  => $service->overallAverage($allGrades),
+                'total'    => $reports->count(),
+                'approved' => $reports->where('status', 'approved')->count(),
+                'recovery' => $reports->where('status', 'recovery')->count(),
+                'failed'   => $reports->where('status', 'failed')->count(),
             ];
 
             /* Aulas de hoje. */
@@ -126,7 +123,7 @@ class DashboardStudent extends Page {
                 ->get();
 
             /* Últimas notas lançadas. */
-            $recentGrades = Grade::where('student_id', $student->id)
+            $recentGrades = Grade::published()->where('student_id', $student->id)
                 ->where('class_id', $currentClass->id)
                 ->whereNotNull('score')
                 ->with(['subject', 'assessment'])

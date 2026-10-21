@@ -134,20 +134,20 @@ O detalhe da disciplina não aparece no menu e é alcançado a partir de “Minh
 
 **Classe:** `App\Filament\Pages\DashboardStudent`
 
-O dashboard resolve o aluno e seleciona a primeira turma encontrada em um ano letivo com `is_active = true`. Os dados são armazenados em cache por cinco minutos usando somente o ID do aluno como chave.
+O dashboard resolve o aluno e usa a turma da matrícula ativa no ano letivo vigente. Os dados são armazenados em cache por cinco minutos por aluno; a publicação de notas invalida esse cache.
 
 Conteúdo atual:
 
 - identificação do aluno, turma, série e ano;
 - frequência geral;
-- média geral simples por disciplina;
+- média geral das médias anuais por disciplina;
 - quantidade de disciplinas aprovadas, em recuperação ou reprovadas;
 - aulas do dia;
 - avaliações dos próximos sete dias;
 - seis notas mais recentes;
 - atalhos condicionados às permissões de notas, frequência, disciplinas e calendário.
 
-Para o resumo de notas, recuperações são excluídas e é calculada a média simples das notas por disciplina. Os limites usados são:
+Para o resumo de notas, somente notas publicadas entram no cálculo. Cada disciplina usa a média ponderada por bimestre e o melhor resultado quando há recuperação, conforme `GradeCalculationService`. A média geral é a média das médias anuais das disciplinas com nota. Os limites padrão usados são:
 
 - média maior ou igual a 6: aprovado;
 - média entre 4 e menor que 6: recuperação;
@@ -159,7 +159,7 @@ Para o resumo de notas, recuperações são excluídas e é calculada a média s
 
 **Classe:** `App\Filament\Pages\Student\MyGrades`
 
-A página localiza a turma do ano ativo e consulta todas as notas do aluno nessa turma. O aluno pode alternar entre ano completo e `b1`, `b2`, `b3`, `b4`.
+A página localiza a turma da matrícula ativa e consulta somente as notas publicadas do aluno nessa turma. O aluno pode alternar entre ano completo e `b1`, `b2`, `b3`, `b4`.
 
 A visão inicial é o boletim anual compacto: uma linha por disciplina da turma e colunas para os quatro bimestres, média final, notas de recuperação identificadas pelo bimestre e situação. Em telas estreitas, a tabela permite rolagem horizontal. Antes do fechamento do ano, a média final e a situação são parciais.
 
@@ -176,6 +176,7 @@ As notas são agrupadas por disciplina e processadas por `GradeCalculationServic
 - recuperação não entra na média regular;
 - havendo recuperação, a média final do período usa o maior valor entre média regular e nota de recuperação;
 - a média geral da disciplina é a média simples das médias finais dos períodos disponíveis;
+- a média geral do aluno é a média das médias anuais das disciplinas com nota;
 - média geral maior ou igual a 6 é `approved`;
 - média geral entre 4 e menor que 6 é `recovery`;
 - média geral menor que 4 é `failed`;
@@ -239,12 +240,12 @@ A fonte de disciplinas é a relação `class_subjects` da turma escolhida. Para 
 - nome, código, categoria e descrição;
 - professor encontrado em `TeacherAssignment`;
 - carga horária semanal da matriz série-disciplina;
-- médias simples por bimestre;
-- média simples geral de todas as notas;
+- médias ponderadas por bimestre, com recuperação pelo melhor resultado;
+- média anual por disciplina e média geral entre disciplinas com nota;
 - presenças, faltas e percentual de frequência;
 - link para detalhes.
 
-Nessa página, o percentual considera `present` e `late` no numerador. Faltas justificadas não são consideradas presença. As médias também são simples, incluem as notas recuperativas e não usam `GradeCalculationService`.
+Nessa página, o percentual considera `present` e `late` no numerador. Faltas justificadas não são consideradas presença. As médias usam `GradeCalculationService` e somente notas publicadas.
 
 ### 7.5 Detalhe da Disciplina
 
@@ -266,7 +267,7 @@ Conteúdo:
 - aulas, conteúdo e situação de frequência do aluno;
 - estatísticas mensais.
 
-As médias são simples e incluem todas as notas. A frequência considera presença mais atraso, mas não falta justificada. As estatísticas mensais são agrupadas por `created_at` da frequência, não pela data acadêmica do registro.
+As médias usam `GradeCalculationService` e somente notas publicadas: média ponderada no bimestre e melhor resultado quando há recuperação. A frequência considera presença mais atraso, mas não falta justificada. As estatísticas mensais são agrupadas por `created_at` da frequência, não pela data acadêmica do registro.
 
 Para cada aula, é executada uma consulta adicional para localizar a frequência do aluno naquela aula.
 
@@ -328,7 +329,7 @@ Notas e frequências são filtradas simultaneamente por `student_id` autenticado
 
 ### RN-ALU-006 — Média oficial no serviço
 
-O cálculo mais completo existente é o `GradeCalculationService`: média ponderada, exclusão de notas nulas, tratamento de recuperação e classificação com limites 6 e 4.
+Todas as telas de notas usam `GradeCalculationService`: média ponderada por bimestre, exclusão de notas nulas, tratamento de recuperação e classificação pelo limite de aprovação configurado (6 por padrão) e recuperação a partir de 4.
 
 ### RN-ALU-007 — Recuperação
 
@@ -415,7 +416,7 @@ O mesmo indicador acadêmico deveria produzir o mesmo valor em todas as páginas
 
 ### RNF-ALU-009 — Testabilidade
 
-Não foram localizados testes funcionais específicos para dashboard, notas, frequência, disciplinas, calendário ou isolamento entre dois alunos.
+Há testes funcionais para o boletim, publicação de notas e consistência de médias entre dashboard, disciplinas e detalhe. A cobertura funcional de frequência, calendário e isolamento entre alunos ainda deve ser ampliada antes da homologação.
 
 ### RNF-ALU-010 — Auditabilidade
 
@@ -427,20 +428,20 @@ O download do boletim ocorre dentro da página e não registra explicitamente hi
 
 As páginas do portal agora selecionam a turma pela matrícula ativa no ano letivo vigente. Isso exclui matrículas transferidas, canceladas e históricas da visualização atual.
 
-### 11.2 Notas não publicadas podem ser exibidas
+### 11.2 Publicação de notas
 
-O professor usa `Grade.locked_at` como indicação de publicação, e períodos possuem `grades_published`. As consultas do aluno não filtram nenhum desses campos. Assim, uma nota salva como rascunho pode aparecer no portal.
+O professor usa `Grade.locked_at` como indicação de publicação. As consultas do portal do aluno, dos widgets e do boletim filtram esse campo; rascunhos permanecem invisíveis. A publicação invalida o cache do dashboard do aluno.
 
-### 11.3 Fórmulas de nota divergentes
+### 11.3 Fórmula de nota unificada
 
 | Tela | Fórmula atual |
 |---|---|
-| Dashboard | Média simples por disciplina; exclui recuperação |
-| Minhas Notas | Média ponderada; recuperação pelo melhor resultado |
-| Minhas Disciplinas | Média simples; inclui recuperação |
-| Detalhe da Disciplina | Média simples; inclui recuperação |
+| Dashboard | Média das médias anuais por disciplina; bimestres ponderados e recuperação pelo melhor resultado |
+| Minhas Notas e PDF | Mesma regra, com detalhamento de bimestres e avaliações |
+| Minhas Disciplinas | Mesma regra por disciplina e no resumo geral |
+| Detalhe da Disciplina | Mesma regra para bimestres e média anual |
 
-Além disso, a view de disciplinas usa faixas visuais próximas de 7 e 5, enquanto o serviço oficial classifica aprovação em 6 e recuperação em 4.
+Os valores intermediários são exibidos com uma casa decimal nos cartões; o serviço mantém duas casas na média calculada. O limite de aprovação é configurável.
 
 ### 11.4 Fórmula de frequência unificada
 
@@ -463,7 +464,7 @@ Labels de notas e frequência usam `now()->year`, enquanto os dados acadêmicos 
 
 ### 11.7 Dashboard pode permanecer desatualizado
 
-A chave de cache usa somente o ID do aluno e não há invalidação localizada quando professor publica nota, lança frequência, altera avaliação ou ocorre mudança de turma. O dado pode ficar desatualizado por até cinco minutos e a mesma chave não distingue ano/matrícula.
+A chave de cache usa somente o ID do aluno. A publicação de notas agora invalida a chave correspondente. Lançamento de frequência, alteração de avaliação ou mudança de turma ainda podem deixar o dashboard desatualizado por até cinco minutos; a chave não distingue ano/matrícula.
 
 ### 11.8 Detalhe de disciplina executa consultas repetidas
 

@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\Grade;
 use App\Models\Student;
 use App\Models\TeacherAssignment;
+use App\Services\GradeCalculationService;
 use App\Support\PermissionAccess;
 use Filament\Pages\Page;
 
@@ -73,10 +74,11 @@ class MySubjects extends Page
             ->keyBy('subject_id');
 
         /* Carrega as notas do aluno nesta turma. */
-        $grades = Grade::where('student_id', $student->id)
+        $grades = Grade::published()->where('student_id', $student->id)
             ->where('class_id', $currentClass->id)
             ->get()
             ->groupBy('subject_id');
+        $gradeService = app(GradeCalculationService::class);
 
         /* Carrega a frequência do aluno nesta turma. */
         $attendances = Attendance::where('student_id', $student->id)
@@ -85,7 +87,7 @@ class MySubjects extends Page
             ->groupBy('subject_id');
 
         /* Complementa os dados de cada disciplina. */
-        $enriched = $subjects->map(function ($subject) use ($assignments, $grades, $attendances, $currentClass) {
+        $enriched = $subjects->map(function ($subject) use ($assignments, $grades, $attendances, $currentClass, $gradeService) {
             $assignment = $assignments->get($subject->id);
             $subjectGrades = $grades->get($subject->id, collect());
             $subjectAttendances = $attendances->get($subject->id, collect());
@@ -96,18 +98,11 @@ class MySubjects extends Page
                 ->first();
             $hoursWeekly = $gradeLevelPivot?->pivot?->hours_weekly;
 
-            /* Média das notas por período. */
-            $termAverages = [];
-            foreach (['b1', 'b2', 'b3', 'b4'] as $term) {
-                $termGrades = $subjectGrades->filter(fn ($g) => $g->term?->value === $term);
-                $termAverages[$term] = $termGrades->isNotEmpty()
-                    ? round($termGrades->avg('score'), 1)
-                    : null;
-            }
-
-            $overallAverage = $subjectGrades->isNotEmpty()
-                ? round($subjectGrades->avg('score'), 1)
-                : null;
+            $report = $gradeService->subjectReport($subjectGrades);
+            $termAverages = collect($report['terms'])
+                ->mapWithKeys(fn (array $term, string $key) => [$key => $term['final_average']])
+                ->all();
+            $overallAverage = $report['overall_average'];
 
             /* Estatísticas de frequência. */
             $totalClasses = $subjectAttendances->count();
@@ -131,16 +126,14 @@ class MySubjects extends Page
         })->sortBy(fn ($s) => $s->category?->value.$s->name);
 
         /* Estatísticas gerais. */
-        $allGrades = Grade::where('student_id', $student->id)
-            ->where('class_id', $currentClass->id)
-            ->get();
+        $allGrades = $grades->flatten(1);
         $allAttendance = Attendance::where('student_id', $student->id)
             ->where('class_id', $currentClass->id)
             ->get();
 
         $stats = [
             'total_subjects' => $subjects->count(),
-            'overall_average' => $allGrades->isNotEmpty() ? round($allGrades->avg('score'), 1) : null,
+            'overall_average' => $gradeService->overallAverage($allGrades),
             'attendance_percent' => $allAttendance->count() > 0
                 ? round(($allAttendance->filter(fn ($attendance) => $attendance->status?->countsAsPresent())->count() / $allAttendance->count()) * 100, 1)
                 : null,
