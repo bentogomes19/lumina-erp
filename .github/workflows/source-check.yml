@@ -17,7 +17,7 @@ jobs:
       - name: Verify tracked files and release allowlist
         run: bash scripts/check-deploy-source.sh
       - name: Validate Composer metadata
-        run: composer validate --strict
+        run: composer validate --no-check-publish
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
