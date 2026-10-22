@@ -1,0 +1,6 @@
+{$DEMO_HOST} {
+    root * /dev/lumina-erp/public
+    encode zstd gzip
+    php_fastcgi app:9000
+    file_server
+}
