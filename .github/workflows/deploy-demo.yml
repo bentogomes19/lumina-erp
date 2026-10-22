@@ -1,0 +1,68 @@
+name: Deploy demo
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lumina-demo
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment: demo
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify source package
+        run: bash scripts/check-deploy-source.sh
+      - name: Package only approved source paths
+        run: |
+          mkdir -p "$RUNNER_TEMP/release"
+          mapfile -t paths < <(bash scripts/check-deploy-source.sh --print-paths)
+          git archive --format=tar HEAD "${paths[@]}" | tar -xf - -C "$RUNNER_TEMP/release"
+          test ! -e "$RUNNER_TEMP/release/.env"
+          test ! -e "$RUNNER_TEMP/release/storage"
+      - name: Configure pinned SSH access
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          test -s "$HOME/.ssh/deploy_key"
+          test -s "$HOME/.ssh/known_hosts"
+      - name: Copy source and deploy
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[A-Za-z0-9.-]+$ ]]
+          [[ "$DEPLOY_USER" =~ ^[A-Za-z_][A-Za-z0-9_-]*$ ]]
+          ssh_opts=(-i "$HOME/.ssh/deploy_key" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
+          ssh "${ssh_opts[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
+            'test -f "$HOME/lumina-erp/.env" && command -v rsync >/dev/null'
+          rsync -a --delete \
+            --exclude='/.env' \
+            --exclude='/.deployed-revision' \
+            --exclude='/.git/' \
+            --exclude='/vendor/' \
+            --exclude='/node_modules/' \
+            --exclude='/storage/' \
+            --exclude='/bootstrap/cache/' \
+            --exclude='/public/build/' \
+            --exclude='/public/storage' \
+            --exclude='/database/*.sqlite*' \
+            -e "ssh -i $HOME/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            "$RUNNER_TEMP/release/" "$DEPLOY_USER@$DEPLOY_HOST:lumina-erp/"
+          ssh "${ssh_opts[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd \"\$HOME/lumina-erp\" && bash scripts/deploy-demo.sh $GITHUB_SHA"

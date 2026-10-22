@@ -1,0 +1,56 @@
+name: lumina-demo
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    user: "${APP_UID:?Set APP_UID in .env}:${APP_GID:?Set APP_GID in .env}"
+    working_dir: /dev/lumina-erp
+    env_file: .env
+    environment:
+      HOME: /tmp
+    volumes:
+      - .:/dev/lumina-erp
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      DEMO_HOST: ${DEMO_HOST:?Set DEMO_HOST in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - .:/dev/lumina-erp:ro
+      - ./Caddyfile.demo:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:?Set DB_DATABASE in .env}
+      MYSQL_USER: ${DB_USERNAME:?Set DB_USERNAME in .env}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+    volumes:
+      - mysqldata:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  mysqldata:
+  caddy_data:
+  caddy_config:

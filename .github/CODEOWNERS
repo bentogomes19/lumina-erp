@@ -1,0 +1,7 @@
+/.github/ @bentogomes19
+/scripts/deploy-demo.sh @bentogomes19
+/scripts/check-deploy-source.sh @bentogomes19
+/compose.demo.yaml @bentogomes19
+/Caddyfile.demo @bentogomes19
+/Dockerfile @bentogomes19
+/docker/ @bentogomes19

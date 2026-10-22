@@ -1,0 +1,26 @@
+name: Check source
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify tracked files and release allowlist
+        run: bash scripts/check-deploy-source.sh
+      - name: Validate Composer metadata
+        run: composer validate --strict
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Build frontend assets
+        run: npm ci && npm run build
