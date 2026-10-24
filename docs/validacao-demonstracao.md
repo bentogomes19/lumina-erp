@@ -1,5 +1,38 @@
 # Validação e roteiro de demonstração
 
+## Correção de publicação e média — 20/10/2026
+
+O portal do aluno passou a consultar somente notas publicadas (`Grade.locked_at` preenchido) no dashboard, em Minhas Notas, Minhas Disciplinas, detalhe da disciplina, widgets e boletim em PDF. Todas as médias usam a regra do boletim: ponderação por peso no bimestre, recuperação pelo melhor resultado e média anual dos bimestres disponíveis; a média geral do aluno é a média das médias anuais das disciplinas com nota. Publicar notas invalida o cache do dashboard dos alunos envolvidos.
+
+Os testes funcionais cobrem rascunho invisível em todas as páginas principais e no boletim, cálculo com pesos e recuperação, além do ciclo salvar rascunho → publicar → atualizar dashboard. A suíte completa no contêiner passou com **297 testes e 1.939 asserções**, sem erros ou falhas. Esta rodada foi automatizada; a navegação manual registrada abaixo ocorreu em 14 e 15/10.
+
+## Ensaio autenticado em base recriada — 14 e 15/10/2026
+
+Ambiente local de demonstração recriado com `migrate:fresh --seed --force` (59 migrações). Após a carga: 173 usuários, 156 alunos, 16 professores, 45 turmas e 540 matrículas. Os três contêineres (`app`, `nginx`, `db`) ficaram ativos, com MySQL saudável. O ensaio foi feito no navegador integrado, com contas sintéticas dos perfis administrativo, docente e discente. O banco `testing` da suíte é separado da base de demonstração.
+
+| Etapa e perfil | Esperado | Observado |
+| --- | --- | --- |
+| Secretaria: criar matrícula em turma com vaga | Matrícula ativa e ocupação +1 | Matrícula `2026000541` criada; turma 9° ANO A passou de 12 para 13/35. PDF de comprovação gerado em A4, com aluno, turma, ano e número corretos. |
+| Secretaria: trancar e reativar | Liberar e retomar a vaga | Ambas as ações retornaram sucesso. A matrícula original ficou trancada e depois ativa. |
+| Secretaria: criar turma e atribuir docente | Turma utilizável no cadastro e no portal | Turma sintética de capacidade 1 criada; docente atribuído à disciplina Língua Portuguesa. A criação inicialmente falhou por ausência de UUID, corrigida no modelo e retestada. |
+| Secretaria: transferir matrícula | Ocupação sai da origem e entra no destino; histórico preservado | Nova matrícula `2026000542` ativa na turma de destino (1/1); `2026000541` ficou transferida. A turma de origem voltou a 12/35. |
+| Secretaria: matrícula em turma cheia | Rejeição sem criar outra matrícula | Rejeitada, com aviso visível da capacidade; total permaneceu em 542 matrículas. O aviso faltava na primeira tentativa e foi corrigido. |
+| Secretaria: matrícula em ano encerrado | Rejeição sem criar matrícula | Rejeitada com mensagem explícita após adicionar a guarda no serviço; total permaneceu em 542. |
+| Docente: turma, avaliação, notas e frequência | Publicação e presença/falta persistidas | Turma e lista de 12 alunos carregaram. Avaliação `1801` criada; 12 notas salvas em rascunho e publicadas; 12 frequências lançadas (11 presenças, 1 falta). O tipo da nota, antes salvo como `test` para avaliação `activity`, foi corrigido e retestado. |
+| Discente: notas, frequência, disciplinas e calendário | Mostrar apenas dados da matrícula ativa | Aluno da turma docente viu nota publicada 8,0 e a nova frequência. Aluno transferido passou a ver a turma de destino e sua disciplina. O portal exibia a turma antiga e foi corrigido. |
+| Discente: cálculo de frequência | Mesma regra nas telas: presente + atraso sobre total | Página de frequência e cartões de disciplinas passaram a concordar com o dashboard: 92,5% no aluno de demonstração (770 registros). Faltas justificadas contam no total, não como presença. |
+| Restrição de documento | Exigir autenticação/autorização | Acesso anônimo ao PDF retornou HTTP 302 para `/login`; aluno tentando abrir PDF administrativo de outra matrícula também foi redirecionado para login. Não houve exposição do documento. Esses acessos não retornaram 403 no ensaio. |
+
+Validação automatizada após as correções: `php -d memory_limit=512M ./vendor/bin/phpunit --no-progress` no contêiner, **294 testes, 1.915 asserções, sem erro, falha ou teste arriscado**. O ensaio usou `MAIL_MAILER=log`; envio e recebimento por provedor real, HTTPS e restauração de backup ainda pertencem à homologação. Dados e documentos deste ensaio são sintéticos.
+
+**Resultado:** roteiro autenticado dos três portais concluído na base local recriada. As falhas observadas nos fluxos exercitados foram corrigidas e retestadas. A autorização por perfil dos PDFs permanece coberta pela suíte, enquanto o ensaio manual confirmou um PDF administrativo e os redirecionamentos de acesso negado.
+
+## Atualização da validação — 14/10/2026
+
+Uma nova execução da suíte dentro do contêiner (`docker compose exec -T app php -d memory_limit=512M ./vendor/bin/phpunit --no-progress`) registrou **281 testes, 1.815 asserções, 9 erros, 30 falhas e 25 testes arriscados**. A variação em relação à execução de 06/10/2026 exige corrigir o isolamento e as massas de dados dos testes antes de usar a suíte como evidência de aprovação. Entre as 30 falhas, 25 pertencem aos testes de autorização de PDF e usam perfis criados sem permissões correspondentes; esses casos precisam ser corrigidos e então validados contra a aplicação.
+
+Os contêineres estavam ativos, o banco estava saudável, as migrações estavam aplicadas e `/lumina/login` respondeu HTTP 200. Esses sinais confirmam a disponibilidade do ambiente de demonstração, não a prontidão para produção. A análise por gravidade e os critérios de entrega constam em [Relatório de prontidão](relatorio-final-prontidao.md).
+
 ## Evidência da validação — 06/10/2026
 
 Ambiente: containers `lumina-app`, `lumina-nginx` e `lumina-db` ativos; PHP 8.4.26 e MySQL 8.4.11. Todas as 59 migrations constavam como aplicadas. O banco `lumina` continha, entre outros dados, 173 usuários, 156 alunos, 16 professores, 45 turmas, 540 matrículas e 1.800 avaliações. Esses números descrevem a base local examinada, não uma medição de produção.

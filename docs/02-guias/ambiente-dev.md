@@ -1,0 +1,176 @@
+---
+titulo: "Ambiente de desenvolvimento – Lumina ERP"
+status: vigente
+atualizado_em: 2026-10-06
+responsavel: bentogomes19
+---
+
+# Ambiente de desenvolvimento – Lumina ERP
+
+Este guia cobre instalação e execução local. PHP 8.4, Composer e Node 22 estão dentro do container `app`; no computador são necessários Git e Docker Compose. Make é opcional.
+
+---
+
+## 1. Autenticação e Acesso: O Jeito Moderno
+
+Para clonar e **enviar alterações** (push) sem ficar digitando senha, use uma destas opções.
+
+### Opção A: SSH (recomendado)
+
+1. **Gerar chave SSH** (se ainda não tiver):
+   ```bash
+   ssh-keygen -t ed25519 -C "seu-email@exemplo.com" -f ~/.ssh/id_ed25519 -N ""
+   ```
+
+2. **Copiar a chave pública** para colar no GitHub:
+   - **Windows (PowerShell):** `Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub | Set-Clipboard`
+   - **macOS:** `pbcopy < ~/.ssh/id_ed25519.pub`
+   - **Linux:** `xclip -sel clip < ~/.ssh/id_ed25519.pub` ou copie o conteúdo do arquivo
+
+3. **Adicionar no GitHub:** [GitHub → Settings → SSH and GPG keys → New SSH key](https://github.com/settings/keys). Cole a chave e salve.
+
+4. **Clonar com SSH** (em vez de HTTPS):
+   ```bash
+   git clone git@github.com:bentogomes19/lumina-erp.git
+   cd lumina-erp
+   ```
+   Assim, `git push` e `git pull` não pedem senha.
+
+### Opção B: GitHub CLI
+
+1. **Instalar:** [https://cli.github.com](https://cli.github.com) (Windows/macOS/Linux).
+
+2. **Autenticar uma vez:**
+   ```bash
+   gh auth login
+   ```
+   Siga o assistente (escolha GitHub.com, HTTPS ou SSH, login no browser).
+
+3. **Clonar** (o CLI já usa a sessão):
+   ```bash
+   gh repo clone bentogomes19/lumina-erp
+   cd lumina-erp
+   ```
+
+### Opção C: HTTPS com credential helper
+
+Se preferir HTTPS e não querer digitar senha a cada push:
+
+- **Windows:** o [Git for Windows](https://git-scm.com/download/win) costuma integrar com o **Credential Manager**; ao dar o primeiro `git push`, a senha é guardada.
+- **macOS:** use o keychain:
+  ```bash
+  git config --global credential.helper osxkeychain
+  ```
+- **Linux:** use um helper em disco (menos seguro) ou [Git Credential Manager](https://github.com/GitCredentialManager/git-credential-manager).
+
+**Resumo:** para o dia a dia, **SSH** ou **GitHub CLI** são o jeito moderno e mais prático.
+
+---
+
+## 2. Pré-requisitos (uma vez na máquina)
+
+- **Docker Desktop** (ou Docker Engine + Docker Compose): [https://docs.docker.com/get-docker](https://docs.docker.com/get-docker)
+- **Git**
+- **Make** (opcional; no Windows pode usar os comandos equivalentes em PowerShell ou o script abaixo)
+
+
+### Host local no Windows
+
+Para acessar a aplicação digitando **http://lumina/** no navegador, adicione o host local do projeto no Windows:
+
+1. Abra o Bloco de Notas, VS Code ou outro editor como administrador.
+2. Edite o arquivo `C:\Windows\System32\drivers\etc\hosts`.
+3. Adicione a linha:
+
+```text
+127.0.0.1 lumina
+```
+
+O nginx do projeto publica a porta HTTP padrão `80`, então não é necessário informar `:8000` na URL.
+
+---
+
+## 3. Do clone ao primeiro refresh no browser
+
+Objetivo: **mínimo de passos** entre clonar e abrir a aplicação no browser.
+
+### Com Make (recomendado)
+
+```bash
+git clone git@github.com:bentogomes19/lumina-erp.git
+cd lumina-erp
+make bootstrap
+```
+
+O `make bootstrap`:
+
+1. Copia `.env.example` → `.env` se não existir
+2. Sobe os containers (app, nginx, MySQL)
+3. Espera o banco ficar saudável
+4. Executa `composer install`, `npm ci`, `npm run build`, geração da chave, publicação de assets e `migrate --seed`
+
+Depois, abra **http://localhost/lumina/login**. Para usar o nome `lumina`, configure o arquivo hosts e abra **http://lumina/lumina/login**. O portal docente fica em `/professor/login` e o discente em `/aluno/login`.
+
+### Sem Make (PowerShell / Bash)
+
+Se não tiver Make, na raiz do projeto:
+
+**PowerShell:**
+```powershell
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+docker compose up -d --build
+# Aguardar ~20s para o MySQL subir, depois:
+docker exec lumina-app composer install --no-scripts
+docker exec lumina-app npm ci
+docker exec lumina-app npm run build
+docker exec lumina-app php artisan key:generate
+docker exec lumina-app php artisan package:discover
+docker exec lumina-app php artisan filament:assets
+docker exec lumina-app php artisan migrate --seed --force
+```
+
+**Bash:**
+```bash
+[ -f .env ] || cp .env.example .env
+docker compose up -d --build
+sleep 25
+docker exec lumina-app composer install --no-scripts
+docker exec lumina-app npm ci
+docker exec lumina-app npm run build
+docker exec lumina-app php artisan key:generate
+docker exec lumina-app php artisan package:discover
+docker exec lumina-app php artisan filament:assets
+docker exec lumina-app php artisan migrate --seed --force
+```
+
+Em seguida: **http://localhost/lumina/login** (ou `http://lumina/lumina/login` com o host configurado).
+
+---
+
+## 4. Comandos úteis após o bootstrap
+
+**Importante:** `php artisan` e `composer` devem rodar **dentro do container** (ambiente com PHP, extensões e `.env` corretos). Use os alvos do Makefile (ex.: `make migrate`, `make seed`) ou `docker exec lumina-app php artisan ...` — não rode artisan no host.
+
+| Comando        | Descrição                          |
+|----------------|------------------------------------|
+| `make up`      | Sobe os containers                 |
+| `make down`    | Para os containers                 |
+| `make shell`   | Entra no container da app (zsh)    |
+| `make migrate` | Roda migrations (no container)     |
+| `make seed`    | Roda migrations + seeders          |
+| `make fresh`   | migrate:fresh --seed               |
+| `make key`     | Gera APP_KEY no .env               |
+| `make clear`   | Limpa caches (config/route/view)   |
+| `make test`    | PHPUnit                            |
+| `make lint`    | Laravel Pint (checagem)            |
+
+---
+
+## 5. Resumo do fluxo “clone → browser”
+
+1. **Autenticação (uma vez):** SSH ou `gh auth login`.
+2. **Clone:** `git clone ...` (de preferência via SSH).
+3. **Subir e instalar:** `make bootstrap`.
+4. **Abrir:** http://localhost/lumina/login.
+
+Isso reduz o tempo entre “clonagem” e “primeiro refresh no browser” ao mínimo possível, com um único comando após o clone.
