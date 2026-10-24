@@ -1,6 +1,6 @@
-## <Tipo de validação> — DD/MM/AAAA
+## 🧪 Tipo de validação — DD/MM/AAAA
 
-**Ambiente:** local / demo / homologação · **Commit:** `abc1234` · **Base:** recriada ou existente · **Executado por:** usuario-github
+> **Ambiente:** local | demo | homologação · **Commit:** `abc1234` · **Base:** recriada | existente · **Executado por:** usuario-github
 
 ### Resultado automatizado
 

@@ -1,31 +1,33 @@
 ---
 titulo: "ADR NNNN — Título da decisão"
-status: vigente    # proposta | vigente | substituida
+status: proposta
 atualizado_em: AAAA-MM-DD
 responsavel: usuario-github
 ---
 
 # ADR NNNN — Título da decisão
 
-## Contexto
+<!-- status: proposta | vigente | substituida -->
+
+## 📝 Contexto
 
 Qual problema ou restrição levou à decisão.
 
-## Decisão
+## 🎯 Decisão
 
 O que foi decidido, em uma ou duas frases afirmativas.
 
-## Alternativas consideradas
+## 🔍 Alternativas consideradas
 
 | Alternativa | Por que não |
 | --- | --- |
 | | |
 
-## Consequências
+## ⚖️ Consequências
 
-- **Positivas:** ...
-- **Negativas / custos:** ...
+- **Positivas:** …
+- **Negativas / custos:** …
 
-## Referências
+## 🔗 Referências
 
-- PR, issue ou documento relacionado. Se substituída, link para a ADR nova.
+- PR, issue ou ADR que substitui esta.

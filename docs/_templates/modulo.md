@@ -9,19 +9,21 @@ responsavel: usuario-github
 
 > Uma frase dizendo o que o módulo faz e para quem.
 
-## 1. Objetivo e escopo
+## 🎯 Objetivo
 
 O que o módulo cobre. **Fora do escopo:** o que não cobre e onde isso está (ou se não existe).
 
-## 2. Perfis e acesso
+## 👥 Perfis e acesso
 
 | Perfil | Entrada | Pode | Não pode |
 | --- | --- | --- | --- |
 | | `/rota/login` | | |
 
-Permissões envolvidas: `modulo.acao`, `modulo.acao`. Policies/Gates: `App\Policies\...`.
+Permissões: `modulo.acao`. Policies/Gates: `App\Policies\...`.
 
-## 3. Fluxo principal
+## 🔄 Fluxo
+
+<span style="color: #009432;">**[ 🖼️ VISUALIZAÇÃO ]**</span> O que o diagrama mostra.
 
 ```mermaid
 flowchart LR
@@ -29,30 +31,28 @@ flowchart LR
 ```
 
 1. Passo, com a tela ou rota envolvida.
-2. Passo.
 
-### Fluxos alternativos e erros
-
-| Situação | Comportamento esperado | Mensagem ao usuário |
+| Situação alternativa | Comportamento | Mensagem ao usuário |
 | --- | --- | --- |
 | | | |
 
-## 4. Regras de negócio
+## 📢 Regras de negócio
 
-### RN-XXX-001 — Nome curto
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span> **RN-XXX-001 — Nome curto**
+Enunciado verificável.
+<sub>Onde: `app/Services/...` · Teste: `tests/Feature/...`</sub>
 
-**Regra:** enunciado verificável.
-**Onde:** `app/Services/...` · **Teste:** `tests/Feature/...`
+## 🗃️ Dados
 
-## 5. Dados
-
-| Tabela | Uso no módulo | Restrições relevantes |
+| Tabela | Uso no módulo | Restrições |
 | --- | --- | --- |
 | | | unique, FK, soft delete |
 
-Detalhes de colunas ficam no [modelo relacional](../03-arquitetura/modelo-relacional.md).
+Colunas no [modelo relacional](../03-arquitetura/modelo-relacional.md).
 
-## 6. Arquivos principais
+## 📁 Arquivos principais
+
+<span style="color: #2980b9;">**[ 🛠️ ESTRUTURA ]**</span>
 
 | Camada | Arquivo |
 | --- | --- |
@@ -61,15 +61,17 @@ Detalhes de colunas ficam no [modelo relacional](../03-arquitetura/modelo-relaci
 | Model | `app/Models/...` |
 | Testes | `tests/Feature/...` |
 
-## 7. Requisitos não funcionais
+## ⚙️ Requisitos não funcionais
 
-- **RNF-XXX-001 — Segurança:** ...
-- **RNF-XXX-002 — Desempenho:** ...
+- **RNF-XXX-001 — Segurança:** …
 
-## 8. Limitações conhecidas
+## ⚠️ Limitações conhecidas
 
-- Limitação atual, com link para issue quando houver.
+- …
 
-## 9. Evolução (proposta, não implementado)
+## 🚀 Evolução
 
-- Item de backlog.
+> [!NOTE]
+> Propostas, ainda não implementadas.
+
+- …

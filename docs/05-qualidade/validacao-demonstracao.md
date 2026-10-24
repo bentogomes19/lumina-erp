@@ -1,19 +1,30 @@
 ---
 titulo: "Validação e roteiro de demonstração"
 status: vigente
-atualizado_em: 2026-10-20
+atualizado_em: 2026-10-24
 responsavel: bentogomes19
 ---
 
 # Validação e roteiro de demonstração
 
-## Correção de publicação e média — 20/10/2026
+## 🚦 Estado atual
+
+| Verificação | Última rodada | Resultado |
+| --- | --- | --- |
+| PHPUnit (suíte completa) | 20/10/2026 | ✅ 297 testes, 1.939 asserções, sem erros ou falhas |
+| Ensaio autenticado dos três portais | 14 e 15/10/2026 | ✅ Concluído em base recriada; falhas corrigidas e retestadas |
+| Laravel Pint `--test` | 06/10/2026 | ❌ 315 problemas de estilo (não reavaliado depois) |
+| E-mail real, HTTPS, backup | — | ⏳ Pendente da homologação |
+
+As rodadas abaixo estão da mais recente para a mais antiga. Use o [template de registro](../_templates/registro-validacao.md) para novas rodadas.
+
+## 🧪 Correção de publicação e média — 20/10/2026
 
 O portal do aluno passou a consultar somente notas publicadas (`Grade.locked_at` preenchido) no dashboard, em Minhas Notas, Minhas Disciplinas, detalhe da disciplina, widgets e boletim em PDF. Todas as médias usam a regra do boletim: ponderação por peso no bimestre, recuperação pelo melhor resultado e média anual dos bimestres disponíveis; a média geral do aluno é a média das médias anuais das disciplinas com nota. Publicar notas invalida o cache do dashboard dos alunos envolvidos.
 
 Os testes funcionais cobrem rascunho invisível em todas as páginas principais e no boletim, cálculo com pesos e recuperação, além do ciclo salvar rascunho → publicar → atualizar dashboard. A suíte completa no contêiner passou com **297 testes e 1.939 asserções**, sem erros ou falhas. Esta rodada foi automatizada; a navegação manual registrada abaixo ocorreu em 14 e 15/10.
 
-## Ensaio autenticado em base recriada — 14 e 15/10/2026
+## 🧪 Ensaio autenticado em base recriada — 14 e 15/10/2026
 
 Ambiente local de demonstração recriado com `migrate:fresh --seed --force` (59 migrações). Após a carga: 173 usuários, 156 alunos, 16 professores, 45 turmas e 540 matrículas. Os três contêineres (`app`, `nginx`, `db`) ficaram ativos, com MySQL saudável. O ensaio foi feito no navegador integrado, com contas sintéticas dos perfis administrativo, docente e discente. O banco `testing` da suíte é separado da base de demonstração.
 
@@ -34,13 +45,21 @@ Validação automatizada após as correções: `php -d memory_limit=512M ./vendo
 
 **Resultado:** roteiro autenticado dos três portais concluído na base local recriada. As falhas observadas nos fluxos exercitados foram corrigidas e retestadas. A autorização por perfil dos PDFs permanece coberta pela suíte, enquanto o ensaio manual confirmou um PDF administrativo e os redirecionamentos de acesso negado.
 
-## Atualização da validação — 14/10/2026
+## 🧪 Atualização da validação — 14/10/2026
+
+<details>
+<summary>Suíte de 14/10/2026: 281 testes, 9 erros, 30 falhas (superada)</summary>
 
 Uma nova execução da suíte dentro do contêiner (`docker compose exec -T app php -d memory_limit=512M ./vendor/bin/phpunit --no-progress`) registrou **281 testes, 1.815 asserções, 9 erros, 30 falhas e 25 testes arriscados**. A variação em relação à execução de 06/10/2026 exige corrigir o isolamento e as massas de dados dos testes antes de usar a suíte como evidência de aprovação. Entre as 30 falhas, 25 pertencem aos testes de autorização de PDF e usam perfis criados sem permissões correspondentes; esses casos precisam ser corrigidos e então validados contra a aplicação.
 
 Os contêineres estavam ativos, o banco estava saudável, as migrações estavam aplicadas e `/lumina/login` respondeu HTTP 200. Esses sinais confirmam a disponibilidade do ambiente de demonstração, não a prontidão para produção. A análise por gravidade e os critérios de entrega constam em [Relatório de prontidão](./relatorio-prontidao.md).
 
-## Evidência da validação — 06/10/2026
+</details>
+
+## 🧪 Evidência da validação — 06/10/2026
+
+<details>
+<summary>Primeira rodada, 06/10/2026: build, HTTP, PHPUnit e Pint (superada)</summary>
 
 Ambiente: containers `lumina-app`, `lumina-nginx` e `lumina-db` ativos; PHP 8.4.26 e MySQL 8.4.11. Todas as 59 migrations constavam como aplicadas. O banco `lumina` continha, entre outros dados, 173 usuários, 156 alunos, 16 professores, 45 turmas, 540 matrículas e 1.800 avaliações. Esses números descrevem a base local examinada, não uma medição de produção.
 
@@ -57,7 +76,9 @@ As falhas da suíte incluem 25 casos de PDF de matrícula que esperavam HTTP 200
 
 **Conclusão:** infraestrutura, assets, banco e páginas públicas de login foram comprovados. A demonstração ponta a ponta autenticada **não está validada** por esta rodada, e o sistema ainda não atende a um critério de suíte integralmente verde.
 
-## Roteiro para ensaio manual
+</details>
+
+## ▶️ Roteiro para ensaio manual
 
 Use apenas dados sintéticos locais. Registre resultado e captura de cada etapa antes da banca.
 
@@ -70,6 +91,6 @@ Use apenas dados sintéticos locais. Registre resultado e captura de cada etapa 
 
 Contas previstas pelos seeders: `admin@lumina.com`, `professor@lumina.com` e `aluno@lumina.com`. A senha de demonstração é configurada por `SCHOOL_DEFAULT_PASSWORD` (padrão do código: `123456`); confirme o valor no seu `.env` sem divulgá-lo em capturas ou no TCC. Convites e redefinições usam `MAIL_MAILER=log` por padrão.
 
-## Critério de conclusão para a banca
+## ✅ Critério de conclusão para a banca
 
 Antes de chamar o roteiro de aprovado, execute as seis etapas em uma base recriada para a apresentação, registre data, navegador, usuário/perfil, resultado esperado e observado, e trate as falhas que impedirem os fluxos centrais. Mantenha os resultados negativos documentados no TCC como limitações, sem atribuir aprovação a testes que falharam.

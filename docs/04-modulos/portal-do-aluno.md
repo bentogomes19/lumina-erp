@@ -1,16 +1,19 @@
 ---
 titulo: "Portal do Aluno — funcionamento e regras atuais"
-status: vigente
-atualizado_em: 2026-10-20
+status: revisar
+atualizado_em: 2026-10-24
 responsavel: bentogomes19
 ---
 
 # Portal do Aluno — funcionamento e regras atuais
 
+> [!WARNING]
+> **Revisão pendente.** A seção 2 diz que o portal usa o mesmo painel da administração, mas hoje ele tem painel próprio em `/aluno` (`StudentPanelProvider`). Para o uso atual das telas, veja o [manual do portal do aluno](./manual-portal-do-aluno.md).
+
 > Documento funcional e técnico baseado no código-fonte em 23 de agosto de 2026.
 > Esta página descreve o que está implementado hoje, as regras observadas e as inconsistências conhecidas. Propostas de evolução são mantidas no backlog local `.dev-tasks/student-module`.
 
-## 1. Objetivo do módulo
+## 🎯 1. Objetivo do módulo
 
 O Portal do Aluno oferece ao estudante autenticado uma visão somente de leitura de sua vida acadêmica no ano letivo ativo. O módulo reúne:
 
@@ -23,7 +26,7 @@ O Portal do Aluno oferece ao estudante autenticado uma visão somente de leitura
 
 O portal não possui cadastro acadêmico próprio. Usuário, aluno, matrícula, turma, disciplinas, aulas, avaliações, notas e frequências são preparados pelos módulos administrativos e pelo portal do professor.
 
-## 2. Limites do módulo atual
+## 🗂️ 2. Limites do módulo atual
 
 O portal é servido pelo mesmo painel Filament usado pela administração e pelos professores. Não existe um `StudentPanelProvider` efetivamente registrado no bootstrap; a separação é feita por papel, permissão, visibilidade da navegação e autorização de cada página.
 
@@ -40,7 +43,9 @@ O aluno atualmente pode consultar dados e baixar o boletim. Não foram localizad
 
 As permissões `student.profile.view`, `student.documents.view` e `student.assessments.view` existem no catálogo, mas não correspondem a páginas próprias completas. Há widgets que consultam permissões de perfil e avaliações, porém o dashboard customizado exibe suas avaliações próximas sem verificar `student.assessments.view` separadamente.
 
-## 3. Arquitetura e fluxo de dados
+## 🛠️ 3. Arquitetura e fluxo de dados
+
+<span style="color: #009432;">**[ 🖼️ VISUALIZAÇÃO ]**</span>
 
 ```mermaid
 flowchart LR
@@ -67,7 +72,7 @@ Fluxo comum executado pelas páginas:
 
 O contexto acadêmico não é centralizado em um serviço. Cada página repete sua própria consulta para encontrar aluno e turma atual.
 
-## 4. Acesso e autorização
+## 👥 4. Acesso e autorização
 
 ### 4.1 Pré-condições gerais
 
@@ -103,7 +108,7 @@ Se o papel possui alguma permissão explícita do módulo “Portal do Aluno”,
 
 Isso permite migração gradual, mas faz o comportamento depender de o papel já ter ou não permissões explícitas do módulo.
 
-## 5. Entrada e rotas
+## 🔄 5. Entrada e rotas
 
 Após autenticar, o acesso à raiz `/lumina` é redirecionado pelo papel `student` para `/lumina/dashboard-student`.
 
@@ -121,7 +126,7 @@ Após autenticar, o acesso à raiz `/lumina` é redirecionado pelo papel `studen
 
 `subject-detail` recebe o identificador por query string, não por segmento de rota. A página valida se a disciplina pertence a alguma turma do aluno no ano letivo ativo antes de liberar o conteúdo.
 
-## 6. Navegação atual
+## 🖼️ 6. Navegação atual
 
 | Ordem | Item | Ícone | Condição |
 |---:|---|---|---|
@@ -133,7 +138,7 @@ Após autenticar, o acesso à raiz `/lumina` é redirecionado pelo papel `studen
 
 O detalhe da disciplina não aparece no menu e é alcançado a partir de “Minhas Disciplinas”.
 
-## 7. Fluxo funcional por página
+## 🔄 7. Fluxo funcional por página
 
 ### 7.1 Painel do Aluno
 
@@ -312,57 +317,81 @@ Os botões de exportação PDF e iCal estão visíveis, mas seus métodos são s
 
 Os limites dos quatro bimestres não usam `SchoolYearTerm`. O intervalo entre início e fim do ano é dividido matematicamente em quatro partes iguais.
 
-## 8. Regras de negócio identificadas
+## 📢 8. Regras de negócio identificadas
 
 ### RN-ALU-001 — Identidade do portal
+
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
 
 Dados pessoais do portal são sempre resolvidos pelo `Student` associado ao `User` autenticado. O usuário não informa um ID de aluno para as páginas principais.
 
 ### RN-ALU-002 — Papel obrigatório
 
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
+
 Permissões `student.*` só são válidas para um usuário com papel `student`.
 
 ### RN-ALU-003 — Contexto do ano ativo
+
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
 
 As páginas acadêmicas usam uma turma cujo ano letivo possui `is_active = true`.
 
 ### RN-ALU-004 — Ausência de contexto
 
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
+
 Sem `Student` ou turma do ano ativo, as páginas retornam coleções e estatísticas vazias em vez de consultar dados globais.
 
 ### RN-ALU-005 — Isolamento de dados
+
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
 
 Notas e frequências são filtradas simultaneamente por `student_id` autenticado e `class_id` da turma atual. O detalhe da disciplina ainda valida que a disciplina pertence à turma do aluno.
 
 ### RN-ALU-006 — Média oficial no serviço
 
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
+
 Todas as telas de notas usam `GradeCalculationService`: média ponderada por bimestre, exclusão de notas nulas, tratamento de recuperação e classificação pelo limite de aprovação configurado (6 por padrão) e recuperação a partir de 4.
 
 ### RN-ALU-007 — Recuperação
+
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
 
 A recuperação pode se relacionar à nota original por `recovery_of_id`; sem esse vínculo, é associada pelo mesmo bimestre. O melhor resultado entre média regular e recuperação é usado como média final do período.
 
 ### RN-ALU-008 — Frequência mínima
 
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
+
 O portal usa 75% como frequência mínima e sinaliza risco abaixo desse valor quando existem registros.
 
 ### RN-ALU-009 — Situações de frequência
+
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
 
 Os estados disponíveis são presente, ausente, atrasado e falta justificada.
 
 ### RN-ALU-010 — Boletim condicionado
 
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
+
 O download do boletim exige `student.report-card.download`, além do acesso à página de notas.
 
 ### RN-ALU-011 — Calendário contextual
+
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
 
 Avaliações são filtradas pela turma; feriados são filtrados pelo ano letivo; o filtro por disciplina atua sobre avaliações.
 
 ### RN-ALU-012 — Cache do dashboard
 
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
+
 O dashboard mantém seus dados por cinco minutos por ID de aluno.
 
-## 9. Requisitos funcionais observados
+## ⚙️ 9. Requisitos funcionais observados
 
 | Código | Requisito atual | Situação |
 |---|---|---|
@@ -387,7 +416,7 @@ O dashboard mantém seus dados por cinco minutos por ID de aluno.
 | RF-ALU-019 | Selecionar histórico por ano/matrícula | Não implementado |
 | RF-ALU-020 | Receber notificações acadêmicas | Não implementado |
 
-## 10. Requisitos não funcionais observados
+## ⚙️ 10. Requisitos não funcionais observados
 
 ### RNF-ALU-001 — Segurança de acesso
 
@@ -429,7 +458,7 @@ Há testes funcionais para o boletim, publicação de notas e consistência de m
 
 O download do boletim ocorre dentro da página e não registra explicitamente histórico de downloads.
 
-## 11. Inconsistências e limitações conhecidas
+## ⚠️ 11. Inconsistências e limitações conhecidas
 
 ### 11.1 Seleção de matrícula/turma atual
 
@@ -505,7 +534,7 @@ Há teste para negar permissão estudantil a um usuário sem papel de aluno, mas
 
 `Student::students()` declara uma relação do aluno com outros alunos usando `class_id` como chave na tabela de matrículas. A relação aparenta estar obsoleta ou incorreta e não faz parte do fluxo legítimo do portal.
 
-## 12. Dados necessários para funcionamento
+## 🗃️ 12. Dados necessários para funcionamento
 
 Para que um aluno visualize o portal completo, a base deve possuir:
 
@@ -520,7 +549,7 @@ Para que um aluno visualize o portal completo, a base deve possuir:
 9. avaliações e notas para desempenho e boletim;
 10. feriados e períodos para enriquecer o calendário.
 
-## 13. Arquivos principais
+## 📁 13. Arquivos principais
 
 | Responsabilidade | Arquivo |
 |---|---|
@@ -538,7 +567,7 @@ Para que um aluno visualize o portal completo, a base deve possuir:
 | Dashboard Blade | `resources/views/filament/pages/dashboard-student.blade.php` |
 | Boletim | `resources/views/pdf/report-card.blade.php` |
 
-## 14. Referência de manutenção
+## 🔗 14. Referência de manutenção
 
 Ao modificar o portal, deve-se conferir no mínimo:
 

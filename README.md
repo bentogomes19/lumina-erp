@@ -2,7 +2,7 @@
 
 Sistema web de gestão escolar desenvolvido com **PHP 8.4, Laravel 12, Filament 5 e MySQL 8**. O projeto reúne administração acadêmica, portal do professor e portal do aluno.
 
-## Instalação para demonstração local
+## ▶️ Instalação para demonstração local
 
 Pré-requisitos no computador: Docker com Compose, Git e Make. PHP, Composer e Node são fornecidos pelo container; a imagem usa Node 22. A porta HTTP definida em `APP_PORT` (padrão 80) precisa estar livre.
 
@@ -18,7 +18,7 @@ Abra `http://localhost/lumina/login` ou, após mapear `127.0.0.1 lumina` no arqu
 
 As contas de demonstração são criadas pelos seeders; veja o [roteiro de validação](./docs/05-qualidade/validacao-demonstracao.md). O ambiente padrão grava e-mails no log (`MAIL_MAILER=log`), então convites e recuperação de senha não chegam a uma caixa de entrada real.
 
-## Verificações no container
+## 🧪 Verificações no contêiner
 
 ```bash
 docker compose ps
@@ -30,7 +30,7 @@ docker compose exec -T app ./vendor/bin/pint --test
 
 Na última validação registrada (20/10/2026), a suíte passou com 297 testes; o Pint não foi reavaliado desde 06/10/2026, quando falhou. Veja os [resultados e limitações](./docs/05-qualidade/validacao-demonstracao.md) e o [relatório de prontidão](./docs/05-qualidade/relatorio-prontidao.md).
 
-## Documentação
+## 🔗 Documentação
 
 - [Índice da documentação](./docs/README.md)
 - [Ambiente e instalação detalhada](./docs/02-guias/ambiente-dev.md)

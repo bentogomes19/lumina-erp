@@ -9,12 +9,11 @@ responsavel: usuario-github
 
 > Para quem é este guia e qual o resultado ao final.
 
-## Pré-requisitos
+## 📦 Pré-requisitos
 
 - Ferramenta e versão mínima.
-- Acesso ou permissão necessária.
 
-## Passo a passo
+## ▶️ Passo a passo
 
 1. Ação.
 
@@ -22,20 +21,18 @@ responsavel: usuario-github
    comando
    ```
 
-   Resultado esperado: o que deve aparecer.
+   Resultado esperado: …
 
-2. Ação.
+## ✅ Verificação
 
-## Verificação
+Como confirmar que deu certo.
 
-Como confirmar que deu certo (comando, URL, saída esperada).
-
-## Problemas comuns
+## 🩺 Problemas comuns
 
 | Sintoma | Causa provável | Solução |
 | --- | --- | --- |
 | | | |
 
-## Desfazer / rollback
+## ↩️ Rollback
 
-Como voltar ao estado anterior, quando aplicável.
+Como voltar ao estado anterior.

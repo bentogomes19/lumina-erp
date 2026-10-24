@@ -9,16 +9,17 @@ responsavel: bentogomes19
 
 **Estado atual:** protótipo funcional para demonstração; não deve receber dados reais antes da homologação. A situação detalhada e os números de teste mais recentes ficam no [relatório de prontidão](./05-qualidade/relatorio-prontidao.md). Não há módulo financeiro operacional nem API pública de negócio.
 
-## Comece aqui
+## 🧭 Comece aqui
 
 | Preciso… | Leia |
 | --- | --- |
 | Entender o produto | [Visão geral e escopo](./01-produto/visao-geral.md) |
+| Aprender a usar o sistema | [Atores, perfis e portais](./04-modulos/atores-e-perfis.md) e os manuais de cada portal |
 | Rodar o projeto localmente | [Ambiente de desenvolvimento](./02-guias/ambiente-dev.md) |
 | Apresentar o sistema | [Validação e roteiro de demonstração](./05-qualidade/validacao-demonstracao.md) |
 | Saber se está pronto para produção | [Relatório de prontidão](./05-qualidade/relatorio-prontidao.md) |
 
-## Estrutura
+## 🛠️ Estrutura
 
 ```text
 docs/
@@ -33,37 +34,52 @@ docs/
 └── assets/              imagens e diagramas
 ```
 
-## Índice
+## 🗂️ Índice
 
 ### 01 · Produto
+
 - [Visão geral e escopo](./01-produto/visao-geral.md)
 
 ### 02 · Guias
+
 - [Ambiente de desenvolvimento](./02-guias/ambiente-dev.md)
 - [Implantação da demonstração (GitHub Actions)](./02-guias/implantacao-demo.md)
 - [Preparação do release de homologação](./02-guias/release-homologacao.md)
 - [Permissões diretas excepcionais](./02-guias/permissoes-diretas.md)
 
 ### 03 · Arquitetura
+
 - [Modelo relacional](./03-arquitetura/modelo-relacional.md) — ⚠️ revisar
 - [Decisões de arquitetura (ADR)](./03-arquitetura/adr/README.md)
 
 ### 04 · Módulos
+
+**Manuais de uso** (com prints das telas)
+
+- [Atores, perfis e portais](./04-modulos/atores-e-perfis.md) — comece por aqui
+- [Manual do portal administrativo](./04-modulos/manual-portal-administrativo.md)
+- [Manual do portal do professor](./04-modulos/manual-portal-do-professor.md)
+- [Manual do portal do aluno](./04-modulos/manual-portal-do-aluno.md)
+
+**Regras técnicas**
+
 - [Matrículas](./04-modulos/matriculas.md)
-- [Portal do aluno](./04-modulos/portal-do-aluno.md)
-- Portal do professor — *pendente; enquanto isso, veja a [auditoria de 23/08/2026](./06-historico/2026-08-23-auditoria-portal-professor.md)*
+- [Portal do aluno](./04-modulos/portal-do-aluno.md) — ⚠️ revisar
+- Portal do professor — *pendente; veja a [auditoria de 23/08/2026](./06-historico/2026-08-23-auditoria-portal-professor.md)*
 - [Frequência](./04-modulos/frequencia.md) — ⚠️ revisar
 - [Dias letivos](./04-modulos/dias-letivos.md) — ⚠️ revisar
 
 ### 05 · Qualidade
+
 - [Validação e roteiro de demonstração](./05-qualidade/validacao-demonstracao.md)
 - [Relatório de prontidão](./05-qualidade/relatorio-prontidao.md)
 
 ### 06 · Histórico
+
 - [Auditoria do portal do professor — 23/08/2026](./06-historico/2026-08-23-auditoria-portal-professor.md)
 - [Análise geral e fluxos de cadastro — 23/08/2026](./06-historico/2026-08-23-analise-geral-e-fluxos-de-cadastro.md)
 - [Revisão da documentação — 24/10/2026](./06-historico/2026-10-24-revisao-da-documentacao.md)
 
-## Como contribuir com a documentação
+## ✍️ Como contribuir com a documentação
 
-Use os [templates](./_templates/README.md) e siga as convenções descritas lá: metadados no topo, nomes em `kebab-case`, links relativos e separação entre o que existe e o que é proposta. Ao mudar uma regra no código, atualize o documento do módulo no mesmo pull request.
+Use os [templates](./_templates/README.md) e o [padrão de formatação](./_templates/padrao-markdown.md), seguindo as convenções descritas lá: metadados no topo, nomes em `kebab-case`, links relativos e separação entre o que existe e o que é proposta. Ao mudar uma regra no código, atualize o documento do módulo no mesmo pull request.

@@ -12,7 +12,7 @@ responsavel: bentogomes19
 
 > Auditoria funcional e técnica do comportamento existente em 23/08/2026. Este documento descreve o código atual; propostas futuras estão explicitamente separadas. Nenhuma regra de produção foi alterada nesta etapa.
 
-## Resumo executivo
+## 🎯 Resumo executivo
 
 O Portal do Professor é implementado no mesmo painel Filament (`/lumina`) usado pelos demais perfis. O usuário entra pelo login do Filament, precisa estar ativo e desbloqueado, possuir o papel `teacher` e ter um registro em `teachers` ligado por `teachers.user_id`. As turmas e disciplinas disponíveis derivam de `teacher_assignments`, cuja combinação `class_id + subject_id` identifica a alocação docente e cujo ano letivo é obtido indiretamente por `classes.school_year_id`.
 
@@ -32,7 +32,7 @@ Os controles mais sólidos estão nos fluxos principais de notas e frequência, 
 | Melhorias práticas de UX | 10 |
 | Tasks técnicas criadas | 19 |
 
-## 1. Visão geral
+## 📝 1. Visão geral
 
 O propósito observado do módulo é oferecer ao professor uma área pessoal para consultar sua alocação acadêmica e operar avaliações, notas e frequência sem acesso aos cadastros administrativos globais.
 
@@ -57,7 +57,7 @@ O painel é compartilhado, mas a navegação é segmentada por `canAccess()`/`sh
 - Comunicados e página de pendências, apesar das permissões e cartões existentes.
 - Página “Minhas Disciplinas”, apesar da permissão `teacher.subjects.view`.
 
-## 2. Arquitetura atual
+## 🛠️ 2. Arquitetura atual
 
 ### Camadas e componentes
 
@@ -85,7 +85,9 @@ Não foram encontrados controllers, Form Requests, DTOs, repositories ou actions
 - `config/lumina-permissions.php`
 - `database/migrations/*teachers*`, `*teacher_assignments*`, `*classes*`, `*enrollments*`, `*assessments*`, `*grades*`, `*lessons*`, `*attendances*`
 
-## 3. Modelo de dados
+## 🗃️ 3. Modelo de dados
+
+<span style="color: #009432;">**[ 🖼️ VISUALIZAÇÃO ]**</span>
 
 ```mermaid
 erDiagram
@@ -132,17 +134,19 @@ erDiagram
 
 O histórico não é inteiramente autônomo. Notas, avaliações, aulas e frequências ainda dependem de relações mutáveis (`classes.school_year_id`, matrícula atual e alocações atuais). A remoção de uma alocação não apaga diretamente notas/avaliações, mas retira o acesso do professor. `forceDelete` de turma, disciplina, professor ou aluno pode acionar cascatas em registros acadêmicos. Essa política precisa ser formalizada antes de migrations corretivas.
 
-## 4. Fluxo atual do professor
+## 🔄 4. Fluxo atual do professor
+
+<span style="color: #009432;">**[ 🖼️ VISUALIZAÇÃO ]**</span>
 
 ```mermaid
 flowchart TD
-    A[Login Filament em /lumina/login] --> B{Usuário ativo e desbloqueado?}
+    A["Login Filament em /lumina/login"] --> B{Usuário ativo e desbloqueado?}
     B -- não --> C[Logout e erro de conta]
     B -- sim --> D{Papel principal no redirecionamento}
-    D -- teacher --> E[/lumina/dashboard-teacher]
+    D -- teacher --> E["/lumina/dashboard-teacher"]
     E --> F{Permissão teacher.dashboard.view}
     F -- negada --> G[403 / página indisponível]
-    F -- concedida --> H{Existe User -> Teacher?}
+    F -- concedida --> H{"Existe User → Teacher?"}
     H -- não --> I[Estado vazio; notas/frequência podem falhar por chaves ausentes]
     H -- sim --> J[Carrega teacher_assignments]
     J --> K[Dashboard]
@@ -177,7 +181,7 @@ Todas passam pelos middlewares do painel, incluindo autenticação, sessão, CSR
 - Matriz vazia: se o papel do professor não tiver nenhuma permissão explícita do módulo, `PermissionAccess::legacyRoleFallback()` volta a conceder todas as permissões docentes conhecidas.
 - Widgets docentes antigos: existem `TeacherAttendanceWidget`, `TeacherStats`, `RecentAttendanceTeacher` e `MyClassesTable`, mas não foi encontrada inclusão nas páginas docentes atuais. Devem ser considerados código dormente, não parte confirmada do fluxo ativo.
 
-## 5. Funcionalidades existentes
+## 🖼️ 5. Funcionalidades existentes
 
 ### 5.1 Dashboard
 
@@ -313,7 +317,7 @@ Limitações:
 - O fallback consulta `ui-avatars.com`, expondo o nome na URL e dependendo de terceiro.
 - O e-mail de `Teacher` não atualiza o e-mail de login de `User`; salvar `User` futuramente pode sobrescrever o perfil docente. A intenção precisa de validação de negócio.
 
-## 6. Regras de negócio existentes
+## 📢 6. Regras de negócio existentes
 
 | # | Regra | Implementação e tabelas | Validação/permissão | Comportamento/problema |
 |---:|---|---|---|---|
@@ -349,7 +353,7 @@ Limitações:
 | 30 | Perfil básico exige permissão específica | `TeacherProfile::saveBasic` | `teacher.profile.update-basic` | Atualiza somente campos permitidos e avatar |
 | 31 | Ano ativo é único em aplicação | `SchoolYear::booted` | update dos demais anos | Não há índice parcial/constraint que garanta isso fora do Eloquent |
 
-## 7. Permissões e autorização
+## 👥 7. Permissões e autorização
 
 ### Camadas existentes
 
@@ -377,7 +381,7 @@ Limitações:
 
 Existe `GradePolicy` para admin, professor proprietário e aluno proprietário. Não há policies registradas para `Assessment`, `Attendance` ou `Lesson`; `Teacher`, `SchoolClass`, `Subject` e `TeacherAssignment` usam `AdminOnlyPolicy` nos recursos administrativos. Não foram encontrados Gates específicos do portal. As páginas docentes não chamam `authorize()`/policy e duplicam regras localmente.
 
-## 8. Inconsistências encontradas
+## ⚠️ 8. Inconsistências encontradas
 
 | ID | Problema | Categoria | Severidade | Prioridade | Local |
 |---|---|---|---|---|---|
@@ -407,7 +411,7 @@ Existe `GradePolicy` para admin, professor proprietário e aluno proprietário. 
 | TCH-024 | Avatar antigo fica órfão, fallback envia nome a terceiro e e-mail User/Teacher pode divergir | MAINTAINABILITY, UX | LOW | P3 | `TeacherProfile`, `User` |
 | TCH-025 | Indicadores de comunicados/notas pendentes são estáticos ou incompatíveis com o schema | BUG, UX | MEDIUM | P2 | `DashboardTeacher` |
 
-## 9. Problemas de UX
+## ⚠️ 9. Problemas de UX
 
 Esta seção é uma revisão estática dos templates e fluxos. Não havia navegador controlável nesta sessão; portanto, contraste real, foco, ordem de leitura, leitores de tela, tempo de resposta percebido e screenshots não foram validados. Não se afirma conformidade WCAG.
 
@@ -422,7 +426,7 @@ Esta seção é uma revisão estática dos templates e fluxos. Não havia navega
 9. **Dashboard sem confiança operacional.** Comunicados sempre zero, notas pendentes tendem a zero e chamadas permanecem pendentes após gravação; os cartões não são bons pontos de decisão.
 10. **Acessibilidade provável.** Há CSS customizado extenso e grids que viram uma coluna no mobile, o que favorece reflow; porém tabelas são construídas com `div`, cabeçalhos somem no mobile e estados dependem de cor/badges. Sem navegador e teste assistivo, semântica, foco e nomes acessíveis permanecem não confirmados.
 
-## 10. Melhorias recomendadas
+## 🚀 10. Melhorias recomendadas
 
 | Problema observado | Melhoria prática | Benefício |
 |---|---|---|
@@ -437,7 +441,9 @@ Esta seção é uma revisão estática dos templates e fluxos. Não havia navega
 | Disciplina inválida só falha no submit | Dropdown dependente da turma | Feedback antecipado |
 | Ausência de página da turma | Workspace da turma com alunos, avaliações, aulas, chamada e notas | Fluxo coeso em torno do trabalho docente |
 
-## 11. Fluxo recomendado
+## 🔄 11. Fluxo recomendado
+
+<span style="color: #009432;">**[ 🖼️ VISUALIZAÇÃO ]**</span>
 
 ```mermaid
 flowchart TD
@@ -461,7 +467,7 @@ flowchart TD
 
 O contexto de alocação deve ser uma entidade/objeto validado no servidor, nunca duas listas independentes. O histórico deve ser acessível de forma deliberada e somente leitura quando o ano estiver encerrado.
 
-## 12. Banco de dados
+## 🗃️ 12. Banco de dados
 
 Necessidades a avaliar nas tasks, sem migration nesta etapa:
 
@@ -475,7 +481,7 @@ Necessidades a avaliar nas tasks, sem migration nesta etapa:
 - Definir se co-docência existe; a decisão altera a unicidade de `teacher_assignments`.
 - Adicionar índices somente após medir consultas reais; candidatos incluem escopos por professor/ano/status e assessment/teacher/class/subject.
 
-## 13. Performance
+## ⚙️ 13. Performance
 
 - `MyClasses` executa contagem de alunos e consulta da grade curricular dentro do loop: aproximadamente `2N` consultas além da carga inicial.
 - `TeacherAssessments::getPageData()` carrega todas as avaliações para estatísticas, enquanto a tabela faz nova consulta paginada.
@@ -486,7 +492,7 @@ Necessidades a avaliar nas tasks, sem migration nesta etapa:
 
 Recomendação: corrigir primeiro autorização/integridade, criar testes de query/ownership e depois introduzir eager loading, `withCount`, agregações SQL e memoização por request. Cache compartilhado só deve ser usado com chave por professor/ano/permissão.
 
-## 14. Riscos técnicos
+## ⚠️ 14. Riscos técnicos
 
 - Corrigir chaves de nota pode revelar colisões já existentes e exigir reconciliação de dados.
 - Tornar frequência dependente de aula exige estratégia para registros legados sem `lesson_id`.
@@ -497,7 +503,7 @@ Recomendação: corrigir primeiro autorização/integridade, criar testes de que
 - Cascatas e soft deletes exigem inventário de registros existentes antes de migration.
 - Tipos de avaliação em português e `AssessmentType` em inglês precisam de migração compatível.
 
-## 15. Débito técnico
+## ⚠️ 15. Débito técnico
 
 - Regras de negócio e persistência dentro de páginas Livewire.
 - Ausência de services/actions de domínio para avaliação, nota e chamada.
@@ -509,7 +515,7 @@ Recomendação: corrigir primeiro autorização/integridade, criar testes de que
 - Model `Grade` combina identidade antiga por tipo/sequência com a nova por avaliação.
 - Documentação de frequência descreve aula obrigatória, mas a página ativa não segue o contrato.
 
-## 16. Estratégia de testes recomendada
+## 🧪 16. Estratégia de testes recomendada
 
 ### Unit Tests
 
@@ -556,7 +562,7 @@ Recomendação: corrigir primeiro autorização/integridade, criar testes de que
 
 O diretório `tests/` contém apenas exemplos, `PermissionAccessTest` (admin não usa portais pessoais) e `UserPanelAccessTest` (conta ativa/bloqueada). Não há factory/scenario tests do portal, autorização horizontal, avaliações, notas, frequência, alocações ou troca de ano.
 
-## 17. Requisitos observados no código
+## ⚙️ 17. Requisitos observados no código
 
 ### Requisitos funcionais atuais
 
@@ -579,7 +585,7 @@ O diretório `tests/` contém apenas exemplos, `PermissionAccessTest` (admin nã
 - RNF-06 Manutenibilidade: permissões são catalogadas centralmente, mas ownership ainda não.
 - RNF-07 Performance: tabelas de avaliação são paginadas; as demais grades carregam a turma integralmente.
 
-## 18. Decisões que exigem validação de negócio
+## ⚖️ 18. Decisões que exigem validação de negócio
 
 `STATUS: REQUIRES_BUSINESS_VALIDATION`
 
@@ -594,6 +600,6 @@ O diretório `tests/` contém apenas exemplos, `PermissionAccessTest` (admin nã
 9. E-mail pessoal do professor e e-mail de login são o mesmo dado?
 10. Force delete de entidades acadêmicas é permitido após existirem notas/frequências?
 
-## 19. Backlog relacionado
+## 🚀 19. Backlog relacionado
 
 As especificações executáveis estão em `.dev-tasks/teacher-module/`, numeradas de `LUM-1039` a `LUM-1057`. O README local apresenta ordem, dependências e tabela consolidada.

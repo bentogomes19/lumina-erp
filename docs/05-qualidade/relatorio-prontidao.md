@@ -1,19 +1,29 @@
 ---
 titulo: "Relatório de prontidão do Lumina ERP"
 status: vigente
-atualizado_em: 2026-10-20
+atualizado_em: 2026-10-24
 responsavel: bentogomes19
 ---
 
 # Relatório de prontidão do Lumina ERP
 
-## Atualização técnica — 20/10/2026
+## 🚦 Estado atual
+
+| Item | Situação em 20/10/2026 |
+| --- | --- |
+| Estimativa de conclusão | **75%** (revisão de 15/10, mantida até o aceite da homologação) |
+| Suíte automatizada | **297 testes, 1.939 asserções**, sem erros ou falhas |
+| Demonstração local | Liberada, com dados sintéticos |
+| Produção com dados reais | **Bloqueada** — falta HTTPS, e-mail real, backup/restauração e monitoramento |
+| Próximo marco | Release de homologação separado da base demo |
+
+## 🧪 Atualização técnica — 20/10/2026
 
 Foi corrigida a exposição de notas em rascunho no portal do aluno e unificada a média entre dashboard, disciplinas, detalhe e boletim. A publicação de notas também invalida o cache do dashboard. A suíte completa passou com **297 testes e 1.939 asserções**. O percentual de 75% da revisão de 15/10 permanece como estimativa até a preparação e o aceite do release de homologação; ainda não há evidência de HTTPS, e-mail real, backup/restauração ou operação monitorada nesse ambiente.
 
 **Próximo marco:** criar o release de homologação separado da base demo seguindo o [roteiro de preparação](../02-guias/release-homologacao.md), validar a configuração de produção, e-mail, filas, armazenamento e restauração; depois repetir smoke test e regressão no ambiente implantado.
 
-## Revisão de prontidão — 15/10/2026
+## 🔍 Revisão de prontidão — 15/10/2026
 
 **Estimativa atual: 75% concluído; cerca de 25% do trabalho de entrega permanece.** O avanço decorre da suíte integralmente verde e do roteiro autenticado concluído em uma base local recriada. É uma estimativa de maturidade, não a porcentagem de testes aprovados. A publicação com dados reais continua condicionada à homologação operacional.
 
@@ -35,13 +45,16 @@ Evidências novas:
 
 **Próxima etapa crítica:** preparar um release de homologação separado da base demo: HTTPS, `APP_DEBUG=false`, segredos e banco sem exposição pública, provedor de e-mail real, armazenamento persistente, worker/monitoramento e backup com restauração ensaiada. Depois, repetir smoke test e regressão nesse ambiente antes de autorizar produção.
 
-## Histórico da revisão de 14/10/2026
+## 🔍 Revisão de prontidão — 14/10/2026
 
-**Data da revisão:** 14/10/2026  
-**Escopo:** aplicação, regras acadêmicas, acesso, testes e implantação.  
+<details>
+<summary><b>Detalhes da revisão de 14/10/2026</b> — estimativa de 62% e análise das falhas da suíte daquela data</summary>
+
+**Data da revisão:** 14/10/2026
+**Escopo:** aplicação, regras acadêmicas, acesso, testes e implantação.
 **Estado:** demonstração local disponível; entrega técnica confiável e produção ainda bloqueadas.
 
-## Estimativa de conclusão
+### Estimativa de conclusão
 
 **62% concluído; cerca de 38% do trabalho de entrega permanece.** É uma estimativa de maturidade, não a proporção de testes aprovados nem uma garantia matemática de ausência de defeitos. A nota considera o que está implementado, o que foi verificado e o trabalho operacional necessário para publicar o sistema com segurança.
 
@@ -56,7 +69,7 @@ Evidências novas:
 
 Os percentuais por área são julgamento técnico baseado nas evidências abaixo. Não existe amostra suficiente para quantificar todas as falhas possíveis de regra de negócio; a meta de entrega deve ser uma suíte crítica aprovada e fluxos reais ensaiados, não a promessa de “zero erros”.
 
-## Evidência verificada
+### Evidência verificada
 
 - A pilha local `app`, `nginx` e `db` subiu; o MySQL ficou saudável e `/lumina/login` respondeu HTTP 200. As migrations existentes estão aplicadas na base local.
 - PHPUnit no contêiner, com `memory_limit=512M`: **281 testes, 1.815 asserções, 9 erros, 30 falhas e 25 testes arriscados**. A suíte terminou com código de erro 2. Em execução anterior, houve 8 erros e 30 falhas; a variação reforça a necessidade de isolamento de dados de teste.
@@ -64,7 +77,7 @@ Os percentuais por área são julgamento técnico baseado nas evidências abaixo
 - Duas falhas envolvem recuperação/primeiro acesso; uma envolve a tela administrativa de capacidade; uma é um teste genérico que espera 200 na raiz, embora a aplicação redirecione; uma é um caso de duplicidade docente cujo dado de e-mail não reproduz o e-mail inicial.
 - Os nove erros incluem cinco tentativas de criar permissões já existentes, dois cenários de capacidade/matrícula, um parâmetro sem o campo obrigatório `description` e uma colisão da chave normalizada de disciplina em teste de exclusão.
 
-## Crítico — impede a liberação
+### Crítico — impede a liberação
 
 | Pendência | Evidência | Critério de conclusão |
 | --- | --- | --- |
@@ -74,7 +87,7 @@ Os percentuais por área são julgamento técnico baseado nas evidências abaixo
 | Criar uma implantação própria para produção | `compose.yaml` monta o código e `~/.ssh`, publica MySQL em todas as interfaces e expõe nginx apenas em HTTP; `.env.example` liga debug e usa credenciais de desenvolvimento. | Imagem e Compose/infra próprios, HTTPS, segredos externos, banco sem porta pública, `APP_ENV=production`, `APP_DEBUG=false`, e verificação de configuração antes do primeiro tráfego. |
 | Definir recuperação dos dados operacionais | O repositório não apresenta rotina de backup e restauração ensaiada para MySQL e arquivos. | Backup automático com retenção definida e restauração testada em ambiente separado. |
 
-## Médio — necessário para entrega estável
+### Médio — necessário para entrega estável
 
 | Pendência | Evidência | Critério de conclusão |
 | --- | --- | --- |
@@ -85,7 +98,7 @@ Os percentuais por área são julgamento técnico baseado nas evidências abaixo
 | Resolver exportações expostas mas ainda não implementadas | `app/Filament/Pages/Student/AcademicCalendar.php` apenas notifica “em breve” para PDF e iCalendar. | Implementar e testar ou remover as ações da interface e do escopo documentado. |
 | Documentar implantação e resposta a incidentes | O `Makefile` `bootstrap` usa `migrate --seed --force`, mas `DatabaseSeeder` é restrito a `local`/`testing`. | Criar procedimento de produção com migrations, dados de referência mínimos, configuração, rollback e validação pós-implantação, sem carga escolar de demonstração. |
 
-## Leve — acabamento e manutenção
+### Leve — acabamento e manutenção
 
 | Pendência | Evidência | Critério de conclusão |
 | --- | --- | --- |
@@ -93,7 +106,9 @@ Os percentuais por área são julgamento técnico baseado nas evidências abaixo
 | Limpar testes arriscados de PDF | Os 25 casos com mock de PDF deixam handlers alterados segundo o PHPUnit. | Restaurar handlers e retirar os avisos após corrigir a autorização. |
 | Padronizar estilo e textos auxiliares | Há pendências de formatação apontadas anteriormente pelo Pint e mensagens de interface ainda provisórias. | Pint aprovado e interface sem ações prometidas como disponíveis quando ainda não executam a função. |
 
-## Ordem recomendada e marcos
+</details>
+
+## 🚀 Ordem recomendada e marcos
 
 1. **Regras e autenticação:** resolver matrícula/capacidade, primeiro acesso e a matriz de autorização dos PDFs; distinguir defeito de produto de fixture incorreto.
 2. **Suíte confiável:** eliminar erros, falhas e testes arriscados relevantes; repetir a suíte em base limpa e executar o roteiro manual por perfil.
@@ -102,6 +117,7 @@ Os percentuais por área são julgamento técnico baseado nas evidências abaixo
 
 **Estimativa de esforço:** aproximadamente **8 a 15 dias úteis** para uma pessoa familiarizada com Laravel/Filament, se a infraestrutura e o serviço de e-mail já estiverem disponíveis. Falhas novas descobertas ao corrigir os testes podem ampliar esse prazo. O percentual deve ser recalculado após o marco 2.
 
-## Decisão
+## ⚖️ Decisão
 
-O Lumina ERP pode ser demonstrado em ambiente local controlado. **Não deve ser publicado com dados reais na configuração atual.** A condição mínima de liberação é a aprovação dos fluxos críticos de matrícula, acesso, notas/frequência e documentos, junto com uma implantação separada da configuração de desenvolvimento e uma restauração de backup comprovada.
+> [!CAUTION]
+> O Lumina ERP pode ser demonstrado em ambiente local controlado. **Não deve ser publicado com dados reais na configuração atual.** A condição mínima de liberação é a aprovação dos fluxos críticos de matrícula, acesso, notas/frequência e documentos, junto com uma implantação separada da configuração de desenvolvimento e uma restauração de backup comprovada.

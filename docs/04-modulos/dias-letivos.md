@@ -1,7 +1,7 @@
 ---
 titulo: "Sistema de Dias Letivos - Lumina ERP"
 status: revisar
-atualizado_em: 2026-09-30
+atualizado_em: 2026-10-24
 responsavel: bentogomes19
 ---
 
@@ -10,13 +10,14 @@ responsavel: bentogomes19
 > [!WARNING]
 > **Revisão pendente.** Exemplos e feriados pré-cadastrados usam o ano de 2025, e a seção “Via Interface (Futuro)” precisa ser confirmada ou levada ao backlog.
 
-## Visão Geral
+## 📝 Visão geral
 
 O sistema de dias letivos gerencia feriados, recessos escolares e eventos que impedem aulas regulares, garantindo que o cálculo de frequências e planejamento de aulas considere apenas dias efetivamente letivos.
 
-## Tabela `school_holidays`
+## 🗃️ Tabela `school_holidays`
 
 ### Estrutura
+
 - **school_year_id**: Ano letivo relacionado
 - **name**: Nome do feriado/recesso
 - **description**: Descrição detalhada
@@ -25,7 +26,7 @@ O sistema de dias letivos gerencia feriados, recessos escolares e eventos que im
 - **type**: Tipo de dia não letivo
 - **is_active**: Status ativo/inativo
 
-### Tipos de Dias Não Letivos
+### Tipos de dias não letivos
 
 ```php
 enum HolidayType {
@@ -39,9 +40,9 @@ enum HolidayType {
 }
 ```
 
-## Uso Básico
+## ▶️ Uso básico
 
-### 1. Verificar se é Dia Letivo
+### 1. Verificar se é dia letivo
 
 ```php
 use App\Models\SchoolHoliday;
@@ -54,10 +55,11 @@ $isDiaLetivo = SchoolHoliday::isSchoolDay($date);
 ```
 
 **Regra**: Não é dia letivo se:
+
 - É fim de semana (sábado ou domingo)
 - Existe feriado/recesso cadastrado na data
 
-### 2. Contar Dias Letivos em um Período
+### 2. Contar dias letivos em um período
 
 ```php
 $inicio = Carbon::parse('2025-07-01');
@@ -67,7 +69,7 @@ $diasLetivos = SchoolHoliday::countSchoolDaysInPeriod($inicio, $fim);
 // Retorna: 12 (Julho tem recesso de 14 a 28/07)
 ```
 
-### 3. Obter Lista de Dias Não Letivos
+### 3. Obter lista de dias não letivos
 
 ```php
 $diasNaoLetivos = SchoolHoliday::getNonSchoolDaysInPeriod($inicio, $fim);
@@ -75,7 +77,7 @@ $diasNaoLetivos = SchoolHoliday::getNonSchoolDaysInPeriod($inicio, $fim);
 // Retorna array: ['2025-07-05', '2025-07-06', '2025-07-12', '2025-07-13', ...]
 ```
 
-### 4. Próximos Feriados
+### 4. Próximos feriados
 
 ```php
 $proximos = SchoolHoliday::getUpcoming(5);
@@ -85,7 +87,7 @@ foreach ($proximos as $feriado) {
 }
 ```
 
-### 5. Verificar Status de um Feriado
+### 5. Verificar status de um feriado
 
 ```php
 $feriado = SchoolHoliday::find(1);
@@ -96,7 +98,7 @@ $feriado->getDurationInDays();     // Duração em dias
 $feriado->getFormattedPeriod();    // "25/12/2025" ou "24/12/2025 a 26/12/2025"
 ```
 
-## Integração com Aulas
+## 🔄 Integração com aulas
 
 O **LessonSeeder** foi atualizado para **não gerar aulas em dias não letivos**:
 
@@ -112,9 +114,10 @@ while ($currentDate->lte($endDate)) {
 }
 ```
 
-## Feriados Pré-cadastrados (2025)
+## 🗃️ Feriados pré-cadastrados (2025)
 
-### Feriados Nacionais
+### Feriados nacionais
+
 - ✅ 01/01 - Ano Novo
 - ✅ 24-26/02 - Carnaval
 - ✅ 18/04 - Sexta-feira Santa
@@ -128,18 +131,20 @@ while ($currentDate->lte($endDate)) {
 - ✅ 20/11 - Consciência Negra
 - ✅ 25/12 - Natal
 
-### Recessos Escolares
+### Recessos escolares
+
 - ✅ 14-28/07 - Recesso de Julho (Inverno)
 - ✅ 16-31/12 - Recesso de Fim de Ano
 
-### Eventos Escolares
+### Eventos escolares
+
 - ✅ 15/03 - Reunião Pedagógica
 - ✅ 13-14/06 - Festa Junina
 - ✅ 05-06/09 - Semana da Pátria
 
 **Total**: 17 períodos cadastrados
 
-## Métodos Úteis do Model
+## 📒 Métodos úteis do model
 
 ### Scopes
 
@@ -170,9 +175,9 @@ $fim = now()->endOfMonth();
 $diasLetivos = SchoolHoliday::countSchoolDaysInPeriod($inicio, $fim);
 ```
 
-## Exemplos de Consultas
+## 📒 Exemplos de consultas
 
-### Exemplo 1: Verificar feriados no mês
+### Exemplo 1 — Verificar feriados no mês
 
 ```php
 $mes = 12;
@@ -189,7 +194,7 @@ foreach ($feriados as $feriado) {
 }
 ```
 
-### Exemplo 2: Dias letivos já decorridos no ano
+### Exemplo 2 — Dias letivos já decorridos no ano
 
 ```php
 $schoolYear = SchoolYear::current();
@@ -208,7 +213,7 @@ $diasRestantes = SchoolHoliday::countSchoolDaysInPeriod(
 $percentual = ($diasDecorridos / ($diasDecorridos + $diasRestantes)) * 100;
 ```
 
-### Exemplo 3: Filtrar aulas em dias letivos
+### Exemplo 3 — Filtrar aulas em dias letivos
 
 ```php
 use App\Models\Lesson;
@@ -221,25 +226,29 @@ $aulas = Lesson::whereBetween('date', [$inicio, $fim])
     });
 ```
 
-## Impacto no Sistema
+## 🔄 Impacto no sistema
 
-### ✅ Geração de Aulas
+### Geração de aulas
+
 - Aulas **não são geradas** em dias não letivos
 - LessonSeeder verifica cada data antes de criar
 
-### ✅ Cálculo de Frequência
+### Cálculo de frequência
+
 - Só considera aulas efetivamente realizadas
 - Dias não letivos não afetam o cálculo
 
-### ✅ Planejamento Escolar
+### Planejamento escolar
+
 - Calendário preciso com feriados
 - Contagem exata de dias letivos
 
-### ✅ Relatórios
+### Relatórios
+
 - Estatísticas corretas de frequência
 - Previsão de término do ano letivo
 
-## Seeder
+## 🗃️ Seeder
 
 Criar feriados automaticamente:
 
@@ -248,13 +257,14 @@ php artisan db:seed --class=Database\\Seeders\\Academic\\SchoolHolidaySeeder
 ```
 
 O seeder cria:
+
 - 12 feriados nacionais
 - 2 recessos escolares
 - 3 eventos escolares
 
-## Adicionando Novos Feriados
+## ▶️ Adicionando novos feriados
 
-### Via Código
+### Via código
 
 ```php
 use App\Models\SchoolHoliday;
@@ -272,16 +282,17 @@ SchoolHoliday::create([
 ]);
 ```
 
-### Via Interface (Futuro)
+### Via interface (proposta, não implementado)
 
 Criar recurso Filament para gerenciar feriados:
+
 - ✨ Criar/Editar/Excluir feriados
 - 📅 Calendário visual
 - 📊 Relatório de dias letivos
 
-## Validações
+## 📢 Validações
 
-### Ao Criar Aulas
+### Ao criar aulas
 
 ```php
 // Validar se a data é dia letivo
@@ -290,7 +301,7 @@ if (!SchoolHoliday::isSchoolDay($date)) {
 }
 ```
 
-### Ao Lançar Frequência
+### Ao lançar frequência
 
 ```php
 // Verificar se a aula aconteceu em dia letivo
@@ -302,32 +313,33 @@ if (!SchoolHoliday::isSchoolDay($lesson->date)) {
 }
 ```
 
-## Testes Realizados
+## 🧪 Testes realizados
 
-### ✅ Natal (25/12/2025)
-```
+### Natal (25/12/2025)
+
+```text
 Data: 25/12/2025
 É dia letivo? NÃO
 Motivo: Recesso de Fim de Ano
 ```
 
-### ✅ Julho/2025
-```
+### Julho/2025
+
+```text
 Dias letivos em Julho/2025: 12
 (15 dias de recesso + fins de semana)
 ```
 
-## API de Exemplo
+## 📒 API de exemplo
 
 Ver: `App\Http\Controllers\Examples\DiasLetivosExampleController`
 
 Endpoints demonstrativos:
+
 - `verificarDiaLetivo($date)` - Verifica se é dia letivo
 - `proximosFeriados()` - Lista próximos feriados
 - `diasLetivosNoMes($month, $year)` - Conta dias letivos
 - `calendarioAnoLetivo()` - Calendário completo
 - `diasLetivosRestantes()` - Dias letivos até o fim do ano
-
----
 
 **Desenvolvido para o Lumina ERP** | Fevereiro 2026

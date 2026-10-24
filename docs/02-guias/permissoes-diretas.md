@@ -1,7 +1,7 @@
 ---
 titulo: "Permissões diretas excepcionais"
 status: vigente
-atualizado_em: 2026-09-30
+atualizado_em: 2026-10-24
 responsavel: bentogomes19
 ---
 
@@ -9,7 +9,7 @@ responsavel: bentogomes19
 
 As permissões padrão devem ser concedidas sempre por papéis. Permissões diretas em usuários são exceções temporárias e precisam de justificativa rastreável.
 
-## Diagnóstico
+## 🔍 Diagnóstico
 
 Execute primeiro em simulação:
 
@@ -19,7 +19,7 @@ php artisan permissions:direct --dry-run
 
 O status `Redundante` indica que a permissão direta já é herdada por algum papel do usuário. O status `Exceção direta` indica uma concessão que não vem dos papéis atuais.
 
-## Limpeza
+## ▶️ Limpeza
 
 Depois de revisar a simulação, remova apenas as redundâncias:
 
@@ -29,7 +29,7 @@ php artisan permissions:direct --prune
 
 O comando preserva exceções diretas e registra em log cada redundância removida.
 
-## Concessão excepcional
+## 🔐 Concessão excepcional
 
 Antes de conceder uma permissão direta, registre no chamado ou trilha de auditoria:
 

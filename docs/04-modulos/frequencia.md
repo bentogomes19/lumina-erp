@@ -1,7 +1,7 @@
 ---
 titulo: "Sistema de Frequências - Lumina ERP"
 status: revisar
-atualizado_em: 2026-09-30
+atualizado_em: 2026-10-24
 responsavel: bentogomes19
 ---
 
@@ -10,20 +10,22 @@ responsavel: bentogomes19
 > [!WARNING]
 > **Revisão pendente.** A seção “Próximos passos” lista como futura a interface de lançamento de frequência, que já existe no portal do professor. Mova sugestões para o backlog e confira a fórmula com a regra usada no portal do aluno (presente + atraso sobre o total).
 
-## Visão Geral
+## 📝 Visão geral
 
 O sistema de frequências do Lumina ERP permite o lançamento e gerenciamento completo de presenças/faltas dos alunos, vinculado a aulas reais ministradas pelos professores.
 
-## Fluxo de Entidades
+## 🔄 Fluxo de entidades
 
-```
+```text
 Professor → Turma → Disciplina → Aula (Lesson) → Diário de Classe (Attendance) → Aluno
 ```
 
-## Tabelas
+## 🗃️ Tabelas
 
 ### `lessons` (Aulas)
+
 Registra cada aula ministrada:
+
 - **teacher_id**: Professor responsável
 - **class_id**: Turma
 - **subject_id**: Disciplina
@@ -35,7 +37,9 @@ Registra cada aula ministrada:
 - **attendance_taken_at**: Quando a chamada foi feita
 
 ### `attendances` (Frequências)
+
 Registra a presença de cada aluno em cada aula:
+
 - **student_id**: Aluno
 - **lesson_id**: Aula específica
 - **class_id**: Turma
@@ -46,9 +50,9 @@ Registra a presença de cada aluno em cada aula:
 - **notes**: Observações (justificativas)
 - **recorded_by**: Quem registrou
 
-## Uso Básico
+## ▶️ Uso básico
 
-### 1. Criar uma Aula
+### 1. Criar uma aula
 
 ```php
 use App\Models\Lesson;
@@ -66,7 +70,7 @@ $lesson = Lesson::create([
 ]);
 ```
 
-### 2. Registrar Frequência
+### 2. Registrar frequência
 
 ```php
 use App\Models\Attendance;
@@ -87,13 +91,13 @@ if (Attendance::canRecordForDate($lesson->date, 3)) {
 }
 ```
 
-### 3. Marcar Chamada como Realizada
+### 3. Marcar chamada como realizada
 
 ```php
 $lesson->markAttendanceTaken(auth()->id());
 ```
 
-### 4. Calcular Frequência de um Aluno
+### 4. Calcular frequência de um aluno
 
 ```php
 $stats = Attendance::calculateFrequency(
@@ -117,7 +121,7 @@ Retorna:
 */
 ```
 
-### 5. Relatório de Frequência da Turma
+### 5. Relatório de frequência da turma
 
 ```php
 $report = Attendance::getClassFrequencyReport(
@@ -145,7 +149,7 @@ Retorna array com dados de todos os alunos:
 */
 ```
 
-### 6. Identificar Alunos em Risco
+### 6. Identificar alunos em risco
 
 ```php
 $atRisk = Attendance::getStudentsAtRisk(
@@ -157,9 +161,9 @@ $atRisk = Attendance::getStudentsAtRisk(
 // Retorna apenas alunos com frequência < 75%
 ```
 
-## Validações
+## 📢 Validações
 
-### Bloqueio Retroativo
+### Bloqueio retroativo
 
 Por padrão, não é possível lançar frequência após **3 dias** da data da aula:
 
@@ -174,7 +178,7 @@ $canRecord = Attendance::canRecordForDate(
 $lesson->canTakeAttendance(maxDaysAfter: 7); // Permite até 7 dias
 ```
 
-### Validação de Horário
+### Validação de horário
 
 O sistema valida se o horário de registro está dentro do período da aula (+ 30 min):
 
@@ -182,30 +186,34 @@ O sistema valida se o horário de registro está dentro do período da aula (+ 3
 $attendance->isTimeValid();
 ```
 
-### Constraint Única
+### Constraint única
 
 Um aluno não pode ter mais de 1 registro de frequência na **mesma aula**:
+
 - Constraint: `uniq_attendance_student_lesson(student_id, lesson_id)`
 
-## Fórmula de Frequência
+## 📢 Fórmula de frequência
 
 A frequência é calculada pela fórmula:
 
 $$F = \frac{P + A}{T} \times 100$$
 
 Onde:
+
 - **F**: Frequência (%)
 - **P**: Presenças (status = present)
 - **A**: Atrasos (status = late) - contam como presença
 - **T**: Total de aulas
 
-**Importante**: 
-- Faltas justificadas (excused) **não contam** como presença
-- Alerta é emitido quando F < 75%
+> [!IMPORTANT]
+>
+> - Faltas justificadas (excused) **não contam** como presença
+> - Alerta é emitido quando F < 75%
 
-## Enums Disponíveis
+## 🗃️ Enums disponíveis
 
-### LessonStatus
+### `LessonStatus`
+
 ```php
 use App\Enums\LessonStatus;
 
@@ -215,7 +223,8 @@ LessonStatus::CANCELLED;    // Cancelada
 LessonStatus::RESCHEDULED;  // Reagendada
 ```
 
-### AttendanceStatus
+### `AttendanceStatus`
+
 ```php
 use App\Enums\AttendanceStatus;
 
@@ -225,7 +234,7 @@ AttendanceStatus::LATE;     // Atrasado
 AttendanceStatus::EXCUSED;  // Falta Justificada
 ```
 
-## Métodos Úteis do Lesson
+## 📒 Métodos úteis de `Lesson`
 
 ```php
 // Verificar se pode lançar chamada
@@ -241,10 +250,12 @@ $lesson->isInProgress();
 $lesson->getAttendanceRate(); // 92.5
 ```
 
-## Seeders
+## 🗃️ Seeders
 
-### LessonSeeder
+### `LessonSeeder`
+
 Gera aulas automaticamente para todas as turmas:
+
 - Período: últimos 60 dias + próximos 30 dias
 - 4-6 aulas por dia (seg-sex)
 - Horários respeitam turno da turma
@@ -254,8 +265,10 @@ Gera aulas automaticamente para todas as turmas:
 php artisan db:seed --class=Database\\Seeders\\Academic\\LessonSeeder
 ```
 
-### AttendanceSeeder
+### `AttendanceSeeder`
+
 Gera registros de frequência para aulas com chamada:
+
 - Perfis de alunos: excellent (70%), good (15%), moderate (10%), poor (5%)
 - Estatísticas realistas
 - Identifica automaticamente alunos em risco
@@ -264,7 +277,7 @@ Gera registros de frequência para aulas com chamada:
 php artisan db:seed --class=Database\\Seeders\\Academic\\AttendanceSeeder
 ```
 
-## Próximos Passos (Sugestões)
+## 🚀 Evolução
 
 1. **Interface Filament** para lançamento de frequência
 2. **Relatórios** de frequência por período
@@ -274,9 +287,10 @@ php artisan db:seed --class=Database\\Seeders\\Academic\\AttendanceSeeder
 6. **Justificativas** com upload de documentos
 7. **Integração** com sistema de notas (reprovação automática)
 
-## Exemplo de Consultas
+## 📒 Exemplos de consultas
 
 ### Listar aulas de hoje de um professor
+
 ```php
 $lessons = Lesson::forTeacher($teacherId)
     ->onDate(today())
@@ -285,6 +299,7 @@ $lessons = Lesson::forTeacher($teacherId)
 ```
 
 ### Aulas pendentes de chamada
+
 ```php
 $pending = Lesson::attendancePending()
     ->where('date', '<', now()->subDays(1))
@@ -292,6 +307,7 @@ $pending = Lesson::attendancePending()
 ```
 
 ### Frequência do mês de um aluno
+
 ```php
 $attendances = Attendance::forStudent($studentId)
     ->month(now()->month)
@@ -299,7 +315,5 @@ $attendances = Attendance::forStudent($studentId)
     ->with('lesson.subject')
     ->get();
 ```
-
----
 
 **Desenvolvido para o Lumina ERP** | Fevereiro 2026

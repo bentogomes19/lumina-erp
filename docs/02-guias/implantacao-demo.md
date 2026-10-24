@@ -1,13 +1,13 @@
 ---
 titulo: "Implantação da demonstração"
 status: vigente
-atualizado_em: 2026-10-23
+atualizado_em: 2026-10-24
 responsavel: bentogomes19
 ---
 
 # Implantação da demonstração
 
-## Fluxo
+## 🔄 Fluxo
 
 1. O colaborador abre uma pull request para `master`.
 2. O GitHub verifica os nomes dos arquivos versionados, o pacote de implantação, o `composer.json` e a compilação dos arquivos de interface.
@@ -16,9 +16,10 @@ responsavel: bentogomes19
 
 O merge **não** altera a VM por si só. O botão envia apenas os caminhos listados em `scripts/check-deploy-source.sh`, extraídos do commit do Git. Não envia o conteúdo local fora do Git, `.env`, banco, `storage`, `vendor`, `node_modules`, arquivos da documentação ou testes. O script na VM conserva esses dados, faz um backup do MySQL antes das migrações, atualiza as dependências, compila os recursos e verifica a página de login. Ele não executa seeders nem `migrate:fresh`.
 
-O repositório é público. Um arquivo de código também pode conter uma credencial ou ler dados da VM após ser executado. Portanto, a lista de arquivos e a checagem de padrões comuns são barreiras contra erros acidentais, não substituem a revisão humana de cada pull request.
+> [!WARNING]
+> O repositório é público. Um arquivo de código também pode conter uma credencial ou ler dados da VM após ser executado. Portanto, a lista de arquivos e a checagem de padrões comuns são barreiras contra erros acidentais, não substituem a revisão humana de cada pull request.
 
-## Configuração única
+## 📦 Configuração única
 
 Faça esta configuração **depois** de incorporar os arquivos do fluxo ao repositório.
 
@@ -48,15 +49,16 @@ Faça esta configuração **depois** de incorporar os arquivos do fluxo ao repos
    - `DEPLOY_USER`: usuário SSH da VM.
    - `DEPLOY_KNOWN_HOSTS`: uma linha no formato `<DEPLOY_HOST> ssh-ed25519 <CHAVE_DO_HOST>`, usando a chave pública do host obtida **dentro da VM** no passo 2.
 
-   Nunca cole a chave privada em conversa, issue, pull request, arquivo do projeto ou captura de tela. Após cadastrá-la no GitHub, mantenha a cópia local protegida ou remova-a se não for necessária.
+   **Atenção:** nunca cole a chave privada em conversa, issue, pull request, arquivo do projeto ou captura de tela. Após cadastrá-la no GitHub, mantenha a cópia local protegida ou remova-a se não for necessária.
 
 5. Em **GitHub → Settings → Branches**, proteja `master`: exija pull request, o status `validate` do fluxo **Check source** e, para alterações na implantação, revisão do proprietário dos arquivos. O arquivo `.github/CODEOWNERS` define esses arquivos. A revisão obrigatória por outro usuário exige que exista outro colaborador apto a aprovar; não ative essa exigência se ela impedir o primeiro merge.
 
-## Antes de cada implantação
+## ✅ Antes de cada implantação
 
 - Confira que a pull request aprovada passou em **Check source**.
 - Verifique se o botão **Run workflow** usa a branch `master`.
 - Confira o registro da execução e abra a página `/lumina/login` após a conclusão.
 - Se o IP externo da VM mudar, atualize `DEPLOY_HOST` e o endereço público usado em `DEMO_HOST` na VM.
 
-O backup MySQL de cada implantação fica em `~/lumina-backups` na VM, fora da pasta sincronizada. Ele contém dados reais da demonstração e deve ser tratado como informação privada.
+> [!CAUTION]
+> O backup MySQL de cada implantação fica em `~/lumina-backups` na VM, fora da pasta sincronizada. Ele contém dados reais da demonstração e deve ser tratado como informação privada.

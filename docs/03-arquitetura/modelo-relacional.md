@@ -1,7 +1,7 @@
 ---
 titulo: "Banco de Dados Lumina ERP"
 status: revisar
-atualizado_em: 2026-09-30
+atualizado_em: 2026-10-24
 responsavel: bentogomes19
 ---
 
@@ -10,7 +10,7 @@ responsavel: bentogomes19
 > [!WARNING]
 > **Revisão pendente.** Este documento cobre 13 entidades, mas as migrations atuais criam também `school_years`, `lessons`, `school_holidays`, `enrollment_logs`, `enrollment_documents`, `class_subjects`, `grade_level_subject` e as tabelas de parâmetros do sistema. A entidade `Assessment` não lista `assessment_type`, `max_score`, `status` e `school_year_id` (migration `2026_05_02_000001`).
 
-O banco de dados do sistema tem 13 entidades documentadas abaixo 
+O banco de dados do sistema tem 13 entidades documentadas abaixo
 
 | Tabela            | PT-BR                   | Definição                                                                                   |
 |-------------------|-------------------------|---------------------------------------------------------------------------------------------|
@@ -28,10 +28,7 @@ O banco de dados do sistema tem 13 entidades documentadas abaixo
 | TeacherAssignment | Atribuição do Professor | Liga professor, turma e disciplina em um ano letivo, definindo o que ele leciona para quem. |
 | User              | Usuários                | Conta de acesso ao sistema (login), podendo estar ligada a aluno, professor ou staff.       |
 
-
----
-
-## Entidade: `Assessment`
+## 🗃️ Entidade `Assessment`
 
 Representa uma avaliação aplicada em uma turma/disciplina (prova, trabalho, atividade etc.).
 
@@ -49,11 +46,8 @@ Representa uma avaliação aplicada em uma turma/disciplina (prova, trabalho, at
 | created_at  | timestamp        | Data e hora em que o registro da avaliação foi criado no sistema.                                  |
 | updated_at  | timestamp        | Data e hora da última atualização do registro da avaliação.                                        |
 
+## 🗃️ Entidade `Attendance`
 
----
-
-
-## Entidade: `Attendance`
 Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar específico.
 
 | Campo      | Tipo             | Descrição                                                                                 |
@@ -67,9 +61,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | created_at| timestamp        | Data e hora em que o registro foi criado no sistema.                                     |
 | updated_at| timestamp        | Data e hora da última atualização do registro.                                           |
 
----
-
-## Entidade: `Enrollment`
+## 🗃️ Entidade `Enrollment`
 
 | Campo           | Tipo                                        | Descrição                                                                                                 |
 |-----------------|---------------------------------------------|-----------------------------------------------------------------------------------------------------------|
@@ -82,8 +74,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | created_at      | timestamp                                   | Data e hora em que o registro da matrícula foi criado no sistema.                                        |
 | updated_at      | timestamp                                   | Data e hora da última atualização do registro da matrícula.                                              |
 
-
-## Entidade: Grade
+## 🗃️ Entidade `Grade`
 
 | Campo           | Tipo                                                                                     | Descrição                                                                                                                                |
 |-----------------|------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
@@ -108,8 +99,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | created_at      | timestamp                                                                                | Data e hora em que o registro de nota foi criado no sistema.                                                                           |
 | updated_at      | timestamp                                                                                | Data e hora da última atualização do registro de nota.                                                                                 |
 
-
-## Entidade: GradeLevel
+## 🗃️ Entidade `GradeLevel`
 
 | Campo         | Tipo             | Descrição                                                                                           |
 |---------------|------------------|-----------------------------------------------------------------------------------------------------|
@@ -121,8 +111,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | created_at    | timestamp        | Data e hora em que o nível foi criado no sistema.                                                  |
 | updated_at    | timestamp        | Data e hora da última atualização do registro do nível.                                            |
 
-
-## Entidade: Permission
+## 🗃️ Entidade `Permission`
 
 | Campo      | Tipo             | Descrição                                                                                       |
 |------------|------------------|-------------------------------------------------------------------------------------------------|
@@ -132,8 +121,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | created_at | timestamp        | Data e hora em que a permissão foi criada no sistema.                                          |
 | updated_at | timestamp        | Data e hora da última atualização do registro da permissão.                                    |
 
-
-## Entidade: Role
+## 🗃️ Entidade `Role`
 
 | Campo      | Tipo             | Descrição                                                                                      |
 |------------|------------------|------------------------------------------------------------------------------------------------|
@@ -143,8 +131,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | created_at | timestamp        | Data e hora em que o papel foi criado no sistema.                                             |
 | updated_at | timestamp        | Data e hora da última atualização do registro do papel.                                       |
 
-
-## Entidade: SchoolClass
+## 🗃️ Entidade `SchoolClass`
 
 | Campo              | Tipo             | Descrição                                                                                                      |
 |--------------------|------------------|----------------------------------------------------------------------------------------------------------------|
@@ -163,8 +150,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | grade_level_id     | bigint unsigned  | Referência ao nível de escolaridade (`grade_levels.id`) ao qual a turma pertence.                             |
 | school_year_id     | bigint unsigned  | Referência ao ano letivo (`school_years.id`) em que a turma está configurada.                                 |
 
-
-## Entidade: Student
+## 🗃️ Entidade `Student`
 
 | Campo             | Tipo                                                              | Descrição                                                                                                                     |
 |-------------------|-------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
@@ -206,8 +192,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | status_changed_at | timestamp                                                         | Data e hora da última alteração do status do aluno (ativo, suspenso, graduado, etc.).                                       |
 | photo_url         | varchar(255)                                                      | URL ou caminho da foto do aluno utilizada no sistema (identificação em telas, documentos, carteirinhas, etc.).              |
 
-
-## Entidade: Subject
+## 🗃️ Entidade `Subject`
 
 | Campo              | Tipo                                                                 | Descrição                                                                                                                       |
 |--------------------|----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
@@ -225,8 +210,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | updated_at         | timestamp                                                            | Data e hora da última atualização do registro da disciplina.                                                                   |
 | deleted_at         | timestamp                                                            | Data e hora da exclusão lógica (soft delete) da disciplina, quando aplicável.                                                 |
 
-
-## Entidade: Teacher
+## 🗃️ Entidade `Teacher`
 
 | Campo            | Tipo                                      | Descrição                                                                                                             |
 |------------------|-------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
@@ -262,8 +246,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | address_state    | varchar(2)                                | UF do estado do endereço (ex.: SP, RJ).                                                                              |
 | address_zip      | varchar(10)                               | CEP do endereço do professor.                                                                                         |
 
-
-## Entidade: TeacherAssignment
+## 🗃️ Entidade `TeacherAssignment`
 
 | Campo      | Tipo            | Descrição                                                                                           |
 |------------|-----------------|-----------------------------------------------------------------------------------------------------|
@@ -274,8 +257,7 @@ Registra a presença ou falta do aluno em uma aula, dia letivo ou evento escolar
 | created_at | timestamp       | Data e hora em que a atribuição foi criada no sistema.                                             |
 | updated_at | timestamp       | Data e hora da última atualização da atribuição.                                                   |
 
-
-## Entidade: User
+## 🗃️ Entidade `User`
 
 | Campo           | Tipo                             | Descrição                                                                                                  |
 |-----------------|----------------------------------|------------------------------------------------------------------------------------------------------------|

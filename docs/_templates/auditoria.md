@@ -1,15 +1,15 @@
 ---
-titulo: "Auditoria de <tema> — DD/MM/AAAA"
+titulo: "Auditoria de TEMA — DD/MM/AAAA"
 status: historico
 atualizado_em: AAAA-MM-DD
 responsavel: usuario-github
 ---
 
-# Auditoria de <tema> — DD/MM/AAAA
+# Auditoria de TEMA — DD/MM/AAAA
 
-> **Base:** commit `abc1234` · **Escopo:** pastas/módulos analisados · **Método:** leitura de código, testes, ensaio manual.
+> **Base:** commit `abc1234` · **Escopo:** … · **Método:** leitura de código, testes, ensaio manual.
 
-## Resumo
+## 🎯 Resumo
 
 Três a cinco linhas com a conclusão principal.
 
@@ -19,16 +19,16 @@ Três a cinco linhas com a conclusão principal.
 | Média | 0 |
 | Leve | 0 |
 
-## Achados
+## 🔍 Achados
 
 | ID | Gravidade | Achado | Evidência | Recomendação |
 | --- | --- | --- | --- | --- |
 | A-01 | Crítica | | `arquivo:linha` | |
 
-## Fora do escopo
+## 🗂️ Fora do escopo
 
 O que não foi verificado.
 
-## Próximos passos
+## 🚀 Próximos passos
 
-- Tarefa, responsável, link para issue.
+- [ ] Tarefa — responsável — link.

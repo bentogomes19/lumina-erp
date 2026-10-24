@@ -1,7 +1,7 @@
 ---
 titulo: "Preparação do release de homologação"
 status: vigente
-atualizado_em: 2026-10-20
+atualizado_em: 2026-10-24
 responsavel: bentogomes19
 ---
 
@@ -9,7 +9,7 @@ responsavel: bentogomes19
 
 **Estado em 20/10/2026:** correção de publicação e média validada pela suíte local. A implantação de homologação ainda depende de infraestrutura e configuração próprias; este roteiro não autoriza tráfego de produção.
 
-## Dados necessários para provisionar o ambiente
+## 📦 Dados necessários para provisionar o ambiente
 
 | Item | Definição necessária |
 | --- | --- |
@@ -20,7 +20,7 @@ responsavel: bentogomes19
 | Segredos | Chave `APP_KEY` persistente, senhas e tokens armazenados fora da imagem e do Git |
 | Operação | Responsável por alertas, monitoramento, retenção de logs e restauração |
 
-## Condições para criar o candidato de release
+## 🗂️ Condições para criar o candidato de release
 
 1. Construir imagem imutável com dependências e assets, sem montar o código, o `.ssh` do host ou o `.env` de desenvolvimento. Manter MySQL acessível apenas pela rede privada.
 2. Configurar `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://...`, segredos próprios, cookies seguros e e-mail real. Verificar permissões de escrita em `storage` e `bootstrap/cache`.
@@ -28,7 +28,7 @@ responsavel: bentogomes19
 4. Preparar backup automatizado do banco e dos arquivos com retenção definida. Restaurar uma cópia em ambiente separado e registrar tempo e integridade da restauração.
 5. Aplicar migrações com `php artisan migrate --force` e dados de referência aprovados. **Não usar** `migrate:fresh`, `--seed` genérico ou as contas de demonstração em homologação.
 
-## Aceite após implantação
+## ✅ Aceite após implantação
 
 - Confirmar HTTPS, redirecionamento de HTTP, debug desligado e ausência de porta pública do banco.
 - Executar a suíte sobre um banco de teste separado e registrar versão da imagem/commit e resultado.
@@ -37,6 +37,6 @@ responsavel: bentogomes19
 - Verificar persistência de arquivos, processamento de filas, logs/alertas e restauração do backup.
 - Registrar aprovação de aceite e plano de retorno antes de qualquer liberação para produção.
 
-## Situação atual
+## ⚠️ Situação atual
 
 O `compose.yaml` e o `Dockerfile` existentes servem ao desenvolvimento: há bind mount de código e `.ssh`, MySQL publicado no host e nginx HTTP. Não devem ser reutilizados como artefatos de homologação. O candidato de release e o ambiente de destino ainda precisam ser criados e testados.

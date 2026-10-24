@@ -13,7 +13,7 @@ responsavel: bentogomes19
 > Análise técnica e funcional baseada no código-fonte em 23 de agosto de 2026.
 > O documento descreve o comportamento atual do sistema, não apenas a arquitetura pretendida.
 
-## 1. Resumo executivo
+## 🎯 1. Resumo executivo
 
 O Lumina ERP é um ERP escolar em estágio de MVP avançado, construído com Laravel 12, Filament 4 e Spatie Permission. O sistema concentra a administração e os portais de aluno e professor em uma única aplicação web, no painel Filament identificado como `lumina` e publicado em `/lumina`.
 
@@ -31,6 +31,8 @@ O núcleo implementado cobre:
 - painéis específicos para administrador, professor e aluno.
 
 O domínio central pode ser resumido assim:
+
+<span style="color: #009432;">**[ 🖼️ VISUALIZAÇÃO ]**</span>
 
 ```mermaid
 flowchart LR
@@ -54,7 +56,7 @@ flowchart LR
 
 O sistema está funcional para uma operação acadêmica básica, mas ainda possui inconsistências entre os diferentes caminhos de cadastro, dois padrões de permissões coexistindo e alguns pontos de autorização que precisam ser endurecidos antes de uso em produção.
 
-## 2. Arquitetura atual
+## 🛠️ 2. Arquitetura atual
 
 ### 2.1 Tecnologias
 
@@ -108,7 +110,7 @@ O acesso ao painel também exige usuário ativo e não bloqueado. Após cinco te
 
 As permissões `student.*` e `teacher.*` são contextuais: além da permissão, o usuário deve possuir respectivamente o papel `student` ou `teacher`. Isso impede que o administrador assuma acidentalmente os portais pessoais apenas por possuir permissões globais.
 
-## 3. Módulos e responsabilidades
+## 🗂️ 3. Módulos e responsabilidades
 
 ### 3.1 Administração e segurança
 
@@ -160,7 +162,7 @@ O professor não escolhe livremente qualquer turma ou disciplina. O contexto é 
 
 Os dados são obtidos pelo `Student` vinculado ao usuário autenticado e pela turma do ano letivo ativo.
 
-## 4. Ordem correta de implantação e cadastros
+## ▶️ 4. Ordem correta de implantação e cadastros
 
 O domínio possui dependências. Em uma base vazia, a sequência recomendada é:
 
@@ -179,7 +181,7 @@ O domínio possui dependências. Em uma base vazia, a sequência recomendada é:
 
 Essa ordem também aparece nos seeders: referências acadêmicas e permissões são criadas antes dos usuários; usuários antes de turmas e alocações; turmas e matrículas antes de aulas, frequências e notas.
 
-## 5. Fluxos de cadastro existentes
+## 🔄 5. Fluxos de cadastro existentes
 
 ### 5.1 Cadastro de usuário
 
@@ -320,7 +322,7 @@ As operações implementadas incluem:
 
 Também existem relações para histórico e documentos entregues, incluindo arquivo digital opcional.
 
-## 6. Fluxo operacional após os cadastros
+## 🔄 6. Fluxo operacional após os cadastros
 
 ### Professor
 
@@ -343,7 +345,7 @@ Sem professor vinculado ou sem alocações, o portal apresenta contexto vazio ou
 
 Sem aluno vinculado, matrícula ou turma no ano ativo, o portal permanece sem dados acadêmicos.
 
-## 7. Regras automáticas relevantes
+## 📢 7. Regras automáticas relevantes
 
 - UUIDs são preenchidos automaticamente nos modelos baseados em `BaseModel` que invocam essa rotina.
 - O registro acadêmico do aluno é gerado automaticamente.
@@ -357,7 +359,7 @@ Sem aluno vinculado, matrícula ou turma no ano ativo, o portal permanece sem da
 - Usuário inativo ou bloqueado não acessa o Filament.
 - Aluno com matrículas e professor com alocações possuem restrições de exclusão nas policies.
 
-## 8. Análise de consistência e riscos
+## 🔍 8. Análise de consistência e riscos
 
 ### Prioridade alta
 
@@ -368,20 +370,20 @@ Sem aluno vinculado, matrícula ou turma no ano ativo, o portal permanece sem da
 
 ### Prioridade média
 
-5. **Definir painel inicial para todos os papéis.** `ti`, `secretaria` e `financeiro` não têm destino explícito ao abrir `/lumina`.
-6. **Evitar permissões duplicadas no usuário.** Em alguns fluxos, o usuário recebe o papel e também cópias diretas das permissões do papel. Isso dificulta revogação e auditoria porque uma permissão removida do papel pode continuar diretamente no usuário.
-7. **Sincronizar alteração de papel e entidade.** Trocar um usuário administrativo para professor ou aluno não mostra a mesma criação explícita de entidade executada no `afterCreate()`.
-8. **Revisar o papel `admin` como superadministrador do Shield.** A configuração ainda o trata como super admin irrestrito. A separação contextual dos portais reduz o problema, mas regras administrativas devem ser intencionais e testadas.
-9. **Revisar caminhos alternativos de matrícula.** Wizard, relação do aluno e ação da turma devem aplicar as mesmas regras de vaga, unicidade, usuário e auditoria.
+1. **Definir painel inicial para todos os papéis.** `ti`, `secretaria` e `financeiro` não têm destino explícito ao abrir `/lumina`.
+2. **Evitar permissões duplicadas no usuário.** Em alguns fluxos, o usuário recebe o papel e também cópias diretas das permissões do papel. Isso dificulta revogação e auditoria porque uma permissão removida do papel pode continuar diretamente no usuário.
+3. **Sincronizar alteração de papel e entidade.** Trocar um usuário administrativo para professor ou aluno não mostra a mesma criação explícita de entidade executada no `afterCreate()`.
+4. **Revisar o papel `admin` como superadministrador do Shield.** A configuração ainda o trata como super admin irrestrito. A separação contextual dos portais reduz o problema, mas regras administrativas devem ser intencionais e testadas.
+5. **Revisar caminhos alternativos de matrícula.** Wizard, relação do aluno e ação da turma devem aplicar as mesmas regras de vaga, unicidade, usuário e auditoria.
 
 ### Prioridade baixa e dívida técnica
 
-10. A configuração `config/filament.php` referencia um `StudentPanelProvider` inexistente, enquanto o bootstrap registra apenas o painel administrativo.
-11. O relacionamento `Student::students()` aparenta estar incorreto ou obsoleto, pois usa `class_id` como chave da própria entidade `Student` na tabela de matrículas.
-12. O índice anterior da documentação aponta para páginas ainda inexistentes de domínio, arquitetura, API e roadmap.
-13. A suíte contém um teste de exemplo que espera HTTP 200 em `/`, embora a rota deliberadamente redirecione para o login com HTTP 302.
+ 1. A configuração `config/filament.php` referencia um `StudentPanelProvider` inexistente, enquanto o bootstrap registra apenas o painel administrativo.
+ 2. O relacionamento `Student::students()` aparenta estar incorreto ou obsoleto, pois usa `class_id` como chave da própria entidade `Student` na tabela de matrículas.
+ 3. O índice anterior da documentação aponta para páginas ainda inexistentes de domínio, arquitetura, API e roadmap.
+ 4. A suíte contém um teste de exemplo que espera HTTP 200 em `/`, embora a rota deliberadamente redirecione para o login com HTTP 302.
 
-## 9. Fluxo recomendado para a equipe operacional
+## 🔄 9. Fluxo recomendado para a equipe operacional
 
 Até a unificação dos cadastros, recomenda-se o seguinte procedimento:
 
@@ -409,7 +411,7 @@ Evitar cadastrar primeiro em **Alunos** quando a intenção já for matricular e
 3. Revisar o papel na matriz de permissões.
 4. Validar que apenas os Resources administrativos necessários aparecem.
 
-## 10. Recomendações de evolução
+## 🚀 10. Recomendações de evolução
 
 Uma ordem segura de evolução seria:
 
@@ -424,7 +426,7 @@ Uma ordem segura de evolução seria:
 9. decidir entre manter um painel com navegação contextual ou separar fisicamente os painéis Filament;
 10. atualizar a documentação à medida que financeiro, responsáveis e integrações forem implementados.
 
-## 11. Arquivos de referência
+## 📁 11. Arquivos de referência
 
 Os principais pontos do código para manutenção são:
 
@@ -439,7 +441,7 @@ Os principais pontos do código para manutenção são:
 - `database/seeders`: carga inicial e ordem de dependências;
 - `database/migrations`: estrutura e constraints do banco.
 
-## 12. Conclusão
+## 🏁 12. Conclusão
 
 O Lumina ERP já representa bem as relações fundamentais de uma escola: estrutura curricular, ano, turma, professor, aluno, matrícula e fatos acadêmicos. Seu ponto mais forte é o fluxo de matrícula, que inclui auditoria e operações de ciclo de vida. O principal desafio atual não é falta de funcionalidades, mas uniformizar como identidades, entidades acadêmicas e permissões são criadas e mantidas.
 
