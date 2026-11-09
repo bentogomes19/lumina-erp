@@ -12,9 +12,9 @@ responsavel: bentogomes19
 1. O colaborador abre uma pull request para `master`.
 2. O GitHub verifica os nomes dos arquivos versionados, o pacote de implantação, o `composer.json` e a compilação dos arquivos de interface.
 3. O responsável revisa a alteração e faz o merge.
-4. O responsável executa **Actions → Deploy demo → Run workflow** na branch `master` e aprova o ambiente `demo`.
+4. Cada push em `master` dispara **Deploy demo** automaticamente, exceto quando a alteração mexe só em `docs/`, arquivos `.md`, `tests/` ou `.idea/`. Para reimplantar sem novo commit, use **Actions → Deploy demo → Run workflow** na branch `master`. Se o ambiente `demo` exigir aprovador, a execução aguarda a aprovação.
 
-O merge **não** altera a VM por si só. O botão envia apenas os caminhos listados em `scripts/check-deploy-source.sh`, extraídos do commit do Git. Não envia o conteúdo local fora do Git, `.env`, banco, `storage`, `vendor`, `node_modules`, arquivos da documentação ou testes. O script na VM conserva esses dados, faz um backup do MySQL antes das migrações, atualiza as dependências, compila os recursos e verifica a página de login. Ele não executa seeders nem `migrate:fresh`.
+O workflow envia apenas os caminhos listados em `scripts/check-deploy-source.sh`, extraídos do commit do Git. Não envia o conteúdo local fora do Git, `.env`, banco, `storage`, `vendor`, `node_modules`, arquivos da documentação ou testes. O script na VM conserva esses dados, faz um backup do MySQL antes das migrações, atualiza as dependências, compila os recursos e verifica a página de login. Ele não executa seeders nem `migrate:fresh`.
 
 > [!WARNING]
 > O repositório é público. Um arquivo de código também pode conter uma credencial ou ler dados da VM após ser executado. Portanto, a lista de arquivos e a checagem de padrões comuns são barreiras contra erros acidentais, não substituem a revisão humana de cada pull request.
