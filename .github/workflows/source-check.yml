@@ -16,8 +16,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify tracked files and release allowlist
         run: bash scripts/check-deploy-source.sh
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, zip, gd, intl, bcmath
+          tools: composer:v2
+          coverage: none
       - name: Validate Composer metadata
         run: composer validate --no-check-publish
+      # The Filament theme CSS imports files from vendor/, so the frontend build needs it.
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

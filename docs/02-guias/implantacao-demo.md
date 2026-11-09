@@ -1,7 +1,7 @@
 ---
 titulo: "Implantação da demonstração"
 status: vigente
-atualizado_em: 2026-10-24
+atualizado_em: 2026-11-09
 responsavel: bentogomes19
 ---
 
@@ -10,9 +10,9 @@ responsavel: bentogomes19
 ## 🔄 Fluxo
 
 1. O colaborador abre uma pull request para `master`.
-2. O GitHub verifica os nomes dos arquivos versionados, o pacote de implantação, o `composer.json` e a compilação dos arquivos de interface.
-3. O responsável revisa a alteração e faz o merge.
-4. Cada push em `master` dispara **Deploy demo** automaticamente, exceto quando a alteração mexe só em `docs/`, arquivos `.md`, `tests/` ou `.idea/`. Para reimplantar sem novo commit, use **Actions → Deploy demo → Run workflow** na branch `master`. Se o ambiente `demo` exigir aprovador, a execução aguarda a aprovação.
+2. O fluxo **Check source** (status `validate`) verifica os nomes dos arquivos versionados, o pacote de implantação e o `composer.json`, instala as dependências do Composer e compila os arquivos de interface.
+3. A pull request é revisada; com a aprovação, as conversas resolvidas e o `validate` aprovado, o responsável faz o merge.
+4. O merge em `master` dispara **Deploy demo** automaticamente, exceto quando a alteração mexe só em `docs/`, arquivos `.md`, `tests/` ou `.idea/`. Para reimplantar sem novo commit, use **Actions → Deploy demo → Run workflow** na branch `master`.
 
 O workflow envia apenas os caminhos listados em `scripts/check-deploy-source.sh`, extraídos do commit do Git. Não envia o conteúdo local fora do Git, `.env`, banco, `storage`, `vendor`, `node_modules`, arquivos da documentação ou testes. O script na VM conserva esses dados, faz um backup do MySQL antes das migrações, atualiza as dependências, compila os recursos e verifica a página de login. Ele não executa seeders nem `migrate:fresh`.
 
@@ -51,7 +51,14 @@ Faça esta configuração **depois** de incorporar os arquivos do fluxo ao repos
 
    **Atenção:** nunca cole a chave privada em conversa, issue, pull request, arquivo do projeto ou captura de tela. Após cadastrá-la no GitHub, mantenha a cópia local protegida ou remova-a se não for necessária.
 
-5. Em **GitHub → Settings → Branches**, proteja `master`: exija pull request, o status `validate` do fluxo **Check source** e, para alterações na implantação, revisão do proprietário dos arquivos. O arquivo `.github/CODEOWNERS` define esses arquivos. A revisão obrigatória por outro usuário exige que exista outro colaborador apto a aprovar; não ative essa exigência se ela impedir o primeiro merge.
+5. Em **GitHub → Settings → Rules → Rulesets**, a regra **"master: só via PR revisada"** protege `master`:
+
+   - alterações entram somente por pull request, com 1 aprovação e todas as conversas resolvidas;
+   - o status `validate` do fluxo **Check source** precisa passar;
+   - push direto, reescrita de histórico (`force push`) e exclusão da branch são bloqueados;
+   - a branch da pull request é apagada após o merge.
+
+   O arquivo `.github/CODEOWNERS` indica o responsável pelos arquivos de implantação.
 
 ## ✅ Antes de cada implantação
 
