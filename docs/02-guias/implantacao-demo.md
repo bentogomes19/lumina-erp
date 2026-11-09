@@ -1,7 +1,7 @@
 ---
 titulo: "Implantação da demonstração"
 status: vigente
-atualizado_em: 2026-10-24
+atualizado_em: 2026-11-09
 responsavel: bentogomes19
 ---
 
@@ -51,7 +51,7 @@ Faça esta configuração **depois** de incorporar os arquivos do fluxo ao repos
 
    **Atenção:** nunca cole a chave privada em conversa, issue, pull request, arquivo do projeto ou captura de tela. Após cadastrá-la no GitHub, mantenha a cópia local protegida ou remova-a se não for necessária.
 
-5. Em **GitHub → Settings → Branches**, proteja `master`: exija pull request, o status `validate` do fluxo **Check source** e, para alterações na implantação, revisão do proprietário dos arquivos. O arquivo `.github/CODEOWNERS` define esses arquivos. A revisão obrigatória por outro usuário exige que exista outro colaborador apto a aprovar; não ative essa exigência se ela impedir o primeiro merge.
+5. Em **GitHub → Settings → Rules → Rulesets**, a regra **"master: só via PR revisada"** protege `master`: proíbe push direto e reescrita de histórico, exige pull request com 1 aprovação, conversas resolvidas e o status `validate` do fluxo **Check source**. Administradores podem fazer o merge sem aprovação (exceção só pela PR, nunca por push direto), porque o GitHub não aceita que o autor aprove a própria PR. Branches são apagadas após o merge.
 
 ## ✅ Antes de cada implantação
 
