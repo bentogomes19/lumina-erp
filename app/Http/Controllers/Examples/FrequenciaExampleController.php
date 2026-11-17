@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Examples;
 
 use App\Enums\AttendanceStatus;
 use App\Models\Attendance;
+use App\Support\AcademicSettings;
 use App\Models\Lesson;
 use App\Models\Student;
 use Illuminate\Http\JsonResponse;
@@ -153,10 +154,7 @@ class FrequenciaExampleController {
      * @return JsonResponse
      */
     public function alunosEmRisco(int $classId): JsonResponse {
-        $atRisk = Attendance::getStudentsAtRisk(
-            classId: $classId,
-            thresholdPercentage: 75.0
-        );
+        $atRisk = Attendance::getStudentsAtRisk(classId: $classId);
 
         $detalhes = [];
 
@@ -255,8 +253,8 @@ class FrequenciaExampleController {
      */
     private function calcularFaltasRestantes(int $totalAulas, int $presencas): int {
 
-        /* Para manter 75% de frequência, o aluno pode faltar no máximo 25%. */
-        $maxFaltas    = floor($totalAulas * 0.25);
+        /* Faltas permitidas = complemento da frequência mínima (75% => até 25% de faltas). */
+        $maxFaltas    = floor($totalAulas * (1 - AcademicSettings::minimumAttendance() / 100));
         $faltasAtuais = $totalAulas - $presencas;
         $restantes    = $maxFaltas - $faltasAtuais;
 

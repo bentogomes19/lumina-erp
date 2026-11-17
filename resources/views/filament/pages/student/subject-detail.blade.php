@@ -110,8 +110,8 @@
                         @endif
                         @if($attendancePercent !== null)
                             @php
-                                $freqBg    = $attendancePercent >= 75 ? 'rgba(34,197,94,0.15)'  : ($attendancePercent >= 50 ? 'rgba(234,179,8,0.15)'  : 'rgba(239,68,68,0.15)');
-                                $freqColor = $attendancePercent >= 75 ? '#22c55e'               : ($attendancePercent >= 50 ? '#eab308'               : '#ef4444');
+                                $freqBg    = $attendancePercent >= \App\Support\AcademicSettings::minimumAttendance() ? 'rgba(34,197,94,0.15)'  : ($attendancePercent >= 50 ? 'rgba(234,179,8,0.15)'  : 'rgba(239,68,68,0.15)');
+                                $freqColor = $attendancePercent >= \App\Support\AcademicSettings::minimumAttendance() ? '#22c55e'               : ($attendancePercent >= 50 ? '#eab308'               : '#ef4444');
                             @endphp
                             <div style="text-align:center">
                                 <div style="width:4rem;height:4rem;border-radius:50%;background:{{ $freqBg }};color:{{ $freqColor }};font-size:1.125rem;font-weight:700;display:flex;align-items:center;justify-content:center">

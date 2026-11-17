@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AttendanceStatus;
+use App\Support\AcademicSettings;
 use Carbon\Carbon;
 
 class Attendance extends BaseModel {
@@ -276,8 +277,8 @@ class Attendance extends BaseModel {
         /* Frequência = (Presenças + Atrasos) / Total * 100. */
         $frequency = (($present + $late) / $total) * 100;
 
-        /* Alerta se frequência < 75%. */
-        $alert = $frequency < 75.0;
+        /* Alerta abaixo da frequência mínima (parâmetro "academic.minimum_attendance"). */
+        $alert = $frequency < AcademicSettings::minimumAttendance();
 
         return [
             'frequency' => round($frequency, 2),
@@ -342,8 +343,9 @@ class Attendance extends BaseModel {
     public static function getStudentsAtRisk(
         int $classId,
         ?int $subjectId = null,
-        float $thresholdPercentage = 75.0
+        ?float $thresholdPercentage = null
     ): array {
+        $thresholdPercentage ??= AcademicSettings::minimumAttendance();
         $report = static::getClassFrequencyReport($classId, $subjectId);
 
         return array_filter($report, function ($item) use ($thresholdPercentage) {

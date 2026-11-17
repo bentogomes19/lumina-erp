@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Attendance;
+use App\Support\AcademicSettings;
 use App\Models\Student;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -45,7 +46,7 @@ class StudentAttendanceStatsWidget extends BaseWidget {
             Stat::make('Taxa de Presença', $attendanceRate . '%')
                 ->description('Presença nas aulas')
                 ->descriptionIcon('fas-circle-check')
-                ->color($attendanceRate >= 75 ? 'success' : ($attendanceRate >= 60 ? 'warning' : 'danger'))
+                ->color(AcademicSettings::attendanceColor($attendanceRate))
                 ->chart($this->getAttendanceTrend()),
 
             Stat::make('Total de Presenças', $present)
