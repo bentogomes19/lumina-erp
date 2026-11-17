@@ -40,6 +40,11 @@ class SchoolClassCodeGenerator {
             return null;
         }
 
+        /* Sem {sequence} todas as turmas teriam o mesmo código; nesse caso vale o formato padrão. */
+        if (!str_contains($format, '{sequence}')) {
+            $format = self::DEFAULT_FORMAT;
+        }
+
         return NumberFormat::render(
             $format,
             [

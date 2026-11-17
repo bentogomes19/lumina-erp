@@ -10,6 +10,8 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 
 class SystemParametersTable
 {
@@ -31,7 +33,7 @@ class SystemParametersTable
                 ->mutateRecordDataUsing(fn (array $data): array => SystemParameterForm::presentData($data))
                 ->mutateDataUsing(fn (array $data): array => SystemParameterForm::normalizeData($data))
                 ->modalHeading(fn (SystemParameter $record): string => 'Editar '.$record->name)
-                ->modalDescription(fn (SystemParameter $record): string => $record->explanation())
+                ->modalDescription(fn (SystemParameter $record): HtmlString => new HtmlString(Str::inlineMarkdown($record->explanation(), ['html_input' => 'escape', 'allow_unsafe_links' => false])))
                 ->modalWidth('3xl')
                 ->slideOver(),
         ])->recordUrl(null)->recordAction('edit')->defaultSort('category');

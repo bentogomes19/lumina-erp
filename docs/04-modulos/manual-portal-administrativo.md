@@ -297,9 +297,9 @@ Configurações gerais, agrupadas por categoria: identidade (nome da instituiç�
 <span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
 
 - **Frequência mínima obrigatória:** aceita valores de 75% a 100%. Valores menores são tratados como 75%, mínimo exigido pela LDB (Lei nº 9.394/1996).
-- **Cor institucional:** aplicada ao painel administrativo e ao portal do aluno; o portal do professor mantém a paleta própria. Aceita `#RGB` ou `#RRGGBB`.
+- **Cor institucional:** escolhida no seletor de cor (ou digitada em hexadecimal, ex.: `#3D5A80`) e aplicada ao painel administrativo e ao portal do aluno; o portal do professor mantém a paleta própria.
 - **Nome do sistema:** exibido no rodapé dos documentos em PDF e nas mensagens do sistema.
-- **Formatos de numeração:** valem para registros novos; números já emitidos não mudam. Turma, aluno e matrícula funcional são gerados quando o campo fica em branco.
+- **Formatos de numeração:** a escola escreve a própria máscara (as opções antigas aparecem como sugestões). Marcadores: `{year}` (ano), `{sequence}` (número sequencial, obrigatório) e, só na turma, `{grade}` (série) e `{shift}` (turno). O campo mostra um exemplo do número gerado e recusa máscaras sem `{sequence}`, com marcadores desconhecidos ou que ultrapassem o tamanho do campo. Valem para registros novos; números já emitidos não mudam. Turma, aluno e matrícula funcional são gerados quando o campo fica em branco.
 - **Segurança:** tentativas de login, tempo de sessão, tamanho mínimo e expiração da senha têm limites seguros; um valor inválido não desliga a proteção.
 
 <span style="color: #009432;">**[ 🖼️ VISUALIZAÇÃO ]**</span>
