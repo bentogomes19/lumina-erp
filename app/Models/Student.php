@@ -6,6 +6,7 @@ use App\Enums\Gender;
 use App\Enums\EnrollmentStatus;
 use App\Enums\StudentStatus;
 use App\Enums\SchoolYearStatus;
+use App\Support\NumberFormat;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,6 +14,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Student extends BaseModel {
 
     use SoftDeletes;
+
+    /**
+     * Máscara usada quando o parâmetro "student.number_format" não está disponível.
+     */
+    public const DEFAULT_NUMBER_FORMAT = 'ALU-{year}-{sequence}';
 
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
@@ -167,18 +173,27 @@ class Student extends BaseModel {
     }
 
     /**
-     * Gera um número de matrícula único para o aluno.
+     * Gera o número do aluno pelo parâmetro "student.number_format".
+     *
+     * Ex.: ALU-{year}-{sequence} => ALU-2026-000124 (próximo número livre do ano).
      *
      * @return string
      */
     public static function generateRegistrationNumber(): string {
+        $format = SystemParameter::read('student.number_format', self::DEFAULT_NUMBER_FORMAT);
 
-        /* Formato: ALU-2025-000123 */
-        do {
-            $code = 'ALU-' . now()->format('Y') . '-' . str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT);
-        } while (self::where('registration_number', $code)->exists());
+        if (!is_string($format) || !str_contains($format, '{sequence}')) {
+            $format = self::DEFAULT_NUMBER_FORMAT;
+        }
 
-        return $code;
+        return NumberFormat::render(
+            $format,
+            ['{year}' => now()->format('Y')],
+            self::withTrashed(),
+            'registration_number',
+            pad: 6,
+            maxLength: 255,
+        );
     }
 
     /**

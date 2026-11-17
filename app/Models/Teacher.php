@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AcademicTitle;
 use App\Enums\TeacherRegime;
 use App\Enums\TeacherStatus;
+use App\Support\NumberFormat;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Teacher extends BaseModel {
@@ -82,7 +83,36 @@ class Teacher extends BaseModel {
             if (empty($model->status)) {
                 $model->status = TeacherStatus::ACTIVE;
             }
+
+            /* Gera a matrícula funcional pelo parâmetro "teacher.number_format" quando não for informada. */
+            if (blank($model->employee_number)) {
+                $model->employee_number = self::generateEmployeeNumber();
+            }
         });
+    }
+
+    /**
+     * Gera a matrícula funcional pelo parâmetro "teacher.number_format".
+     *
+     * Ex.: PROF-{sequence} => PROF-0007. Retorna null se o parâmetro estiver inativo.
+     *
+     * @return string|null
+     */
+    public static function generateEmployeeNumber(): ?string {
+        $format = SystemParameter::read('teacher.number_format');
+
+        if (!is_string($format) || !str_contains($format, '{sequence}')) {
+            return null;
+        }
+
+        return NumberFormat::render(
+            $format,
+            ['{year}' => now()->format('Y')],
+            self::withTrashed(),
+            'employee_number',
+            pad: 4,
+            maxLength: 20,
+        );
     }
 
     /**

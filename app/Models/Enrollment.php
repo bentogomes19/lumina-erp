@@ -10,6 +10,12 @@ class Enrollment extends BaseModel {
     use SoftDeletes;
 
     /**
+     * Máscara usada quando o parâmetro "enrollment.number_format" não está disponível
+     * (mantém o formato anterior: ano + ID com seis dígitos).
+     */
+    public const DEFAULT_NUMBER_FORMAT = '{year}{sequence}';
+
+    /**
      * Campos que podem ser preenchidos em massa pela aplicação.
      *
      * @var array<int, string>
@@ -157,7 +163,10 @@ class Enrollment extends BaseModel {
     }
 
     /**
-     * Gera o número de matrícula no formato ano mais ID com seis dígitos.
+     * Gera o número de matrícula pelo parâmetro "enrollment.number_format".
+     *
+     * {year} é o ano letivo e {sequence} é o ID da matrícula com seis dígitos,
+     * o que garante números únicos. Ex.: MAT-{year}-{sequence} => MAT-2026-000123.
      *
      * @param self $enr
      *
@@ -168,7 +177,16 @@ class Enrollment extends BaseModel {
             ?? SchoolYear::where('id', $enr->school_year_id)->value('year')
             ?? now()->year;
 
-        return $year . str_pad($enr->id, 6, '0', STR_PAD_LEFT);
+        $format = SystemParameter::read('enrollment.number_format', self::DEFAULT_NUMBER_FORMAT);
+
+        if (!is_string($format) || !str_contains($format, '{sequence}')) {
+            $format = self::DEFAULT_NUMBER_FORMAT;
+        }
+
+        return mb_substr(strtr(trim($format), [
+            '{year}'     => (string) $year,
+            '{sequence}' => str_pad((string) $enr->id, 6, '0', STR_PAD_LEFT),
+        ]), 0, 20);
     }
 
     /**

@@ -132,7 +132,9 @@ class TeacherOnboardingWizardSchema {
                         ->schema([
                             TextInput::make('employee_number')
                                 ->label('Matrícula funcional')
-                                ->required()
+                                ->required(fn (): bool => Teacher::generateEmployeeNumber() === null)
+                                ->placeholder('Gerada automaticamente')
+                                ->helperText('Deixe em branco para gerar pelo formato definido nas Parametrizações do Sistema.')
                                 ->maxLength(20)
                                 ->unique(Teacher::class, 'employee_number')
                                 ->live(onBlur: true),
