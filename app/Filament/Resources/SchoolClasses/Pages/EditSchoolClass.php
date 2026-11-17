@@ -51,7 +51,20 @@ class EditSchoolClass extends EditRecord
 
                     $action->cancel();
                 }),
-            RestoreAction::make(),
+            RestoreAction::make()
+                ->before(function (RestoreAction $action, Model $record): void {
+                    if (!$record->hasActiveDuplicate()) {
+                        return;
+                    }
+
+                    Notification::make()
+                        ->title('Restauração bloqueada')
+                        ->body("Já existe uma turma ativa \"{$record->name}\" na mesma série, ano letivo e turno. Renomeie ou exclua essa turma antes de restaurar.")
+                        ->danger()
+                        ->send();
+
+                    $action->cancel();
+                }),
         ];
     }
 

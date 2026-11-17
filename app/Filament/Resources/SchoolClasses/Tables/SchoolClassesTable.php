@@ -11,6 +11,7 @@ use App\Models\SchoolClass;
 use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Services\Enrollments\StudentEnrollmentService;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -30,6 +31,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rules\Enum as EnumRule;
 
 class SchoolClassesTable
@@ -312,7 +314,33 @@ class SchoolClassesTable
                             'turmas',
                         ),
                     GuardedForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
+                    RestoreBulkAction::make()
+                        ->before(function (RestoreBulkAction $action, Collection $records): void {
+                            /* Bloqueia se alguma turma colidir com uma ativa ou se duas selecionadas forem iguais. */
+                            $conflicts = $records
+                                ->groupBy(fn (SchoolClass $class): string => implode('|', [
+                                    $class->school_year_id,
+                                    $class->grade_level_id,
+                                    $class->name,
+                                    $class->shift instanceof BackedEnum ? $class->shift->value : $class->shift,
+                                ]))
+                                ->filter(fn (Collection $group): bool => $group->count() > 1 || $group->first()->hasActiveDuplicate())
+                                ->map(fn (Collection $group): string => $group->first()->name)
+                                ->values();
+
+                            if ($conflicts->isEmpty()) {
+                                return;
+                            }
+
+                            Notification::make()
+                                ->title('Restauração bloqueada')
+                                ->body('Já existe turma ativa (ou mais de uma selecionada) com o mesmo nome, série, ano letivo e turno: '
+                                    . $conflicts->unique()->implode(', ') . '.')
+                                ->danger()
+                                ->send();
+
+                            $action->cancel();
+                        }),
                 ]),
             ]);
     }

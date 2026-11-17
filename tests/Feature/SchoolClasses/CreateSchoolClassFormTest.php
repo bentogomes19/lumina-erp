@@ -90,17 +90,68 @@ class CreateSchoolClassFormTest extends TestCase {
     }
 
     /**
-     * Turma excluída com o mesmo nome também bloqueia, pois continua no banco.
+     * Turma excluída fica no banco como histórico e não impede recriar o mesmo nome.
      *
      * @return void
      */
-    public function test_duplicate_of_deleted_class_shows_form_error(): void {
+    public function test_name_of_deleted_class_can_be_reused(): void {
+        $deleted = $this->existingClass('1 ANO B');
+        $deleted->delete();
+
+        Livewire::test(CreateSchoolClass::class)
+            ->fillForm($this->formData())
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(2, SchoolClass::withTrashed()->where('name', '1 ANO B')->count());
+        $this->assertSame(1, SchoolClass::where('name', '1 ANO B')->count());
+        $this->assertTrue($deleted->fresh()->trashed(), 'A turma excluída continua no histórico.');
+    }
+
+    /**
+     * Turma excluída várias vezes com o mesmo nome continua permitindo recriar.
+     *
+     * @return void
+     */
+    public function test_name_deleted_several_times_can_be_reused(): void {
+        $this->existingClass('1 ANO B')->delete();
         $this->existingClass('1 ANO B')->delete();
 
         Livewire::test(CreateSchoolClass::class)
             ->fillForm($this->formData())
             ->call('create')
-            ->assertHasFormErrors(['name']);
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(3, SchoolClass::withTrashed()->where('name', '1 ANO B')->count());
+    }
+
+    /**
+     * Restaurar turma excluída é bloqueado quando já existe outra ativa igual.
+     *
+     * @return void
+     */
+    public function test_active_duplicate_is_detected_before_restoring(): void {
+        $deleted = $this->existingClass('1 ANO B');
+        $deleted->delete();
+
+        $this->assertFalse($deleted->fresh()->hasActiveDuplicate());
+
+        $this->existingClass('1 ANO B');
+
+        $this->assertTrue($deleted->fresh()->hasActiveDuplicate());
+    }
+
+    /**
+     * O banco continua impedindo duas turmas ativas iguais.
+     *
+     * @return void
+     */
+    public function test_database_still_rejects_two_active_duplicates(): void {
+        $this->existingClass('1 ANO B');
+
+        $this->expectException(\Illuminate\Database\UniqueConstraintViolationException::class);
+
+        $this->existingClass('1 ANO B');
     }
 
     /**
@@ -162,7 +213,7 @@ class CreateSchoolClassFormTest extends TestCase {
     private function existingClass(string $name, string $shift = 'morning'): SchoolClass {
         return SchoolClass::create([
             'uuid'           => (string) Str::uuid(),
-            'code'           => 'TUR-2026-01-A',
+            'code'           => 'TUR-2026-01-' . Str::upper(Str::random(3)),
             'name'           => $name,
             'grade_level_id' => $this->gradeLevel->id,
             'school_year_id' => $this->schoolYear->id,

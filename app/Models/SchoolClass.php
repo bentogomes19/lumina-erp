@@ -37,6 +37,13 @@ class SchoolClass extends BaseModel {
      *
      * @var array<string, string>
      */
+    /**
+     * Coluna virtual do índice único de turmas ativas; não faz parte dos dados da turma.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = ['active_name_key'];
+
     protected $casts = [
         'shift'  => ClassShift::class,
         'status' => ClassStatus::class,
@@ -53,6 +60,25 @@ class SchoolClass extends BaseModel {
                 $schoolClass->code = $code;
             }
         });
+    }
+
+    /**
+     * Indica se já existe outra turma ativa (não excluída) com o mesmo nome, série, ano letivo e turno.
+     *
+     * É a mesma regra do índice uniq_active_class_year_grade_name_shift; usada antes de restaurar uma turma.
+     *
+     * @return bool
+     */
+    public function hasActiveDuplicate(): bool {
+        $shift = $this->shift instanceof ClassShift ? $this->shift->value : $this->shift;
+
+        return static::query()
+            ->whereKeyNot($this->getKey())
+            ->where('school_year_id', $this->school_year_id)
+            ->where('grade_level_id', $this->grade_level_id)
+            ->where('name', $this->name)
+            ->where('shift', $shift)
+            ->exists();
     }
 
     /**
