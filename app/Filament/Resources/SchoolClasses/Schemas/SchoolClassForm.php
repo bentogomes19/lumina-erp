@@ -5,11 +5,15 @@ namespace App\Filament\Resources\SchoolClasses\Schemas;
 use App\Enums\ClassShift;
 use App\Enums\ClassStatus;
 use App\Enums\ClassType;
+use App\Models\SchoolClass;
 use App\Models\SystemParameter;
+use BackedEnum;
 use Illuminate\Validation\Rules\Enum as EnumRule;
+use Illuminate\Validation\Rules\Unique;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class SchoolClassForm {
@@ -41,6 +45,22 @@ class SchoolClassForm {
                         ->placeholder('Ex.: 1° ANO A')
                         ->required()
                         ->maxLength(80)
+                        /*
+                         * Mesma regra do índice único uniq_class_year_grade_name_shift: o nome não pode se repetir
+                         * na mesma série, ano letivo e turno. Turmas excluídas continuam no banco e também contam.
+                         */
+                        ->unique(
+                            table: SchoolClass::class,
+                            column: 'name',
+                            ignoreRecord: true,
+                            modifyRuleUsing: fn (Unique $rule, Get $get): Unique => $rule
+                                ->where('school_year_id', $get('school_year_id'))
+                                ->where('grade_level_id', $get('grade_level_id'))
+                                ->where('shift', $get('shift') instanceof BackedEnum ? $get('shift')->value : $get('shift')),
+                        )
+                        ->validationMessages([
+                            'unique' => 'Já existe uma turma com este nome na mesma série, ano letivo e turno (inclusive entre as excluídas).',
+                        ])
                         ->columnSpan(['lg' => 8]),
                 ])
                     ->columns(12)

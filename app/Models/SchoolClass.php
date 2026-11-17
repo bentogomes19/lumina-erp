@@ -48,8 +48,9 @@ class SchoolClass extends BaseModel {
             $schoolClass->fillUuidIfMissing();
 
             /* Gera o código pelo parâmetro "class.number_format" quando não for informado. */
-            if (blank($schoolClass->code)) {
-                $schoolClass->code = app(SchoolClassCodeGenerator::class)->generate($schoolClass);
+            if (blank($schoolClass->code)
+                && ($code = app(SchoolClassCodeGenerator::class)->generate($schoolClass)) !== null) {
+                $schoolClass->code = $code;
             }
         });
     }
