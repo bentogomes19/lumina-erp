@@ -94,7 +94,13 @@ class SchoolClassCodeGenerationTest extends TestCase {
      * @return SchoolClass
      */
     private function createClass(array $attributes = []): SchoolClass {
-        return SchoolClass::factory()->create(array_merge(['code' => null], $attributes))->refresh();
+        static $sequence = 0;
+        $sequence++;
+
+        /* O nome varia porque turma, série, ano letivo e turno formam uma chave única. */
+        return SchoolClass::factory()
+            ->create(array_merge(['code' => null, 'name' => "Turma {$sequence}"], $attributes))
+            ->refresh();
     }
 
     /**
