@@ -13,11 +13,10 @@ use App\Filament\Widgets\AdminSchoolClassesTable;
 use App\Filament\Widgets\EnrollmentStatsWidget;
 use App\Support\SystemBranding;
 use App\Http\Middleware\EnsurePasswordWasChanged;
-use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RedirectUserByRole;
 use Asmit\ResizedColumn\ResizedColumnPlugin;
 use Filament\FontProviders\LocalFontProvider;
-use Filament\Http\Middleware\Authenticate;
+use App\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -102,7 +101,6 @@ class AdminPanelProvider extends PanelProvider {
                 ResizedColumnPlugin::make(),
             ])
             ->authMiddleware([
-                EnsureUserIsActive::class,
                 Authenticate::class,
                 EnsurePasswordWasChanged::class,
                 RedirectUserByRole::class,
