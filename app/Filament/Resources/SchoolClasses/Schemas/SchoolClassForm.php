@@ -31,9 +31,9 @@ class SchoolClassForm {
                     ->schema([
                     TextInput::make('code')
                         ->label('Código (Turma)')
-                        ->placeholder('Ex.: 1A-MAN-2025')
+                        ->placeholder('Gerado automaticamente')
                         ->maxLength(20)
-                        ->helperText('Opcional')
+                        ->helperText('Deixe em branco para gerar pelo formato definido nas Parametrizações do Sistema.')
                         ->columnSpan(['lg' => 4]),
 
                     TextInput::make('name')
