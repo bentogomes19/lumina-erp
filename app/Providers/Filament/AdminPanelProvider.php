@@ -64,8 +64,9 @@ class AdminPanelProvider extends PanelProvider {
                     resource_path('js/filament/student-animations.js'),
                 ),
             ])
-            ->colors([
-                'primary' => Color::hex('#3D5A80'),
+            /* Cor institucional configurada em Parametrizações do Sistema. */
+            ->colors(fn (): array => [
+                'primary' => Color::hex(app(SystemBranding::class)->primaryColor()),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->pages([

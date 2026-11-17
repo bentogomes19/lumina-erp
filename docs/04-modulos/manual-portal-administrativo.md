@@ -294,6 +294,14 @@ Contas de login de todos os perfis. Os cartões do topo mostram usuários ativos
 
 Configurações gerais, agrupadas por categoria: identidade (nome da instituição, logos, cor institucional, nome do sistema), formatos de numeração (matrícula, aluno, turma, matrícula funcional) e regras de cadastro, como **Permitir matrícula sem responsável**. Cada item tem apenas a ação **Editar**.
 
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span>
+
+- **Frequência mínima obrigatória:** aceita valores de 75% a 100%. Valores menores são tratados como 75%, mínimo exigido pela LDB (Lei nº 9.394/1996).
+- **Cor institucional:** aplicada ao painel administrativo e ao portal do aluno; o portal do professor mantém a paleta própria. Aceita `#RGB` ou `#RRGGBB`.
+- **Nome do sistema:** exibido no rodapé dos documentos em PDF e nas mensagens do sistema.
+- **Formatos de numeração:** valem para registros novos; números já emitidos não mudam. Turma, aluno e matrícula funcional são gerados quando o campo fica em branco.
+- **Segurança:** tentativas de login, tempo de sessão, tamanho mínimo e expiração da senha têm limites seguros; um valor inválido não desliga a proteção.
+
 <span style="color: #009432;">**[ 🖼️ VISUALIZAÇÃO ]**</span>
 
 ![Parametrizações do sistema](../assets/manual/admin/12-parametros.webp)

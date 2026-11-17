@@ -11,6 +11,7 @@ use App\Models\Teacher;
 use App\Models\TeacherAssignment;
 use App\Services\TeacherRosterService;
 use App\Support\PermissionAccess;
+use App\Support\SystemBranding;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class TeacherReportPdfController extends Controller
@@ -116,6 +117,6 @@ class TeacherReportPdfController extends Controller
             footer{margin-top:8mm;border-top:1px solid #cbd5e1;padding-top:3mm;color:#64748b;font-size:8px}
             </style></head><body><h1>'.e($title).'</h1><p class="teacher">Professor: '.e($teacher->name).'</p>
             <div class="meta">'.$detailsHtml.'</div><table><thead><tr>'.$headingsHtml.'</tr></thead><tbody>'.$rowsHtml.'</tbody></table>
-            <footer>Emitido em '.e(now()->format('d/m/Y H:i')).' · Portal do Professor - Lumina ERP</footer></body></html>';
+            <footer>Emitido em '.e(now()->format('d/m/Y H:i')).' · Portal do Professor - '.e(app(SystemBranding::class)->systemName()).'</footer></body></html>';
     }
 }

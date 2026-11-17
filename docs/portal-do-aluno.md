@@ -337,7 +337,7 @@ A recuperação pode se relacionar à nota original por `recovery_of_id`; sem es
 
 ### RN-ALU-008 — Frequência mínima
 
-O portal usa 75% como frequência mínima e sinaliza risco abaixo desse valor quando existem registros.
+O portal usa a frequência mínima do parâmetro **Frequência mínima obrigatória** (padrão 75%) e sinaliza risco abaixo desse valor quando existem registros. O valor nunca fica abaixo de 75%, mínimo exigido pela LDB (Lei nº 9.394/1996).
 
 ### RN-ALU-009 — Situações de frequência
 

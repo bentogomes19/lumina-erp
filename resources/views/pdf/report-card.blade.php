@@ -21,7 +21,7 @@
     <table>
         <tr>
             <td>{{ $systemBranding->institutionName() }} · Registro de desempenho escolar</td>
-            <td class="text-right">Emitido em {{ $generatedAt->format('d/m/Y H:i') }}</td>
+            <td class="text-right">Emitido em {{ $generatedAt->format('d/m/Y H:i') }} · {{ app(\App\Support\SystemBranding::class)->systemName() }}</td>
         </tr>
     </table>
 </footer>

@@ -12,12 +12,19 @@ class AcademicSettings {
     public const DEFAULT_MINIMUM_ATTENDANCE = 75.0;
 
     /**
+     * Piso legal: a LDB (Lei nº 9.394/1996, art. 24, VI) exige 75% de frequência para aprovação.
+     */
+    public const LEGAL_MINIMUM_ATTENDANCE = 75.0;
+
+    /**
      * Distância, em pontos percentuais, da faixa de atenção abaixo da frequência mínima.
      */
     public const ATTENDANCE_WARNING_MARGIN = 15.0;
 
     /**
-     * Frequência mínima obrigatória, em percentual (0 a 100).
+     * Frequência mínima obrigatória, em percentual (75 a 100).
+     *
+     * A escola pode exigir mais que a LDB, mas nunca menos: valores abaixo de 75% são elevados ao piso legal.
      *
      * @return float
      */
@@ -28,7 +35,7 @@ class AcademicSettings {
             return self::DEFAULT_MINIMUM_ATTENDANCE;
         }
 
-        return max(0.0, min(100.0, (float) $value));
+        return max(self::LEGAL_MINIMUM_ATTENDANCE, min(100.0, (float) $value));
     }
 
     /**

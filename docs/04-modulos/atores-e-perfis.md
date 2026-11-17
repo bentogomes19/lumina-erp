@@ -62,7 +62,7 @@ flowchart TD
 | Professor | Usuário ativo, perfil `teacher` e cadastro de professor com status **Ativo** e sem data de desligamento. |
 | Aluno | Usuário ativo, perfil `student` e cadastro de aluno com status **Ativo**. |
 
-<sub>Onde: `User::canAccessPanel`, `EnsureUserIsActive`, `EnsurePasswordWasChanged`, `AdministrativeDashboardAccess`.</sub>
+<sub>Onde: `User::canAccessPanel`, `App\Http\Middleware\Authenticate`, `EnsurePasswordWasChanged`, `AdministrativeDashboardAccess`.</sub>
 
 <span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span> **RN-ACE-002 — Primeiro acesso por convite**
 Alunos e professores recebem o acesso a partir do cadastro. Na etapa **Acesso ao portal** da matrícula (aluno) e no campo **Ação de acesso** do cadastro do professor, a secretaria escolhe entre **Não criar acesso agora**, **Criar usuário sem enviar convite** ou **Criar usuário e enviar convite**. As listas de Alunos, Professores e Usuários também têm a ação de enviar ou reenviar o convite, que leva a pessoa a definir a própria senha. Usuários marcados com **Forçar troca de senha** são levados à redefinição antes de entrar.

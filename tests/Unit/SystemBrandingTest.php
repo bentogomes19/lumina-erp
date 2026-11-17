@@ -69,4 +69,49 @@ class SystemBrandingTest extends TestCase
 
         $this->assertSame('Portal Lumina', app(SystemBranding::class)->institutionName());
     }
+
+    public function test_it_uses_default_system_name_and_color_when_parameters_are_unavailable(): void
+    {
+        $branding = app(SystemBranding::class);
+
+        $this->assertSame('Lumina ERP', $branding->systemName());
+        $this->assertSame('#3D5A80', $branding->primaryColor());
+        $this->assertFalse($branding->hasCustomPrimaryColor());
+    }
+
+    public function test_it_reads_the_configured_system_name_and_color(): void
+    {
+        $this->textParameter('system.display_name', 'Gestão Horizonte');
+        $this->textParameter('institution.primary_color', '#1f7a4d');
+
+        $branding = app(SystemBranding::class);
+
+        $this->assertSame('Gestão Horizonte', $branding->systemName());
+        $this->assertSame('#1F7A4D', $branding->primaryColor());
+        $this->assertTrue($branding->hasCustomPrimaryColor());
+    }
+
+    public function test_it_normalizes_short_colors_and_rejects_invalid_ones(): void
+    {
+        $this->textParameter('institution.primary_color', 'abc');
+        $this->assertSame('#AABBCC', app(SystemBranding::class)->primaryColor());
+
+        SystemParameter::where('key', 'institution.primary_color')->update(['value' => 'red; background:url(x)']);
+        $this->assertSame('#3D5A80', app(SystemBranding::class)->primaryColor());
+    }
+
+    private function textParameter(string $key, string $value): void
+    {
+        SystemParameter::create([
+            'key' => $key,
+            'name' => $key,
+            'category' => 'Identidade e personalização',
+            'type' => SystemParameterType::TEXT,
+            'value' => $value,
+            'default_value' => null,
+            'description' => 'Parâmetro de identidade.',
+            'is_active' => true,
+            'is_system' => true,
+        ]);
+    }
 }

@@ -53,7 +53,7 @@ O painel é compartilhado, mas a navegação é segmentada por `canAccess()`/`sh
 
 | Camada | Elementos principais | Responsabilidade atual |
 |---|---|---|
-| Painel/autenticação | `AdminPanelProvider`, `User::canAccessPanel()`, `EnsureUserIsActive`, `RedirectUserByRole` | Login, sessão, bloqueio de usuário e redirecionamento por papel |
+| Painel/autenticação | `AdminPanelProvider`, `User::canAccessPanel()`, `App\Http\Middleware\Authenticate`, `RedirectUserByRole` | Login, sessão, bloqueio de usuário e redirecionamento por papel |
 | Autorização de página | `HasTeacherPortalAccess`, `PermissionAccess` | Exibição da navegação e acesso direto às páginas `teacher.*` |
 | Contexto docente | `CurrentTeacherService` | Resolve `User -> Teacher` e carrega todas as alocações do professor |
 | Páginas Filament/Livewire | `DashboardTeacher`, `MyClasses`, `TeacherSchedule`, `TeacherAssessments`, `TeacherGrades`, `TeacherAttendance`, `TeacherProfile` | Fluxo de interface e, em muitos casos, regras e persistência |
@@ -159,7 +159,7 @@ flowchart TD
 | GET | `/lumina/teacher-attendance` | `TeacherAttendance` | `teacher.attendance.view` |
 | GET | `/lumina/teacher-profile` | `TeacherProfile` | `teacher.profile.view` |
 
-Todas passam pelos middlewares do painel, incluindo autenticação, sessão, CSRF, `EnsureUserIsActive` e `RedirectUserByRole`. As ações Livewire usam os mesmos endpoints internos do Filament/Livewire, não controllers próprios.
+Todas passam pelos middlewares do painel, incluindo autenticação (com a verificação de usuário ativo), sessão, CSRF e `RedirectUserByRole`. As ações Livewire usam os mesmos endpoints internos do Filament/Livewire, não controllers próprios.
 
 ### Fluxos alternativos
 
@@ -307,7 +307,7 @@ Limitações:
 
 | # | Regra | Implementação e tabelas | Validação/permissão | Comportamento/problema |
 |---:|---|---|---|---|
-| 1 | Conta precisa estar ativa e desbloqueada | `User::canAccessPanel`, `EnsureUserIsActive`; `users` | `active`, `locked_at` | Bloqueia o painel inteiro |
+| 1 | Conta precisa estar ativa e desbloqueada | `User::canAccessPanel`, `App\Http\Middleware\Authenticate`; `users` | `active`, `locked_at` | Bloqueia o painel inteiro |
 | 2 | Portal docente exige papel `teacher` | `PermissionAccess::requiredPortalRole` | Spatie Role | Admin sem papel docente não assume o portal |
 | 3 | Cada página exige permissão `teacher.*` | Trait `HasTeacherPortalAccess` | `canAccess` e navegação | Protege acesso direto da página |
 | 4 | Matriz explícita prevalece no módulo | `PermissionAccess::can` | permissões do papel | Se houver ao menos uma permissão do módulo, as demais negadas permanecem negadas |
@@ -345,7 +345,7 @@ Limitações:
 
 1. Filament autentica o usuário.
 2. `User::canAccessPanel()` nega conta inativa/bloqueada.
-3. `EnsureUserIsActive` derruba sessão já aberta se o estado mudar.
+3. `Authenticate` (`App\Http\Middleware\Authenticate`) derruba a sessão já aberta se o usuário for inativado ou bloqueado e redireciona para o login (em vez de 403). A verificação fica no próprio middleware de autenticação porque o Laravel o executa antes dos demais `authMiddleware`.
 4. `RedirectUserByRole` direciona somente a raiz do painel.
 5. Cada página docente exige uma permissão via `PermissionAccess`.
 6. Mutações de notas e frequência revalidam contexto e permissões no método de gravação.
