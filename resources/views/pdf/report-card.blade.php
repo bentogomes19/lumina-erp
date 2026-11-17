@@ -12,7 +12,9 @@
     $documentLogo = $systemBranding->documentLogoDataUri();
     $schoolYear      = $currentClass->schoolYear?->year ?? $generatedAt->year;
     $termLabels      = ['b1' => '1º bimestre', 'b2' => '2º bimestre', 'b3' => '3º bimestre', 'b4' => '4º bimestre'];
-    $formatGrade     = fn ($value) => $value === null ? '—' : number_format($value, 1, ',', '');
+    /* Notas e médias com duas casas decimais; critério e escala mantêm uma casa. */
+    $formatGrade     = fn ($value) => $value === null ? '—' : number_format($value, 2, ',', '');
+    $formatScale     = fn ($value) => $value === null ? '—' : number_format($value, 1, ',', '');
     $statusLabels    = ['approved' => 'Aprovado', 'recovery' => 'Recuperação', 'failed' => 'Reprovado', 'ongoing' => 'Cursando'];
     $orderedSubjects = $subjects;
 @endphp
@@ -89,7 +91,7 @@
 
 <div class="table-notes">
     <p><strong>Legenda:</strong> Cada bimestre mostra a média apurada, considerando a recuperação quando houver. Recuperação mostra o bimestre e a nota obtida. — = sem lançamento.</p>
-    <p><strong>Critério de referência:</strong> média para aprovação {{ $formatGrade($minimumGrade) }} · Escala de notas: 0 a {{ $formatGrade(\App\Services\GradeCalculationService::MAX_SCORE) }}.</p>
+    <p><strong>Critério de referência:</strong> média para aprovação {{ $formatScale($minimumGrade) }} · Escala de notas: 0 a {{ $formatScale(\App\Services\GradeCalculationService::MAX_SCORE) }}.</p>
     <p>* A média final e a situação consideram as notas disponíveis. Antes do fechamento dos quatro bimestres, os resultados são parciais e não substituem o fechamento escolar.</p>
 </div>
 

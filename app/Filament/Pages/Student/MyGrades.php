@@ -224,7 +224,7 @@ class MyGrades extends Page implements HasTable {
                 'recovery' => $col->where('status', 'recovery')->count(),
                 'failed'   => $col->where('status', 'failed')->count(),
                 'ongoing'  => $col->where('status', 'ongoing')->count(),
-                'average'  => $averages->isNotEmpty() ? round($averages->avg(), 1) : null,
+                'average'  => $averages->isNotEmpty() ? round($averages->avg(), 2) : null,
             ],
             'selected_period' => $period,
             'period_label'    => $this->periodLabel($currentClass->schoolYear?->year, $period),
@@ -241,7 +241,8 @@ class MyGrades extends Page implements HasTable {
     }
 
     public function table(Table $table): Table {
-        $format = fn ($state): string => number_format((float) $state, 1, ',', '');
+        /* Notas e médias do boletim com o valor exato em duas casas decimais (mesma precisão do cálculo da situação). */
+        $format = fn ($state): string => number_format((float) $state, 2, ',', '');
 
         return $table
             ->heading(fn () => $this->selectedPeriod === 'all' ? 'Meu boletim' : 'Boletim do '.self::PERIODS[$this->selectedPeriod])
@@ -355,7 +356,7 @@ class MyGrades extends Page implements HasTable {
         $scores = collect(['b1', 'b2', 'b3', 'b4'])
             ->map(fn (string $term) => [$term, data_get($record, "terms.$term.recovery.score")])
             ->filter(fn (array $entry) => $entry[1] !== null)
-            ->map(fn (array $entry) => substr($entry[0], 1).'º: '.number_format((float) $entry[1], 1, ',', ''));
+            ->map(fn (array $entry) => substr($entry[0], 1).'º: '.number_format((float) $entry[1], 2, ',', ''));
 
         return $scores->isEmpty() ? '—' : $scores->implode(' · ');
     }

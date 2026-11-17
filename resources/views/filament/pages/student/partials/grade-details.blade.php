@@ -4,7 +4,9 @@
     if ($selectedPeriod !== 'all') {
         $periods = array_intersect_key($periods, [$selectedPeriod => true]);
     }
-    $format = fn ($value) => $value === null ? '—' : number_format($value, 1, ',', '');
+    /* Notas e médias com duas casas decimais; peso e nota máxima mantêm uma casa. */
+    $format = fn ($value) => $value === null ? '—' : number_format($value, 2, ',', '');
+    $formatScale = fn ($value) => $value === null ? '—' : number_format($value, 1, ',', '');
 @endphp
 <div class="sg-details">
     <p class="sg-detail-intro">A média considera o peso de cada avaliação e a recuperação, quando registrada. Nota ainda não lançada aparece como —.</p>
@@ -27,8 +29,8 @@
                                         @if($grade->comment)<small>{{ $grade->comment }}</small>@endif
                                     </th>
                                     <td>{{ $grade->date_recorded?->format('d/m/Y') ?? '—' }}</td>
-                                    <td>{{ $format($grade->weight ?? 1) }}</td>
-                                    <td><strong style="color:{{ $grade->score === null ? 'inherit' : ($grade->score >= $minimumGrade ? '#166534' : '#9a3412') }}">{{ $format($grade->score) }}</strong> / {{ $format($grade->max_score ?? 10) }}</td>
+                                    <td>{{ $formatScale($grade->weight ?? 1) }}</td>
+                                    <td><strong style="color:{{ $grade->score === null ? 'inherit' : ($grade->score >= $minimumGrade ? '#166534' : '#9a3412') }}">{{ $format($grade->score) }}</strong> / {{ $formatScale($grade->max_score ?? 10) }}</td>
                                 </tr>
                             @endforeach
                             @if($term['recovery'])
@@ -36,7 +38,7 @@
                                     <th scope="row">Recuperação</th>
                                     <td>{{ $term['recovery']->date_recorded?->format('d/m/Y') ?? '—' }}</td>
                                     <td>—</td>
-                                    <td><strong>{{ $format($term['recovery']->score) }}</strong> / {{ $format($term['recovery']->max_score ?? 10) }}</td>
+                                    <td><strong>{{ $format($term['recovery']->score) }}</strong> / {{ $formatScale($term['recovery']->max_score ?? 10) }}</td>
                                 </tr>
                             @endif
                         </tbody>

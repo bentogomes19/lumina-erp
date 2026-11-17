@@ -51,7 +51,7 @@ class MyGradesReportCardTest extends TestCase {
         $this->assertSame(8.0, $mathReport['terms']['b2']['final_average']);
         $this->assertNull($mathReport['terms']['b3']['final_average']);
         $this->assertSame(7.5, $mathReport['overall_average']);
-        $this->assertSame('1º: 7,0', MyGrades::recoverySummary($mathReport));
+        $this->assertSame('1º: 7,00', MyGrades::recoverySummary($mathReport));
         $this->assertNull($historyReport['overall_average']);
         $this->assertSame('—', MyGrades::recoverySummary($historyReport));
     }
@@ -89,9 +89,44 @@ class MyGradesReportCardTest extends TestCase {
         $this->assertSame(1, substr_count($html, '4º bimestre</th>'));
         $this->assertStringContainsString('Média<br>final*', $html);
         $this->assertStringContainsString('Recuperação</th>', $html);
-        $this->assertStringContainsString('1º: 7,0', $html);
-        $this->assertStringContainsString('8,0', $html);
+        $this->assertStringContainsString('1º: 7,00', $html);
+        $this->assertStringContainsString('8,00', $html);
         $this->assertStringStartsWith('%PDF-', Pdf::loadView('pdf.report-card', $viewData)->output());
+    }
+
+    public function test_report_card_shows_exact_grades_with_two_decimals(): void {
+        [$student, $class, $enrollment] = $this->studentInActiveClass();
+        $student->user->assignRole(Role::findOrCreate('student', 'web'));
+        $student->user->givePermissionTo(Permission::findOrCreate('student.grades.view', 'web'));
+        $subject = Subject::factory()->create(['name' => 'História', 'code' => 'HIS-D', 'normalized_code' => 'his-d']);
+        $class->subjects()->attach($subject);
+        $this->grade($enrollment, $subject, 'b1', 7.25, 'test', 1);
+        $this->grade($enrollment, $subject, 'b1', 6.5, 'test', 2);
+
+        $this->actingAs($student->user, 'student');
+        $page = new MyGrades();
+        $annual = (new \ReflectionMethod(MyGrades::class, 'buildPageData'))->invoke($page, 'all');
+
+        /* Média 6,875: o boletim mostra o valor exato com duas casas (6,88), não 6,9. */
+        $this->assertSame(6.88, $annual['subjects'][0]['terms']['b1']['final_average']);
+
+        $html = view('pdf.report-card', [
+            'student' => $student,
+            'currentClass' => $class->load(['schoolYear', 'gradeLevel']),
+            'subjects' => $annual['subjects'],
+            'stats' => $annual['stats'],
+            'minimumGrade' => $annual['min_approval'],
+            'generatedAt' => now(),
+        ])->render();
+
+        $this->assertStringContainsString('6,88', $html);
+        $this->assertStringNotContainsString('6,9<', $html);
+
+        Livewire::test(MyGrades::class)
+            ->call('setPeriod', 'b1')
+            ->assertSee('7,25')
+            ->assertSee('6,50')
+            ->assertSee('6,88');
     }
 
     public function test_student_page_renders_annual_columns_and_keeps_term_filter_available(): void {
@@ -162,9 +197,9 @@ class MyGradesReportCardTest extends TestCase {
             ->assertSee('Trabalho 1')
             ->assertSee('Recuperação')
             ->assertSee('Média final')
-            ->assertSee('6,5')
-            ->assertSee('7,8')
-            ->assertSee('9,0')
+            ->assertSee('6,50')
+            ->assertSee('7,80')
+            ->assertSee('9,00')
             ->assertDontSee('Buscar disciplina');
     }
 
