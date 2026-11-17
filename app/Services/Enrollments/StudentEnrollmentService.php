@@ -17,6 +17,7 @@ use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\User;
 use App\Services\Auth\FirstAccessInvitationService;
+use App\Support\EnrollmentSettings;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -65,6 +66,10 @@ class StudentEnrollmentService {
                 $schoolClass = $this->findAndLockSchoolClass((int) $data['class_id']);
                 $student     = $this->resolveStudent($data);
 
+                $this->ensureMinorHasGuardian(
+                    $student,
+                    ($data['student_source'] ?? '') === 'new' ? 'student_guardian_main' : 'student_id',
+                );
                 $this->ensureStudentIsNotEnrolled($student, $schoolClass);
                 $enrollment = $this->createEnrollmentInClass($schoolClass, [
                     'student_id'       => $student->id,
@@ -278,6 +283,7 @@ class StudentEnrollmentService {
                 ]);
             }
 
+            $this->ensureMinorHasGuardian($student, 'student_id');
             $this->ensureStudentIsNotEnrolled($student, $schoolClass);
             $status = $data['status'] ?? EnrollmentStatus::ACTIVE;
             $status = $status instanceof EnrollmentStatus ? $status : EnrollmentStatus::from($status);
@@ -898,6 +904,24 @@ class StudentEnrollmentService {
         }
 
         return Student::create($this->studentAttributes($data));
+    }
+
+    /**
+     * Exige responsável legal para aluno menor quando o parâmetro "enrollment.allow_without_guardian" estiver desligado.
+     *
+     * @param Student $student
+     * @param string $errorField
+     *
+     * @return void
+     */
+    private function ensureMinorHasGuardian(Student $student, string $errorField): void {
+        if (filled($student->guardian_main) || !EnrollmentSettings::requiresGuardian($student->birth_date)) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            $errorField => 'Aluno menor de idade: informe o responsável legal antes de concluir a matrícula.',
+        ]);
     }
 
     /**

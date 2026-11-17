@@ -8,6 +8,7 @@ use App\Enums\StudentAccessAction;
 use App\Models\Enrollment;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
+use App\Support\EnrollmentSettings;
 use App\Models\Student;
 use App\Services\Enrollments\StudentEnrollmentService;
 use App\Services\IbgeLocalidadesService;
@@ -375,6 +376,9 @@ class EnrollmentWizardSchema {
                                 ->label('Nome do responsável')
                                 ->maxLength(120)
                                 ->placeholder('Nome do responsável legal')
+                                ->required(fn (Get $get): bool => $get('student_source') === 'new'
+                                    && EnrollmentSettings::requiresGuardian($get('student_birth_date')))
+                                ->validationMessages(['required' => 'Aluno menor de idade: informe o responsável legal.'])
                                 ->nullable()
                                 ->columnSpanFull(),
 

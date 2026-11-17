@@ -7,6 +7,7 @@ use App\Models\GradeLevel;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
 use App\Models\SystemParameter;
+use App\Support\NumberFormat;
 
 /**
  * Gera o código automático da turma a partir do parâmetro "class.number_format".
@@ -39,42 +40,18 @@ class SchoolClassCodeGenerator {
             return null;
         }
 
-        $resolved = strtr(trim($format), [
-            '{year}'  => $this->year($schoolClass),
-            '{grade}' => $this->grade($schoolClass),
-            '{shift}' => $this->shift($schoolClass),
-        ]);
-
-        if (!str_contains($resolved, '{sequence}')) {
-            return mb_substr($resolved, 0, self::MAX_LENGTH);
-        }
-
-        [$prefix, $suffix] = explode('{sequence}', $resolved, 2);
-
-        $code = $prefix . str_pad((string) $this->nextSequence($prefix, $suffix), 2, '0', STR_PAD_LEFT) . $suffix;
-
-        return mb_substr($code, 0, self::MAX_LENGTH);
-    }
-
-    /**
-     * Calcula o próximo número livre entre as turmas (inclusive excluídas) com o mesmo prefixo.
-     *
-     * @param string $prefix
-     * @param string $suffix
-     *
-     * @return int
-     */
-    private function nextSequence(string $prefix, string $suffix): int {
-        $like    = addcslashes($prefix, '\\%_') . '%' . addcslashes($suffix, '\\%_');
-        $pattern = '/^' . preg_quote($prefix, '/') . '(\d+)' . preg_quote($suffix, '/') . '$/';
-
-        $max = SchoolClass::withTrashed()
-            ->where('code', 'like', $like)
-            ->pluck('code')
-            ->map(fn (string $code): int => preg_match($pattern, $code, $matches) ? (int) $matches[1] : 0)
-            ->max();
-
-        return ((int) $max) + 1;
+        return NumberFormat::render(
+            $format,
+            [
+                '{year}'  => $this->year($schoolClass),
+                '{grade}' => $this->grade($schoolClass),
+                '{shift}' => $this->shift($schoolClass),
+            ],
+            SchoolClass::withTrashed(),
+            'code',
+            pad: 2,
+            maxLength: self::MAX_LENGTH,
+        );
     }
 
     /**

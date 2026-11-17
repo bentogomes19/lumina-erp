@@ -519,7 +519,8 @@ class TeacherOnboardingService {
             throw ValidationException::withMessages(['name' => 'Informe o nome do professor.']);
         }
 
-        if (!filled($data['employee_number'] ?? null)) {
+        /* Sem matrícula informada, ela é gerada pelo parâmetro "teacher.number_format". */
+        if (!filled($data['employee_number'] ?? null) && Teacher::generateEmployeeNumber() === null) {
             throw ValidationException::withMessages([
                 'employee_number' => 'Informe a matrícula funcional do professor.',
             ]);
