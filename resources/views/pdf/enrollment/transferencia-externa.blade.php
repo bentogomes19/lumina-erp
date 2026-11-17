@@ -135,7 +135,7 @@
         Operador: <strong>{{ $operator?->name ?? 'Sistema' }}</strong>
     </div>
     <div class="footer">
-        <span>Emitido em: {{ $generatedAt->format('d/m/Y \à\s H:i:s') }}</span>
+        <span>Emitido em: {{ $generatedAt->format('d/m/Y \à\s H:i:s') }} · {{ app(\App\Support\SystemBranding::class)->systemName() }}</span>
         <span>Matrícula: {{ $enrollment->registration_number }}</span>
         <span>{{ $systemBranding->institutionName() }}</span>
     </div>

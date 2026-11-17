@@ -16,11 +16,53 @@ class SystemBranding
 {
     public const DEFAULT_NAME = 'Portal Lumina';
 
+    public const DEFAULT_SYSTEM_NAME = 'Lumina ERP';
+
+    public const DEFAULT_PRIMARY_COLOR = '#3D5A80';
+
     public function institutionName(): string
     {
         $name = SystemParameter::read('institution.name', self::DEFAULT_NAME);
 
         return filled($name) ? trim((string) $name) : self::DEFAULT_NAME;
+    }
+
+    /**
+     * Nome do sistema exibido em mensagens e documentos (parâmetro "system.display_name").
+     */
+    public function systemName(): string
+    {
+        $name = SystemParameter::read('system.display_name', self::DEFAULT_SYSTEM_NAME);
+
+        return filled($name) ? trim((string) $name) : self::DEFAULT_SYSTEM_NAME;
+    }
+
+    /**
+     * Cor institucional em hexadecimal (parâmetro "institution.primary_color").
+     *
+     * Aceita "#RGB" ou "#RRGGBB"; qualquer outro valor volta para a cor padrão.
+     */
+    public function primaryColor(): string
+    {
+        $color = trim((string) SystemParameter::read('institution.primary_color', self::DEFAULT_PRIMARY_COLOR));
+
+        if (! str_starts_with($color, '#')) {
+            $color = '#'.$color;
+        }
+
+        if (preg_match('/^#([0-9a-f]{3})$/i', $color, $short)) {
+            $color = '#'.implode('', array_map(fn (string $c): string => $c.$c, str_split($short[1])));
+        }
+
+        return preg_match('/^#[0-9a-f]{6}$/i', $color) ? strtoupper($color) : self::DEFAULT_PRIMARY_COLOR;
+    }
+
+    /**
+     * Indica se a cor institucional foi alterada em relação à paleta padrão do tema.
+     */
+    public function hasCustomPrimaryColor(): bool
+    {
+        return $this->primaryColor() !== self::DEFAULT_PRIMARY_COLOR;
     }
 
     public function logoUrl(): ?string

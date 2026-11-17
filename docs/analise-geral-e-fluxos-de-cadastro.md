@@ -94,7 +94,7 @@ Os seeders criam os seguintes papéis:
 | `teacher` | Portal e operações do próprio professor |
 | `student` | Portal e dados do próprio aluno |
 
-O acesso ao painel também exige usuário ativo e não bloqueado. Após cinco tentativas de login malsucedidas, o modelo prevê bloqueio. Em um login bem-sucedido, as tentativas são zeradas e `last_login_at` é atualizado.
+O acesso ao painel também exige usuário ativo e não bloqueado. Após o número de tentativas malsucedidas definido no parâmetro **Tentativas inválidas antes do bloqueio** (padrão: 5), a conta é bloqueada. Em um login bem-sucedido, as tentativas são zeradas e `last_login_at` é atualizado.
 
 As permissões `student.*` e `teacher.*` são contextuais: além da permissão, o usuário deve possuir respectivamente o papel `student` ou `teacher`. Isso impede que o administrador assuma acidentalmente os portais pessoais apenas por possuir permissões globais.
 
@@ -202,7 +202,7 @@ Menu: **Alunos**.
 O cadastro contempla identificação, CPF, RG, contato, endereço, nascimento, responsáveis, saúde, transporte e situação. O modelo gera automaticamente:
 
 - UUID;
-- registro no formato aproximado `ALU-AAAA-NNNNNN`.
+- número do aluno pelo parâmetro **Formato do número do aluno** (padrão `ALU-{year}-{sequence}`, ex.: `ALU-2026-000001`), com sequência por ano.
 
 Comportamento importante: o cadastro direto de aluno não cria automaticamente uma conta em `users`. O aluno poderá existir como pessoa acadêmica sem acesso ao portal até que seja matriculado pelo fluxo que cria usuário ou até que uma conta seja criada e vinculada por outro caminho.
 

@@ -25,16 +25,19 @@ class AcademicParametersTest extends TestCase {
     }
 
     /**
-     * Valores fora de 0 a 100 são limitados.
+     * Valores acima de 100 são limitados e abaixo do piso legal da LDB (75%) são elevados a ele.
      *
      * @return void
      */
-    public function test_minimum_attendance_is_clamped(): void {
+    public function test_minimum_attendance_is_clamped_to_legal_floor(): void {
         $this->minimumAttendance('150');
         $this->assertSame(100.0, AcademicSettings::minimumAttendance());
 
-        SystemParameter::where('key', 'academic.minimum_attendance')->update(['value' => '-10']);
-        $this->assertSame(0.0, AcademicSettings::minimumAttendance());
+        SystemParameter::where('key', 'academic.minimum_attendance')->update(['value' => '60']);
+        $this->assertSame(75.0, AcademicSettings::minimumAttendance());
+
+        SystemParameter::where('key', 'academic.minimum_attendance')->update(['value' => '80']);
+        $this->assertSame(80.0, AcademicSettings::minimumAttendance());
     }
 
     /**
@@ -47,9 +50,14 @@ class AcademicParametersTest extends TestCase {
 
         $this->assertTrue(Attendance::calculateFrequency($student->id, $class->id)['alert']);
 
-        $this->minimumAttendance('60');
+        $this->minimumAttendance('60'); // abaixo do piso legal: continua valendo 75%
 
-        $this->assertFalse(Attendance::calculateFrequency($student->id, $class->id)['alert']);
+        $this->assertTrue(Attendance::calculateFrequency($student->id, $class->id)['alert']);
+
+        SystemParameter::where('key', 'academic.minimum_attendance')->update(['value' => '90']);
+        [$student80, $class80] = $this->studentWithFrequency(present: 8, absent: 2); // 80%
+
+        $this->assertTrue(Attendance::calculateFrequency($student80->id, $class80->id)['alert']);
     }
 
     /**

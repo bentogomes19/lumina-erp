@@ -6,7 +6,7 @@
             </p>
 
             <p class="text-sm text-gray-600 dark:text-gray-400">
-                Solicite à administração da escola a revisão dos seus perfis e permissões antes de acessar os módulos do Lumina.
+                Solicite à administração da escola a revisão dos seus perfis e permissões antes de acessar os módulos do {{ app(\App\Support\SystemBranding::class)->systemName() }}.
             </p>
         </div>
     </x-filament::section>

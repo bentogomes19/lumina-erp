@@ -56,6 +56,30 @@ class AppServiceProvider extends ServiceProvider {
             },
         );
 
+        /* Aplica a cor institucional às telas próprias do painel administrativo e do portal do aluno. */
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::HEAD_END,
+            function (): string {
+                $panelId  = filament()->getCurrentPanel()?->getId();
+                $branding = app(SystemBranding::class);
+
+                if (!in_array($panelId, ['lumina', 'aluno'], true) || !$branding->hasCustomPrimaryColor()) {
+                    return '';
+                }
+
+                $color = $branding->primaryColor();
+
+                return '<style>'
+                    . ":root{--lumina-primary:{$color};"
+                    . "--lumina-primary-strong:color-mix(in srgb,{$color} 78%,black);"
+                    . "--lumina-primary-soft:color-mix(in srgb,{$color} 14%,transparent);}"
+                    . ":root.dark{--lumina-primary:color-mix(in srgb,{$color} 70%,white);"
+                    . "--lumina-primary-strong:color-mix(in srgb,{$color} 85%,white);"
+                    . "--lumina-primary-soft:color-mix(in srgb,{$color} 20%,transparent);}"
+                    . '</style>';
+            },
+        );
+
         app(\Spatie\Permission\PermissionRegistrar::class)
             ->setPermissionClass(Permission::class)
             ->setRoleClass(Role::class);

@@ -45,8 +45,9 @@ class StudentPanelProvider extends PanelProvider {
             ->homeUrl(fn (): string => DashboardStudent::getUrl(panel: 'aluno'))
             ->font('Inter Variable', url: asset('fonts/filament/filament/inter/index.css'), provider: LocalFontProvider::class)
             ->viteTheme('resources/css/filament/aluno/theme.css')
-            ->colors([
-                'primary' => Color::hex('#3D5A80'),
+            /* Cor institucional configurada em Parametrizações do Sistema. */
+            ->colors(fn (): array => [
+                'primary' => Color::hex(app(SystemBranding::class)->primaryColor()),
             ])
             ->pages([
                 DashboardStudent::class,
