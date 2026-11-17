@@ -17,8 +17,7 @@ use App\Filament\Widgets\TeacherAttendanceWidget;
 use App\Filament\Widgets\TeacherStats;
 use App\Support\SystemBranding;
 use App\Http\Middleware\EnsurePasswordWasChanged;
-use App\Http\Middleware\EnsureUserIsActive;
-use Filament\Http\Middleware\Authenticate;
+use App\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -80,7 +79,6 @@ class TeacherPanelProvider extends PanelProvider {
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                EnsureUserIsActive::class,
                 Authenticate::class,
                 EnsurePasswordWasChanged::class,
             ]);
