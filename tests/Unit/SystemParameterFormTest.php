@@ -24,4 +24,17 @@ class SystemParameterFormTest extends TestCase
         $this->assertSame('bimestre', SystemParameterForm::normalizeData(['select_value' => 'bimestre'])['value']);
         $this->assertSame('system/logo.png', SystemParameterForm::normalizeData(['file_value' => 'system/logo.png'])['value']);
     }
+
+    public function test_it_saves_the_picked_color_as_uppercase_hex(): void
+    {
+        $this->assertSame('#1F7A4D', SystemParameterForm::normalizeData(['color_value' => '#1f7a4d'])['value']);
+    }
+
+    public function test_it_reads_list_options_saved_as_array_or_as_text_lines(): void
+    {
+        $expected = ['TUR-{year}-{sequence}' => 'TUR-{year}-{sequence}', '{grade}-{shift}-{sequence}' => '{grade}-{shift}-{sequence}'];
+
+        $this->assertSame($expected, SystemParameterForm::optionList(['TUR-{year}-{sequence}', '{grade}-{shift}-{sequence}']));
+        $this->assertSame($expected, SystemParameterForm::optionList("TUR-{year}-{sequence}\n{grade}-{shift}-{sequence}\n"));
+    }
 }

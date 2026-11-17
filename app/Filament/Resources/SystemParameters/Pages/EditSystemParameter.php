@@ -10,6 +10,11 @@ class EditSystemParameter extends EditRecord
 {
     protected static string $resource = SystemParameterResource::class;
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        return SystemParameterForm::presentData($data);
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         return SystemParameterForm::normalizeData($data);
