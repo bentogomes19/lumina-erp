@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ClassShift;
 use App\Enums\ClassStatus;
 use App\Enums\ClassType;
+use App\Services\SchoolClassCodeGenerator;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SchoolClass extends BaseModel {
@@ -45,6 +46,11 @@ class SchoolClass extends BaseModel {
     protected static function booted(): void {
         static::creating(function (self $schoolClass): void {
             $schoolClass->fillUuidIfMissing();
+
+            /* Gera o código pelo parâmetro "class.number_format" quando não for informado. */
+            if (blank($schoolClass->code)) {
+                $schoolClass->code = app(SchoolClassCodeGenerator::class)->generate($schoolClass);
+            }
         });
     }
 
