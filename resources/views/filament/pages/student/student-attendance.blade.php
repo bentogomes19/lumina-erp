@@ -19,7 +19,7 @@
             'b4'  => '4º Bimestre',
         ];
 
-        $rateColor = fn($r) => $r >= 75 ? '#22c55e' : ($r >= 50 ? '#eab308' : '#ef4444');
+        $rateColor = fn($r) => $r >= \App\Support\AcademicSettings::minimumAttendance() ? '#22c55e' : ($r >= 50 ? '#eab308' : '#ef4444');
     @endphp
 
     @if(!$student || !$currentClass)

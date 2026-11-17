@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\Student;
 
 use App\Enums\AttendanceStatus;
+use App\Support\AcademicSettings;
 use App\Models\Attendance;
 use App\Support\PermissionAccess;
 use Carbon\Carbon;
@@ -80,7 +81,7 @@ class StudentAttendance extends Page implements HasTable {
             'calendar'        => [],
             'selected_period' => $this->selectedPeriod,
             'period_label'    => $this->periodLabel(),
-            'min_rate'        => 75.0,
+            'min_rate'        => AcademicSettings::minimumAttendance(),
         ];
 
         if (!$student) {
@@ -101,8 +102,8 @@ class StudentAttendance extends Page implements HasTable {
             ->with(['subject', 'lesson'])
             ->get();
 
-        $stats        = $this->computeStats($records, 75.0);
-        $subjectStats = $this->computeSubjectStats($records, 75.0);
+        $stats        = $this->computeStats($records, AcademicSettings::minimumAttendance());
+        $subjectStats = $this->computeSubjectStats($records, AcademicSettings::minimumAttendance());
         $calendar     = $this->buildCalendar($records);
 
         return [
@@ -113,7 +114,7 @@ class StudentAttendance extends Page implements HasTable {
             'calendar'        => $calendar,
             'selected_period' => $this->selectedPeriod,
             'period_label'    => $this->periodLabel(),
-            'min_rate'        => 75.0,
+            'min_rate'        => AcademicSettings::minimumAttendance(),
         ];
     }
 

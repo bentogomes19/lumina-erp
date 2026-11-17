@@ -17,7 +17,7 @@
         $canViewCalendar = \App\Support\PermissionAccess::can('student.calendar.view');
 
         /* Define as cores conforme o percentual. */
-        $freqColor  = fn($r) => $r >= 75 ? '#22c55e' : ($r >= 60 ? '#eab308' : '#ef4444');
+        $freqColor  = fn($r) => ['success' => '#22c55e', 'warning' => '#eab308', 'danger' => '#ef4444'][\App\Support\AcademicSettings::attendanceColor((float) $r)];
         $minimumGrade = app(\App\Services\GradeCalculationService::class)->minimumApproval();
         $gradeColor = fn($v) => $v === null ? 'var(--ms-text-muted)' : ($v >= $minimumGrade ? '#22c55e' : ($v >= 4.0 ? '#eab308' : '#ef4444'));
 
@@ -149,7 +149,7 @@
                         <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-left:4px solid #ef4444;border-radius:0.75rem;padding:0.875rem 1.125rem;display:flex;align-items:center;gap:0.75rem">
                             @svg('fas-triangle-exclamation', '', ['style' => 'width:1.125rem;height:1.125rem;color:#ef4444;flex-shrink:0'])
                             <p style="font-size:0.875rem;color:var(--ms-text-primary);margin:0">
-                                Sua <strong style="color:#ef4444">frequência está abaixo de 75%</strong>. Você pode ser reprovado(a) por falta. Procure a coordenação.
+                                Sua <strong style="color:#ef4444">frequência está abaixo de {{ str_replace(',0', '', number_format(\App\Support\AcademicSettings::minimumAttendance(), 1, ',', '')) }}%</strong>. Você pode ser reprovado(a) por falta. Procure a coordenação.
                             </p>
                         </div>
                     @endif

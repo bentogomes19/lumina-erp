@@ -57,7 +57,7 @@
             <div class="ms-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
                 @php
                     $avgColor  = ($stats['overall_average'] !== null && $stats['overall_average'] >= $minimumGrade) ? '#22c55e' : '#ef4444';
-                    $freqColor = ($stats['attendance_percent'] !== null && $stats['attendance_percent'] >= 75) ? '#22c55e' : '#f97316';
+                    $freqColor = ($stats['attendance_percent'] !== null && $stats['attendance_percent'] >= \App\Support\AcademicSettings::minimumAttendance()) ? '#22c55e' : '#f97316';
                     $statCards = [
                         ['icon' => 'fas-book-open',   'value' => $stats['total_subjects'],                                                                                              'label' => 'Disciplinas',  'color' => 'var(--lumina-primary)'],
                         ['icon' => 'fas-chart-bar',   'value' => $stats['overall_average'] !== null    ? number_format($stats['overall_average'], 1, ',', '.')    . '' : '—',           'label' => 'Média Geral',  'color' => $avgColor],
@@ -197,7 +197,7 @@
                                     {{-- Barra de frequência --}}
                                     @if($subject->attendance_percent !== null)
                                         @php
-                                            $barColor = $subject->attendance_percent >= 75 ? '#22c55e' : ($subject->attendance_percent >= 50 ? '#eab308' : '#ef4444');
+                                            $barColor = $subject->attendance_percent >= \App\Support\AcademicSettings::minimumAttendance() ? '#22c55e' : ($subject->attendance_percent >= 50 ? '#eab308' : '#ef4444');
                                         @endphp
                                         <div style="display:flex;flex-direction:column;gap:0.25rem">
                                             <div
