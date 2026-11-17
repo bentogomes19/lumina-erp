@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages\Auth\Concerns;
 
-use App\Models\User;
+use App\Support\SecuritySettings;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Illuminate\Support\Facades\RateLimiter;
@@ -40,7 +40,7 @@ trait RateLimitsLoginAttempts {
     private function rateLimitIdentity(): void {
         $key = $this->identityRateLimitKey();
 
-        if (RateLimiter::tooManyAttempts($key, User::MAX_LOGIN_ATTEMPTS)) {
+        if (RateLimiter::tooManyAttempts($key, SecuritySettings::maxLoginAttempts())) {
             throw new TooManyRequestsException(
                 static::class,
                 'authenticate',

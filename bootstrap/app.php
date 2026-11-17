@@ -3,6 +3,7 @@
 use App\Console\Commands\DiagnoseDirectPermissions;
 use App\Console\Commands\DiagnoseSchemaIntegrity;
 use App\Console\Commands\DiagnoseTeacherDeletion;
+use App\Http\Middleware\ApplySessionLifetime;
 use App\Providers\AuthServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,5 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         AuthServiceProvider::class,
     ])
-    ->withMiddleware(function (Middleware $middleware): void {})
+    ->withMiddleware(function (Middleware $middleware): void {
+        /* Precisa rodar antes do StartSession dos grupos web e dos painéis. */
+        $middleware->prepend(ApplySessionLifetime::class);
+    })
     ->withExceptions(function (Exceptions $exceptions): void {})->create();

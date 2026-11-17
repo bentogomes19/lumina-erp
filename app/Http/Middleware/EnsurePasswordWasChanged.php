@@ -21,17 +21,22 @@ class EnsurePasswordWasChanged {
         $guard = Filament::auth();
         $user  = $guard->user();
 
-        if (!$user?->force_password_change) {
+        $expired = (bool) $user?->passwordHasExpired();
+
+        if (!$user?->force_password_change && !$expired) {
             return $next($request);
         }
 
-        $email = $user->email;
+        $email   = $user->email;
+        $message = $expired
+            ? 'Sua senha expirou. Defina uma nova senha para continuar acessando o ERP.'
+            : 'Defina uma nova senha para continuar acessando o ERP.';
 
         $guard->logout();
         // Regenera o ID preservando os outros guards independentes do navegador.
         $request->session()->regenerate();
 
         return redirect(Filament::getRequestPasswordResetUrl(['email' => $email]))
-            ->withErrors(['email' => 'Defina uma nova senha para continuar acessando o ERP.']);
+            ->withErrors(['email' => $message]);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\AdministrativeDashboardAccess;
+use App\Support\SecuritySettings;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,9 +30,11 @@ class User extends Authenticatable implements FilamentUser {
     protected string $guard_name = 'web';
 
     /**
-     * Número máximo de tentativas antes do bloqueio automático.
+     * Limite padrão de tentativas antes do bloqueio automático.
+     *
+     * O valor efetivo vem do parâmetro "security.login_attempts" (SecuritySettings).
      */
-    public const MAX_LOGIN_ATTEMPTS = 5;
+    public const MAX_LOGIN_ATTEMPTS = SecuritySettings::DEFAULT_LOGIN_ATTEMPTS;
 
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
@@ -58,6 +61,7 @@ class User extends Authenticatable implements FilamentUser {
         'active',
         'last_login_at',
         'force_password_change',
+        'password_changed_at',
         'login_attempts',
         'locked_at',
         'inactive_reason',
@@ -82,6 +86,7 @@ class User extends Authenticatable implements FilamentUser {
             'birth_date'            => 'date',
             'active'                => 'boolean',
             'last_login_at'         => 'datetime',
+            'password_changed_at'   => 'datetime',
             'force_password_change' => 'boolean',
             'login_attempts'        => 'integer',
             'locked_at'             => 'datetime',
@@ -123,6 +128,23 @@ class User extends Authenticatable implements FilamentUser {
     }
 
     /**
+     * Indica se a senha passou do prazo do parâmetro "security.password_expiration_days".
+     *
+     * Usuários que ainda não definiram a própria senha (sem data registrada) não expiram.
+     *
+     * @return bool
+     */
+    public function passwordHasExpired(): bool {
+        $days = SecuritySettings::passwordExpirationDays();
+
+        if ($days === 0 || is_null($this->password_changed_at)) {
+            return false;
+        }
+
+        return $this->password_changed_at->lte(now()->subDays($days));
+    }
+
+    /**
      * Registra tentativa de login falha e bloqueia se atingir o limite.
      *
      * @return void
@@ -135,10 +157,11 @@ class User extends Authenticatable implements FilamentUser {
                 return;
             }
 
-            $attempts = min($user->login_attempts + 1, self::MAX_LOGIN_ATTEMPTS);
-            $data     = ['login_attempts' => $attempts];
+            $maxAttempts = SecuritySettings::maxLoginAttempts();
+            $attempts    = min($user->login_attempts + 1, $maxAttempts);
+            $data        = ['login_attempts' => $attempts];
 
-            if ($attempts >= self::MAX_LOGIN_ATTEMPTS) {
+            if ($attempts >= $maxAttempts) {
                 $data['locked_at'] = now();
             }
 
