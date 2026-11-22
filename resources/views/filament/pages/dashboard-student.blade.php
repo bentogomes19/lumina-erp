@@ -75,7 +75,7 @@
                     {{-- Identidade --}}
                     <div style="display:flex;align-items:center;gap:1.125rem">
                         @if($student->photo_url)
-                            <img src="{{ $student->photo_url }}" alt="{{ $student->name }}"
+                            <img src="{{ \Illuminate\Support\Str::startsWith($student->photo_url, ['http://', 'https://', '/']) ? $student->photo_url : \Illuminate\Support\Facades\Storage::disk('public')->url($student->photo_url) }}" alt="{{ $student->name }}"
                                  style="width:4rem;height:4rem;border-radius:50%;object-fit:cover;border:2px solid var(--lumina-primary);flex-shrink:0">
                         @else
                             <div class="ms-avatar">{{ $initials }}</div>
@@ -198,7 +198,7 @@
                             'value' => $todayLessons->count(),
                             'label' => 'Aulas Hoje',
                             'color' => 'var(--lumina-primary)',
-                            'sub'   => now()->translatedFormat('l, d/m'),
+                            'sub'   => now()->translatedFormat('l, d/m/Y'),
                         ],
                         [
                             'icon'  => 'fas-clipboard-list',
@@ -233,7 +233,7 @@
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
                         @svg('fas-clock', '', ['style' => 'width:1.125rem;height:1.125rem;color:var(--lumina-primary)'])
                         <h3 style="font-size:1rem;font-weight:700;color:var(--ms-text-primary);margin:0">Agenda de Hoje</h3>
-                        <span style="font-size:0.75rem;color:var(--ms-text-muted);margin-left:auto">{{ now()->translatedFormat('l, d \d\e F') }}</span>
+                        <span style="font-size:0.75rem;color:var(--ms-text-muted);margin-left:auto">{{ now()->translatedFormat('l, d/m/Y') }}</span>
                     </div>
 
                     @if($todayLessons->isEmpty())

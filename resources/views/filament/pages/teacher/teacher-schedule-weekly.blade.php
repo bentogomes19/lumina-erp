@@ -31,7 +31,7 @@
             <div class="ts-week-title">
                 <x-filament::icon icon="fas-calendar-week" />
                 <div>
-                    <strong>Semana de {{ $weekStart->format('d/m') }} a {{ $weekEnd->format('d/m/Y') }}</strong>
+                    <strong>Semana de {{ $weekStart->format('d/m/Y') }} a {{ $weekEnd->format('d/m/Y') }}</strong>
                     <span>{{ $lessons->count() }} aula{{ $lessons->count() === 1 ? '' : 's' }} entre segunda e sexta</span>
                 </div>
             </div>
@@ -56,7 +56,7 @@
                     $dayLessons = $grouped[$day->toDateString()] ?? collect();
                 @endphp
                 <section class="ts-day-column">
-                    <header class="ts-day-header"><strong>{{ ucfirst($day->translatedFormat('l')) }}</strong><span>{{ $day->format('d/m') }}</span></header>
+                    <header class="ts-day-header"><strong>{{ ucfirst($day->translatedFormat('l')) }}</strong><span>{{ $day->format('d/m/Y') }}</span></header>
                     <div class="ts-day-lessons">
                         @forelse($dayLessons as $lesson)
                             @php

@@ -73,7 +73,9 @@ class EnrollmentDocumentsRelationManager extends RelationManager {
                 ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
                 ->maxSize(10240) /* 10MB em KB. */
                 ->nullable()
-                ->storeFileNamesIn('arquivo_nome_original'),
+                ->storeFileNamesIn('arquivo_nome_original')
+                ->downloadable()
+                ->openable(),
 
             Textarea::make('observacoes')
                 ->label('Observações')

@@ -156,7 +156,7 @@ class TeacherProfile extends Page {
         $name = urlencode($teacher?->name ?? auth()->user()?->name ?? 'Professor');
 
         if ($avatarPath) {
-            return Storage::url($avatarPath);
+            return Storage::disk('public')->url($avatarPath);
         }
 
         return "https://ui-avatars.com/api/?name={$name}&background=0ea5e9&color=ffffff";
