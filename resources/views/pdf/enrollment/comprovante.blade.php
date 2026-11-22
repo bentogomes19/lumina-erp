@@ -2,148 +2,213 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    @include('pdf.enrollment.partials.styles')
+    <style>
+        @page { margin: 48px 56px 40px 56px; }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11px;
+            color: #111;
+            line-height: 1.45;
+        }
+
+        /* Cabeçalho institucional */
+        .header { width: 100%; border-collapse: collapse; }
+        .header td { vertical-align: middle; }
+        .header .logo { width: 90px; }
+        .header .logo img { max-width: 80px; max-height: 70px; }
+        .header .institution { text-align: center; font-size: 12px; line-height: 1.5; }
+        .header .institution .name { font-size: 13px; }
+        .header .spacer { width: 90px; }
+
+        .title { text-align: center; margin: 26px 0 0; font-weight: bold; font-size: 12.5px; line-height: 1.5; }
+
+        .intro { margin-top: 40px; text-align: justify; }
+
+        /* Dados em linhas "rótulo: valor" */
+        .data { width: 100%; border-collapse: collapse; margin-top: 34px; }
+        .data td { padding: 4px 0; vertical-align: top; }
+        .data .label { font-weight: bold; white-space: nowrap; padding-right: 10px; }
+
+        .section-title {
+            margin-top: 26px;
+            font-weight: bold;
+            font-size: 11px;
+            border-bottom: 1px solid #111;
+            padding-bottom: 2px;
+        }
+
+        .docs { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 10.5px; }
+        .docs td { padding: 3px 0; border-bottom: 1px dotted #999; }
+        .docs td.status { text-align: right; width: 120px; }
+        .pending-note { margin-top: 6px; font-size: 10px; }
+
+        .paragraph { margin-top: 22px; text-align: justify; }
+
+        .place-date { margin-top: 34px; text-align: right; }
+
+        .signatures { width: 100%; border-collapse: collapse; margin-top: 50px; }
+        .signatures td { width: 50%; text-align: center; padding: 0 20px; font-size: 10.5px; }
+        .signatures .line { border-top: 1px solid #111; padding-top: 4px; }
+
+        .control {
+            margin-top: 34px;
+            border: 1.5px solid #111;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 0.04em;
+        }
+        .control-label { text-align: center; font-size: 9px; margin-top: 3px; color: #333; }
+
+        .footer { margin-top: 26px; text-align: center; font-size: 10.5px; line-height: 1.6; }
+        .footer .strong { font-weight: bold; margin-top: 8px; }
+    </style>
 </head>
 <body>
 @php
     $documentLogo = $systemBranding->documentLogoDataUri();
+    $institution  = $systemBranding->institutionName();
+    $systemName   = $systemBranding->systemName();
+    $schoolYear   = $enrollment->schoolYear?->year ?? $enrollment->class?->schoolYear?->year ?? now()->year;
+    $docTitle     = $isRematricula ? 'Comprovante de Rematrícula' : 'Comprovante de Matrícula';
+    $registeredAt = $enrollment->created_at ?? $generatedAt;
+    $student      = $enrollment->student;
 @endphp
-<div class="page">
 
-    {{-- Cabeçalho --}}
-    <div class="header">
-        <div class="header-top">
-            <div>
-                @if($documentLogo)
-                    <img src="{{ $documentLogo }}" alt="{{ $systemBranding->institutionName() }}" style="height:28px; max-width:130px; object-fit:contain; margin-bottom:4px;">
-                @endif
-                <div class="school-name">{{ $systemBranding->institutionName() }}</div>
-                <div class="school-sub">Sistema de Gestão Escolar</div>
-            </div>
-            <div>
-                <div class="doc-title">{{ $isRematricula ? 'COMPROVANTE DE REMATRÍCULA' : 'COMPROVANTE DE MATRÍCULA' }}</div>
-                <div class="doc-sub">Ano Letivo {{ $enrollment->schoolYear?->year ?? now()->year }}</div>
-            </div>
-        </div>
-    </div>
+{{-- Cabeçalho institucional --}}
+<table class="header">
+    <tr>
+        <td class="logo">
+            @if($documentLogo)
+                <img src="{{ $documentLogo }}" alt="{{ $institution }}">
+            @endif
+        </td>
+        <td class="institution">
+            <div class="name">{{ $institution }}</div>
+            <div>Secretaria Escolar</div>
+            <div>{{ $systemName }}</div>
+        </td>
+        <td class="spacer"></td>
+    </tr>
+</table>
 
-    {{-- Número de matrícula --}}
-    <div style="text-align:center; margin-bottom:16px;">
-        <div style="font-size:8px; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; margin-bottom:4px;">Número de Matrícula</div>
-        <div class="reg-number">{{ $enrollment->registration_number }}</div>
-        @if($isRematricula && $enrollment->previousEnrollment)
-            <div style="font-size:8px; color:#64748b; margin-top:4px;">
-                Renovação da matrícula {{ $enrollment->previousEnrollment->registration_number }}
-            </div>
-        @endif
-    </div>
-
-    {{-- Dados do aluno --}}
-    <div class="info-box">
-        <div class="info-box-title">Dados do Aluno</div>
-        <div class="info-grid">
-            <div class="info-item" style="flex:2">
-                <label>Nome Completo</label>
-                <span>{{ $enrollment->student?->name ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-                <label>CPF</label>
-                <span>{{ $enrollment->student?->cpf ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-                <label>Data de Nascimento</label>
-                <span>{{ $enrollment->student?->birth_date?->format('d/m/Y') ?? '—' }}</span>
-            </div>
-        </div>
-    </div>
-
-    {{-- Dados acadêmicos --}}
-    <div class="info-box">
-        <div class="info-box-title">Dados Acadêmicos</div>
-        <div class="info-grid">
-            <div class="info-item">
-                <label>Turma</label>
-                <span>{{ $enrollment->class?->name ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-                <label>Série / Etapa</label>
-                <span>{{ $enrollment->class?->gradeLevel?->name ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-                <label>Turno</label>
-                <span>{{ $enrollment->class?->shift?->label() ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-                <label>Ano Letivo</label>
-                <span>{{ $enrollment->schoolYear?->year ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-                <label>Nº de Chamada</label>
-                <span>{{ $enrollment->roll_number ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-                <label>Data da Matrícula</label>
-                <span>{{ $enrollment->enrollment_date?->format('d/m/Y') ?? '—' }}</span>
-            </div>
-            <div class="info-item">
-                <label>Status</label>
-                <span>{{ $enrollment->status?->label() ?? '—' }}</span>
-            </div>
-        </div>
-    </div>
-
-    {{-- Checklist de documentos --}}
-    @if($enrollment->documents->isNotEmpty())
-    <div class="doc-list">
-        <div class="doc-list-title">Checklist de Documentos</div>
-        @foreach($enrollment->documents as $doc)
-            <div class="doc-item">
-                <span>{{ \App\Models\EnrollmentDocument::TIPOS[$doc->tipo] ?? $doc->tipo }}</span>
-                <span class="badge b-{{ $doc->status }}">
-                    {{ \App\Models\EnrollmentDocument::STATUS_OPTIONS[$doc->status] ?? $doc->status }}
-                </span>
-            </div>
-        @endforeach
-        @php $pendentes = $enrollment->documents->where('status', 'pendente')->count(); @endphp
-        @if($pendentes > 0)
-            <div style="margin-top:6px; font-size:8.5px; color:#b45309;">
-                ⚠ {{ $pendentes }} documento(s) pendente(s). A matrícula está ativa, mas os documentos devem ser regularizados.
-            </div>
-        @endif
-    </div>
-    @endif
-
-    {{-- Declaração --}}
-    <div class="decl-box">
-        Declaramos, para os devidos fins, que o(a) aluno(a) identificado(a) acima está
-        {{ $isRematricula ? 'regularmente rematriculado(a)' : 'regularmente matriculado(a)' }}
-        nesta instituição de ensino para o ano letivo indicado, conforme dados registrados no
-        Sistema de Gestão Escolar.
-    </div>
-
-    {{-- Assinaturas --}}
-    <div class="signatures">
-        <div class="sig-line">
-            <div class="line"></div>
-            <div class="label">Secretaria Escolar</div>
-        </div>
-        <div class="sig-line">
-            <div class="line"></div>
-            <div class="label">Responsável pelo Aluno</div>
-        </div>
-    </div>
-
-    {{-- Rodapé --}}
-    <div class="seal">
-        Documento gerado eletronicamente pelo Sistema de Gestão Escolar.<br>
-        Operador: <strong>{{ $operator?->name ?? 'Sistema' }}</strong>
-    </div>
-    <div class="footer">
-        <span>Emitido em: {{ $generatedAt->format('d/m/Y \à\s H:i:s') }} · {{ app(\App\Support\SystemBranding::class)->systemName() }}</span>
-        <span>Matrícula: {{ $enrollment->registration_number }}</span>
-        <span>{{ $systemBranding->institutionName() }}</span>
-    </div>
-
+<div class="title">
+    {{ $docTitle }} - Ano Letivo: {{ $schoolYear }}<br>
+    {{ $systemName }}
 </div>
+
+{{-- Registro --}}
+<div class="intro">
+    O {{ $systemName }} registrou em {{ $registeredAt->format('d/m/Y') }} às {{ $registeredAt->format('H:i:s') }}
+    a {{ $isRematricula ? 'rematrícula' : 'matrícula' }} do(a) aluno(a) abaixo identificado(a), contendo as
+    informações necessárias ao cadastro escolar desta instituição, sob a responsabilidade de:
+</div>
+
+{{-- Dados do aluno e da matrícula --}}
+<table class="data">
+    <tr>
+        <td class="label">Aluno(a):</td>
+        <td colspan="3">{{ $student?->name ?? '—' }}</td>
+    </tr>
+    <tr>
+        <td class="label">Nº de Matrícula:</td>
+        <td>{{ $enrollment->registration_number }}</td>
+        <td class="label">CPF:</td>
+        <td>{{ $student?->cpf ?: '—' }}</td>
+    </tr>
+    <tr>
+        <td class="label">Data de Nascimento:</td>
+        <td>{{ $student?->birth_date?->format('d/m/Y') ?? '—' }}</td>
+        <td class="label">Data da Matrícula:</td>
+        <td>{{ $enrollment->enrollment_date?->format('d/m/Y') ?? '—' }}</td>
+    </tr>
+    <tr>
+        <td class="label">Série / Etapa:</td>
+        <td>{{ $enrollment->class?->gradeLevel?->name ?? '—' }}</td>
+        <td class="label">Turma:</td>
+        <td>{{ $enrollment->class?->name ?? '—' }}</td>
+    </tr>
+    <tr>
+        <td class="label">Turno:</td>
+        <td>{{ $enrollment->class?->shift?->label() ?? '—' }}</td>
+        <td class="label">Nº de Chamada:</td>
+        <td>{{ $enrollment->roll_number ?? '—' }}</td>
+    </tr>
+    <tr>
+        <td class="label">Situação:</td>
+        <td>{{ $enrollment->status?->label() ?? '—' }}</td>
+        <td class="label">Ano Letivo:</td>
+        <td>{{ $schoolYear }}</td>
+    </tr>
+    @if($isRematricula && $enrollment->previousEnrollment)
+        <tr>
+            <td class="label">Matrícula anterior:</td>
+            <td colspan="3">
+                {{ $enrollment->previousEnrollment->registration_number }}
+                @if($enrollment->previousEnrollment->class)
+                    ({{ $enrollment->previousEnrollment->class->name }})
+                @endif
+            </td>
+        </tr>
+    @endif
+</table>
+
+{{-- Documentos entregues --}}
+@if($enrollment->documents->isNotEmpty())
+    <div class="section-title">Documentação</div>
+    <table class="docs">
+        @foreach($enrollment->documents as $doc)
+            <tr>
+                <td>{{ \App\Models\EnrollmentDocument::TIPOS[$doc->tipo] ?? $doc->tipo }}</td>
+                <td class="status">{{ \App\Models\EnrollmentDocument::STATUS_OPTIONS[$doc->status] ?? $doc->status }}</td>
+            </tr>
+        @endforeach
+    </table>
+    @php $pendentes = $enrollment->documents->where('status', 'pendente')->count(); @endphp
+    @if($pendentes > 0)
+        <div class="pending-note">
+            Há {{ $pendentes }} documento(s) pendente(s), que devem ser regularizados junto à Secretaria Escolar.
+        </div>
+    @endif
+@endif
+
+{{-- Declarações --}}
+<div class="paragraph">
+    Declaramos, para os devidos fins, que o(a) aluno(a) acima identificado(a) encontra-se
+    {{ $isRematricula ? 'regularmente rematriculado(a)' : 'regularmente matriculado(a)' }} nesta instituição de
+    ensino para o ano letivo de {{ $schoolYear }}, conforme dados registrados no {{ $systemName }}.
+</div>
+
+<div class="paragraph">
+    O responsável declara, sob as penas da lei, a veracidade das informações prestadas no ato da
+    {{ $isRematricula ? 'rematrícula' : 'matrícula' }}, comprometendo-se a comunicar à Secretaria Escolar
+    qualquer alteração cadastral.
+</div>
+
+<div class="place-date">
+    {{ $institution }}, {{ $generatedAt->format('d/m/Y H:i:s') }}
+</div>
+
+{{-- Assinaturas --}}
+<table class="signatures">
+    <tr>
+        <td><div class="line">Secretaria Escolar</div></td>
+        <td><div class="line">Responsável pelo(a) Aluno(a)</div></td>
+    </tr>
+</table>
+
+{{-- Código de controle --}}
+<div class="control">{{ $controlCode }}</div>
+<div class="control-label">Código de controle do comprovante</div>
+
+{{-- Rodapé --}}
+<div class="footer">
+    {{ $institution }} · Secretaria Escolar<br>
+    Documento gerado eletronicamente pelo {{ $systemName }} · Operador: {{ $operator?->name ?? 'Sistema' }}<br>
+    Recomenda-se a impressão e a guarda deste comprovante.
+</div>
+
 </body>
 </html>
