@@ -38,6 +38,16 @@ return [
             'report' => false,
         ],
 
+        /* Arquivos sensíveis (documentos de matrícula) | fora do diretório público. */
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'visibility' => 'private',
+            'serve' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

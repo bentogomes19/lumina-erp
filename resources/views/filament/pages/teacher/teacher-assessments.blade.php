@@ -205,7 +205,7 @@
             </div>
             <div class="teacher-assessments-card teacher-assessments-stat">
                 <small>Próxima</small>
-                <strong>{{ $stats['next']?->scheduled_at?->format('d/m') ?? '—' }}</strong>
+                <strong>{{ $stats['next']?->scheduled_at?->format('d/m/Y') ?? '—' }}</strong>
                 <span>{{ $stats['next']?->title ?? 'Sem próxima avaliação' }}</span>
             </div>
         </div>

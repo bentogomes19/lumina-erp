@@ -11,7 +11,10 @@ use App\Notifications\PasswordReset as PasswordResetNotification;
 use App\Support\SecuritySettings;
 use App\Support\SystemBranding;
 use Filament\Auth\Notifications\ResetPassword as FilamentPasswordResetNotification;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Schemas\Schema;
 use Filament\Support\Facades\FilamentView;
+use Filament\Tables\Table;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\PasswordReset;
@@ -40,6 +43,8 @@ class AppServiceProvider extends ServiceProvider {
 
         /* Regra padrão das telas de definição de senha (parâmetro "security.password_min_length"). */
         PasswordRule::defaults(fn (): PasswordRule => PasswordRule::min(SecuritySettings::passwordMinLength()));
+
+        $this->configureDateFormats();
 
         FilamentView::registerRenderHook(
             PanelsRenderHook::HEAD_START,
@@ -105,5 +110,30 @@ class AppServiceProvider extends ServiceProvider {
         });
 
         Event::listen(EnrollmentStatusChanged::class, RecordEnrollmentStatusChange::class);
+    }
+
+    /**
+     * Padroniza a exibição de datas no formato brasileiro (dd/mm/aaaa) em todo o sistema.
+     *
+     * Colunas e entradas que chamam ->date() / ->dateTime() sem formato explícito herdam o padrão,
+     * e os seletores de data deixam de depender do idioma do navegador.
+     *
+     * @return void
+     */
+    private function configureDateFormats(): void {
+        Table::configureUsing(fn (Table $table) => $table
+            ->defaultDateDisplayFormat('d/m/Y')
+            ->defaultDateTimeDisplayFormat('d/m/Y H:i'));
+
+        Schema::configureUsing(fn (Schema $schema) => $schema
+            ->defaultDateDisplayFormat('d/m/Y')
+            ->defaultDateTimeDisplayFormat('d/m/Y H:i'));
+
+        /* Vale para DatePicker também (subclasse); o seletor nativo mostraria o formato do navegador. */
+        DateTimePicker::configureUsing(fn (DateTimePicker $picker) => $picker
+            ->native(false)
+            ->defaultDateDisplayFormat('d/m/Y')
+            ->defaultDateTimeDisplayFormat('d/m/Y H:i')
+            ->defaultDateTimeWithSecondsDisplayFormat('d/m/Y H:i:s'));
     }
 }

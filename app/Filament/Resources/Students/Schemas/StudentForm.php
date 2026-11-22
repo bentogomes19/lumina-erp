@@ -86,7 +86,9 @@ class StudentForm {
                         FileUpload::make('photo_url')
                             ->label('Foto')
                             ->image()
+                            ->disk('public')
                             ->directory('students/photos')
+                            ->visibility('public')
                             ->imageEditor()
                             ->downloadable(),
                     ])

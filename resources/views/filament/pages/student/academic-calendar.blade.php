@@ -16,7 +16,7 @@
 
         $weekStartCrb = $data['weekStart'];
         $weekEndCrb   = $weekStartCrb->copy()->addDays(6);
-        $weekLabel    = $weekStartCrb->locale('pt_BR')->translatedFormat('d M') . ' – ' . $weekEndCrb->locale('pt_BR')->translatedFormat('d M Y');
+        $weekLabel    = $weekStartCrb->format('d/m/Y') . ' – ' . $weekEndCrb->format('d/m/Y');
 
         $dowNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -319,7 +319,7 @@
                                 @php
                                     $dateCrb   = \Carbon\Carbon::parse($dateStr);
                                     $isToday   = $dateStr === $today;
-                                    $dateLabel = ucfirst($dateCrb->locale('pt_BR')->translatedFormat('l, d \d\e F'));
+                                    $dateLabel = ucfirst($dateCrb->locale('pt_BR')->translatedFormat('l, d/m/Y'));
                                 @endphp
                                 <div class="ac-list-date-group">
                                     <div class="ac-list-date-label">
@@ -429,7 +429,7 @@
                                 </p>
                             @endif
                             <p style="font-size:0.6875rem;color:var(--ac-text-secondary);margin:0.25rem 0 0">
-                                {{ ucfirst(\Carbon\Carbon::parse($ev['date'])->locale('pt_BR')->translatedFormat('d \d\e M')) }}
+                                {{ \Carbon\Carbon::parse($ev['date'])->format('d/m/Y') }}
                                 &middot;
                                 <span style="font-weight:600;color:{{ $urgencyColor }}">{{ $daysLabel }}</span>
                             </p>

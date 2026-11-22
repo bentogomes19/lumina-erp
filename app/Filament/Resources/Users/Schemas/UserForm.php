@@ -164,6 +164,7 @@ class UserForm {
                         ->image()
                         ->imageEditor()
                         ->circleCropper()
+                        ->disk('public')
                         ->directory('avatars')
                         ->visibility('public')
                         ->columnSpan(2),

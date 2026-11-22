@@ -273,7 +273,7 @@
                                             elseif ($isWeekend) $classes .= ' weekend';
                                             if ($isToday) $classes .= ' today';
                                         @endphp
-                                        <div class="{{ $classes }}" title="{{ $day['date'] }}{{ $day['count'] > 0 ? ' · '.$day['count'].' registro(s)' : '' }}">
+                                        <div class="{{ $classes }}" title="{{ \Carbon\Carbon::parse($day['date'])->format('d/m/Y') }}{{ $day['count'] > 0 ? ' · '.$day['count'].' registro(s)' : '' }}">
                                             {{ $day['day'] }}
                                         </div>
                                     @endforeach
