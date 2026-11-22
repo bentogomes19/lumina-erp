@@ -69,6 +69,13 @@ class EnrollmentPdfController extends Controller {
 
         $isRematricula = (bool) $enr->previous_enrollment_id;
 
+        /* Código de controle estável por matrícula: identifica o comprovante sem expor dados internos. */
+        $controlCode = substr(hash_hmac('sha256', implode('|', [
+            $enr->id,
+            $enr->registration_number,
+            $enr->created_at?->toIso8601String(),
+        ]), (string) config('app.key')), 0, 32);
+
         return $this->pdf(
             view: 'pdf.enrollment.comprovante',
             data: [
@@ -76,6 +83,7 @@ class EnrollmentPdfController extends Controller {
                 'isRematricula' => $isRematricula,
                 'generatedAt'   => now(),
                 'operator'      => auth()->user(),
+                'controlCode'   => $controlCode,
             ],
             filename: "comprovante-matricula-{$enr->registration_number}.pdf",
         );
