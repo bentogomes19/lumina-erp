@@ -22,6 +22,9 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_mysql mbstring zip gd intl bcmath
 
+# Limites de upload (padrão da imagem é 2M, menor que o aceito pelos formulários)
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-lumina-uploads.ini
+
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
