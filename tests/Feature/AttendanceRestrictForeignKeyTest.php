@@ -31,7 +31,7 @@ class AttendanceRestrictForeignKeyTest extends TestCase
 
     public function test_school_class_with_attendance_cannot_be_force_deleted(): void
     {
-        $schoolClass = SchoolClass::factory()->create();
+        $schoolClass = SchoolClass::factory()->create(['status' => 'closed']);
 
         Attendance::create([
             'student_id' => Student::factory()->create()->getKey(),

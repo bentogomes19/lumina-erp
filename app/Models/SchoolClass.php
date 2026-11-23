@@ -50,7 +50,20 @@ class SchoolClass extends BaseModel {
         'type'   => ClassType::class,
     ];
 
+    /**
+     * Mensagem exibida quando alguém tenta excluir uma turma aberta.
+     */
+    public const DELETE_OPEN_MESSAGE = 'Turma aberta não pode ser excluída. Altere o status para Fechada ou Arquivada antes de excluir.';
+
     protected static function booted(): void {
+        /*
+         * Turma aberta não pode ser excluída: primeiro ela precisa ser fechada ou arquivada.
+         * Uma turma já excluída (na lixeira) continua podendo ser excluída definitivamente.
+         */
+        static::deleting(function (self $schoolClass): bool {
+            return !($schoolClass->isOpen() && !$schoolClass->trashed());
+        });
+
         static::creating(function (self $schoolClass): void {
             $schoolClass->fillUuidIfMissing();
 
@@ -60,6 +73,17 @@ class SchoolClass extends BaseModel {
                 $schoolClass->code = $code;
             }
         });
+    }
+
+    /**
+     * Indica se a turma está com status Aberta.
+     *
+     * @return bool
+     */
+    public function isOpen(): bool {
+        $status = $this->status instanceof ClassStatus ? $this->status : ClassStatus::tryFrom((string) $this->status);
+
+        return $status === ClassStatus::OPEN;
     }
 
     /**

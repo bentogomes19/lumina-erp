@@ -203,7 +203,7 @@ class DeletionImpactWarningTest extends TestCase
                 'code' => sprintf('TST-%04d', ++$this->subjectSequence),
                 'normalized_code' => sprintf('TST%04d', $this->subjectSequence),
             ]),
-            'class' => SchoolClass::factory()->create(['name' => $name]),
+            'class' => SchoolClass::factory()->create(['name' => $name, 'status' => 'closed']),
         };
     }
 

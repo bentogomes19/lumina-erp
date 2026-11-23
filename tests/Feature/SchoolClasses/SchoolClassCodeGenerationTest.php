@@ -54,7 +54,7 @@ class SchoolClassCodeGenerationTest extends TestCase {
         $this->classFormat('TUR-{year}-{sequence}');
         $year = SchoolYear::factory()->forYear(2026)->create();
 
-        $this->createClass(['school_year_id' => $year->id])->delete();
+        $this->createClass(['school_year_id' => $year->id, 'status' => 'closed'])->delete();
         $next = $this->createClass(['school_year_id' => $year->id]);
 
         $this->assertSame('TUR-2026-02', $next->code);

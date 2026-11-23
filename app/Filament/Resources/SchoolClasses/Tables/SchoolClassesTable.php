@@ -312,6 +312,11 @@ class SchoolClassesTable
                             'Atenção: turmas com vínculos ativos',
                             'turma',
                             'turmas',
+                        )
+                        ->blockDeletionWhen(
+                            fn (SchoolClass $schoolClass): bool => $schoolClass->isOpen(),
+                            'Exclusão bloqueada: turma aberta',
+                            SchoolClass::DELETE_OPEN_MESSAGE,
                         ),
                     GuardedForceDeleteBulkAction::make(),
                     RestoreBulkAction::make()

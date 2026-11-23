@@ -131,6 +131,7 @@ class DeletionGuardForceDeleteBulkActionTest extends TestCase
             'class' => SchoolClass::factory()->create([
                 'name' => $name,
                 'code' => "BULK-TURMA-{$index}",
+                'status' => 'closed',
             ]),
         };
     }

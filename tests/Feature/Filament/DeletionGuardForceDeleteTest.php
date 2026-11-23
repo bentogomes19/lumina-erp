@@ -110,7 +110,7 @@ class DeletionGuardForceDeleteTest extends TestCase
             'teacher' => Teacher::factory()->create(),
             'student' => Student::factory()->create(),
             'subject' => Subject::factory()->create(),
-            'class' => SchoolClass::factory()->create(),
+            'class' => SchoolClass::factory()->create(['status' => 'closed']),
         };
         $record->delete();
 
