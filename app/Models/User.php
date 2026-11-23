@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Support\AdministrativeDashboardAccess;
 use App\Support\SecuritySettings;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -12,11 +13,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser {
+class User extends Authenticatable implements FilamentUser, HasAvatar {
 
     use HasFactory;
     use HasRoles;
@@ -198,6 +200,25 @@ class User extends Authenticatable implements FilamentUser {
             'actor_user_id'  => auth()->id(),
             'ip'             => request()->ip(),
         ]);
+    }
+
+    /**
+     * URL da foto de perfil enviada pelo usuário, ou null quando não houver.
+     *
+     * @return string|null
+     */
+    public function avatarUrl(): ?string {
+        return filled($this->avatar) ? Storage::disk('public')->url($this->avatar) : null;
+    }
+
+    /**
+     * Foto exibida pelo Filament no menu do usuário, no topo dos painéis.
+     * Sem foto, o Filament mostra as iniciais.
+     *
+     * @return string|null
+     */
+    public function getFilamentAvatarUrl(): ?string {
+        return $this->avatarUrl();
     }
 
     /**
