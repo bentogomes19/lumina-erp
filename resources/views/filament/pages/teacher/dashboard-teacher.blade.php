@@ -14,6 +14,9 @@
             ->take(2)
             ->map(fn ($word) => strtoupper($word[0]))
             ->implode('');
+
+        /* Foto enviada em Meu Perfil; sem foto, mostra as iniciais. */
+        $avatarUrl = ($teacher?->user ?? auth()->user())?->avatarUrl();
     @endphp
 
     <style>
@@ -68,6 +71,13 @@
             font-weight: 800;
             box-shadow: 0 0 0 4px var(--lumina-primary-soft);
             flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .teacher-dashboard-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .teacher-dashboard-identity h2 {
@@ -354,7 +364,13 @@
                 <div class="teacher-dashboard-accent"></div>
 
                 <div class="teacher-dashboard-identity">
-                    <div class="teacher-dashboard-avatar">{{ $initials }}</div>
+                    <div class="teacher-dashboard-avatar">
+                        @if($avatarUrl)
+                            <img src="{{ $avatarUrl }}" alt="Foto de {{ $teacher->name }}">
+                        @else
+                            {{ $initials }}
+                        @endif
+                    </div>
                     <div>
                         <h2>{{ $teacher->name }}</h2>
                         <p>
