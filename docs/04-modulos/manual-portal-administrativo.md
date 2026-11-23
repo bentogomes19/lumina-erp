@@ -96,6 +96,8 @@ Ao editar uma turma, as abas **Alunos matriculados** e **Disciplinas da Turma** 
 
 <span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span> **Capacidade máxima** limita as matrículas que ocupam vaga. Deixe vazio para turma sem limite; o sistema recomenda de 25 a 40 alunos.
 
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span> **Turma aberta não pode ser excluída.** Altere o status para **Fechada** ou **Arquivada** antes de excluir; na exclusão em massa, uma turma aberta na seleção bloqueia a ação inteira. A turma excluída continua no histórico e o mesmo nome pode ser usado em uma turma nova.
+
 ### Alunos
 
 Cadastro dos estudantes, com matrícula, idade, turma atual, contatos, status e situação de **Onboarding** (sem usuário, sem matrícula, completo ou inconsistente).

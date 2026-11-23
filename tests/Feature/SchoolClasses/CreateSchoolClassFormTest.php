@@ -96,6 +96,7 @@ class CreateSchoolClassFormTest extends TestCase {
      */
     public function test_name_of_deleted_class_can_be_reused(): void {
         $deleted = $this->existingClass('1 ANO B');
+        $deleted->update(['status' => 'closed']);
         $deleted->delete();
 
         Livewire::test(CreateSchoolClass::class)
@@ -114,8 +115,8 @@ class CreateSchoolClassFormTest extends TestCase {
      * @return void
      */
     public function test_name_deleted_several_times_can_be_reused(): void {
-        $this->existingClass('1 ANO B')->delete();
-        $this->existingClass('1 ANO B')->delete();
+        tap($this->existingClass('1 ANO B'))->update(['status' => 'closed'])->delete();
+        tap($this->existingClass('1 ANO B'))->update(['status' => 'closed'])->delete();
 
         Livewire::test(CreateSchoolClass::class)
             ->fillForm($this->formData())
@@ -132,6 +133,7 @@ class CreateSchoolClassFormTest extends TestCase {
      */
     public function test_active_duplicate_is_detected_before_restoring(): void {
         $deleted = $this->existingClass('1 ANO B');
+        $deleted->update(['status' => 'closed']);
         $deleted->delete();
 
         $this->assertFalse($deleted->fresh()->hasActiveDuplicate());

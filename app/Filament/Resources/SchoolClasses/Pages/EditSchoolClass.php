@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SchoolClasses\Pages;
 
 use App\Filament\Resources\SchoolClasses\SchoolClassResource;
+use App\Models\SchoolClass;
 use App\Services\Domain\DeletionGuard;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -22,7 +23,17 @@ class EditSchoolClass extends EditRecord
     {
         return [
             DeleteAction::make()
-                ->before(function (Model $record): void {
+                ->before(function (DeleteAction $action, Model $record): void {
+                    if ($record instanceof SchoolClass && $record->isOpen()) {
+                        Notification::make()
+                            ->title('Exclusão bloqueada: turma aberta')
+                            ->body(SchoolClass::DELETE_OPEN_MESSAGE)
+                            ->danger()
+                            ->send();
+
+                        $action->cancel();
+                    }
+
                     $blockingLinks = app(DeletionGuard::class)->blockingLinks($record);
 
                     if ($blockingLinks->isEmpty()) {

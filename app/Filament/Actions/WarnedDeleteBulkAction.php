@@ -3,6 +3,7 @@
 namespace App\Filament\Actions;
 
 use App\Services\Domain\DeletionGuard;
+use Closure;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
@@ -16,11 +17,19 @@ class WarnedDeleteBulkAction extends DeleteBulkAction
 
     private string $pluralRecordLabel = 'registros';
 
+    private ?Closure $blockCondition = null;
+
+    private string $blockTitle = 'Exclusão bloqueada';
+
+    private string $blockReason = '';
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->before(function (Collection $records): void {
+            $this->cancelIfBlocked($records);
+
             $guard = app(DeletionGuard::class);
             $linkedRecords = collect();
             $totalLinks = 0;
@@ -77,6 +86,41 @@ class WarnedDeleteBulkAction extends DeleteBulkAction
         $this->pluralRecordLabel = $pluralRecordLabel;
 
         return $this;
+    }
+
+    /**
+     * Impede a exclusão em massa quando algum registro selecionado atende à condição.
+     *
+     * @param Closure(Model): bool $condition
+     */
+    public function blockDeletionWhen(Closure $condition, string $title, string $reason): static
+    {
+        $this->blockCondition = $condition;
+        $this->blockTitle = $title;
+        $this->blockReason = $reason;
+
+        return $this;
+    }
+
+    private function cancelIfBlocked(Collection $records): void
+    {
+        if ($this->blockCondition === null) {
+            return;
+        }
+
+        $blocked = $records->filter(fn (Model $record): bool => (bool) ($this->blockCondition)($record));
+
+        if ($blocked->isEmpty()) {
+            return;
+        }
+
+        Notification::make()
+            ->title($this->blockTitle)
+            ->body($this->blockReason."\n\n".$blocked->map(fn (Model $record): string => '• '.$this->recordLabel($record))->implode("\n"))
+            ->danger()
+            ->send();
+
+        $this->cancel();
     }
 
     /** @param Collection<int, string> $links */
