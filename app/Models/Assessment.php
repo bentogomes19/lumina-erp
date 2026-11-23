@@ -2,10 +2,38 @@
 
 namespace App\Models;
 
+use App\Enums\AssessmentType;
+use App\Enums\Term;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Assessment extends BaseModel {
+
+    /**
+     * Indica se a avaliação é uma recuperação (o cadastro antigo também usava "recuperacao").
+     *
+     * @return bool
+     */
+    public function isRecovery(): bool {
+        return in_array((string) $this->assessment_type, [AssessmentType::RECOVERY->value, 'recuperacao'], true);
+    }
+
+    /**
+     * Bimestre em que as notas desta avaliação são lançadas: o período do ano letivo
+     * que está com o lançamento de notas aberto (1º bimestre se nenhum estiver).
+     *
+     * @return string
+     */
+    public function gradeTerm(): string {
+        $term = $this->schoolYear?->currentTerm();
+
+        return match ((int) $term?->sequence) {
+            2       => Term::B2->value,
+            3       => Term::B3->value,
+            4       => Term::B4->value,
+            default => Term::B1->value,
+        };
+    }
 
     /**
      * Campos que podem ser preenchidos em massa pela aplicação.
