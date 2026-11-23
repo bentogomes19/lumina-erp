@@ -87,11 +87,15 @@
 
         <section class="tg-card" aria-labelledby="tg-roster-title">
             <div class="tg-head">
-                <div><h3 id="tg-roster-title">Notas dos alunos</h3><p>Média da escola: {{ $minimumLabel }}. As cores indicam o desempenho parcial em relação a essa referência.</p></div>
+                <div><h3 id="tg-roster-title">Notas dos alunos</h3><p>Média da escola: {{ $minimumLabel }}. As cores indicam o desempenho parcial em relação a essa referência.</p>@if($data['isRecovery'] ?? false)<p><strong>Recuperação:</strong> aparecem só os alunos com média abaixo de {{ $minimumLabel }} nesta disciplina e neste bimestre, considerando as notas já publicadas.</p>@endif</div>
                 <span class="tg-count">{{ $data['summary']['filled'] }} de {{ $data['summary']['total'] }} notas preenchidas</span>
             </div>
             @if($students->isEmpty())
-                <div class="tg-empty"><strong>Nenhum aluno para esta seleção.</strong> Confira a turma, a disciplina e a avaliação do ano letivo vigente.</div>
+                @if($data['isRecovery'] ?? false)
+                    <div class="tg-empty"><strong>Nenhum aluno precisa desta recuperação.</strong> Todos os alunos estão com média igual ou acima de {{ $minimumLabel }} nesta disciplina e neste bimestre, ou ainda não há notas publicadas.</div>
+                @else
+                    <div class="tg-empty"><strong>Nenhum aluno para esta seleção.</strong> Confira a turma, a disciplina e a avaliação do ano letivo vigente.</div>
+                @endif
             @else
                 <div class="tg-table-head" aria-hidden="true"><span>Nº</span><span>Aluno</span><span>Nota</span><span>Observação</span><span>Situação</span></div>
                 <div class="tg-rows">

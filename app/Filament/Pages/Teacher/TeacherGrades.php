@@ -161,6 +161,7 @@ class TeacherGrades extends Page {
                 'contextError' => !$teacher ? 'Nenhum professor vinculado ao usuário atual.' : 'Você não possui turmas ou disciplinas atribuídas.',
                 'saveSummary'  => $this->saveSummary,
                 'minimumGrade' => $minimumGrade,
+                'isRecovery'   => false,
             ];
         }
 
@@ -221,6 +222,7 @@ class TeacherGrades extends Page {
             'contextError'     => $contextError,
             'saveSummary'      => $this->saveSummary,
             'minimumGrade'     => $minimumGrade,
+            'isRecovery'       => $context ? $context['assessment']->isRecovery() : false,
         ];
     }
 
@@ -295,7 +297,9 @@ class TeacherGrades extends Page {
 
         if ($students->isEmpty()) {
             throw ValidationException::withMessages([
-                'assessment' => 'Nenhum aluno matriculado encontrado para a avaliação selecionada.',
+                'assessment' => $assessment->isRecovery()
+                    ? 'Nenhum aluno está abaixo da média neste bimestre para fazer a recuperação.'
+                    : 'Nenhum aluno matriculado encontrado para a avaliação selecionada.',
             ]);
         }
 
@@ -625,19 +629,7 @@ class TeacherGrades extends Page {
      * @return string
      */
     private function resolveTerm(Assessment $assessment): string {
-        $term = $assessment->schoolYear?->currentTerm();
-
-        if (!$term) {
-            return Term::B1->value;
-        }
-
-        return match ((int) $term->sequence) {
-            1       => Term::B1->value,
-            2       => Term::B2->value,
-            3       => Term::B3->value,
-            4       => Term::B4->value,
-            default => Term::B1->value,
-        };
+        return $assessment->gradeTerm();
     }
 
     /**

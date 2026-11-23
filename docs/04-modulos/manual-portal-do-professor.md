@@ -110,6 +110,8 @@ Lista as avaliações do professor no ano letivo escolhido, com data, título, t
 > [!IMPORTANT]
 > O aluno só vê notas **publicadas**. A publicação encerra a edição daquela avaliação, então confira tudo antes de publicar.
 
+<span style="color: #c0392b;">**[ 📢 REGRA DE NEGÓCIO ]**</span> **Recuperação.** Em uma avaliação do tipo **Recuperação**, a lista mostra só os alunos com média abaixo da média da escola naquela disciplina e bimestre, considerando as notas já publicadas; para publicar, basta lançar a nota deles. No boletim, a média do bimestre passa a ser a maior entre a média original e a nota da recuperação.
+
 ## 🙋 Lançar Frequência
 
 <span style="color: #009432;">**[ 🖼️ VISUALIZAÇÃO ]**</span>
