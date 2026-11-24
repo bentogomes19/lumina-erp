@@ -10,6 +10,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 
 class SubjectsRelationManager extends RelationManager {
@@ -46,7 +47,9 @@ class SubjectsRelationManager extends RelationManager {
 
                 TextColumn::make('pivot.hours_weekly')
                     ->label('Aulas/Semana')
-                    ->sortable(),
+                    /* "pivot.hours_weekly" não existe no SQL; ordena pela coluna real da tabela pivot. */
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query
+                        ->orderBy('grade_level_subject.hours_weekly', $direction)),
             ])
             ->headerActions([
                 Action::make('addSubjects')

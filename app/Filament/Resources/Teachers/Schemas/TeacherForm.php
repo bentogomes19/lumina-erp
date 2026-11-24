@@ -31,7 +31,8 @@ class TeacherForm {
                     TextInput::make('employee_number')->label('Matrícula')->maxLength(20)->unique(ignoreRecord: true),
                     TextInput::make('name')->label('Nome')->required()->maxLength(120),
                     TextInput::make('cpf')->label('CPF')->mask('999.999.999-99')->unique(ignoreRecord: true)->nullable(),
-                    DatePicker::make('birth_date')->label('Data de Nascimento'),
+                    /* Seletor nativo: permite digitar a data em vez de navegar anos no calendário. */
+                    DatePicker::make('birth_date')->label('Data de Nascimento')->native(),
                     Select::make('gender')->label('Gênero')->options(['M' => 'Masculino', 'F' => 'Feminino', 'O' => 'Outro'])->nullable(),
                 ])
                     ->columns(3)

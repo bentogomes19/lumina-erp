@@ -60,7 +60,9 @@ class TeacherOnboardingWizardSchema {
                                 ->nullable(),
 
                             DatePicker::make('birth_date')
-                                ->label('Data de nascimento'),
+                                ->label('Data de nascimento')
+                                /* Seletor nativo: permite digitar a data em vez de navegar anos no calendário. */
+                                ->native(),
 
                             Select::make('gender')
                                 ->label('Gênero')

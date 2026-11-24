@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\SchoolClass;
 use App\Models\TeacherAssignment;
+use App\Support\PermissionAccess;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;

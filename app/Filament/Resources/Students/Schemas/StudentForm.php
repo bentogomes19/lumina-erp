@@ -56,6 +56,8 @@ class StudentForm {
 
                         DatePicker::make('birth_date')
                             ->label('Nascimento')
+                            /* Seletor nativo: permite digitar a data em vez de navegar anos no calendário. */
+                            ->native()
                             ->columnSpan(2),
 
                         Select::make('gender')
