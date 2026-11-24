@@ -20,6 +20,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Database\Eloquent\Builder;
 
 class StudentsRelationManager extends RelationManager {
 
@@ -36,8 +37,17 @@ class StudentsRelationManager extends RelationManager {
     public function table(Table $table): Table {
         return $table
             ->columns([
-                TextColumn::make('registration_number')->label('Matrícula')->searchable(),
-                TextColumn::make('name')->label('Aluno')->searchable()->sortable(),
+                /* A pivot enrollments também tem registration_number; qualifica a coluna para evitar ambiguidade. */
+                TextColumn::make('registration_number')
+                    ->label('Matrícula')
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query
+                        ->where('students.registration_number', 'like', "%{$search}%")),
+                TextColumn::make('name')
+                    ->label('Aluno')
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query
+                        ->where('students.name', 'like', "%{$search}%"))
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query
+                        ->orderBy('students.name', $direction)),
                 TextColumn::make('pivot.enrollment_date')->label('Ingresso')->date(),
                 TextColumn::make('pivot.roll_number')->label('Nº chamada')->toggleable(),
                 TextColumn::make('pivot.status')->label('Status matrícula')->badge(),
