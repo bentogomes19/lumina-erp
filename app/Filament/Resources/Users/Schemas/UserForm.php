@@ -150,6 +150,8 @@ class UserForm {
 
                     DatePicker::make('birth_date')
                         ->label('Data de Nascimento')
+                        /* Seletor nativo: permite digitar a data em vez de navegar anos no calendário. */
+                        ->native()
                         ->maxDate(now()->subYears(5)),
 
                     Select::make('gender')

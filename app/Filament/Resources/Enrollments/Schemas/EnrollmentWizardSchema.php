@@ -102,6 +102,8 @@ class EnrollmentWizardSchema {
 
                             DatePicker::make('student_birth_date')
                                 ->label('Data de nascimento')
+                                /* Seletor nativo: permite digitar a data em vez de navegar anos no calendário. */
+                                ->native()
                                 ->required(fn (Get $get) => $get('student_source') === 'new')
                                 ->columnSpan(2),
 
