@@ -52,13 +52,14 @@ class StudentForm {
                             ->label('Nome')
                             ->required()
                             ->maxLength(120)
-                            ->columnSpan(5),
+                            ->columnSpan(4),
 
                         DatePicker::make('birth_date')
                             ->label('Nascimento')
                             /* Seletor nativo: permite digitar a data em vez de navegar anos no calendário. */
                             ->native()
-                            ->columnSpan(2),
+                            /* O campo nativo precisa de largura para mostrar dd/mm/aaaa inteiro. */
+                            ->columnSpan(3),
 
                         Select::make('gender')
                             ->label('Gênero')
@@ -152,21 +153,25 @@ class StudentForm {
                 Section::make('Nascimento & Nacionalidade')
                     ->schema([
                         TextInput::make('birth_city')
-                            ->label('Município de Nascimento')
-                            ->nullable(),
+                            ->label('Município de nascimento')
+                            ->nullable()
+                            ->columnSpan(8),
 
                         TextInput::make('birth_state')
-                            ->label('UF Nasc.')
+                            ->label('UF')
                             ->maxLength(2)
                             ->minLength(2)
                             ->extraAttributes(['style' => 'text-transform:uppercase'])
-                            ->nullable(),
+                            ->nullable()
+                            ->columnSpan(4),
 
                         TextInput::make('nationality')
                             ->label('Nacionalidade')
-                            ->nullable(),
+                            ->nullable()
+                            ->columnSpan(12),
                     ])
-                    ->columns(3)
+                    /* Município e UF lado a lado; rótulos em uma linha para os campos ficarem alinhados. */
+                    ->columns(12)
                     ->columnSpan(4),
 
                 Section::make('Responsáveis')

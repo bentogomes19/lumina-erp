@@ -23,31 +23,36 @@ class SubjectForm {
     public static function configure(Schema $schema): Schema {
         return $schema
             ->components([
+                /* Duas linhas com colunas mais largas: rótulos em uma linha e campos alinhados. */
                 Section::make('Identificação')->schema([
                     TextInput::make('code')
                         ->label('Código')
                         ->helperText('Ex.: PORT-BAS, MAT-1, BIOG')
                         ->regex('/^[A-Za-z0-9\-_.]+$/')
                         ->maxLength(20)
-                        ->unique(ignoreRecord: true),
+                        ->unique(ignoreRecord: true)
+                        ->columnSpan(4),
 
                     TextInput::make('name')
                         ->label('Nome')
                         ->required()
-                        ->maxLength(120),
+                        ->maxLength(120)
+                        ->columnSpan(8),
 
                     Select::make('category')
                         ->label('Componente Curricular')
                         ->options(SubjectCategory::toArray())
                         ->required()
-                        ->rule(new EnumRule(SubjectCategory::class)), /* Valida a categoria da disciplina. */
+                        ->rule(new EnumRule(SubjectCategory::class)) /* Valida a categoria da disciplina. */
+                        ->columnSpan(8),
 
                     Select::make('status')
                         ->label('Status')
                         ->options(['active' => 'Ativa', 'inactive' => 'Inativa'])
                         ->default('active')
-                        ->required(),
-                ])->columns(4)->columnSpan(8),
+                        ->required()
+                        ->columnSpan(4),
+                ])->columns(12)->columnSpan(8),
 
                 Section::make('BNCC')->schema([
                     TextInput::make('bncc_code')
