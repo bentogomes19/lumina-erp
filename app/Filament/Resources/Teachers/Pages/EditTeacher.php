@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Teachers\Pages;
 
 use App\Filament\Resources\Teachers\TeacherResource;
+use App\Filament\Resources\Users\UserResource;
 use App\Services\Domain\DeletionGuard;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -21,6 +23,13 @@ class EditTeacher extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            /* Atalho para o perfil do usuário de acesso vinculado ao professor. */
+            Action::make('verUsuario')
+                ->label('Ver usuário')
+                ->icon('fas-circle-user')
+                ->color('gray')
+                ->visible(fn (): bool => $this->record->user !== null && UserResource::canEdit($this->record->user))
+                ->url(fn (): string => UserResource::getUrl('edit', ['record' => $this->record->user])),
             DeleteAction::make()
                 ->before(function (Model $record): void {
                     $blockingLinks = app(DeletionGuard::class)->blockingLinks($record);

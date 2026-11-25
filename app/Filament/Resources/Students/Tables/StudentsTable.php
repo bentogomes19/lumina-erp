@@ -6,6 +6,7 @@ use App\Enums\StudentOnboardingState;
 use App\Enums\StudentStatus;
 use App\Filament\Actions\GuardedForceDeleteBulkAction;
 use App\Filament\Resources\Enrollments\EnrollmentResource;
+use App\Filament\Resources\Users\UserResource;
 use App\Models\Student;
 use App\Models\SchoolYear;
 use App\Services\Enrollments\StudentEnrollmentService;
@@ -34,7 +35,7 @@ class StudentsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('currentActiveEnrollment.schoolClass'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['currentActiveEnrollment.schoolClass', 'user']))
             ->columns([
                 TextColumn::make('registration_number')->label('Matrícula')->searchable()->copyable(),
                 TextColumn::make('name')->label('Nome')->searchable()->sortable(),
@@ -58,6 +59,16 @@ class StudentsTable
                     ->label('Turma atual')
                     ->placeholder('Sem turma ativa no ano atual')
                     ->limit(28)
+                    ->toggleable(),
+                /* Usuário de acesso vinculado; leva ao perfil do usuário quando há permissão. */
+                TextColumn::make('user.email')
+                    ->label('Usuário')
+                    ->icon('fas-circle-user')
+                    ->placeholder('Sem usuário')
+                    ->url(fn (Student $record): ?string => $record->user && UserResource::canEdit($record->user)
+                        ? UserResource::getUrl('edit', ['record' => $record->user])
+                        : null)
+                    ->color(fn (Student $record): ?string => $record->user && UserResource::canEdit($record->user) ? 'primary' : null)
                     ->toggleable(),
                 TextColumn::make('email')->label('E-mail')->toggleable(),
                 TextColumn::make('phone_number')->label('Telefone')->toggleable(),
