@@ -102,7 +102,7 @@ class EditEnrollment extends EditRecord {
                             auth()->id(),
                         );
 
-                        $this->refreshFormData(['status', 'locked_reason', 'lock_expires_at']);
+                        $this->refreshRecordAndForm(['status', 'locked_reason', 'lock_expires_at']);
 
                         Notification::make()
                             ->title('Matrícula trancada')
@@ -132,7 +132,7 @@ class EditEnrollment extends EditRecord {
                             auth()->id(),
                         );
 
-                        $this->refreshFormData(['status', 'locked_reason', 'lock_expires_at']);
+                        $this->refreshRecordAndForm(['status', 'locked_reason', 'lock_expires_at']);
 
                         Notification::make()
                             ->title('Matrícula reativada')
@@ -234,7 +234,7 @@ class EditEnrollment extends EditRecord {
                             auth()->id(),
                         );
 
-                        $this->refreshFormData(['status', 'transfer_type', 'transfer_destination', 'transfer_reason']);
+                        $this->refreshRecordAndForm(['status', 'transfer_type', 'transfer_destination', 'transfer_reason']);
 
                         Notification::make()
                             ->title('Transferência externa registrada')
@@ -276,7 +276,7 @@ class EditEnrollment extends EditRecord {
                             auth()->id(),
                         );
 
-                        $this->refreshFormData(['status', 'cancel_reason', 'cancel_observations']);
+                        $this->refreshRecordAndForm(['status', 'cancel_reason', 'cancel_observations']);
 
                         Notification::make()
                             ->title('Matrícula cancelada')
@@ -314,7 +314,7 @@ class EditEnrollment extends EditRecord {
                             auth()->id(),
                         );
 
-                        $this->refreshFormData(['status', 'cancel_reason', 'cancel_observations']);
+                        $this->refreshRecordAndForm(['status', 'cancel_reason', 'cancel_observations']);
 
                         Notification::make()
                             ->title('Cancelamento revertido')
@@ -397,5 +397,20 @@ class EditEnrollment extends EditRecord {
             acao: 'edicao',
             observacao: 'Dados da matrícula editados via painel administrativo.',
         );
+    }
+
+    /**
+     * Recarrega a matrícula do banco e atualiza os campos informados.
+     *
+     * As ações de status gravam por meio do serviço em outra instância do modelo;
+     * sem recarregar, o formulário voltaria a mostrar o status anterior.
+     *
+     * @param array<int, string> $statePaths
+     *
+     * @return void
+     */
+    private function refreshRecordAndForm(array $statePaths): void {
+        $this->record->refresh();
+        $this->refreshFormData($statePaths);
     }
 }

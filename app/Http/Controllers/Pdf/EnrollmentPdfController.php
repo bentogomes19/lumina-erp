@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Pdf;
 
 use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
+use App\Models\Grade;
+use App\Services\GradeCalculationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
@@ -131,13 +133,19 @@ class EnrollmentPdfController extends Controller {
 
         $enr = $this->load($enrollment);
 
-        /* Agrupa notas por disciplina para o histórico. */
-        $historicoNotas = $enr->grades
-            ->groupBy(fn ($g) => $g->subject?->name ?? 'Sem disciplina')
+        /*
+         * Agrupa as notas publicadas por disciplina. A média segue o mesmo cálculo do
+         * boletim (peso das avaliações, média por bimestre e recuperação); rascunhos do
+         * professor não entram no documento.
+         */
+        $gradeCalculation = app(GradeCalculationService::class);
+        $historicoNotas   = $enr->grades
+            ->filter(fn (Grade $grade): bool => $grade->locked_at !== null)
+            ->groupBy(fn (Grade $grade) => $grade->subject?->name ?? 'Sem disciplina')
             ->map(fn ($grades) => [
                 'subject' => $grades->first()->subject?->name ?? '—',
                 'grades'  => $grades,
-                'media'   => round($grades->avg('score'), 1),
+                'media'   => $gradeCalculation->subjectReport($grades->values())['overall_average'],
             ]);
 
         return $this->pdf(
