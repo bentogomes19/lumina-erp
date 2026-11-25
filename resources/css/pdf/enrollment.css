@@ -47,7 +47,9 @@
     .b-dispensado { background: #f1f5f9; color: #475569; }
 
     /* ── Assinaturas ── */
-    .signatures { display: flex; gap: 40px; justify-content: center; margin-top: 30px; margin-bottom: 16px; }
+    /* O DomPDF não suporta flex: as assinaturas ficam lado a lado com inline-block. */
+    .signatures { text-align: center; margin-top: 30px; margin-bottom: 16px; }
+    .sig-line { display: inline-block; vertical-align: top; width: 160px; margin: 0 16px; }
     .sig-line .line  { border-top: 1px solid #334155; width: 140px; margin: 0 auto 4px; }
     .sig-line .label { font-size: 8px; color: #64748b; text-align: center; }
 
