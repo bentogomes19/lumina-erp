@@ -6,6 +6,7 @@ use App\Enums\TeacherOnboardingState;
 use App\Enums\TeacherStatus;
 use App\Filament\Actions\GuardedForceDeleteBulkAction;
 use App\Filament\Actions\WarnedDeleteBulkAction;
+use App\Filament\Resources\Users\UserResource;
 use App\Models\SchoolClass;
 use App\Models\Teacher;
 use App\Services\Teachers\TeacherOnboardingService;
@@ -27,6 +28,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -38,10 +40,22 @@ class TeachersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('user'))
             ->columns([
                 TextColumn::make('employee_number')->label('Matrícula')->searchable()->copyable()->toggleable(),
                 TextColumn::make('name')->label('Nome')->searchable()->toggleable()->sortable(),
                 TextColumn::make('email')->label('E-mail')->searchable()->toggleable(),
+
+                /* Usuário de acesso vinculado; leva ao perfil do usuário quando há permissão. */
+                TextColumn::make('user.email')
+                    ->label('Usuário')
+                    ->icon('fas-circle-user')
+                    ->placeholder('Sem usuário')
+                    ->url(fn (Teacher $record): ?string => $record->user && UserResource::canEdit($record->user)
+                        ? UserResource::getUrl('edit', ['record' => $record->user])
+                        : null)
+                    ->color(fn (Teacher $record): ?string => $record->user && UserResource::canEdit($record->user) ? 'primary' : null)
+                    ->toggleable(),
                 TextColumn::make('phone')->label('Telefone')->toggleable()->toggleable(),
                 TextColumn::make('weekly_workload')->label('CH (h)')->numeric()->alignRight()->toggleable(),
                 TextColumn::make('status')->toggleable(true)->searchable()->sortable()
