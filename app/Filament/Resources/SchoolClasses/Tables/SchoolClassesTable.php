@@ -4,6 +4,7 @@ namespace App\Filament\Resources\SchoolClasses\Tables;
 
 use App\Enums\ClassShift;
 use App\Enums\ClassStatus;
+use App\Enums\EducationStage;
 use App\Enums\EnrollmentStatus;
 use App\Filament\Actions\GuardedForceDeleteBulkAction;
 use App\Filament\Actions\WarnedDeleteBulkAction;
@@ -43,7 +44,7 @@ class SchoolClassesTable
     {
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query
-                ->with(['homeroomTeacher' => fn ($teacher) => $teacher->withTrashed()])
+                ->with(['gradeLevel', 'homeroomTeacher' => fn ($teacher) => $teacher->withTrashed()])
                 ->withCount([
                     'enrollments as occupied_slots_count' => fn (Builder $enrollments) => $enrollments
                         ->whereIn('status', EnrollmentStatus::occupyingValues()),
@@ -61,7 +62,11 @@ class SchoolClassesTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('gradeLevel.name')->label('Série')->searchable()->sortable(),
+                TextColumn::make('gradeLevel.name')
+                    ->label('Série / Etapa')
+                    ->description(fn (SchoolClass $record): ?string => $record->gradeLevel?->stage?->label())
+                    ->searchable()
+                    ->sortable(),
 
                 TextColumn::make('schoolYear.year')->label('Ano Letivo')->sortable(),
 
@@ -121,6 +126,19 @@ class SchoolClassesTable
                     ->default(fn () => SchoolYear::query()
                         ->where('is_active', true)
                         ->value('id')),
+
+                SelectFilter::make('grade_level_id')
+                    ->label('Série')
+                    ->relationship('gradeLevel', 'name', fn (Builder $query) => $query->orderBy('display_order'))
+                    ->preload(),
+
+                SelectFilter::make('stage')
+                    ->label('Etapa')
+                    ->options(EducationStage::toArray())
+                    ->query(fn (Builder $query, array $data): Builder => $query->when(
+                        $data['value'] ?? null,
+                        fn (Builder $query, string $stage) => $query->whereHas('gradeLevel', fn (Builder $gradeLevel) => $gradeLevel->where('stage', $stage)),
+                    )),
 
                 SelectFilter::make('status')
                     ->label('Status')

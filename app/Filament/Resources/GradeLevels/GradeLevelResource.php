@@ -6,6 +6,7 @@ use App\Filament\Resources\BaseAdminResource;
 use App\Filament\Resources\GradeLevels\Pages\CreateGradeLevel;
 use App\Filament\Resources\GradeLevels\Pages\EditGradeLevel;
 use App\Filament\Resources\GradeLevels\Pages\ListGradeLevels;
+use App\Filament\Resources\GradeLevels\RelationManagers\ClassesRelationManager;
 use App\Filament\Resources\GradeLevels\RelationManagers\SubjectsRelationManager;
 use App\Filament\Resources\GradeLevels\Schemas\GradeLevelForm;
 use App\Filament\Resources\GradeLevels\Tables\GradeLevelsTable;
@@ -88,6 +89,7 @@ class GradeLevelResource extends BaseAdminResource {
     public static function getRelations(): array {
         return [
             SubjectsRelationManager::class,
+            ClassesRelationManager::class,
         ];
     }
 
