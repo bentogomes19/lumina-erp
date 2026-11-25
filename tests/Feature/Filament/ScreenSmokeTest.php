@@ -86,6 +86,7 @@ class ScreenSmokeTest extends TestCase
             [Resources\Enrollments\RelationManagers\EnrollmentLogsRelationManager::class, Resources\Enrollments\Pages\EditEnrollment::class, \App\Models\Enrollment::class],
             [Resources\Enrollments\RelationManagers\EnrollmentDocumentsRelationManager::class, Resources\Enrollments\Pages\EditEnrollment::class, \App\Models\Enrollment::class],
             [Resources\GradeLevels\RelationManagers\SubjectsRelationManager::class, Resources\GradeLevels\Pages\EditGradeLevel::class, \App\Models\GradeLevel::class],
+            [Resources\GradeLevels\RelationManagers\ClassesRelationManager::class, Resources\GradeLevels\Pages\EditGradeLevel::class, \App\Models\GradeLevel::class],
             [Resources\SchoolClasses\RelationManagers\StudentsRelationManager::class, Resources\SchoolClasses\Pages\EditSchoolClass::class, \App\Models\SchoolClass::class],
             [Resources\SchoolClasses\RelationManagers\SubjectsRelationManager::class, Resources\SchoolClasses\Pages\EditSchoolClass::class, \App\Models\SchoolClass::class],
             [Resources\SchoolYears\RelationManagers\TermsRelationManager::class, Resources\SchoolYears\Pages\EditSchoolYear::class, \App\Models\SchoolYear::class],

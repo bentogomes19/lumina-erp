@@ -35,7 +35,7 @@ class StudentsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['currentActiveEnrollment.schoolClass', 'user']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['currentActiveEnrollment.schoolClass.gradeLevel', 'user']))
             ->columns([
                 TextColumn::make('registration_number')->label('Matrícula')->searchable()->copyable(),
                 TextColumn::make('name')->label('Nome')->searchable()->sortable(),
@@ -55,6 +55,12 @@ class StudentsTable
                             ->orderByRaw('birth_date IS NULL') /* nulos por último. */
                             ->orderBy('birth_date', $direction === 'asc' ? 'desc' : 'asc');
                     }),
+                /* Série e etapa vêm da turma da matrícula ativa no ano vigente. */
+                TextColumn::make('currentActiveEnrollment.schoolClass.gradeLevel.name')
+                    ->label('Série / Etapa')
+                    ->description(fn (Student $record): ?string => $record->currentActiveEnrollment?->schoolClass?->gradeLevel?->stage?->label())
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('currentActiveEnrollment.schoolClass.name')
                     ->label('Turma atual')
                     ->placeholder('Sem turma ativa no ano atual')
